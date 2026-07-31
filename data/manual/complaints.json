@@ -1,0 +1,7040 @@
+{
+  "provenance": "sample",
+  "months": [
+    "2024-07",
+    "2024-08",
+    "2024-09",
+    "2024-10",
+    "2024-11",
+    "2024-12",
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06",
+    "2025-07",
+    "2025-08",
+    "2025-09",
+    "2025-10",
+    "2025-11",
+    "2025-12",
+    "2026-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06"
+  ],
+  "source_note": "SAMPLE DATA - replace with per-broker SEBI Annexure-B disclosures.",
+  "brokers": {
+    "zerodha": [
+      {
+        "month": "2024-07",
+        "received": 988,
+        "resolved": 823,
+        "pending": 165
+      },
+      {
+        "month": "2024-08",
+        "received": 1839,
+        "resolved": 1759,
+        "pending": 80
+      },
+      {
+        "month": "2024-09",
+        "received": 1530,
+        "resolved": 1311,
+        "pending": 219
+      },
+      {
+        "month": "2024-10",
+        "received": 2066,
+        "resolved": 1968,
+        "pending": 98
+      },
+      {
+        "month": "2024-11",
+        "received": 1046,
+        "resolved": 1002,
+        "pending": 44
+      },
+      {
+        "month": "2024-12",
+        "received": 474,
+        "resolved": 467,
+        "pending": 7
+      },
+      {
+        "month": "2025-01",
+        "received": 1610,
+        "resolved": 1328,
+        "pending": 282
+      },
+      {
+        "month": "2025-02",
+        "received": 1070,
+        "resolved": 913,
+        "pending": 157
+      },
+      {
+        "month": "2025-03",
+        "received": 1393,
+        "resolved": 1278,
+        "pending": 115
+      },
+      {
+        "month": "2025-04",
+        "received": 1012,
+        "resolved": 958,
+        "pending": 54
+      },
+      {
+        "month": "2025-05",
+        "received": 1195,
+        "resolved": 1011,
+        "pending": 184
+      },
+      {
+        "month": "2025-06",
+        "received": 1866,
+        "resolved": 1808,
+        "pending": 58
+      },
+      {
+        "month": "2025-07",
+        "received": 1377,
+        "resolved": 1110,
+        "pending": 267
+      },
+      {
+        "month": "2025-08",
+        "received": 1069,
+        "resolved": 921,
+        "pending": 148
+      },
+      {
+        "month": "2025-09",
+        "received": 1157,
+        "resolved": 958,
+        "pending": 199
+      },
+      {
+        "month": "2025-10",
+        "received": 745,
+        "resolved": 726,
+        "pending": 19
+      },
+      {
+        "month": "2025-11",
+        "received": 1459,
+        "resolved": 1181,
+        "pending": 278
+      },
+      {
+        "month": "2025-12",
+        "received": 719,
+        "resolved": 637,
+        "pending": 82
+      },
+      {
+        "month": "2026-01",
+        "received": 711,
+        "resolved": 655,
+        "pending": 56
+      },
+      {
+        "month": "2026-02",
+        "received": 1334,
+        "resolved": 1113,
+        "pending": 221
+      },
+      {
+        "month": "2026-03",
+        "received": 857,
+        "resolved": 701,
+        "pending": 156
+      },
+      {
+        "month": "2026-04",
+        "received": 1333,
+        "resolved": 1130,
+        "pending": 203
+      },
+      {
+        "month": "2026-05",
+        "received": 2210,
+        "resolved": 1769,
+        "pending": 441
+      },
+      {
+        "month": "2026-06",
+        "received": 2163,
+        "resolved": 1946,
+        "pending": 217
+      }
+    ],
+    "groww": [
+      {
+        "month": "2024-07",
+        "received": 1421,
+        "resolved": 1371,
+        "pending": 50
+      },
+      {
+        "month": "2024-08",
+        "received": 799,
+        "resolved": 751,
+        "pending": 48
+      },
+      {
+        "month": "2024-09",
+        "received": 1771,
+        "resolved": 1451,
+        "pending": 320
+      },
+      {
+        "month": "2024-10",
+        "received": 1282,
+        "resolved": 1255,
+        "pending": 27
+      },
+      {
+        "month": "2024-11",
+        "received": 2210,
+        "resolved": 1891,
+        "pending": 319
+      },
+      {
+        "month": "2024-12",
+        "received": 2130,
+        "resolved": 1944,
+        "pending": 186
+      },
+      {
+        "month": "2025-01",
+        "received": 2525,
+        "resolved": 2151,
+        "pending": 374
+      },
+      {
+        "month": "2025-02",
+        "received": 2241,
+        "resolved": 1950,
+        "pending": 291
+      },
+      {
+        "month": "2025-03",
+        "received": 1712,
+        "resolved": 1393,
+        "pending": 319
+      },
+      {
+        "month": "2025-04",
+        "received": 2678,
+        "resolved": 2335,
+        "pending": 343
+      },
+      {
+        "month": "2025-05",
+        "received": 670,
+        "resolved": 568,
+        "pending": 102
+      },
+      {
+        "month": "2025-06",
+        "received": 1760,
+        "resolved": 1415,
+        "pending": 345
+      },
+      {
+        "month": "2025-07",
+        "received": 1020,
+        "resolved": 969,
+        "pending": 51
+      },
+      {
+        "month": "2025-08",
+        "received": 2839,
+        "resolved": 2519,
+        "pending": 320
+      },
+      {
+        "month": "2025-09",
+        "received": 1716,
+        "resolved": 1639,
+        "pending": 77
+      },
+      {
+        "month": "2025-10",
+        "received": 1716,
+        "resolved": 1609,
+        "pending": 107
+      },
+      {
+        "month": "2025-11",
+        "received": 1919,
+        "resolved": 1679,
+        "pending": 240
+      },
+      {
+        "month": "2025-12",
+        "received": 991,
+        "resolved": 931,
+        "pending": 60
+      },
+      {
+        "month": "2026-01",
+        "received": 1982,
+        "resolved": 1891,
+        "pending": 91
+      },
+      {
+        "month": "2026-02",
+        "received": 954,
+        "resolved": 839,
+        "pending": 115
+      },
+      {
+        "month": "2026-03",
+        "received": 1671,
+        "resolved": 1581,
+        "pending": 90
+      },
+      {
+        "month": "2026-04",
+        "received": 1940,
+        "resolved": 1722,
+        "pending": 218
+      },
+      {
+        "month": "2026-05",
+        "received": 3066,
+        "resolved": 2721,
+        "pending": 345
+      },
+      {
+        "month": "2026-06",
+        "received": 3147,
+        "resolved": 2685,
+        "pending": 462
+      }
+    ],
+    "angel-one": [
+      {
+        "month": "2024-07",
+        "received": 612,
+        "resolved": 535,
+        "pending": 77
+      },
+      {
+        "month": "2024-08",
+        "received": 1759,
+        "resolved": 1459,
+        "pending": 300
+      },
+      {
+        "month": "2024-09",
+        "received": 1017,
+        "resolved": 951,
+        "pending": 66
+      },
+      {
+        "month": "2024-10",
+        "received": 1666,
+        "resolved": 1621,
+        "pending": 45
+      },
+      {
+        "month": "2024-11",
+        "received": 402,
+        "resolved": 323,
+        "pending": 79
+      },
+      {
+        "month": "2024-12",
+        "received": 645,
+        "resolved": 549,
+        "pending": 96
+      },
+      {
+        "month": "2025-01",
+        "received": 863,
+        "resolved": 725,
+        "pending": 138
+      },
+      {
+        "month": "2025-02",
+        "received": 869,
+        "resolved": 730,
+        "pending": 139
+      },
+      {
+        "month": "2025-03",
+        "received": 662,
+        "resolved": 570,
+        "pending": 92
+      },
+      {
+        "month": "2025-04",
+        "received": 1375,
+        "resolved": 1214,
+        "pending": 161
+      },
+      {
+        "month": "2025-05",
+        "received": 1846,
+        "resolved": 1768,
+        "pending": 78
+      },
+      {
+        "month": "2025-06",
+        "received": 1487,
+        "resolved": 1294,
+        "pending": 193
+      },
+      {
+        "month": "2025-07",
+        "received": 953,
+        "resolved": 895,
+        "pending": 58
+      },
+      {
+        "month": "2025-08",
+        "received": 1948,
+        "resolved": 1582,
+        "pending": 366
+      },
+      {
+        "month": "2025-09",
+        "received": 637,
+        "resolved": 587,
+        "pending": 50
+      },
+      {
+        "month": "2025-10",
+        "received": 1402,
+        "resolved": 1310,
+        "pending": 92
+      },
+      {
+        "month": "2025-11",
+        "received": 1084,
+        "resolved": 980,
+        "pending": 104
+      },
+      {
+        "month": "2025-12",
+        "received": 1396,
+        "resolved": 1377,
+        "pending": 19
+      },
+      {
+        "month": "2026-01",
+        "received": 1197,
+        "resolved": 1153,
+        "pending": 44
+      },
+      {
+        "month": "2026-02",
+        "received": 1707,
+        "resolved": 1474,
+        "pending": 233
+      },
+      {
+        "month": "2026-03",
+        "received": 2131,
+        "resolved": 1715,
+        "pending": 416
+      },
+      {
+        "month": "2026-04",
+        "received": 1588,
+        "resolved": 1450,
+        "pending": 138
+      },
+      {
+        "month": "2026-05",
+        "received": 2012,
+        "resolved": 1909,
+        "pending": 103
+      },
+      {
+        "month": "2026-06",
+        "received": 681,
+        "resolved": 656,
+        "pending": 25
+      }
+    ],
+    "upstox": [
+      {
+        "month": "2024-07",
+        "received": 468,
+        "resolved": 440,
+        "pending": 28
+      },
+      {
+        "month": "2024-08",
+        "received": 500,
+        "resolved": 453,
+        "pending": 47
+      },
+      {
+        "month": "2024-09",
+        "received": 452,
+        "resolved": 412,
+        "pending": 40
+      },
+      {
+        "month": "2024-10",
+        "received": 683,
+        "resolved": 580,
+        "pending": 103
+      },
+      {
+        "month": "2024-11",
+        "received": 685,
+        "resolved": 666,
+        "pending": 19
+      },
+      {
+        "month": "2024-12",
+        "received": 682,
+        "resolved": 586,
+        "pending": 96
+      },
+      {
+        "month": "2025-01",
+        "received": 612,
+        "resolved": 538,
+        "pending": 74
+      },
+      {
+        "month": "2025-02",
+        "received": 695,
+        "resolved": 593,
+        "pending": 102
+      },
+      {
+        "month": "2025-03",
+        "received": 525,
+        "resolved": 497,
+        "pending": 28
+      },
+      {
+        "month": "2025-04",
+        "received": 682,
+        "resolved": 577,
+        "pending": 105
+      },
+      {
+        "month": "2025-05",
+        "received": 730,
+        "resolved": 602,
+        "pending": 128
+      },
+      {
+        "month": "2025-06",
+        "received": 642,
+        "resolved": 592,
+        "pending": 50
+      },
+      {
+        "month": "2025-07",
+        "received": 294,
+        "resolved": 275,
+        "pending": 19
+      },
+      {
+        "month": "2025-08",
+        "received": 670,
+        "resolved": 661,
+        "pending": 9
+      },
+      {
+        "month": "2025-09",
+        "received": 349,
+        "resolved": 307,
+        "pending": 42
+      },
+      {
+        "month": "2025-10",
+        "received": 777,
+        "resolved": 675,
+        "pending": 102
+      },
+      {
+        "month": "2025-11",
+        "received": 262,
+        "resolved": 247,
+        "pending": 15
+      },
+      {
+        "month": "2025-12",
+        "received": 541,
+        "resolved": 489,
+        "pending": 52
+      },
+      {
+        "month": "2026-01",
+        "received": 632,
+        "resolved": 616,
+        "pending": 16
+      },
+      {
+        "month": "2026-02",
+        "received": 744,
+        "resolved": 668,
+        "pending": 76
+      },
+      {
+        "month": "2026-03",
+        "received": 620,
+        "resolved": 503,
+        "pending": 117
+      },
+      {
+        "month": "2026-04",
+        "received": 434,
+        "resolved": 426,
+        "pending": 8
+      },
+      {
+        "month": "2026-05",
+        "received": 825,
+        "resolved": 770,
+        "pending": 55
+      },
+      {
+        "month": "2026-06",
+        "received": 550,
+        "resolved": 505,
+        "pending": 45
+      }
+    ],
+    "icici-direct": [
+      {
+        "month": "2024-07",
+        "received": 312,
+        "resolved": 260,
+        "pending": 52
+      },
+      {
+        "month": "2024-08",
+        "received": 487,
+        "resolved": 409,
+        "pending": 78
+      },
+      {
+        "month": "2024-09",
+        "received": 360,
+        "resolved": 337,
+        "pending": 23
+      },
+      {
+        "month": "2024-10",
+        "received": 485,
+        "resolved": 390,
+        "pending": 95
+      },
+      {
+        "month": "2024-11",
+        "received": 357,
+        "resolved": 325,
+        "pending": 32
+      },
+      {
+        "month": "2024-12",
+        "received": 521,
+        "resolved": 422,
+        "pending": 99
+      },
+      {
+        "month": "2025-01",
+        "received": 133,
+        "resolved": 121,
+        "pending": 12
+      },
+      {
+        "month": "2025-02",
+        "received": 532,
+        "resolved": 464,
+        "pending": 68
+      },
+      {
+        "month": "2025-03",
+        "received": 155,
+        "resolved": 130,
+        "pending": 25
+      },
+      {
+        "month": "2025-04",
+        "received": 262,
+        "resolved": 220,
+        "pending": 42
+      },
+      {
+        "month": "2025-05",
+        "received": 502,
+        "resolved": 404,
+        "pending": 98
+      },
+      {
+        "month": "2025-06",
+        "received": 405,
+        "resolved": 336,
+        "pending": 69
+      },
+      {
+        "month": "2025-07",
+        "received": 322,
+        "resolved": 290,
+        "pending": 32
+      },
+      {
+        "month": "2025-08",
+        "received": 133,
+        "resolved": 125,
+        "pending": 8
+      },
+      {
+        "month": "2025-09",
+        "received": 420,
+        "resolved": 410,
+        "pending": 10
+      },
+      {
+        "month": "2025-10",
+        "received": 265,
+        "resolved": 256,
+        "pending": 9
+      },
+      {
+        "month": "2025-11",
+        "received": 137,
+        "resolved": 111,
+        "pending": 26
+      },
+      {
+        "month": "2025-12",
+        "received": 360,
+        "resolved": 294,
+        "pending": 66
+      },
+      {
+        "month": "2026-01",
+        "received": 480,
+        "resolved": 395,
+        "pending": 85
+      },
+      {
+        "month": "2026-02",
+        "received": 293,
+        "resolved": 255,
+        "pending": 38
+      },
+      {
+        "month": "2026-03",
+        "received": 466,
+        "resolved": 421,
+        "pending": 45
+      },
+      {
+        "month": "2026-04",
+        "received": 410,
+        "resolved": 404,
+        "pending": 6
+      },
+      {
+        "month": "2026-05",
+        "received": 224,
+        "resolved": 203,
+        "pending": 21
+      },
+      {
+        "month": "2026-06",
+        "received": 324,
+        "resolved": 272,
+        "pending": 52
+      }
+    ],
+    "hdfc-securities": [
+      {
+        "month": "2024-07",
+        "received": 182,
+        "resolved": 147,
+        "pending": 35
+      },
+      {
+        "month": "2024-08",
+        "received": 206,
+        "resolved": 167,
+        "pending": 39
+      },
+      {
+        "month": "2024-09",
+        "received": 272,
+        "resolved": 268,
+        "pending": 4
+      },
+      {
+        "month": "2024-10",
+        "received": 279,
+        "resolved": 271,
+        "pending": 8
+      },
+      {
+        "month": "2024-11",
+        "received": 253,
+        "resolved": 204,
+        "pending": 49
+      },
+      {
+        "month": "2024-12",
+        "received": 160,
+        "resolved": 150,
+        "pending": 10
+      },
+      {
+        "month": "2025-01",
+        "received": 272,
+        "resolved": 244,
+        "pending": 28
+      },
+      {
+        "month": "2025-02",
+        "received": 280,
+        "resolved": 258,
+        "pending": 22
+      },
+      {
+        "month": "2025-03",
+        "received": 334,
+        "resolved": 311,
+        "pending": 23
+      },
+      {
+        "month": "2025-04",
+        "received": 315,
+        "resolved": 303,
+        "pending": 12
+      },
+      {
+        "month": "2025-05",
+        "received": 343,
+        "resolved": 319,
+        "pending": 24
+      },
+      {
+        "month": "2025-06",
+        "received": 214,
+        "resolved": 188,
+        "pending": 26
+      },
+      {
+        "month": "2025-07",
+        "received": 262,
+        "resolved": 243,
+        "pending": 19
+      },
+      {
+        "month": "2025-08",
+        "received": 286,
+        "resolved": 242,
+        "pending": 44
+      },
+      {
+        "month": "2025-09",
+        "received": 293,
+        "resolved": 250,
+        "pending": 43
+      },
+      {
+        "month": "2025-10",
+        "received": 110,
+        "resolved": 94,
+        "pending": 16
+      },
+      {
+        "month": "2025-11",
+        "received": 209,
+        "resolved": 207,
+        "pending": 2
+      },
+      {
+        "month": "2025-12",
+        "received": 134,
+        "resolved": 112,
+        "pending": 22
+      },
+      {
+        "month": "2026-01",
+        "received": 194,
+        "resolved": 165,
+        "pending": 29
+      },
+      {
+        "month": "2026-02",
+        "received": 373,
+        "resolved": 345,
+        "pending": 28
+      },
+      {
+        "month": "2026-03",
+        "received": 207,
+        "resolved": 204,
+        "pending": 3
+      },
+      {
+        "month": "2026-04",
+        "received": 162,
+        "resolved": 140,
+        "pending": 22
+      },
+      {
+        "month": "2026-05",
+        "received": 88,
+        "resolved": 77,
+        "pending": 11
+      },
+      {
+        "month": "2026-06",
+        "received": 286,
+        "resolved": 257,
+        "pending": 29
+      }
+    ],
+    "kotak-securities": [
+      {
+        "month": "2024-07",
+        "received": 81,
+        "resolved": 71,
+        "pending": 10
+      },
+      {
+        "month": "2024-08",
+        "received": 156,
+        "resolved": 149,
+        "pending": 7
+      },
+      {
+        "month": "2024-09",
+        "received": 72,
+        "resolved": 60,
+        "pending": 12
+      },
+      {
+        "month": "2024-10",
+        "received": 134,
+        "resolved": 123,
+        "pending": 11
+      },
+      {
+        "month": "2024-11",
+        "received": 252,
+        "resolved": 234,
+        "pending": 18
+      },
+      {
+        "month": "2024-12",
+        "received": 210,
+        "resolved": 174,
+        "pending": 36
+      },
+      {
+        "month": "2025-01",
+        "received": 308,
+        "resolved": 261,
+        "pending": 47
+      },
+      {
+        "month": "2025-02",
+        "received": 101,
+        "resolved": 94,
+        "pending": 7
+      },
+      {
+        "month": "2025-03",
+        "received": 180,
+        "resolved": 149,
+        "pending": 31
+      },
+      {
+        "month": "2025-04",
+        "received": 266,
+        "resolved": 225,
+        "pending": 41
+      },
+      {
+        "month": "2025-05",
+        "received": 239,
+        "resolved": 201,
+        "pending": 38
+      },
+      {
+        "month": "2025-06",
+        "received": 196,
+        "resolved": 175,
+        "pending": 21
+      },
+      {
+        "month": "2025-07",
+        "received": 206,
+        "resolved": 171,
+        "pending": 35
+      },
+      {
+        "month": "2025-08",
+        "received": 306,
+        "resolved": 252,
+        "pending": 54
+      },
+      {
+        "month": "2025-09",
+        "received": 110,
+        "resolved": 90,
+        "pending": 20
+      },
+      {
+        "month": "2025-10",
+        "received": 309,
+        "resolved": 293,
+        "pending": 16
+      },
+      {
+        "month": "2025-11",
+        "received": 88,
+        "resolved": 74,
+        "pending": 14
+      },
+      {
+        "month": "2025-12",
+        "received": 313,
+        "resolved": 259,
+        "pending": 54
+      },
+      {
+        "month": "2026-01",
+        "received": 358,
+        "resolved": 329,
+        "pending": 29
+      },
+      {
+        "month": "2026-02",
+        "received": 155,
+        "resolved": 145,
+        "pending": 10
+      },
+      {
+        "month": "2026-03",
+        "received": 321,
+        "resolved": 292,
+        "pending": 29
+      },
+      {
+        "month": "2026-04",
+        "received": 315,
+        "resolved": 308,
+        "pending": 7
+      },
+      {
+        "month": "2026-05",
+        "received": 336,
+        "resolved": 307,
+        "pending": 29
+      },
+      {
+        "month": "2026-06",
+        "received": 331,
+        "resolved": 327,
+        "pending": 4
+      }
+    ],
+    "sharekhan": [
+      {
+        "month": "2024-07",
+        "received": 154,
+        "resolved": 141,
+        "pending": 13
+      },
+      {
+        "month": "2024-08",
+        "received": 146,
+        "resolved": 124,
+        "pending": 22
+      },
+      {
+        "month": "2024-09",
+        "received": 96,
+        "resolved": 82,
+        "pending": 14
+      },
+      {
+        "month": "2024-10",
+        "received": 193,
+        "resolved": 160,
+        "pending": 33
+      },
+      {
+        "month": "2024-11",
+        "received": 73,
+        "resolved": 71,
+        "pending": 2
+      },
+      {
+        "month": "2024-12",
+        "received": 136,
+        "resolved": 122,
+        "pending": 14
+      },
+      {
+        "month": "2025-01",
+        "received": 213,
+        "resolved": 181,
+        "pending": 32
+      },
+      {
+        "month": "2025-02",
+        "received": 206,
+        "resolved": 173,
+        "pending": 33
+      },
+      {
+        "month": "2025-03",
+        "received": 189,
+        "resolved": 174,
+        "pending": 15
+      },
+      {
+        "month": "2025-04",
+        "received": 94,
+        "resolved": 79,
+        "pending": 15
+      },
+      {
+        "month": "2025-05",
+        "received": 161,
+        "resolved": 153,
+        "pending": 8
+      },
+      {
+        "month": "2025-06",
+        "received": 115,
+        "resolved": 94,
+        "pending": 21
+      },
+      {
+        "month": "2025-07",
+        "received": 47,
+        "resolved": 44,
+        "pending": 3
+      },
+      {
+        "month": "2025-08",
+        "received": 49,
+        "resolved": 47,
+        "pending": 2
+      },
+      {
+        "month": "2025-09",
+        "received": 205,
+        "resolved": 196,
+        "pending": 9
+      },
+      {
+        "month": "2025-10",
+        "received": 99,
+        "resolved": 90,
+        "pending": 9
+      },
+      {
+        "month": "2025-11",
+        "received": 52,
+        "resolved": 46,
+        "pending": 6
+      },
+      {
+        "month": "2025-12",
+        "received": 80,
+        "resolved": 78,
+        "pending": 2
+      },
+      {
+        "month": "2026-01",
+        "received": 65,
+        "resolved": 59,
+        "pending": 6
+      },
+      {
+        "month": "2026-02",
+        "received": 95,
+        "resolved": 79,
+        "pending": 16
+      },
+      {
+        "month": "2026-03",
+        "received": 106,
+        "resolved": 94,
+        "pending": 12
+      },
+      {
+        "month": "2026-04",
+        "received": 167,
+        "resolved": 137,
+        "pending": 30
+      },
+      {
+        "month": "2026-05",
+        "received": 176,
+        "resolved": 167,
+        "pending": 9
+      },
+      {
+        "month": "2026-06",
+        "received": 59,
+        "resolved": 53,
+        "pending": 6
+      }
+    ],
+    "motilal-oswal": [
+      {
+        "month": "2024-07",
+        "received": 139,
+        "resolved": 132,
+        "pending": 7
+      },
+      {
+        "month": "2024-08",
+        "received": 223,
+        "resolved": 197,
+        "pending": 26
+      },
+      {
+        "month": "2024-09",
+        "received": 150,
+        "resolved": 122,
+        "pending": 28
+      },
+      {
+        "month": "2024-10",
+        "received": 67,
+        "resolved": 55,
+        "pending": 12
+      },
+      {
+        "month": "2024-11",
+        "received": 225,
+        "resolved": 214,
+        "pending": 11
+      },
+      {
+        "month": "2024-12",
+        "received": 60,
+        "resolved": 51,
+        "pending": 9
+      },
+      {
+        "month": "2025-01",
+        "received": 232,
+        "resolved": 219,
+        "pending": 13
+      },
+      {
+        "month": "2025-02",
+        "received": 69,
+        "resolved": 63,
+        "pending": 6
+      },
+      {
+        "month": "2025-03",
+        "received": 119,
+        "resolved": 117,
+        "pending": 2
+      },
+      {
+        "month": "2025-04",
+        "received": 185,
+        "resolved": 168,
+        "pending": 17
+      },
+      {
+        "month": "2025-05",
+        "received": 204,
+        "resolved": 190,
+        "pending": 14
+      },
+      {
+        "month": "2025-06",
+        "received": 168,
+        "resolved": 163,
+        "pending": 5
+      },
+      {
+        "month": "2025-07",
+        "received": 87,
+        "resolved": 84,
+        "pending": 3
+      },
+      {
+        "month": "2025-08",
+        "received": 257,
+        "resolved": 233,
+        "pending": 24
+      },
+      {
+        "month": "2025-09",
+        "received": 144,
+        "resolved": 125,
+        "pending": 19
+      },
+      {
+        "month": "2025-10",
+        "received": 104,
+        "resolved": 96,
+        "pending": 8
+      },
+      {
+        "month": "2025-11",
+        "received": 135,
+        "resolved": 113,
+        "pending": 22
+      },
+      {
+        "month": "2025-12",
+        "received": 279,
+        "resolved": 262,
+        "pending": 17
+      },
+      {
+        "month": "2026-01",
+        "received": 232,
+        "resolved": 225,
+        "pending": 7
+      },
+      {
+        "month": "2026-02",
+        "received": 211,
+        "resolved": 176,
+        "pending": 35
+      },
+      {
+        "month": "2026-03",
+        "received": 118,
+        "resolved": 109,
+        "pending": 9
+      },
+      {
+        "month": "2026-04",
+        "received": 76,
+        "resolved": 72,
+        "pending": 4
+      },
+      {
+        "month": "2026-05",
+        "received": 166,
+        "resolved": 134,
+        "pending": 32
+      },
+      {
+        "month": "2026-06",
+        "received": 191,
+        "resolved": 164,
+        "pending": 27
+      }
+    ],
+    "5paisa": [
+      {
+        "month": "2024-07",
+        "received": 135,
+        "resolved": 108,
+        "pending": 27
+      },
+      {
+        "month": "2024-08",
+        "received": 154,
+        "resolved": 127,
+        "pending": 27
+      },
+      {
+        "month": "2024-09",
+        "received": 122,
+        "resolved": 106,
+        "pending": 16
+      },
+      {
+        "month": "2024-10",
+        "received": 139,
+        "resolved": 124,
+        "pending": 15
+      },
+      {
+        "month": "2024-11",
+        "received": 151,
+        "resolved": 127,
+        "pending": 24
+      },
+      {
+        "month": "2024-12",
+        "received": 125,
+        "resolved": 114,
+        "pending": 11
+      },
+      {
+        "month": "2025-01",
+        "received": 95,
+        "resolved": 88,
+        "pending": 7
+      },
+      {
+        "month": "2025-02",
+        "received": 84,
+        "resolved": 71,
+        "pending": 13
+      },
+      {
+        "month": "2025-03",
+        "received": 58,
+        "resolved": 57,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 126,
+        "resolved": 122,
+        "pending": 4
+      },
+      {
+        "month": "2025-05",
+        "received": 112,
+        "resolved": 99,
+        "pending": 13
+      },
+      {
+        "month": "2025-06",
+        "received": 88,
+        "resolved": 76,
+        "pending": 12
+      },
+      {
+        "month": "2025-07",
+        "received": 140,
+        "resolved": 126,
+        "pending": 14
+      },
+      {
+        "month": "2025-08",
+        "received": 124,
+        "resolved": 109,
+        "pending": 15
+      },
+      {
+        "month": "2025-09",
+        "received": 118,
+        "resolved": 99,
+        "pending": 19
+      },
+      {
+        "month": "2025-10",
+        "received": 104,
+        "resolved": 85,
+        "pending": 19
+      },
+      {
+        "month": "2025-11",
+        "received": 128,
+        "resolved": 105,
+        "pending": 23
+      },
+      {
+        "month": "2025-12",
+        "received": 63,
+        "resolved": 60,
+        "pending": 3
+      },
+      {
+        "month": "2026-01",
+        "received": 105,
+        "resolved": 86,
+        "pending": 19
+      },
+      {
+        "month": "2026-02",
+        "received": 77,
+        "resolved": 65,
+        "pending": 12
+      },
+      {
+        "month": "2026-03",
+        "received": 104,
+        "resolved": 98,
+        "pending": 6
+      },
+      {
+        "month": "2026-04",
+        "received": 138,
+        "resolved": 122,
+        "pending": 16
+      },
+      {
+        "month": "2026-05",
+        "received": 125,
+        "resolved": 102,
+        "pending": 23
+      },
+      {
+        "month": "2026-06",
+        "received": 70,
+        "resolved": 67,
+        "pending": 3
+      }
+    ],
+    "dhan": [
+      {
+        "month": "2024-07",
+        "received": 140,
+        "resolved": 123,
+        "pending": 17
+      },
+      {
+        "month": "2024-08",
+        "received": 136,
+        "resolved": 124,
+        "pending": 12
+      },
+      {
+        "month": "2024-09",
+        "received": 58,
+        "resolved": 55,
+        "pending": 3
+      },
+      {
+        "month": "2024-10",
+        "received": 114,
+        "resolved": 95,
+        "pending": 19
+      },
+      {
+        "month": "2024-11",
+        "received": 156,
+        "resolved": 130,
+        "pending": 26
+      },
+      {
+        "month": "2024-12",
+        "received": 109,
+        "resolved": 96,
+        "pending": 13
+      },
+      {
+        "month": "2025-01",
+        "received": 50,
+        "resolved": 45,
+        "pending": 5
+      },
+      {
+        "month": "2025-02",
+        "received": 133,
+        "resolved": 128,
+        "pending": 5
+      },
+      {
+        "month": "2025-03",
+        "received": 58,
+        "resolved": 55,
+        "pending": 3
+      },
+      {
+        "month": "2025-04",
+        "received": 161,
+        "resolved": 131,
+        "pending": 30
+      },
+      {
+        "month": "2025-05",
+        "received": 157,
+        "resolved": 128,
+        "pending": 29
+      },
+      {
+        "month": "2025-06",
+        "received": 200,
+        "resolved": 162,
+        "pending": 38
+      },
+      {
+        "month": "2025-07",
+        "received": 66,
+        "resolved": 56,
+        "pending": 10
+      },
+      {
+        "month": "2025-08",
+        "received": 165,
+        "resolved": 156,
+        "pending": 9
+      },
+      {
+        "month": "2025-09",
+        "received": 94,
+        "resolved": 82,
+        "pending": 12
+      },
+      {
+        "month": "2025-10",
+        "received": 197,
+        "resolved": 163,
+        "pending": 34
+      },
+      {
+        "month": "2025-11",
+        "received": 245,
+        "resolved": 203,
+        "pending": 42
+      },
+      {
+        "month": "2025-12",
+        "received": 135,
+        "resolved": 116,
+        "pending": 19
+      },
+      {
+        "month": "2026-01",
+        "received": 232,
+        "resolved": 227,
+        "pending": 5
+      },
+      {
+        "month": "2026-02",
+        "received": 272,
+        "resolved": 248,
+        "pending": 24
+      },
+      {
+        "month": "2026-03",
+        "received": 105,
+        "resolved": 84,
+        "pending": 21
+      },
+      {
+        "month": "2026-04",
+        "received": 178,
+        "resolved": 143,
+        "pending": 35
+      },
+      {
+        "month": "2026-05",
+        "received": 123,
+        "resolved": 104,
+        "pending": 19
+      },
+      {
+        "month": "2026-06",
+        "received": 115,
+        "resolved": 113,
+        "pending": 2
+      }
+    ],
+    "fyers": [
+      {
+        "month": "2024-07",
+        "received": 61,
+        "resolved": 59,
+        "pending": 2
+      },
+      {
+        "month": "2024-08",
+        "received": 52,
+        "resolved": 46,
+        "pending": 6
+      },
+      {
+        "month": "2024-09",
+        "received": 49,
+        "resolved": 47,
+        "pending": 2
+      },
+      {
+        "month": "2024-10",
+        "received": 68,
+        "resolved": 55,
+        "pending": 13
+      },
+      {
+        "month": "2024-11",
+        "received": 51,
+        "resolved": 41,
+        "pending": 10
+      },
+      {
+        "month": "2024-12",
+        "received": 26,
+        "resolved": 25,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 27,
+        "resolved": 24,
+        "pending": 3
+      },
+      {
+        "month": "2025-02",
+        "received": 52,
+        "resolved": 47,
+        "pending": 5
+      },
+      {
+        "month": "2025-03",
+        "received": 34,
+        "resolved": 31,
+        "pending": 3
+      },
+      {
+        "month": "2025-04",
+        "received": 33,
+        "resolved": 33,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 35,
+        "resolved": 33,
+        "pending": 2
+      },
+      {
+        "month": "2025-06",
+        "received": 18,
+        "resolved": 16,
+        "pending": 2
+      },
+      {
+        "month": "2025-07",
+        "received": 32,
+        "resolved": 26,
+        "pending": 6
+      },
+      {
+        "month": "2025-08",
+        "received": 64,
+        "resolved": 54,
+        "pending": 10
+      },
+      {
+        "month": "2025-09",
+        "received": 45,
+        "resolved": 39,
+        "pending": 6
+      },
+      {
+        "month": "2025-10",
+        "received": 63,
+        "resolved": 53,
+        "pending": 10
+      },
+      {
+        "month": "2025-11",
+        "received": 23,
+        "resolved": 21,
+        "pending": 2
+      },
+      {
+        "month": "2025-12",
+        "received": 61,
+        "resolved": 56,
+        "pending": 5
+      },
+      {
+        "month": "2026-01",
+        "received": 25,
+        "resolved": 24,
+        "pending": 1
+      },
+      {
+        "month": "2026-02",
+        "received": 55,
+        "resolved": 45,
+        "pending": 10
+      },
+      {
+        "month": "2026-03",
+        "received": 74,
+        "resolved": 70,
+        "pending": 4
+      },
+      {
+        "month": "2026-04",
+        "received": 38,
+        "resolved": 32,
+        "pending": 6
+      },
+      {
+        "month": "2026-05",
+        "received": 33,
+        "resolved": 27,
+        "pending": 6
+      },
+      {
+        "month": "2026-06",
+        "received": 44,
+        "resolved": 42,
+        "pending": 2
+      }
+    ],
+    "paytm-money": [
+      {
+        "month": "2024-07",
+        "received": 82,
+        "resolved": 77,
+        "pending": 5
+      },
+      {
+        "month": "2024-08",
+        "received": 201,
+        "resolved": 173,
+        "pending": 28
+      },
+      {
+        "month": "2024-09",
+        "received": 178,
+        "resolved": 156,
+        "pending": 22
+      },
+      {
+        "month": "2024-10",
+        "received": 159,
+        "resolved": 156,
+        "pending": 3
+      },
+      {
+        "month": "2024-11",
+        "received": 69,
+        "resolved": 60,
+        "pending": 9
+      },
+      {
+        "month": "2024-12",
+        "received": 158,
+        "resolved": 144,
+        "pending": 14
+      },
+      {
+        "month": "2025-01",
+        "received": 66,
+        "resolved": 64,
+        "pending": 2
+      },
+      {
+        "month": "2025-02",
+        "received": 90,
+        "resolved": 73,
+        "pending": 17
+      },
+      {
+        "month": "2025-03",
+        "received": 155,
+        "resolved": 131,
+        "pending": 24
+      },
+      {
+        "month": "2025-04",
+        "received": 147,
+        "resolved": 142,
+        "pending": 5
+      },
+      {
+        "month": "2025-05",
+        "received": 143,
+        "resolved": 136,
+        "pending": 7
+      },
+      {
+        "month": "2025-06",
+        "received": 72,
+        "resolved": 68,
+        "pending": 4
+      },
+      {
+        "month": "2025-07",
+        "received": 111,
+        "resolved": 101,
+        "pending": 10
+      },
+      {
+        "month": "2025-08",
+        "received": 91,
+        "resolved": 79,
+        "pending": 12
+      },
+      {
+        "month": "2025-09",
+        "received": 131,
+        "resolved": 108,
+        "pending": 23
+      },
+      {
+        "month": "2025-10",
+        "received": 77,
+        "resolved": 67,
+        "pending": 10
+      },
+      {
+        "month": "2025-11",
+        "received": 194,
+        "resolved": 171,
+        "pending": 23
+      },
+      {
+        "month": "2025-12",
+        "received": 173,
+        "resolved": 157,
+        "pending": 16
+      },
+      {
+        "month": "2026-01",
+        "received": 193,
+        "resolved": 162,
+        "pending": 31
+      },
+      {
+        "month": "2026-02",
+        "received": 129,
+        "resolved": 118,
+        "pending": 11
+      },
+      {
+        "month": "2026-03",
+        "received": 128,
+        "resolved": 126,
+        "pending": 2
+      },
+      {
+        "month": "2026-04",
+        "received": 118,
+        "resolved": 110,
+        "pending": 8
+      },
+      {
+        "month": "2026-05",
+        "received": 44,
+        "resolved": 38,
+        "pending": 6
+      },
+      {
+        "month": "2026-06",
+        "received": 118,
+        "resolved": 112,
+        "pending": 6
+      }
+    ],
+    "sbi-securities": [
+      {
+        "month": "2024-07",
+        "received": 69,
+        "resolved": 57,
+        "pending": 12
+      },
+      {
+        "month": "2024-08",
+        "received": 152,
+        "resolved": 150,
+        "pending": 2
+      },
+      {
+        "month": "2024-09",
+        "received": 104,
+        "resolved": 90,
+        "pending": 14
+      },
+      {
+        "month": "2024-10",
+        "received": 146,
+        "resolved": 129,
+        "pending": 17
+      },
+      {
+        "month": "2024-11",
+        "received": 114,
+        "resolved": 92,
+        "pending": 22
+      },
+      {
+        "month": "2024-12",
+        "received": 166,
+        "resolved": 143,
+        "pending": 23
+      },
+      {
+        "month": "2025-01",
+        "received": 178,
+        "resolved": 152,
+        "pending": 26
+      },
+      {
+        "month": "2025-02",
+        "received": 117,
+        "resolved": 100,
+        "pending": 17
+      },
+      {
+        "month": "2025-03",
+        "received": 156,
+        "resolved": 148,
+        "pending": 8
+      },
+      {
+        "month": "2025-04",
+        "received": 76,
+        "resolved": 71,
+        "pending": 5
+      },
+      {
+        "month": "2025-05",
+        "received": 173,
+        "resolved": 153,
+        "pending": 20
+      },
+      {
+        "month": "2025-06",
+        "received": 81,
+        "resolved": 76,
+        "pending": 5
+      },
+      {
+        "month": "2025-07",
+        "received": 173,
+        "resolved": 163,
+        "pending": 10
+      },
+      {
+        "month": "2025-08",
+        "received": 185,
+        "resolved": 167,
+        "pending": 18
+      },
+      {
+        "month": "2025-09",
+        "received": 191,
+        "resolved": 155,
+        "pending": 36
+      },
+      {
+        "month": "2025-10",
+        "received": 67,
+        "resolved": 65,
+        "pending": 2
+      },
+      {
+        "month": "2025-11",
+        "received": 107,
+        "resolved": 105,
+        "pending": 2
+      },
+      {
+        "month": "2025-12",
+        "received": 176,
+        "resolved": 156,
+        "pending": 20
+      },
+      {
+        "month": "2026-01",
+        "received": 197,
+        "resolved": 172,
+        "pending": 25
+      },
+      {
+        "month": "2026-02",
+        "received": 111,
+        "resolved": 101,
+        "pending": 10
+      },
+      {
+        "month": "2026-03",
+        "received": 96,
+        "resolved": 90,
+        "pending": 6
+      },
+      {
+        "month": "2026-04",
+        "received": 109,
+        "resolved": 107,
+        "pending": 2
+      },
+      {
+        "month": "2026-05",
+        "received": 206,
+        "resolved": 191,
+        "pending": 15
+      },
+      {
+        "month": "2026-06",
+        "received": 153,
+        "resolved": 147,
+        "pending": 6
+      }
+    ],
+    "axis-direct": [
+      {
+        "month": "2024-07",
+        "received": 58,
+        "resolved": 46,
+        "pending": 12
+      },
+      {
+        "month": "2024-08",
+        "received": 126,
+        "resolved": 104,
+        "pending": 22
+      },
+      {
+        "month": "2024-09",
+        "received": 167,
+        "resolved": 157,
+        "pending": 10
+      },
+      {
+        "month": "2024-10",
+        "received": 159,
+        "resolved": 141,
+        "pending": 18
+      },
+      {
+        "month": "2024-11",
+        "received": 122,
+        "resolved": 119,
+        "pending": 3
+      },
+      {
+        "month": "2024-12",
+        "received": 146,
+        "resolved": 128,
+        "pending": 18
+      },
+      {
+        "month": "2025-01",
+        "received": 124,
+        "resolved": 115,
+        "pending": 9
+      },
+      {
+        "month": "2025-02",
+        "received": 121,
+        "resolved": 118,
+        "pending": 3
+      },
+      {
+        "month": "2025-03",
+        "received": 162,
+        "resolved": 147,
+        "pending": 15
+      },
+      {
+        "month": "2025-04",
+        "received": 147,
+        "resolved": 126,
+        "pending": 21
+      },
+      {
+        "month": "2025-05",
+        "received": 133,
+        "resolved": 131,
+        "pending": 2
+      },
+      {
+        "month": "2025-06",
+        "received": 157,
+        "resolved": 131,
+        "pending": 26
+      },
+      {
+        "month": "2025-07",
+        "received": 110,
+        "resolved": 94,
+        "pending": 16
+      },
+      {
+        "month": "2025-08",
+        "received": 103,
+        "resolved": 95,
+        "pending": 8
+      },
+      {
+        "month": "2025-09",
+        "received": 102,
+        "resolved": 91,
+        "pending": 11
+      },
+      {
+        "month": "2025-10",
+        "received": 91,
+        "resolved": 76,
+        "pending": 15
+      },
+      {
+        "month": "2025-11",
+        "received": 147,
+        "resolved": 129,
+        "pending": 18
+      },
+      {
+        "month": "2025-12",
+        "received": 100,
+        "resolved": 94,
+        "pending": 6
+      },
+      {
+        "month": "2026-01",
+        "received": 112,
+        "resolved": 109,
+        "pending": 3
+      },
+      {
+        "month": "2026-02",
+        "received": 120,
+        "resolved": 99,
+        "pending": 21
+      },
+      {
+        "month": "2026-03",
+        "received": 142,
+        "resolved": 130,
+        "pending": 12
+      },
+      {
+        "month": "2026-04",
+        "received": 168,
+        "resolved": 135,
+        "pending": 33
+      },
+      {
+        "month": "2026-05",
+        "received": 156,
+        "resolved": 132,
+        "pending": 24
+      },
+      {
+        "month": "2026-06",
+        "received": 90,
+        "resolved": 75,
+        "pending": 15
+      }
+    ],
+    "iifl-securities": [
+      {
+        "month": "2024-07",
+        "received": 118,
+        "resolved": 112,
+        "pending": 6
+      },
+      {
+        "month": "2024-08",
+        "received": 102,
+        "resolved": 93,
+        "pending": 9
+      },
+      {
+        "month": "2024-09",
+        "received": 35,
+        "resolved": 32,
+        "pending": 3
+      },
+      {
+        "month": "2024-10",
+        "received": 35,
+        "resolved": 31,
+        "pending": 4
+      },
+      {
+        "month": "2024-11",
+        "received": 87,
+        "resolved": 79,
+        "pending": 8
+      },
+      {
+        "month": "2024-12",
+        "received": 121,
+        "resolved": 115,
+        "pending": 6
+      },
+      {
+        "month": "2025-01",
+        "received": 120,
+        "resolved": 115,
+        "pending": 5
+      },
+      {
+        "month": "2025-02",
+        "received": 100,
+        "resolved": 86,
+        "pending": 14
+      },
+      {
+        "month": "2025-03",
+        "received": 125,
+        "resolved": 104,
+        "pending": 21
+      },
+      {
+        "month": "2025-04",
+        "received": 72,
+        "resolved": 70,
+        "pending": 2
+      },
+      {
+        "month": "2025-05",
+        "received": 56,
+        "resolved": 53,
+        "pending": 3
+      },
+      {
+        "month": "2025-06",
+        "received": 45,
+        "resolved": 36,
+        "pending": 9
+      },
+      {
+        "month": "2025-07",
+        "received": 68,
+        "resolved": 57,
+        "pending": 11
+      },
+      {
+        "month": "2025-08",
+        "received": 110,
+        "resolved": 106,
+        "pending": 4
+      },
+      {
+        "month": "2025-09",
+        "received": 103,
+        "resolved": 97,
+        "pending": 6
+      },
+      {
+        "month": "2025-10",
+        "received": 69,
+        "resolved": 66,
+        "pending": 3
+      },
+      {
+        "month": "2025-11",
+        "received": 153,
+        "resolved": 126,
+        "pending": 27
+      },
+      {
+        "month": "2025-12",
+        "received": 137,
+        "resolved": 119,
+        "pending": 18
+      },
+      {
+        "month": "2026-01",
+        "received": 82,
+        "resolved": 67,
+        "pending": 15
+      },
+      {
+        "month": "2026-02",
+        "received": 94,
+        "resolved": 84,
+        "pending": 10
+      },
+      {
+        "month": "2026-03",
+        "received": 79,
+        "resolved": 73,
+        "pending": 6
+      },
+      {
+        "month": "2026-04",
+        "received": 128,
+        "resolved": 117,
+        "pending": 11
+      },
+      {
+        "month": "2026-05",
+        "received": 151,
+        "resolved": 121,
+        "pending": 30
+      },
+      {
+        "month": "2026-06",
+        "received": 39,
+        "resolved": 34,
+        "pending": 5
+      }
+    ],
+    "nuvama": [
+      {
+        "month": "2024-07",
+        "received": 45,
+        "resolved": 39,
+        "pending": 6
+      },
+      {
+        "month": "2024-08",
+        "received": 30,
+        "resolved": 26,
+        "pending": 4
+      },
+      {
+        "month": "2024-09",
+        "received": 42,
+        "resolved": 36,
+        "pending": 6
+      },
+      {
+        "month": "2024-10",
+        "received": 21,
+        "resolved": 19,
+        "pending": 2
+      },
+      {
+        "month": "2024-11",
+        "received": 18,
+        "resolved": 15,
+        "pending": 3
+      },
+      {
+        "month": "2024-12",
+        "received": 53,
+        "resolved": 45,
+        "pending": 8
+      },
+      {
+        "month": "2025-01",
+        "received": 23,
+        "resolved": 21,
+        "pending": 2
+      },
+      {
+        "month": "2025-02",
+        "received": 16,
+        "resolved": 13,
+        "pending": 3
+      },
+      {
+        "month": "2025-03",
+        "received": 21,
+        "resolved": 20,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 27,
+        "resolved": 24,
+        "pending": 3
+      },
+      {
+        "month": "2025-05",
+        "received": 38,
+        "resolved": 35,
+        "pending": 3
+      },
+      {
+        "month": "2025-06",
+        "received": 27,
+        "resolved": 25,
+        "pending": 2
+      },
+      {
+        "month": "2025-07",
+        "received": 49,
+        "resolved": 45,
+        "pending": 4
+      },
+      {
+        "month": "2025-08",
+        "received": 16,
+        "resolved": 14,
+        "pending": 2
+      },
+      {
+        "month": "2025-09",
+        "received": 22,
+        "resolved": 21,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 21,
+        "resolved": 17,
+        "pending": 4
+      },
+      {
+        "month": "2025-11",
+        "received": 32,
+        "resolved": 31,
+        "pending": 1
+      },
+      {
+        "month": "2025-12",
+        "received": 34,
+        "resolved": 31,
+        "pending": 3
+      },
+      {
+        "month": "2026-01",
+        "received": 41,
+        "resolved": 37,
+        "pending": 4
+      },
+      {
+        "month": "2026-02",
+        "received": 35,
+        "resolved": 31,
+        "pending": 4
+      },
+      {
+        "month": "2026-03",
+        "received": 54,
+        "resolved": 49,
+        "pending": 5
+      },
+      {
+        "month": "2026-04",
+        "received": 26,
+        "resolved": 26,
+        "pending": 0
+      },
+      {
+        "month": "2026-05",
+        "received": 39,
+        "resolved": 35,
+        "pending": 4
+      },
+      {
+        "month": "2026-06",
+        "received": 58,
+        "resolved": 47,
+        "pending": 11
+      }
+    ],
+    "geojit": [
+      {
+        "month": "2024-07",
+        "received": 22,
+        "resolved": 18,
+        "pending": 4
+      },
+      {
+        "month": "2024-08",
+        "received": 34,
+        "resolved": 33,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 41,
+        "resolved": 34,
+        "pending": 7
+      },
+      {
+        "month": "2024-10",
+        "received": 17,
+        "resolved": 15,
+        "pending": 2
+      },
+      {
+        "month": "2024-11",
+        "received": 18,
+        "resolved": 17,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 47,
+        "resolved": 45,
+        "pending": 2
+      },
+      {
+        "month": "2025-01",
+        "received": 47,
+        "resolved": 40,
+        "pending": 7
+      },
+      {
+        "month": "2025-02",
+        "received": 40,
+        "resolved": 39,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 12,
+        "resolved": 11,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 25,
+        "resolved": 24,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 17,
+        "resolved": 14,
+        "pending": 3
+      },
+      {
+        "month": "2025-06",
+        "received": 35,
+        "resolved": 29,
+        "pending": 6
+      },
+      {
+        "month": "2025-07",
+        "received": 44,
+        "resolved": 43,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 41,
+        "resolved": 33,
+        "pending": 8
+      },
+      {
+        "month": "2025-09",
+        "received": 29,
+        "resolved": 28,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 49,
+        "resolved": 42,
+        "pending": 7
+      },
+      {
+        "month": "2025-11",
+        "received": 31,
+        "resolved": 28,
+        "pending": 3
+      },
+      {
+        "month": "2025-12",
+        "received": 51,
+        "resolved": 49,
+        "pending": 2
+      },
+      {
+        "month": "2026-01",
+        "received": 49,
+        "resolved": 44,
+        "pending": 5
+      },
+      {
+        "month": "2026-02",
+        "received": 12,
+        "resolved": 10,
+        "pending": 2
+      },
+      {
+        "month": "2026-03",
+        "received": 44,
+        "resolved": 37,
+        "pending": 7
+      },
+      {
+        "month": "2026-04",
+        "received": 51,
+        "resolved": 48,
+        "pending": 3
+      },
+      {
+        "month": "2026-05",
+        "received": 24,
+        "resolved": 19,
+        "pending": 5
+      },
+      {
+        "month": "2026-06",
+        "received": 26,
+        "resolved": 22,
+        "pending": 4
+      }
+    ],
+    "anand-rathi": [
+      {
+        "month": "2024-07",
+        "received": 24,
+        "resolved": 23,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2024-09",
+        "received": 17,
+        "resolved": 16,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 20,
+        "resolved": 17,
+        "pending": 3
+      },
+      {
+        "month": "2024-11",
+        "received": 22,
+        "resolved": 18,
+        "pending": 4
+      },
+      {
+        "month": "2024-12",
+        "received": 17,
+        "resolved": 14,
+        "pending": 3
+      },
+      {
+        "month": "2025-01",
+        "received": 18,
+        "resolved": 17,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 15,
+        "resolved": 15,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 22,
+        "resolved": 19,
+        "pending": 3
+      },
+      {
+        "month": "2025-04",
+        "received": 13,
+        "resolved": 12,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 14,
+        "resolved": 12,
+        "pending": 2
+      },
+      {
+        "month": "2025-06",
+        "received": 22,
+        "resolved": 22,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 26,
+        "resolved": 24,
+        "pending": 2
+      },
+      {
+        "month": "2025-08",
+        "received": 13,
+        "resolved": 11,
+        "pending": 2
+      },
+      {
+        "month": "2025-09",
+        "received": 27,
+        "resolved": 22,
+        "pending": 5
+      },
+      {
+        "month": "2025-10",
+        "received": 36,
+        "resolved": 31,
+        "pending": 5
+      },
+      {
+        "month": "2025-11",
+        "received": 27,
+        "resolved": 22,
+        "pending": 5
+      },
+      {
+        "month": "2025-12",
+        "received": 39,
+        "resolved": 33,
+        "pending": 6
+      },
+      {
+        "month": "2026-01",
+        "received": 26,
+        "resolved": 21,
+        "pending": 5
+      },
+      {
+        "month": "2026-02",
+        "received": 25,
+        "resolved": 22,
+        "pending": 3
+      },
+      {
+        "month": "2026-03",
+        "received": 30,
+        "resolved": 26,
+        "pending": 4
+      },
+      {
+        "month": "2026-04",
+        "received": 14,
+        "resolved": 12,
+        "pending": 2
+      },
+      {
+        "month": "2026-05",
+        "received": 35,
+        "resolved": 33,
+        "pending": 2
+      },
+      {
+        "month": "2026-06",
+        "received": 31,
+        "resolved": 25,
+        "pending": 6
+      }
+    ],
+    "choice": [
+      {
+        "month": "2024-07",
+        "received": 11,
+        "resolved": 10,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 33,
+        "resolved": 30,
+        "pending": 3
+      },
+      {
+        "month": "2024-09",
+        "received": 19,
+        "resolved": 17,
+        "pending": 2
+      },
+      {
+        "month": "2024-10",
+        "received": 16,
+        "resolved": 15,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 40,
+        "resolved": 34,
+        "pending": 6
+      },
+      {
+        "month": "2024-12",
+        "received": 22,
+        "resolved": 19,
+        "pending": 3
+      },
+      {
+        "month": "2025-01",
+        "received": 49,
+        "resolved": 48,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 22,
+        "resolved": 22,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 29,
+        "resolved": 26,
+        "pending": 3
+      },
+      {
+        "month": "2025-04",
+        "received": 39,
+        "resolved": 37,
+        "pending": 2
+      },
+      {
+        "month": "2025-05",
+        "received": 37,
+        "resolved": 34,
+        "pending": 3
+      },
+      {
+        "month": "2025-06",
+        "received": 47,
+        "resolved": 40,
+        "pending": 7
+      },
+      {
+        "month": "2025-07",
+        "received": 16,
+        "resolved": 15,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 33,
+        "resolved": 30,
+        "pending": 3
+      },
+      {
+        "month": "2025-09",
+        "received": 28,
+        "resolved": 23,
+        "pending": 5
+      },
+      {
+        "month": "2025-10",
+        "received": 39,
+        "resolved": 31,
+        "pending": 8
+      },
+      {
+        "month": "2025-11",
+        "received": 41,
+        "resolved": 34,
+        "pending": 7
+      },
+      {
+        "month": "2025-12",
+        "received": 62,
+        "resolved": 55,
+        "pending": 7
+      },
+      {
+        "month": "2026-01",
+        "received": 17,
+        "resolved": 17,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 54,
+        "resolved": 48,
+        "pending": 6
+      },
+      {
+        "month": "2026-03",
+        "received": 62,
+        "resolved": 57,
+        "pending": 5
+      },
+      {
+        "month": "2026-04",
+        "received": 47,
+        "resolved": 42,
+        "pending": 5
+      },
+      {
+        "month": "2026-05",
+        "received": 50,
+        "resolved": 45,
+        "pending": 5
+      },
+      {
+        "month": "2026-06",
+        "received": 41,
+        "resolved": 39,
+        "pending": 2
+      }
+    ],
+    "smc": [
+      {
+        "month": "2024-07",
+        "received": 14,
+        "resolved": 13,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2024-09",
+        "received": 33,
+        "resolved": 29,
+        "pending": 4
+      },
+      {
+        "month": "2024-10",
+        "received": 20,
+        "resolved": 16,
+        "pending": 4
+      },
+      {
+        "month": "2024-11",
+        "received": 17,
+        "resolved": 14,
+        "pending": 3
+      },
+      {
+        "month": "2024-12",
+        "received": 27,
+        "resolved": 25,
+        "pending": 2
+      },
+      {
+        "month": "2025-01",
+        "received": 13,
+        "resolved": 12,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 36,
+        "resolved": 31,
+        "pending": 5
+      },
+      {
+        "month": "2025-03",
+        "received": 18,
+        "resolved": 17,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 37,
+        "resolved": 31,
+        "pending": 6
+      },
+      {
+        "month": "2025-05",
+        "received": 21,
+        "resolved": 18,
+        "pending": 3
+      },
+      {
+        "month": "2025-06",
+        "received": 17,
+        "resolved": 16,
+        "pending": 1
+      },
+      {
+        "month": "2025-07",
+        "received": 27,
+        "resolved": 26,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 27,
+        "resolved": 27,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 38,
+        "resolved": 35,
+        "pending": 3
+      },
+      {
+        "month": "2025-10",
+        "received": 26,
+        "resolved": 24,
+        "pending": 2
+      },
+      {
+        "month": "2025-11",
+        "received": 32,
+        "resolved": 27,
+        "pending": 5
+      },
+      {
+        "month": "2025-12",
+        "received": 10,
+        "resolved": 10,
+        "pending": 0
+      },
+      {
+        "month": "2026-01",
+        "received": 19,
+        "resolved": 16,
+        "pending": 3
+      },
+      {
+        "month": "2026-02",
+        "received": 13,
+        "resolved": 10,
+        "pending": 3
+      },
+      {
+        "month": "2026-03",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 32,
+        "resolved": 28,
+        "pending": 4
+      },
+      {
+        "month": "2026-06",
+        "received": 34,
+        "resolved": 32,
+        "pending": 2
+      }
+    ],
+    "religare": [
+      {
+        "month": "2024-07",
+        "received": 14,
+        "resolved": 13,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 12,
+        "resolved": 10,
+        "pending": 2
+      },
+      {
+        "month": "2024-09",
+        "received": 12,
+        "resolved": 10,
+        "pending": 2
+      },
+      {
+        "month": "2024-10",
+        "received": 25,
+        "resolved": 22,
+        "pending": 3
+      },
+      {
+        "month": "2024-11",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2024-12",
+        "received": 24,
+        "resolved": 22,
+        "pending": 2
+      },
+      {
+        "month": "2025-01",
+        "received": 20,
+        "resolved": 17,
+        "pending": 3
+      },
+      {
+        "month": "2025-02",
+        "received": 11,
+        "resolved": 10,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 19,
+        "resolved": 17,
+        "pending": 2
+      },
+      {
+        "month": "2025-04",
+        "received": 25,
+        "resolved": 24,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 16,
+        "resolved": 15,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2025-07",
+        "received": 15,
+        "resolved": 12,
+        "pending": 3
+      },
+      {
+        "month": "2025-08",
+        "received": 10,
+        "resolved": 10,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 20,
+        "resolved": 16,
+        "pending": 4
+      },
+      {
+        "month": "2025-10",
+        "received": 18,
+        "resolved": 15,
+        "pending": 3
+      },
+      {
+        "month": "2025-11",
+        "received": 21,
+        "resolved": 17,
+        "pending": 4
+      },
+      {
+        "month": "2025-12",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2026-01",
+        "received": 24,
+        "resolved": 23,
+        "pending": 1
+      },
+      {
+        "month": "2026-02",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2026-03",
+        "received": 19,
+        "resolved": 18,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 10,
+        "resolved": 8,
+        "pending": 2
+      },
+      {
+        "month": "2026-05",
+        "received": 18,
+        "resolved": 18,
+        "pending": 0
+      },
+      {
+        "month": "2026-06",
+        "received": 26,
+        "resolved": 24,
+        "pending": 2
+      }
+    ],
+    "alice-blue": [
+      {
+        "month": "2024-07",
+        "received": 28,
+        "resolved": 24,
+        "pending": 4
+      },
+      {
+        "month": "2024-08",
+        "received": 41,
+        "resolved": 36,
+        "pending": 5
+      },
+      {
+        "month": "2024-09",
+        "received": 16,
+        "resolved": 15,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 16,
+        "resolved": 14,
+        "pending": 2
+      },
+      {
+        "month": "2024-11",
+        "received": 25,
+        "resolved": 22,
+        "pending": 3
+      },
+      {
+        "month": "2024-12",
+        "received": 31,
+        "resolved": 29,
+        "pending": 2
+      },
+      {
+        "month": "2025-01",
+        "received": 26,
+        "resolved": 24,
+        "pending": 2
+      },
+      {
+        "month": "2025-02",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 31,
+        "resolved": 31,
+        "pending": 0
+      },
+      {
+        "month": "2025-04",
+        "received": 28,
+        "resolved": 24,
+        "pending": 4
+      },
+      {
+        "month": "2025-05",
+        "received": 42,
+        "resolved": 39,
+        "pending": 3
+      },
+      {
+        "month": "2025-06",
+        "received": 49,
+        "resolved": 41,
+        "pending": 8
+      },
+      {
+        "month": "2025-07",
+        "received": 31,
+        "resolved": 30,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 24,
+        "resolved": 20,
+        "pending": 4
+      },
+      {
+        "month": "2025-09",
+        "received": 22,
+        "resolved": 21,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 28,
+        "resolved": 23,
+        "pending": 5
+      },
+      {
+        "month": "2025-11",
+        "received": 20,
+        "resolved": 17,
+        "pending": 3
+      },
+      {
+        "month": "2025-12",
+        "received": 36,
+        "resolved": 29,
+        "pending": 7
+      },
+      {
+        "month": "2026-01",
+        "received": 18,
+        "resolved": 16,
+        "pending": 2
+      },
+      {
+        "month": "2026-02",
+        "received": 45,
+        "resolved": 41,
+        "pending": 4
+      },
+      {
+        "month": "2026-03",
+        "received": 27,
+        "resolved": 23,
+        "pending": 4
+      },
+      {
+        "month": "2026-04",
+        "received": 36,
+        "resolved": 34,
+        "pending": 2
+      },
+      {
+        "month": "2026-05",
+        "received": 23,
+        "resolved": 21,
+        "pending": 2
+      },
+      {
+        "month": "2026-06",
+        "received": 32,
+        "resolved": 27,
+        "pending": 5
+      }
+    ],
+    "master-trust": [
+      {
+        "month": "2024-07",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 29,
+        "resolved": 25,
+        "pending": 4
+      },
+      {
+        "month": "2024-09",
+        "received": 17,
+        "resolved": 14,
+        "pending": 3
+      },
+      {
+        "month": "2024-10",
+        "received": 27,
+        "resolved": 26,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 26,
+        "resolved": 21,
+        "pending": 5
+      },
+      {
+        "month": "2024-12",
+        "received": 27,
+        "resolved": 25,
+        "pending": 2
+      },
+      {
+        "month": "2025-01",
+        "received": 26,
+        "resolved": 23,
+        "pending": 3
+      },
+      {
+        "month": "2025-02",
+        "received": 17,
+        "resolved": 17,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 28,
+        "resolved": 25,
+        "pending": 3
+      },
+      {
+        "month": "2025-04",
+        "received": 20,
+        "resolved": 17,
+        "pending": 3
+      },
+      {
+        "month": "2025-05",
+        "received": 25,
+        "resolved": 20,
+        "pending": 5
+      },
+      {
+        "month": "2025-06",
+        "received": 28,
+        "resolved": 25,
+        "pending": 3
+      },
+      {
+        "month": "2025-07",
+        "received": 28,
+        "resolved": 24,
+        "pending": 4
+      },
+      {
+        "month": "2025-08",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2025-09",
+        "received": 31,
+        "resolved": 28,
+        "pending": 3
+      },
+      {
+        "month": "2025-10",
+        "received": 26,
+        "resolved": 23,
+        "pending": 3
+      },
+      {
+        "month": "2025-11",
+        "received": 27,
+        "resolved": 27,
+        "pending": 0
+      },
+      {
+        "month": "2025-12",
+        "received": 23,
+        "resolved": 20,
+        "pending": 3
+      },
+      {
+        "month": "2026-01",
+        "received": 33,
+        "resolved": 32,
+        "pending": 1
+      },
+      {
+        "month": "2026-02",
+        "received": 17,
+        "resolved": 17,
+        "pending": 0
+      },
+      {
+        "month": "2026-03",
+        "received": 13,
+        "resolved": 12,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 22,
+        "resolved": 19,
+        "pending": 3
+      },
+      {
+        "month": "2026-05",
+        "received": 16,
+        "resolved": 14,
+        "pending": 2
+      },
+      {
+        "month": "2026-06",
+        "received": 33,
+        "resolved": 28,
+        "pending": 5
+      }
+    ],
+    "bonanza": [
+      {
+        "month": "2024-07",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 10,
+        "resolved": 10,
+        "pending": 0
+      },
+      {
+        "month": "2024-10",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 15,
+        "resolved": 14,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 11,
+        "resolved": 9,
+        "pending": 2
+      },
+      {
+        "month": "2025-03",
+        "received": 10,
+        "resolved": 8,
+        "pending": 2
+      },
+      {
+        "month": "2025-04",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2025-08",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-10",
+        "received": 11,
+        "resolved": 10,
+        "pending": 1
+      },
+      {
+        "month": "2025-11",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-12",
+        "received": 16,
+        "resolved": 16,
+        "pending": 0
+      },
+      {
+        "month": "2026-01",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 15,
+        "resolved": 13,
+        "pending": 2
+      },
+      {
+        "month": "2026-03",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2026-04",
+        "received": 16,
+        "resolved": 14,
+        "pending": 2
+      },
+      {
+        "month": "2026-05",
+        "received": 12,
+        "resolved": 11,
+        "pending": 1
+      },
+      {
+        "month": "2026-06",
+        "received": 13,
+        "resolved": 11,
+        "pending": 2
+      }
+    ],
+    "ventura": [
+      {
+        "month": "2024-07",
+        "received": 15,
+        "resolved": 15,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 13,
+        "resolved": 10,
+        "pending": 3
+      },
+      {
+        "month": "2024-10",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2024-11",
+        "received": 11,
+        "resolved": 10,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 15,
+        "resolved": 13,
+        "pending": 2
+      },
+      {
+        "month": "2025-01",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 12,
+        "resolved": 11,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 14,
+        "resolved": 13,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 17,
+        "resolved": 16,
+        "pending": 1
+      },
+      {
+        "month": "2025-11",
+        "received": 16,
+        "resolved": 13,
+        "pending": 3
+      },
+      {
+        "month": "2025-12",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2026-01",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2026-02",
+        "received": 10,
+        "resolved": 8,
+        "pending": 2
+      },
+      {
+        "month": "2026-03",
+        "received": 15,
+        "resolved": 14,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 15,
+        "resolved": 15,
+        "pending": 0
+      },
+      {
+        "month": "2026-06",
+        "received": 13,
+        "resolved": 13,
+        "pending": 0
+      }
+    ],
+    "prabhudas-lilladher": [
+      {
+        "month": "2024-07",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 11,
+        "resolved": 10,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2024-10",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2024-12",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-01",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-07",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2025-08",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-09",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 10,
+        "resolved": 10,
+        "pending": 0
+      },
+      {
+        "month": "2025-11",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-12",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2026-01",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2026-03",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2026-04",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2026-06",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      }
+    ],
+    "marwadi": [
+      {
+        "month": "2024-07",
+        "received": 15,
+        "resolved": 14,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 22,
+        "resolved": 20,
+        "pending": 2
+      },
+      {
+        "month": "2024-09",
+        "received": 10,
+        "resolved": 10,
+        "pending": 0
+      },
+      {
+        "month": "2024-10",
+        "received": 18,
+        "resolved": 15,
+        "pending": 3
+      },
+      {
+        "month": "2024-11",
+        "received": 22,
+        "resolved": 18,
+        "pending": 4
+      },
+      {
+        "month": "2024-12",
+        "received": 23,
+        "resolved": 21,
+        "pending": 2
+      },
+      {
+        "month": "2025-01",
+        "received": 10,
+        "resolved": 8,
+        "pending": 2
+      },
+      {
+        "month": "2025-02",
+        "received": 20,
+        "resolved": 19,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 15,
+        "resolved": 14,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 17,
+        "resolved": 17,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 11,
+        "resolved": 10,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 23,
+        "resolved": 19,
+        "pending": 4
+      },
+      {
+        "month": "2025-09",
+        "received": 18,
+        "resolved": 15,
+        "pending": 3
+      },
+      {
+        "month": "2025-10",
+        "received": 20,
+        "resolved": 18,
+        "pending": 2
+      },
+      {
+        "month": "2025-11",
+        "received": 18,
+        "resolved": 14,
+        "pending": 4
+      },
+      {
+        "month": "2025-12",
+        "received": 24,
+        "resolved": 22,
+        "pending": 2
+      },
+      {
+        "month": "2026-01",
+        "received": 17,
+        "resolved": 14,
+        "pending": 3
+      },
+      {
+        "month": "2026-02",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2026-03",
+        "received": 25,
+        "resolved": 25,
+        "pending": 0
+      },
+      {
+        "month": "2026-04",
+        "received": 13,
+        "resolved": 10,
+        "pending": 3
+      },
+      {
+        "month": "2026-05",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2026-06",
+        "received": 17,
+        "resolved": 16,
+        "pending": 1
+      }
+    ],
+    "samco": [
+      {
+        "month": "2024-07",
+        "received": 15,
+        "resolved": 12,
+        "pending": 3
+      },
+      {
+        "month": "2024-08",
+        "received": 15,
+        "resolved": 14,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 22,
+        "resolved": 20,
+        "pending": 2
+      },
+      {
+        "month": "2024-10",
+        "received": 12,
+        "resolved": 11,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 22,
+        "resolved": 21,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 16,
+        "resolved": 13,
+        "pending": 3
+      },
+      {
+        "month": "2025-01",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 10,
+        "resolved": 8,
+        "pending": 2
+      },
+      {
+        "month": "2025-03",
+        "received": 19,
+        "resolved": 17,
+        "pending": 2
+      },
+      {
+        "month": "2025-04",
+        "received": 14,
+        "resolved": 13,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 22,
+        "resolved": 20,
+        "pending": 2
+      },
+      {
+        "month": "2025-06",
+        "received": 13,
+        "resolved": 10,
+        "pending": 3
+      },
+      {
+        "month": "2025-07",
+        "received": 25,
+        "resolved": 20,
+        "pending": 5
+      },
+      {
+        "month": "2025-08",
+        "received": 16,
+        "resolved": 16,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 17,
+        "resolved": 16,
+        "pending": 1
+      },
+      {
+        "month": "2025-11",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2025-12",
+        "received": 13,
+        "resolved": 12,
+        "pending": 1
+      },
+      {
+        "month": "2026-01",
+        "received": 17,
+        "resolved": 14,
+        "pending": 3
+      },
+      {
+        "month": "2026-02",
+        "received": 18,
+        "resolved": 16,
+        "pending": 2
+      },
+      {
+        "month": "2026-03",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2026-04",
+        "received": 24,
+        "resolved": 20,
+        "pending": 4
+      },
+      {
+        "month": "2026-05",
+        "received": 13,
+        "resolved": 11,
+        "pending": 2
+      },
+      {
+        "month": "2026-06",
+        "received": 17,
+        "resolved": 16,
+        "pending": 1
+      }
+    ],
+    "mstock": [
+      {
+        "month": "2024-07",
+        "received": 15,
+        "resolved": 13,
+        "pending": 2
+      },
+      {
+        "month": "2024-08",
+        "received": 24,
+        "resolved": 23,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 22,
+        "resolved": 18,
+        "pending": 4
+      },
+      {
+        "month": "2024-10",
+        "received": 60,
+        "resolved": 56,
+        "pending": 4
+      },
+      {
+        "month": "2024-11",
+        "received": 61,
+        "resolved": 52,
+        "pending": 9
+      },
+      {
+        "month": "2024-12",
+        "received": 55,
+        "resolved": 45,
+        "pending": 10
+      },
+      {
+        "month": "2025-01",
+        "received": 40,
+        "resolved": 34,
+        "pending": 6
+      },
+      {
+        "month": "2025-02",
+        "received": 29,
+        "resolved": 27,
+        "pending": 2
+      },
+      {
+        "month": "2025-03",
+        "received": 73,
+        "resolved": 68,
+        "pending": 5
+      },
+      {
+        "month": "2025-04",
+        "received": 47,
+        "resolved": 43,
+        "pending": 4
+      },
+      {
+        "month": "2025-05",
+        "received": 44,
+        "resolved": 36,
+        "pending": 8
+      },
+      {
+        "month": "2025-06",
+        "received": 25,
+        "resolved": 22,
+        "pending": 3
+      },
+      {
+        "month": "2025-07",
+        "received": 50,
+        "resolved": 43,
+        "pending": 7
+      },
+      {
+        "month": "2025-08",
+        "received": 77,
+        "resolved": 71,
+        "pending": 6
+      },
+      {
+        "month": "2025-09",
+        "received": 61,
+        "resolved": 50,
+        "pending": 11
+      },
+      {
+        "month": "2025-10",
+        "received": 26,
+        "resolved": 22,
+        "pending": 4
+      },
+      {
+        "month": "2025-11",
+        "received": 81,
+        "resolved": 67,
+        "pending": 14
+      },
+      {
+        "month": "2025-12",
+        "received": 45,
+        "resolved": 42,
+        "pending": 3
+      },
+      {
+        "month": "2026-01",
+        "received": 92,
+        "resolved": 78,
+        "pending": 14
+      },
+      {
+        "month": "2026-02",
+        "received": 81,
+        "resolved": 70,
+        "pending": 11
+      },
+      {
+        "month": "2026-03",
+        "received": 100,
+        "resolved": 86,
+        "pending": 14
+      },
+      {
+        "month": "2026-04",
+        "received": 31,
+        "resolved": 31,
+        "pending": 0
+      },
+      {
+        "month": "2026-05",
+        "received": 72,
+        "resolved": 62,
+        "pending": 10
+      },
+      {
+        "month": "2026-06",
+        "received": 52,
+        "resolved": 51,
+        "pending": 1
+      }
+    ],
+    "nirmal-bang": [
+      {
+        "month": "2024-07",
+        "received": 17,
+        "resolved": 16,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 19,
+        "resolved": 15,
+        "pending": 4
+      },
+      {
+        "month": "2024-09",
+        "received": 12,
+        "resolved": 10,
+        "pending": 2
+      },
+      {
+        "month": "2024-10",
+        "received": 11,
+        "resolved": 11,
+        "pending": 0
+      },
+      {
+        "month": "2024-11",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2024-12",
+        "received": 12,
+        "resolved": 11,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 15,
+        "resolved": 12,
+        "pending": 3
+      },
+      {
+        "month": "2025-02",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 13,
+        "resolved": 13,
+        "pending": 0
+      },
+      {
+        "month": "2025-04",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 10,
+        "resolved": 8,
+        "pending": 2
+      },
+      {
+        "month": "2025-07",
+        "received": 19,
+        "resolved": 18,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2025-09",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 13,
+        "resolved": 13,
+        "pending": 0
+      },
+      {
+        "month": "2025-11",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2025-12",
+        "received": 18,
+        "resolved": 16,
+        "pending": 2
+      },
+      {
+        "month": "2026-01",
+        "received": 13,
+        "resolved": 13,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2026-03",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 12,
+        "resolved": 11,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2026-06",
+        "received": 17,
+        "resolved": 15,
+        "pending": 2
+      }
+    ],
+    "shoonya": [
+      {
+        "month": "2024-07",
+        "received": 29,
+        "resolved": 27,
+        "pending": 2
+      },
+      {
+        "month": "2024-08",
+        "received": 16,
+        "resolved": 13,
+        "pending": 3
+      },
+      {
+        "month": "2024-09",
+        "received": 30,
+        "resolved": 26,
+        "pending": 4
+      },
+      {
+        "month": "2024-10",
+        "received": 16,
+        "resolved": 15,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 27,
+        "resolved": 25,
+        "pending": 2
+      },
+      {
+        "month": "2024-12",
+        "received": 15,
+        "resolved": 13,
+        "pending": 2
+      },
+      {
+        "month": "2025-01",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 20,
+        "resolved": 18,
+        "pending": 2
+      },
+      {
+        "month": "2025-03",
+        "received": 23,
+        "resolved": 22,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 12,
+        "resolved": 10,
+        "pending": 2
+      },
+      {
+        "month": "2025-05",
+        "received": 36,
+        "resolved": 31,
+        "pending": 5
+      },
+      {
+        "month": "2025-06",
+        "received": 16,
+        "resolved": 14,
+        "pending": 2
+      },
+      {
+        "month": "2025-07",
+        "received": 40,
+        "resolved": 38,
+        "pending": 2
+      },
+      {
+        "month": "2025-08",
+        "received": 39,
+        "resolved": 34,
+        "pending": 5
+      },
+      {
+        "month": "2025-09",
+        "received": 38,
+        "resolved": 32,
+        "pending": 6
+      },
+      {
+        "month": "2025-10",
+        "received": 26,
+        "resolved": 22,
+        "pending": 4
+      },
+      {
+        "month": "2025-11",
+        "received": 25,
+        "resolved": 20,
+        "pending": 5
+      },
+      {
+        "month": "2025-12",
+        "received": 17,
+        "resolved": 16,
+        "pending": 1
+      },
+      {
+        "month": "2026-01",
+        "received": 27,
+        "resolved": 26,
+        "pending": 1
+      },
+      {
+        "month": "2026-02",
+        "received": 23,
+        "resolved": 20,
+        "pending": 3
+      },
+      {
+        "month": "2026-03",
+        "received": 38,
+        "resolved": 35,
+        "pending": 3
+      },
+      {
+        "month": "2026-04",
+        "received": 20,
+        "resolved": 17,
+        "pending": 3
+      },
+      {
+        "month": "2026-05",
+        "received": 22,
+        "resolved": 18,
+        "pending": 4
+      },
+      {
+        "month": "2026-06",
+        "received": 45,
+        "resolved": 43,
+        "pending": 2
+      }
+    ],
+    "tradejini": [
+      {
+        "month": "2024-07",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2024-09",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2024-11",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2025-06",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-09",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-10",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-11",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-12",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2026-01",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2026-03",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2026-04",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2026-05",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2026-06",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      }
+    ],
+    "bajaj-broking": [
+      {
+        "month": "2024-07",
+        "received": 26,
+        "resolved": 23,
+        "pending": 3
+      },
+      {
+        "month": "2024-08",
+        "received": 28,
+        "resolved": 25,
+        "pending": 3
+      },
+      {
+        "month": "2024-09",
+        "received": 32,
+        "resolved": 30,
+        "pending": 2
+      },
+      {
+        "month": "2024-10",
+        "received": 27,
+        "resolved": 24,
+        "pending": 3
+      },
+      {
+        "month": "2024-11",
+        "received": 35,
+        "resolved": 33,
+        "pending": 2
+      },
+      {
+        "month": "2024-12",
+        "received": 23,
+        "resolved": 22,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 44,
+        "resolved": 39,
+        "pending": 5
+      },
+      {
+        "month": "2025-02",
+        "received": 18,
+        "resolved": 16,
+        "pending": 2
+      },
+      {
+        "month": "2025-03",
+        "received": 52,
+        "resolved": 51,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 12,
+        "resolved": 11,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 56,
+        "resolved": 48,
+        "pending": 8
+      },
+      {
+        "month": "2025-06",
+        "received": 30,
+        "resolved": 26,
+        "pending": 4
+      },
+      {
+        "month": "2025-07",
+        "received": 35,
+        "resolved": 33,
+        "pending": 2
+      },
+      {
+        "month": "2025-08",
+        "received": 21,
+        "resolved": 18,
+        "pending": 3
+      },
+      {
+        "month": "2025-09",
+        "received": 29,
+        "resolved": 27,
+        "pending": 2
+      },
+      {
+        "month": "2025-10",
+        "received": 45,
+        "resolved": 38,
+        "pending": 7
+      },
+      {
+        "month": "2025-11",
+        "received": 61,
+        "resolved": 55,
+        "pending": 6
+      },
+      {
+        "month": "2025-12",
+        "received": 22,
+        "resolved": 22,
+        "pending": 0
+      },
+      {
+        "month": "2026-01",
+        "received": 33,
+        "resolved": 29,
+        "pending": 4
+      },
+      {
+        "month": "2026-02",
+        "received": 50,
+        "resolved": 47,
+        "pending": 3
+      },
+      {
+        "month": "2026-03",
+        "received": 25,
+        "resolved": 22,
+        "pending": 3
+      },
+      {
+        "month": "2026-04",
+        "received": 54,
+        "resolved": 47,
+        "pending": 7
+      },
+      {
+        "month": "2026-05",
+        "received": 26,
+        "resolved": 23,
+        "pending": 3
+      },
+      {
+        "month": "2026-06",
+        "received": 78,
+        "resolved": 68,
+        "pending": 10
+      }
+    ],
+    "goodwill": [
+      {
+        "month": "2024-07",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 12,
+        "resolved": 10,
+        "pending": 2
+      },
+      {
+        "month": "2024-09",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 11,
+        "resolved": 9,
+        "pending": 2
+      },
+      {
+        "month": "2024-12",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2025-01",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2025-04",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-06",
+        "received": 13,
+        "resolved": 11,
+        "pending": 2
+      },
+      {
+        "month": "2025-07",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 12,
+        "resolved": 10,
+        "pending": 2
+      },
+      {
+        "month": "2025-09",
+        "received": 13,
+        "resolved": 12,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-11",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-12",
+        "received": 11,
+        "resolved": 9,
+        "pending": 2
+      },
+      {
+        "month": "2026-01",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2026-03",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 14,
+        "resolved": 11,
+        "pending": 3
+      },
+      {
+        "month": "2026-06",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      }
+    ],
+    "zebu": [
+      {
+        "month": "2024-07",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2024-11",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2024-12",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-01",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-04",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-06",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-10",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-11",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-12",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2026-01",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2026-03",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2026-04",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2026-05",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2026-06",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      }
+    ],
+    "trade-smart": [
+      {
+        "month": "2024-07",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2024-09",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2024-11",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2025-01",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-02",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-07",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-08",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-09",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-11",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-12",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2026-01",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2026-03",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2026-04",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2026-05",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2026-06",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      }
+    ],
+    "rupeezy": [
+      {
+        "month": "2024-07",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2024-09",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 10,
+        "resolved": 8,
+        "pending": 2
+      },
+      {
+        "month": "2024-11",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 11,
+        "resolved": 11,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2025-06",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-08",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2025-09",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2025-10",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2025-11",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2025-12",
+        "received": 12,
+        "resolved": 11,
+        "pending": 1
+      },
+      {
+        "month": "2026-01",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2026-03",
+        "received": 12,
+        "resolved": 11,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 11,
+        "resolved": 9,
+        "pending": 2
+      },
+      {
+        "month": "2026-06",
+        "received": 11,
+        "resolved": 11,
+        "pending": 0
+      }
+    ],
+    "profitmart": [
+      {
+        "month": "2024-07",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-02",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-06",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-08",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2025-11",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-12",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2026-01",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2026-03",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2026-06",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      }
+    ],
+    "ashika": [
+      {
+        "month": "2024-07",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2024-09",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2024-12",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-04",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-07",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-08",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-09",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2025-10",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-11",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-12",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2026-01",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2026-03",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2026-04",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2026-05",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2026-06",
+        "received": 8,
+        "resolved": 6,
+        "pending": 2
+      }
+    ],
+    "jainam": [
+      {
+        "month": "2024-07",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2024-09",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2024-12",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2025-02",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2025-04",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-07",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-10",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-11",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-12",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2026-01",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2026-02",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2026-03",
+        "received": 11,
+        "resolved": 10,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2026-05",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2026-06",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      }
+    ],
+    "swastika": [
+      {
+        "month": "2024-07",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-01",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-04",
+        "received": 8,
+        "resolved": 6,
+        "pending": 2
+      },
+      {
+        "month": "2025-05",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      },
+      {
+        "month": "2025-08",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-11",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-12",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2026-01",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2026-02",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2026-03",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2026-04",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2026-06",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      }
+    ],
+    "arihant": [
+      {
+        "month": "2024-07",
+        "received": 8,
+        "resolved": 6,
+        "pending": 2
+      },
+      {
+        "month": "2024-08",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2024-09",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 11,
+        "resolved": 9,
+        "pending": 2
+      },
+      {
+        "month": "2025-01",
+        "received": 14,
+        "resolved": 12,
+        "pending": 2
+      },
+      {
+        "month": "2025-02",
+        "received": 10,
+        "resolved": 10,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 11,
+        "resolved": 11,
+        "pending": 0
+      },
+      {
+        "month": "2025-04",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 10,
+        "resolved": 9,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 15,
+        "resolved": 13,
+        "pending": 2
+      },
+      {
+        "month": "2025-08",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-10",
+        "received": 15,
+        "resolved": 14,
+        "pending": 1
+      },
+      {
+        "month": "2025-11",
+        "received": 15,
+        "resolved": 13,
+        "pending": 2
+      },
+      {
+        "month": "2025-12",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2026-01",
+        "received": 12,
+        "resolved": 12,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2026-03",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 12,
+        "resolved": 11,
+        "pending": 1
+      },
+      {
+        "month": "2026-06",
+        "received": 12,
+        "resolved": 12,
+        "pending": 0
+      }
+    ],
+    "indira": [
+      {
+        "month": "2024-07",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2024-12",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-01",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-04",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-06",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 7,
+        "resolved": 7,
+        "pending": 0
+      },
+      {
+        "month": "2025-08",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-10",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-11",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-12",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2026-01",
+        "received": 6,
+        "resolved": 6,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2026-03",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2026-04",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2026-05",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2026-06",
+        "received": 9,
+        "resolved": 7,
+        "pending": 2
+      }
+    ],
+    "wisdom-capital": [
+      {
+        "month": "2024-07",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2024-08",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2024-09",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2024-10",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2024-12",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-02",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-03",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-04",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-05",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-06",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-07",
+        "received": 3,
+        "resolved": 2,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 1,
+        "resolved": 1,
+        "pending": 0
+      },
+      {
+        "month": "2025-10",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-11",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-12",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2026-01",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2026-03",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2026-04",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2026-05",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2026-06",
+        "received": 1,
+        "resolved": 1,
+        "pending": 0
+      }
+    ],
+    "espresso": [
+      {
+        "month": "2024-07",
+        "received": 13,
+        "resolved": 12,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2024-09",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 15,
+        "resolved": 13,
+        "pending": 2
+      },
+      {
+        "month": "2024-11",
+        "received": 8,
+        "resolved": 8,
+        "pending": 0
+      },
+      {
+        "month": "2024-12",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2025-01",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-02",
+        "received": 13,
+        "resolved": 12,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 15,
+        "resolved": 13,
+        "pending": 2
+      },
+      {
+        "month": "2025-04",
+        "received": 12,
+        "resolved": 12,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-06",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2025-07",
+        "received": 9,
+        "resolved": 9,
+        "pending": 0
+      },
+      {
+        "month": "2025-08",
+        "received": 7,
+        "resolved": 6,
+        "pending": 1
+      },
+      {
+        "month": "2025-09",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 19,
+        "resolved": 16,
+        "pending": 3
+      },
+      {
+        "month": "2025-11",
+        "received": 10,
+        "resolved": 8,
+        "pending": 2
+      },
+      {
+        "month": "2025-12",
+        "received": 17,
+        "resolved": 14,
+        "pending": 3
+      },
+      {
+        "month": "2026-01",
+        "received": 10,
+        "resolved": 10,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2026-03",
+        "received": 12,
+        "resolved": 10,
+        "pending": 2
+      },
+      {
+        "month": "2026-04",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 9,
+        "resolved": 8,
+        "pending": 1
+      },
+      {
+        "month": "2026-06",
+        "received": 16,
+        "resolved": 15,
+        "pending": 1
+      }
+    ],
+    "stoxkart": [
+      {
+        "month": "2024-07",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2024-10",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2024-11",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2024-12",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2025-01",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-02",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-03",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-04",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2025-05",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-06",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2025-07",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2025-08",
+        "received": 5,
+        "resolved": 4,
+        "pending": 1
+      },
+      {
+        "month": "2025-09",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-10",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2025-11",
+        "received": 3,
+        "resolved": 3,
+        "pending": 0
+      },
+      {
+        "month": "2025-12",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2026-01",
+        "received": 5,
+        "resolved": 5,
+        "pending": 0
+      },
+      {
+        "month": "2026-02",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      },
+      {
+        "month": "2026-03",
+        "received": 2,
+        "resolved": 2,
+        "pending": 0
+      },
+      {
+        "month": "2026-04",
+        "received": 4,
+        "resolved": 3,
+        "pending": 1
+      },
+      {
+        "month": "2026-05",
+        "received": 6,
+        "resolved": 5,
+        "pending": 1
+      },
+      {
+        "month": "2026-06",
+        "received": 4,
+        "resolved": 4,
+        "pending": 0
+      }
+    ],
+    "jio-blackrock": [
+      {
+        "month": "2024-07",
+        "received": 8,
+        "resolved": 7,
+        "pending": 1
+      },
+      {
+        "month": "2024-08",
+        "received": 20,
+        "resolved": 19,
+        "pending": 1
+      },
+      {
+        "month": "2024-09",
+        "received": 13,
+        "resolved": 12,
+        "pending": 1
+      },
+      {
+        "month": "2024-10",
+        "received": 18,
+        "resolved": 17,
+        "pending": 1
+      },
+      {
+        "month": "2024-11",
+        "received": 22,
+        "resolved": 20,
+        "pending": 2
+      },
+      {
+        "month": "2024-12",
+        "received": 10,
+        "resolved": 10,
+        "pending": 0
+      },
+      {
+        "month": "2025-01",
+        "received": 19,
+        "resolved": 16,
+        "pending": 3
+      },
+      {
+        "month": "2025-02",
+        "received": 19,
+        "resolved": 16,
+        "pending": 3
+      },
+      {
+        "month": "2025-03",
+        "received": 22,
+        "resolved": 20,
+        "pending": 2
+      },
+      {
+        "month": "2025-04",
+        "received": 32,
+        "resolved": 26,
+        "pending": 6
+      },
+      {
+        "month": "2025-05",
+        "received": 21,
+        "resolved": 17,
+        "pending": 4
+      },
+      {
+        "month": "2025-06",
+        "received": 18,
+        "resolved": 17,
+        "pending": 1
+      },
+      {
+        "month": "2025-07",
+        "received": 17,
+        "resolved": 15,
+        "pending": 2
+      },
+      {
+        "month": "2025-08",
+        "received": 13,
+        "resolved": 13,
+        "pending": 0
+      },
+      {
+        "month": "2025-09",
+        "received": 35,
+        "resolved": 34,
+        "pending": 1
+      },
+      {
+        "month": "2025-10",
+        "received": 45,
+        "resolved": 43,
+        "pending": 2
+      },
+      {
+        "month": "2025-11",
+        "received": 20,
+        "resolved": 17,
+        "pending": 3
+      },
+      {
+        "month": "2025-12",
+        "received": 51,
+        "resolved": 48,
+        "pending": 3
+      },
+      {
+        "month": "2026-01",
+        "received": 47,
+        "resolved": 38,
+        "pending": 9
+      },
+      {
+        "month": "2026-02",
+        "received": 48,
+        "resolved": 47,
+        "pending": 1
+      },
+      {
+        "month": "2026-03",
+        "received": 27,
+        "resolved": 24,
+        "pending": 3
+      },
+      {
+        "month": "2026-04",
+        "received": 19,
+        "resolved": 16,
+        "pending": 3
+      },
+      {
+        "month": "2026-05",
+        "received": 54,
+        "resolved": 51,
+        "pending": 3
+      },
+      {
+        "month": "2026-06",
+        "received": 74,
+        "resolved": 64,
+        "pending": 10
+      }
+    ]
+  }
+}

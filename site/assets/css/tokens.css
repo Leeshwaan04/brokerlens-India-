@@ -1,0 +1,122 @@
+/* Design tokens. Single source of truth for the whole surface.
+   Light is the default; dark is applied via prefers-color-scheme and can be
+   forced either way with data-theme on <html>. */
+
+:root {
+  color-scheme: light dark;
+
+  /* neutrals */
+  --bg:            #fbfbfa;
+  --bg-raised:     #ffffff;
+  --bg-sunken:     #f2f2f0;
+  --bg-hover:      #f6f6f4;
+  --border:        #e3e3df;
+  --border-strong: #cfcfc9;
+
+  /* text */
+  --text:          #1a1a18;
+  --text-muted:    #6b6b64;
+  --text-faint:    #96968d;
+  --text-invert:   #fbfbfa;
+
+  /* brand — deep indigo reads as "market data", not "fintech startup" */
+  --accent:        #2f4a8f;
+  --accent-hover:  #263d76;
+  --accent-soft:   #eaeefa;
+  --accent-text:   #2f4a8f;
+
+  /* semantic: Indian markets convention — green up, red down */
+  --up:            #0f7a4d;
+  --up-soft:       #e6f4ec;
+  --down:          #c0392b;
+  --down-soft:     #fbeae8;
+  --warn:          #9a6b00;
+  --warn-soft:     #fdf3dc;
+  --info:          #1f6a8f;
+  --info-soft:     #e6f2f8;
+
+  /* data-viz categorical ramp, colour-blind safe ordering */
+  --c1: #2f4a8f; --c2: #0f7a4d; --c3: #b8621b; --c4: #7a3e9d;
+  --c5: #1f6a8f; --c6: #a03050; --c7: #5c6b1f; --c8: #7d5a3c;
+
+  /* spacing */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+  /* radius */
+  --radius-sm: 4px; --radius: 8px; --radius-lg: 12px; --radius-full: 999px;
+
+  /* type */
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+               "Liberation Mono", monospace;
+  --fs-xs: 11px; --fs-sm: 12.5px; --fs-base: 14px; --fs-md: 16px;
+  --fs-lg: 20px; --fs-xl: 26px; --fs-2xl: 34px; --fs-3xl: 44px;
+
+  /* motion */
+  --dur-fast: 90ms; --dur: 160ms; --dur-slow: 280ms;
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+
+  --shadow-sm: 0 1px 2px rgba(20, 20, 18, 0.06);
+  --shadow: 0 2px 8px rgba(20, 20, 18, 0.08), 0 1px 2px rgba(20, 20, 18, 0.04);
+  --shadow-lg: 0 12px 32px rgba(20, 20, 18, 0.12);
+
+  --maxw: 1240px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:            #131316;
+    --bg-raised:     #1b1b1f;
+    --bg-sunken:     #0e0e11;
+    --bg-hover:      #23232a;
+    --border:        #2c2c33;
+    --border-strong: #3d3d46;
+
+    --text:          #ececef;
+    --text-muted:    #a2a2ac;
+    --text-faint:    #74747e;
+    --text-invert:   #131316;
+
+    --accent:        #8fa8e8;
+    --accent-hover:  #a8bcf0;
+    --accent-soft:   #1e2438;
+    --accent-text:   #a8bcf0;
+
+    --up:            #4cc38a;  --up-soft:   #14291f;
+    --down:          #f0736a;  --down-soft: #2d1917;
+    --warn:          #e0b155;  --warn-soft: #2b2213;
+    --info:          #6ab6d8;  --info-soft: #12242c;
+
+    --c1: #8fa8e8; --c2: #4cc38a; --c3: #e39a5c; --c4: #b98ad4;
+    --c5: #6ab6d8; --c6: #e07a97; --c7: #a8b86a; --c8: #c19b7d;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* explicit overrides must beat the media query in both directions */
+:root[data-theme="dark"] {
+  --bg: #131316; --bg-raised: #1b1b1f; --bg-sunken: #0e0e11; --bg-hover: #23232a;
+  --border: #2c2c33; --border-strong: #3d3d46;
+  --text: #ececef; --text-muted: #a2a2ac; --text-faint: #74747e; --text-invert: #131316;
+  --accent: #8fa8e8; --accent-hover: #a8bcf0; --accent-soft: #1e2438; --accent-text: #a8bcf0;
+  --up: #4cc38a; --up-soft: #14291f; --down: #f0736a; --down-soft: #2d1917;
+  --warn: #e0b155; --warn-soft: #2b2213; --info: #6ab6d8; --info-soft: #12242c;
+  --c1: #8fa8e8; --c2: #4cc38a; --c3: #e39a5c; --c4: #b98ad4;
+  --c5: #6ab6d8; --c6: #e07a97; --c7: #a8b86a; --c8: #c19b7d;
+}
+
+:root[data-theme="light"] {
+  --bg: #fbfbfa; --bg-raised: #ffffff; --bg-sunken: #f2f2f0; --bg-hover: #f6f6f4;
+  --border: #e3e3df; --border-strong: #cfcfc9;
+  --text: #1a1a18; --text-muted: #6b6b64; --text-faint: #96968d; --text-invert: #fbfbfa;
+  --accent: #2f4a8f; --accent-hover: #263d76; --accent-soft: #eaeefa; --accent-text: #2f4a8f;
+  --up: #0f7a4d; --up-soft: #e6f4ec; --down: #c0392b; --down-soft: #fbeae8;
+  --warn: #9a6b00; --warn-soft: #fdf3dc; --info: #1f6a8f; --info-soft: #e6f2f8;
+  --c1: #2f4a8f; --c2: #0f7a4d; --c3: #b8621b; --c4: #7a3e9d;
+  --c5: #1f6a8f; --c6: #a03050; --c7: #5c6b1f; --c8: #7d5a3c;
+}

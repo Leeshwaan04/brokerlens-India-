@@ -1,0 +1,23 @@
+# Generated / internal state - never commit.
+# NOTE: gitignore has no trailing-comment syntax; comments must be on their own line.
+data/cache/
+data/raw/
+data/canonical/
+
+# 1MB of raw scraped exchange + regulator state. Internal, regenerable.
+data/_ingest.json
+
+# Published payloads; regenerate with `make all`.
+site/data/
+site/sitemap.xml
+site/feed.xml
+
+# Personal data. Leads are DPDP-regulated and must never reach a repo.
+data/leads/
+
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+.venv/
+venv/

@@ -1,0 +1,48 @@
+{
+  "_comment": [
+    "Listed brokers and broker parents, for the 'Broker stocks' ticker feed.",
+    "This feed exists because it is the one thing a broker-comparison site can show",
+    "that a generic ticker cannot: how the market prices the brokers being compared.",
+    "",
+    "`relation` matters and must not be blurred:",
+    "  self   - the broking entity itself is the listed company",
+    "  parent - the listed company is the broker's parent; the broking arm is a",
+    "           subsidiary and its results are only part of what this share price",
+    "           reflects. Saying 'HDFC Bank' is HDFC Securities would be wrong.",
+    "",
+    "bse_scrip codes are resolved by joining NSE and BSE equity masters on ISIN",
+    "(pipeline/symbolmap.py). Quotes come from BSE getScripHeaderData because NSE's",
+    "per-symbol endpoint returns 403 to anything without a full browser sensor."
+  ],
+  "stocks": [
+    { "symbol": "ANGELONE",   "bse_scrip": "543235", "broker_id": "angel-one",        "relation": "self",   "label": "Angel One" },
+    { "symbol": "MOTILALOFS", "bse_scrip": "532892", "broker_id": "motilal-oswal",    "relation": "self",   "label": "Motilal Oswal" },
+    { "symbol": "5PAISA",     "bse_scrip": "540776", "broker_id": "5paisa",           "relation": "self",   "label": "5paisa" },
+    { "symbol": "IIFLCAPS",   "bse_scrip": "542773", "broker_id": "iifl-securities",  "relation": "self",   "label": "IIFL Capital" },
+    { "symbol": "GEOJITFSL",  "bse_scrip": "532285", "broker_id": "geojit",           "relation": "self",   "label": "Geojit" },
+    { "symbol": "SMCGLOBAL",  "bse_scrip": "543263", "broker_id": "smc",              "relation": "self",   "label": "SMC Global" },
+    { "symbol": "ARIHANTCAP", "bse_scrip": "511605", "broker_id": "arihant",          "relation": "self",   "label": "Arihant Capital" },
+    { "symbol": "MASTERTR",   "bse_scrip": "511768", "broker_id": "master-trust",     "relation": "self",   "label": "Master Trust" },
+    { "symbol": "NUVAMA",     "bse_scrip": "543988", "broker_id": "nuvama",           "relation": "parent", "label": "Nuvama Wealth Mgmt" },
+    { "symbol": "CHOICEIN",   "bse_scrip": "531358", "broker_id": "choice",           "relation": "parent", "label": "Choice International" },
+    { "symbol": "RELIGARE",   "bse_scrip": "532915", "broker_id": "religare",         "relation": "parent", "label": "Religare Enterprises" },
+    { "symbol": "ANANDRATHI", "bse_scrip": "543415", "broker_id": "anand-rathi",      "relation": "parent", "label": "Anand Rathi Wealth" },
+    { "symbol": "KOTAKBANK",  "bse_scrip": "500247", "broker_id": "kotak-securities", "relation": "parent", "label": "Kotak Mahindra Bank" },
+    { "symbol": "HDFCBANK",   "bse_scrip": "500180", "broker_id": "hdfc-securities",  "relation": "parent", "label": "HDFC Bank" },
+    { "symbol": "SBIN",       "bse_scrip": "500112", "broker_id": "sbi-securities",   "relation": "parent", "label": "State Bank of India" },
+    { "symbol": "AXISBANK",   "bse_scrip": "532215", "broker_id": "axis-direct",      "relation": "parent", "label": "Axis Bank" },
+    { "symbol": "BAJFINANCE", "bse_scrip": "500034", "broker_id": "bajaj-broking",    "relation": "parent", "label": "Bajaj Finance" },
+    { "symbol": "PAYTM",      "bse_scrip": "543396", "broker_id": "paytm-money",      "relation": "parent", "label": "One 97 (Paytm)" }
+  ],
+  "not_listed": {
+    "_comment": "Recorded so nobody wastes time looking for a ticker that does not exist.",
+    "zerodha": "privately held",
+    "groww": "privately held",
+    "upstox": "privately held",
+    "dhan": "privately held",
+    "fyers": "privately held",
+    "sharekhan": "acquired by Mirae Asset; not separately listed in India",
+    "icici-direct": "ICICI Securities delisted in 2024 after the ICICI Bank merger",
+    "mstock": "Mirae Asset group; not separately listed in India"
+  }
+}

@@ -1,0 +1,3 @@
+# SPA fallback: client-side routes must resolve on a hard refresh.
+/api/*    /api/:splat   200
+/*        /index.html   200

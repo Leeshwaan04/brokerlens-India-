@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BrokerLens India — Indian stock broker statistics from NSE, BSE and SEBI</title>
+<meta name="description" content="Compare every SEBI-registered Indian stock broker on active clients, market share, complaint records and cost. Built from primary NSE, BSE and SEBI disclosures.">
+<link rel="canonical" href="/">
+<meta name="theme-color" content="#2f4a8f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f4a8f'/%3E%3Cpath d='M7 22l5-7 4 4 5-9 4 5' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="alternate" type="application/rss+xml" title="Monthly broker movers" href="/feed.xml">
+<link rel="stylesheet" href="/assets/css/app.css">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="BrokerLens India — broker statistics from primary sources">
+<meta property="og:description" content="Active clients, market share, SEBI complaint records and cost, for every registered Indian stock broker.">
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"BrokerLens India",
+ "description":"Statistics and comparisons for SEBI-registered Indian stock brokers, built from NSE, BSE and SEBI primary disclosures.",
+ "potentialAction":{"@type":"SearchAction","target":"/brokers?q={search_term_string}","query-input":"required name=search_term_string"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Dataset","name":"Indian stock broker statistics",
+ "description":"Per-broker active client counts, market share, investor complaint records, regulatory registrations and cost comparisons.",
+ "creator":{"@type":"Organization","name":"BrokerLens India"},
+ "isAccessibleForFree":true,
+ "keywords":["stock broker","India","NSE","BSE","SEBI","active clients","market share","investor complaints"]}
+</script>
+</head>
+<body>
+<div class="ticker" aria-label="Live market prices">
+  <div class="ticker-bar">
+    <div class="exch-picker">
+      <span class="mkt-dot" id="exch-dot" aria-hidden="true"></span>
+      <select id="exch-select" aria-label="Choose ticker feed">
+        <option value="NSE">NSE</option>
+      </select>
+      <span class="exch-status xs" id="exch-status"></span>
+    </div>
+    <div class="ticker-rail" id="ticker-rail"><div class="ticker-track" id="ticker-track"></div></div>
+    <span class="ticker-time xs faint" id="ticker-time" title="Time of the last pipeline refresh"></span>
+  </div>
+</div>
+
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="/" data-link>
+      <span class="brand-mark">BL</span>
+      <span>BrokerLens<span class="muted" style="font-weight:400"> India</span></span>
+    </a>
+    <nav class="nav-links" id="navlinks">
+      <a href="/brokers" data-link>Brokers</a>
+      <a href="/compare" data-link>Compare</a>
+      <a href="/leaderboards" data-link>Rankings</a>
+      <a href="/calculator" data-link>Cost calculator</a>
+      <a href="/registry" data-link>SEBI registry</a>
+      <a href="/for-brokers" data-link>For brokers</a>
+    </nav>
+    <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">◐</button>
+  </div>
+</header>
+
+<main id="app" class="wrap" style="padding-top:24px;padding-bottom:24px">
+  <div class="grid g3">
+    <div class="card skeleton" style="height:96px"></div>
+    <div class="card skeleton" style="height:96px"></div>
+    <div class="card skeleton" style="height:96px"></div>
+  </div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <div class="brand" style="margin-bottom:8px"><span class="brand-mark">BL</span> BrokerLens India</div>
+        <p class="small">Broker statistics assembled from primary NSE, BSE and SEBI disclosures. We publish facts and
+        normalised ratios so you can compare brokers yourself.</p>
+      </div>
+      <div>
+        <h5>Compare</h5>
+        <ul>
+          <li><a href="/brokers" data-link>All brokers</a></li>
+          <li><a href="/leaderboards" data-link>Rankings</a></li>
+          <li><a href="/calculator" data-link>Cost calculator</a></li>
+          <li><a href="/registry" data-link>SEBI registry</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Data</h5>
+        <ul>
+          <li><a href="/methodology" data-link>Methodology</a></li>
+          <li><a href="/sources" data-link>Sources &amp; lineage</a></li>
+          <li><a href="/feed.xml">RSS feed</a></li>
+          <li><a href="/sitemap.xml">Sitemap</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Brokers</h5>
+        <ul>
+          <li><a href="/for-brokers" data-link>Get listed</a></li>
+          <li><a href="/for-brokers#claim" data-link>Claim your profile</a></li>
+          <li><a href="/for-brokers#advertise" data-link>Advertise</a></li>
+          <li><a href="/for-brokers#leads" data-link>Buy leads</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="disclaimer">
+      <strong>Not investment advice.</strong> BrokerLens is an information service. We are not a SEBI-registered
+      investment adviser or research analyst and we do not recommend any broker, security or strategy. Figures are
+      reproduced from exchange and regulator disclosures and may lag their source. Verify anything material with the
+      broker and with SEBI before acting on it. Brokerage figures exclude statutory charges (STT, stamp duty, exchange
+      transaction charges, SEBI turnover fees and GST), which are identical across brokers for the same trade.
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="/assets/js/app.js"></script>
+</body>
+</html>

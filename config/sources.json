@@ -1,0 +1,207 @@
+{
+  "_comment": "Primary-source registry. Every number published on the site must trace back to one id in this file. Verified reachable on 2026-07-30 from an Indian-accessible network.",
+  "sources": {
+    "nse_market_status": {
+      "publisher": "NSE",
+      "title": "Market status (segment-wise)",
+      "url": "https://www.nseindia.com/api/marketStatus",
+      "kind": "json_api",
+      "cadence": "realtime",
+      "needs_session": true,
+      "verified": "2026-07-30",
+      "notes": "Powers the live market strip. Cheap, poll every 60s during market hours."
+    },
+    "nse_all_indices": {
+      "publisher": "NSE",
+      "title": "All indices snapshot",
+      "url": "https://www.nseindia.com/api/allIndices",
+      "kind": "json_api",
+      "cadence": "realtime",
+      "needs_session": true,
+      "verified": "2026-07-30",
+      "notes": "NIFTY 50 / BANKNIFTY levels + advance-decline for the market pulse header."
+    },
+    "nse_fii_dii": {
+      "publisher": "NSE",
+      "title": "FII / DII trading activity",
+      "url": "https://www.nseindia.com/api/fiidiiTradeReact",
+      "kind": "json_api",
+      "cadence": "daily",
+      "needs_session": true,
+      "verified": "2026-07-30"
+    },
+    "nse_equity_master": {
+      "publisher": "NSE",
+      "title": "Equity securities master (EQUITY_L.csv)",
+      "url": "https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv",
+      "kind": "csv",
+      "cadence": "daily",
+      "needs_session": false,
+      "verified": "2026-07-30",
+      "notes": "Used to size the tradable universe and to detect listed brokers."
+    },
+    "nse_circulars": {
+      "publisher": "NSE",
+      "title": "Member circulars feed",
+      "url": "https://www.nseindia.com/api/circulars",
+      "kind": "json_api",
+      "cadence": "daily",
+      "needs_session": true,
+      "verified": "2026-07-30",
+      "notes": "Scanned for member-name mentions: disciplinary actions, penalties, suspensions."
+    },
+    "nse_cm_bhavcopy": {
+      "publisher": "NSE",
+      "title": "CM segment bhavcopy",
+      "url": "https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_{yyyymmdd}_F_0000.csv.zip",
+      "kind": "csv_zip",
+      "cadence": "daily",
+      "needs_session": false,
+      "verified": "2026-07-30",
+      "notes": "Market-wide turnover context. Date-templated."
+    },
+    "bse_default_data": {
+      "publisher": "BSE",
+      "title": "BSE corporate actions feed",
+      "url": "https://api.bseindia.com/BseIndiaAPI/api/DefaultData/w",
+      "kind": "json_api",
+      "cadence": "realtime",
+      "needs_session": false,
+      "requires_referer": "https://www.bseindia.com/",
+      "follow_redirects": true,
+      "verified": "2026-07-30",
+      "notes": "CORRECTED: this is a corporate-actions feed (scrip_code, short_name, Ex_date, Purpose, RD_Date, payment_date), NOT indices. Requires Referer plus redirect following. BSE exposes no open index-level endpoint - SensexData, IndexMovement, MktRtrnData, GetIndexData, MarketWatchTable, Indexhighlight and MktCapitalisation all return an error page - so index levels come from NSE only."
+    },
+    "bse_gross_turnover": {
+      "publisher": "BSE",
+      "title": "BSE scrip-wise gross delivery archive",
+      "url": "https://www.bseindia.com/BSEDATA/gross/{yyyy}/SCBSEALL{ddmm}.zip",
+      "kind": "csv_zip",
+      "cadence": "daily",
+      "needs_session": false,
+      "requires_referer": "https://www.bseindia.com/",
+      "verified": "2026-07-30",
+      "notes": "CORRECTED: SCBSEALL is scrip-wise DELIVERY data (DATE|SCRIP CODE|DELIVERY QTY|DELIVERY VAL|DAY'S VOLUME|DAY'S TURNOVER|DELV. PER.), not member-wise turnover. Aggregated into a market-wide delivery percentage. BSE does not publish member-wise activity openly."
+    },
+    "sebi_stock_brokers": {
+      "publisher": "SEBI",
+      "title": "Registered stock brokers (recognised intermediaries)",
+      "url": "https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=1",
+      "kind": "html_paginated_post",
+      "pagination": {
+        "field": "nextValue",
+        "pages_field": "mno"
+      },
+      "cadence": "monthly",
+      "verified": "2026-07-30",
+      "notes": "SEBI returns 'No record(s) available' for intmId=1 for every parameter combination and renders its own exchange dropdown empty - the gap is upstream. Identity therefore comes from intmId=2 (commodity segment), which returns 2,048 registration rows / 831 entities."
+    },
+    "sebi_commodity_brokers": {
+      "publisher": "SEBI",
+      "title": "Registered stock brokers - commodity derivatives segment",
+      "url": "https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=2",
+      "kind": "html_paginated_post",
+      "cadence": "monthly",
+      "verified": "2026-07-30"
+    },
+    "sebi_dp_cdsl": {
+      "publisher": "SEBI",
+      "title": "Registered depository participants - CDSL",
+      "url": "https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=18",
+      "kind": "html_paginated_post",
+      "cadence": "monthly",
+      "verified": "2026-07-30",
+      "notes": "Tells you which brokers self-clear demat vs route through a partner DP."
+    },
+    "sebi_dp_nsdl": {
+      "publisher": "SEBI",
+      "title": "Registered depository participants - NSDL",
+      "url": "https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=19",
+      "kind": "html_paginated_post",
+      "cadence": "monthly",
+      "verified": "2026-07-30"
+    },
+    "sebi_defaulter_brokers": {
+      "publisher": "SEBI",
+      "title": "Defaulter / expelled stock brokers",
+      "url": "https://www.sebi.gov.in/sebiweb/broker/BrokerAction.do?doBroker=yes",
+      "kind": "html",
+      "cadence": "monthly",
+      "verified": "2026-07-30",
+      "notes": "Hard negative signal. A broker appearing here is flagged on the site immediately."
+    },
+    "sebi_scores": {
+      "publisher": "SEBI",
+      "title": "SCORES investor grievance portal",
+      "url": "https://scores.sebi.gov.in",
+      "kind": "html",
+      "cadence": "monthly",
+      "verified": "2026-07-30",
+      "notes": "Aggregate complaint counts by entity. Feeds the reliability score."
+    },
+    "nse_complaints_dashboard": {
+      "publisher": "NSE",
+      "title": "Investor complaints dashboard against trading members",
+      "url": "https://www.nseindia.com/static/complaints/dashboard",
+      "kind": "html",
+      "cadence": "monthly",
+      "verified": "2026-07-30"
+    },
+    "broker_annexure_b": {
+      "publisher": "Individual brokers (SEBI-mandated)",
+      "title": "Monthly investor complaint disclosure, SEBI Annexure-B format",
+      "url": "per-broker; see brokers_master.json[].disclosures.complaints_url",
+      "kind": "html_or_pdf",
+      "cadence": "monthly",
+      "verified": "2026-07-30",
+      "notes": "Every registered broker MUST publish received/resolved/pending monthly. Public disclosure, safe to cite with attribution."
+    },
+    "nse_ucc_active_clients": {
+      "publisher": "NSE",
+      "title": "Member-wise active client counts (UCC)",
+      "url": "UNCONFIRMED - see docs/DATA_SOURCES.md",
+      "kind": "manual_until_confirmed",
+      "cadence": "monthly",
+      "verified": null,
+      "notes": "The single most valuable metric and the only one not yet automated. NSE publishes it monthly but not at a stable public JSON/CSV endpoint we could confirm. Until the endpoint is pinned, active-client figures are loaded from data/manual/active_clients.json and every number carries provenance:'manual' so the UI can badge it. DO NOT scrape aggregator sites for this."
+    },
+    "nse_live_quotes": {
+      "publisher": "NSE",
+      "title": "Live equity quotes (most active by volume + top gainers)",
+      "url": "https://www.nseindia.com/api/live-analysis-most-active-securities?index=volume",
+      "kind": "json_api",
+      "cadence": "realtime",
+      "needs_session": true,
+      "verified": "2026-07-30",
+      "notes": "Powers the rolling header ticker: 20 most-active symbols plus 10 NIFTY gainers with LTP, change and volume. /api/equity-stockIndices 404s and /api/quote-equity 403s - the live-analysis paths are the ones that answer."
+    },
+    "bse_live_quotes": {
+      "publisher": "BSE",
+      "title": "Per-scrip live quote (getScripHeaderData)",
+      "url": "https://api.bseindia.com/BseIndiaAPI/api/getScripHeaderData/w?Debtflag=&scripcode={scrip}&seriesid=",
+      "kind": "json_api",
+      "cadence": "realtime",
+      "needs_session": false,
+      "requires_referer": "https://www.bseindia.com/",
+      "follow_redirects": true,
+      "verified": "2026-07-30",
+      "notes": "Returns CurrRate{LTP,Chg,PcChg} and Cmpname{FullN}. The only working open BSE quote endpoint and there is no bulk variant, so it costs one request per scrip - keep config/watchlist.json short."
+    },
+    "mcx_market_watch": {
+      "publisher": "MCX",
+      "title": "Commodity futures market watch",
+      "url": "https://www.mcxindia.com/market-data/market-watch/GetMarketWatch?culture=en",
+      "kind": "json_api",
+      "cadence": "realtime",
+      "verified": "2026-07-30",
+      "notes": "GET, not POST. MCX builds the URL as location.origin + location.pathname + MethodName (see /assets/customjs/data.js), so /backpage.aspx/GetMarketWatch is wrong - it returns MCX's 404 page with a 200 status. Akamai Bot Manager also requires the full Chrome client-hint and Sec-Fetch header set PLUS Content-Type: application/json and X-Requested-With, or it answers 403. Returns 2,239 contracts; only the ~112 FUTCOM futures are surfaced, most-traded expiry per product."
+    }
+  },
+  "licensing": {
+    "nse": "robots.txt allows all crawling. Exchange data carries redistribution restrictions for commercial use - obtain written clearance from NSE Data & Analytics before monetising derived datasets.",
+    "bse": "Same posture as NSE. BSE licenses data commercially.",
+    "sebi": "Regulator disclosures are public records. Attribution required; no redistribution licence needed.",
+    "aggregators": "Never ingest from Chittorgarh / IPO Central / broker-comparison sites. Primary sources only - this is both a legal and a trust requirement.",
+    "mcx": "Same commercial-redistribution posture to assume as NSE and BSE: fine for internal use, needs clearance before monetising a public display."
+  }
+}

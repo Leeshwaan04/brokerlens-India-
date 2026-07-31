@@ -1,0 +1,71 @@
+{
+  "provenance": "sample",
+  "as_of": "2026-06",
+  "source_note": "SAMPLE pricing for claimed demo profiles only. Unclaimed brokers stay null by design.",
+  "brokers": {
+    "zerodha": {
+      "delivery": {
+        "flat_per_order": 0
+      },
+      "intraday": {
+        "flat_per_order": 20,
+        "pct_of_turnover": 0.03,
+        "cap_per_order": 20
+      },
+      "fno": {
+        "flat_per_order": 20
+      },
+      "demat_amc_annual": 300,
+      "account_opening": 200
+    },
+    "groww": {
+      "delivery": {
+        "flat_per_order": 20,
+        "pct_of_turnover": 0.1,
+        "cap_per_order": 20
+      },
+      "intraday": {
+        "flat_per_order": 20,
+        "pct_of_turnover": 0.1,
+        "cap_per_order": 20
+      },
+      "fno": {
+        "flat_per_order": 20
+      },
+      "demat_amc_annual": 0,
+      "account_opening": 0
+    },
+    "angel-one": {
+      "delivery": {
+        "flat_per_order": 20,
+        "pct_of_turnover": 0.1,
+        "cap_per_order": 20
+      },
+      "intraday": {
+        "flat_per_order": 20,
+        "pct_of_turnover": 0.03,
+        "cap_per_order": 20
+      },
+      "fno": {
+        "flat_per_order": 20
+      },
+      "demat_amc_annual": 240,
+      "account_opening": 0
+    },
+    "dhan": {
+      "delivery": {
+        "flat_per_order": 0
+      },
+      "intraday": {
+        "flat_per_order": 20,
+        "pct_of_turnover": 0.03,
+        "cap_per_order": 20
+      },
+      "fno": {
+        "flat_per_order": 20
+      },
+      "demat_amc_annual": 0,
+      "account_opening": 0
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "provenance": "sample",
+  "brokers": {
+    "zerodha": {
+      "tier": "verified",
+      "claimed": true,
+      "claimed_on": "2026-06-01",
+      "provenance": "sample"
+    },
+    "groww": {
+      "tier": "featured",
+      "claimed": true,
+      "claimed_on": "2026-06-01",
+      "provenance": "sample"
+    },
+    "angel-one": {
+      "tier": "featured",
+      "claimed": true,
+      "claimed_on": "2026-06-01",
+      "provenance": "sample"
+    },
+    "dhan": {
+      "tier": "verified",
+      "claimed": true,
+      "claimed_on": "2026-06-01",
+      "provenance": "sample"
+    }
+  }
+}

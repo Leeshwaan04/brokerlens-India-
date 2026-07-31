@@ -1,0 +1,25 @@
+{
+  "_comment": [
+    "Symbols shown in the rolling header ticker, per exchange.",
+    "NSE is fetched as a live 'most active by volume' list, so it needs no watchlist -",
+    "whatever the market is actually trading that day shows up.",
+    "BSE has no open bulk-quote endpoint, only a per-scrip one, so it needs an explicit",
+    "list. Keep it short: every entry is one HTTP request per refresh.",
+    "MCX contracts expire monthly, hence the symbol root plus expiry-agnostic matching."
+  ],
+  "bse": [
+    { "scrip": "500325", "label": "RELIANCE" },
+    { "scrip": "532540", "label": "TCS" },
+    { "scrip": "500180", "label": "HDFCBANK" },
+    { "scrip": "500209", "label": "INFY" },
+    { "scrip": "500112", "label": "SBIN" },
+    { "scrip": "532174", "label": "ICICIBANK" },
+    { "scrip": "500875", "label": "ITC" },
+    { "scrip": "500696", "label": "HINDUNILVR" },
+    { "scrip": "532454", "label": "BHARTIARTL" },
+    { "scrip": "500510", "label": "LT" },
+    { "scrip": "500247", "label": "KOTAKBANK" },
+    { "scrip": "500034", "label": "BAJFINANCE" }
+  ],
+  "mcx": ["GOLD", "SILVER", "CRUDEOIL", "NATURALGAS", "COPPER", "ZINC", "ALUMINIUM", "LEAD"]
+}

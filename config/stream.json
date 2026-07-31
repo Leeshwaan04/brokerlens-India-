@@ -1,0 +1,113 @@
+{
+  "_comment": [
+    "Live-stream tuning. Intervals are in seconds and are what the scheduler AIMS for;",
+    "the poller widens them automatically under two conditions:",
+    "  1. bandwidth  - if a source exceeds max_mb_per_min, its interval is stretched",
+    "                  to fit the budget rather than the budget being ignored.",
+    "  2. failure    - a circuit breaker backs a failing source off exponentially.",
+    "",
+    "Every wire size below was measured on 2026-07-30, gzip where the source supports it.",
+    "",
+    "The MCX story is the important one. Its market-watch call returns the ENTIRE option",
+    "chain - 1,277,049 bytes, uncompressed, no ETag, no Last-Modified, and it ignores",
+    "Accept-Encoding entirely. At 2s that is 38 MB/min = 32 GB/day and a near-certain IP ban.",
+    "The heatmap endpoint carries the same 16 major futures (GOLD, SILVER, CRUDEOIL,",
+    "NATURALGAS, COPPER, ZINC, ALUMINIUM, LEAD, NICKEL, MENTHAOIL + mini/petal variants)",
+    "with LTP, OHLC, volume and open interest in 4,795 bytes - 266x smaller. So the fast",
+    "loop uses the heatmap, and the full market watch runs every 15 minutes purely to",
+    "refresh the complete contract list, units and expiries."
+  ],
+  "sources": {
+    "nse_active": {
+      "label": "NSE most active",
+      "exchange": "NSE",
+      "interval": 1,
+      "wire_bytes": 1847,
+      "max_mb_per_min": 4,
+      "note": "gzipped 7.5KB -> 1.8KB",
+      "feed": "NSE"
+    },
+    "nse_gainers": {
+      "label": "NSE top gainers",
+      "exchange": "NSE",
+      "interval": 2,
+      "wire_bytes": 9000,
+      "max_mb_per_min": 4,
+      "feed": "GAINERS"
+    },
+    "nse_pulse": {
+      "label": "NSE indices + status",
+      "exchange": "NSE",
+      "interval": 2,
+      "wire_bytes": 22000,
+      "max_mb_per_min": 6,
+      "feed": "INDICES"
+    },
+    "bse_quotes": {
+      "label": "BSE watchlist",
+      "exchange": "BSE",
+      "interval": 2,
+      "wire_bytes": 7200,
+      "max_mb_per_min": 4,
+      "concurrency": 4,
+      "note": "No bulk endpoint: the whole watchlist is fetched in parallel each cycle, 594b per scrip.",
+      "feed": "BSE"
+    },
+    "mcx_heatmap": {
+      "label": "MCX futures heatmap",
+      "exchange": "MCX",
+      "interval": 1,
+      "wire_bytes": 4795,
+      "max_mb_per_min": 6,
+      "note": "The fast MCX loop. 16 major futures with LTP/OHLC/OI.",
+      "feed": "MCX"
+    },
+    "mcx_gainers": {
+      "label": "MCX top gainers",
+      "exchange": "MCX",
+      "interval": 2,
+      "wire_bytes": 1915,
+      "max_mb_per_min": 2,
+      "feed": "MCX"
+    },
+    "mcx_full": {
+      "label": "MCX full market watch",
+      "exchange": "MCX",
+      "interval": 900,
+      "wire_bytes": 1277049,
+      "max_mb_per_min": 3,
+      "note": "1.28MB uncompressed. Slow loop only - contract list, units, expiries. NEVER put this on the fast path.",
+      "feed": "MCX"
+    },
+    "nse_losers": {
+      "label": "NSE top losers",
+      "exchange": "NSE",
+      "feed": "LOSERS",
+      "interval": 2,
+      "wire_bytes": 6451,
+      "max_mb_per_min": 4
+    },
+    "broker_stocks": {
+      "label": "Broker stocks",
+      "exchange": "BSE",
+      "feed": "BROKERS",
+      "interval": 2,
+      "wire_bytes": 10700,
+      "max_mb_per_min": 4,
+      "concurrency": 4,
+      "note": "18 listed brokers and broker parents, quoted via BSE getScripHeaderData. 594b per scrip."
+    }
+  },
+  "limits": {
+    "closed_market_multiplier": 20,
+    "jitter_pct": 12,
+    "breaker_failures_to_open": 4,
+    "breaker_base_backoff_s": 5,
+    "breaker_max_backoff_s": 300,
+    "max_sse_clients": 200,
+    "max_sse_clients_per_ip": 6,
+    "subscriber_queue_depth": 60,
+    "max_instruments_per_exchange": 400,
+    "total_max_mb_per_min": 12
+  }
+}
