@@ -1,12 +1,6 @@
 {
   "name": "BrokerLens India",
   "install": "make seed\nmake all",
-  "terminals": [
-    {
-      "name": "dev server",
-      "command": "make serve",
-      "description": "Static site, lead capture API, and live SSE quote stream at http://127.0.0.1:8000"
-    }
-  ],
+  "start": "python3 server/devserver.py --port 8000",
   "ports": [{"port": 8000, "name": "dev server"}]
 }
