@@ -1,0 +1,6 @@
+{
+  "name": "BrokerLens India",
+  "install": "make seed\nmake all",
+  "start": "make serve",
+  "ports": [{"port": 8000, "name": "dev server"}]
+}
