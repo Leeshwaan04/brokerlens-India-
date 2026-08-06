@@ -1,0 +1,8 @@
+{
+  "buildCommand": "make seed && make build",
+  "outputDirectory": "site",
+  "framework": null,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
