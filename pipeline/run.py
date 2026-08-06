@@ -6,6 +6,7 @@
   python3 -m pipeline.run all       fetch + build
   python3 -m pipeline.run pulse     refresh market strip + live quotes, then full rebuild
   python3 -m pipeline.run ticker    refresh ONLY live quotes -> ticker.json (cheapest; run every minute)
+  python3 -m pipeline.run refetch-mcx  re-pull MCX quotes into data/_ingest.json (Vercel build retry)
 
 Exit code is non-zero if a source that was expected to return rows returned
 none, so cron can alert instead of silently publishing a hollow site.
@@ -176,6 +177,20 @@ def complaints():
     return 0
 
 
+def refetch_mcx():
+    """Re-pull MCX quotes only. Used by Vercel build when the first fetch is blocked."""
+    wl = _watchlist()
+    ingest = read_json(os.path.join(DATA, "_ingest.json"), {}) or {}
+    ingest.setdefault("mcx", {})["quotes"] = mcx_src.collect(wl.get("mcx")).get("quotes")
+    write_json(os.path.join(DATA, "_ingest.json"), ingest, compact=True)
+    n = len(_dig(ingest.get("mcx"), "quotes.quotes") or [])
+    if not n:
+        log("mcx refetch: still empty", "warn")
+        return 1
+    log("mcx refetch: %d instruments" % n, "ok")
+    return 0
+
+
 def main(argv):
     cmd = argv[1] if len(argv) > 1 else "all"
     pages = int(os.environ.get("SEBI_MAX_PAGES", "0")) or None
@@ -186,6 +201,8 @@ def main(argv):
     if cmd == "fetch":
         _, problems = fetch(pages)
         return 1 if problems else 0
+    if cmd == "refetch-mcx":
+        return refetch_mcx()
     if cmd == "build":
         publish.build()
         return 0

@@ -18,6 +18,9 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from http_probe import REFUSED_POST_CODES, detect_static_host, http, is_spa_shell  # noqa: E402
 
 from pipeline import feeds as feedmod          # noqa: E402
 from pipeline import metrics                    # noqa: E402
@@ -455,18 +458,8 @@ def test_hub():
 
 # ------------------------------------------------------------------- server
 
-def http(url, method="GET", data=None, headers=None, timeout=10):
-    req = urllib.request.Request(url, data=data, method=method, headers=headers or {})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.status, r.read(), dict(r.headers)
-    except urllib.error.HTTPError as e:
-        return e.code, e.read(), dict(e.headers)
-    except Exception as e:
-        return 0, str(e).encode(), {}
 
-
-def test_server(base):
+def test_server(base, static_host=False):
     section("http routes")
     routes = ["/", "/brokers", "/broker/zerodha", "/compare", "/leaderboards",
               "/calculator", "/registry", "/algo", "/methodology", "/sources"]
@@ -479,11 +472,15 @@ def test_server(base):
         code, body, _ = http(base + a)
         check("GET %s" % a, code == 200 and len(body) > 0, "code=%s" % code)
 
-    code, _, _ = http(base + "/definitely-not-a-route")
-    check("unknown route falls back to the SPA shell", code == 200)
+    code, body, _ = http(base + "/definitely-not-a-route")
+    check("unknown route falls back to the SPA shell",
+          code == 200 and is_spa_shell(body))
 
-    code, body, _ = http(base + "/api/health")
-    check("health endpoint responds", code == 200 and b"ok" in body)
+    if static_host:
+        skip("health endpoint", "static host has no /api/health")
+    else:
+        code, body, _ = http(base + "/api/health")
+        check("health endpoint responds", code == 200 and b"ok" in body)
 
     section("no data collection")
     # The site collects no personal data at all: no lead capture, no contact
@@ -491,8 +488,10 @@ def test_server(base):
     for path in ("/api/leads", "/api/contact", "/"):
         code, _, _ = http(base + path, "POST", b'{"name":"x"}',
                           {"Content-Type": "application/json"})
-        check("POST %s is refused" % path, code in (404, 405),
-              "expected 404 or 405, got %s" % code)
+        allowed = REFUSED_POST_CODES if static_host else frozenset({404, 405})
+        check("POST %s is refused" % path, code in allowed,
+              "expected %s, got %s" % (
+                  "/".join(str(c) for c in sorted(allowed)), code))
 
     check("no lead store on disk", not os.path.exists(os.path.join(ROOT, "data", "leads")))
 
@@ -593,8 +592,13 @@ def main():
     test_ticker()
     test_hub()
     if args.url:
-        test_server(args.url.rstrip("/"))
-        test_sse(args.url.rstrip("/"))
+        base = args.url.rstrip("/")
+        static = detect_static_host(base)
+        if static:
+            skip("sse stream", "static host (no /api/stream); use devserver for SSE QA")
+        test_server(base, static_host=static)
+        if not static:
+            test_sse(base)
     else:
         skip("http + sse checks", "pass --url to include them")
 
