@@ -1,5 +1,5 @@
 {
-  "buildCommand": "make seed && make build",
+  "buildCommand": "SITE_URL=https://www.brokerlens.in make seed && make all",
   "outputDirectory": "site",
   "framework": null,
   "rewrites": [
@@ -9,7 +9,7 @@
     {
       "source": "/data/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=60, s-maxage=3600, must-revalidate" }
+        { "key": "Cache-Control", "value": "public, max-age=30, s-maxage=60, must-revalidate" }
       ]
     },
     {
@@ -21,7 +21,7 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
