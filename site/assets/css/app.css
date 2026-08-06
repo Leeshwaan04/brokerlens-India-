@@ -122,38 +122,28 @@ header.site {
 .nav-links a { color: var(--text-muted); font-size: var(--fs-sm); font-weight: 520; padding: var(--space-1) 0; border-bottom: 2px solid transparent; white-space: nowrap; }
 .nav-links a:hover { color: var(--text); text-decoration: none; }
 .nav-links a.active { color: var(--text); border-bottom-color: var(--accent); }
-.nav-links a:focus-visible, .mega-toggle:focus-visible, .nav-toggle:focus-visible,
-.icon-btn:focus-visible, th.sortable:focus-visible, .chip:focus-visible, .btn:focus-visible {
+.nav-links a:focus-visible, .icon-btn:focus-visible, th.sortable:focus-visible, .chip:focus-visible, .btn:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm);
 }
 
-/* The hamburger only exists below the breakpoint. */
-.nav-toggle {
-  display: none; border: 1px solid var(--border); background: var(--bg-raised);
-  color: var(--text); width: 34px; height: 32px; border-radius: var(--radius-sm);
-  cursor: pointer; font-size: 15px; line-height: 1; flex: none;
-}
-
-/* Mobile: the seven-item nav cannot fit a 375px bar, and without this the whole
-   page was forced to ~679px and scrolled horizontally on every phone. */
+/* Mobile: scroll the nav row instead of hiding it behind a menu button. */
 @media (max-width: 900px) {
-  .nav { gap: var(--space-3); }
+  .nav { gap: var(--space-3); flex-wrap: wrap; height: auto; min-height: 58px; padding-bottom: var(--space-2); }
   .brand { order: 1; margin-right: auto; }
   .icon-btn { order: 2; }
-  .nav-toggle { display: block; order: 3; }
   .nav-links {
-    order: 4; flex: 0 0 100%; display: none; flex-direction: column;
-    align-items: stretch; gap: 0; padding: var(--space-2) 0 var(--space-3);
-    border-top: 1px solid var(--border);
+    order: 3; flex: 0 0 100%; display: flex; flex-direction: row;
+    align-items: center; gap: var(--space-3); overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    padding: var(--space-1) 0 var(--space-2); border-top: 1px solid var(--border);
   }
-  .nav-links.open { display: flex; }
-  .nav-links a, .nav-links .mega-toggle {
-    padding: var(--space-3) var(--space-1); border-bottom: 1px solid var(--border);
-    font-size: var(--fs-base); text-align: left; width: 100%;
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-links a {
+    flex: none; padding: var(--space-2) 0; font-size: var(--fs-sm);
+    border-bottom: 2px solid transparent;
   }
-  .nav-links a.active { border-bottom-color: var(--border); color: var(--accent-text); font-weight: 640; }
-  .nav { height: auto; min-height: 58px; flex-wrap: wrap; padding-bottom: 0; }
-  header.site { position: static; }        /* a growing menu must not pin the viewport */
+  .nav-links a.active { border-bottom-color: var(--accent); color: var(--accent-text); font-weight: 640; }
+  header.site { position: static; }
 }
 
 /* Hover definitions. Any element with data-tip grows a tooltip explaining the
@@ -176,56 +166,6 @@ th[data-tip]:not(.sortable) { cursor: help; }
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
 }
 [data-tip].tip-end:hover::after { left: auto; right: 0; }
-
-/* Market-timings mega menu. The header is sticky, so the panel anchors to it
-   and spans the full viewport width. */
-.mega-toggle {
-  border: none; background: none; cursor: pointer; font: inherit;
-  color: var(--text-muted); font-size: var(--fs-sm); font-weight: 520;
-  padding: var(--space-1) 0; border-bottom: 2px solid transparent;
-}
-.mega-toggle:hover { color: var(--text); }
-.mega-toggle[aria-expanded="true"] { color: var(--text); border-bottom-color: var(--accent); }
-.mega {
-  position: absolute; left: 0; right: 0; top: 100%;
-  background: var(--bg-raised); border-bottom: 1px solid var(--border);
-  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.25);
-  max-height: calc(100vh - 58px); overflow-y: auto;
-}
-.mega-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-5); padding: var(--space-5) 0 var(--space-4);
-}
-@media (max-width: 860px) { .mega-grid { grid-template-columns: 1fr; } }
-.mega-col h4 {
-  display: flex; align-items: center; gap: var(--space-2);
-  font-size: var(--fs-base); margin-bottom: var(--space-3);
-}
-.mega-seg {
-  border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--bg); padding: var(--space-2) var(--space-3);
-  margin-bottom: var(--space-2);
-}
-.mega-seg-head {
-  display: flex; justify-content: space-between; align-items: baseline;
-  gap: var(--space-3); font-size: var(--fs-sm); font-weight: 620; color: var(--text);
-}
-.mega-seg-head .t, .sess .t { font-family: var(--font-mono); white-space: nowrap; }
-.mega-seg-head.live { color: var(--up); }
-.mega-seg-head + .sess { margin-top: var(--space-1); padding-top: var(--space-1); border-top: 1px dashed var(--border); }
-.sess {
-  display: flex; justify-content: space-between; align-items: baseline;
-  gap: var(--space-3); font-size: var(--fs-xs); padding: 1px 0 1px var(--space-2);
-  color: var(--text-muted);
-}
-.sess.live { color: var(--up); font-weight: 620; }
-.mega-seg-head.live .t::before, .sess.live .t::before {
-  content: "●"; font-size: 8px; margin-right: 5px; vertical-align: 2px;
-}
-.mega-foot {
-  grid-column: 1 / -1; border-top: 1px solid var(--border);
-  padding-top: var(--space-3); font-size: var(--fs-xs); color: var(--text-faint);
-}
 
 .icon-btn {
   border: 1px solid var(--border); background: var(--bg-raised); color: var(--text-muted);
