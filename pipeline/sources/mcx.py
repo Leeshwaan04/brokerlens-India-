@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 
 from ..common import Fetcher, log, to_num
 
@@ -169,7 +170,7 @@ def _rows(payload):
     return (rows if isinstance(rows, list) else []), _as_on(inner.get("Summary"))
 
 
-def heatmap(f: Fetcher = None, symbols=None, ttl=1):
+def heatmap(f: Fetcher = None, symbols=None, ttl=1, retries=3):
     """The fast MCX loop: 16 major futures in ~4.8KB.
 
     This is what makes MCX viable at a 1s cadence. Prefer it over live_quotes()
@@ -177,7 +178,7 @@ def heatmap(f: Fetcher = None, symbols=None, ttl=1):
     """
     f = f or fetcher()
     out = {"exchange": "MCX", "quotes": [], "as_of": None, "note": None}
-    payload = f.get_json(HEATMAP, ttl=ttl, retries=1,
+    payload = f.get_json(HEATMAP, ttl=ttl, retries=retries,
                          headers=dict(_XHR, Referer=HEATMAP_PAGE))
     if not payload:
         out["note"] = "MCX heatmap did not respond."
@@ -240,8 +241,16 @@ def top_gainers(f: Fetcher = None, ttl=2):
 def collect(symbols=None):
     """Pipeline-level collect: light heatmap for prices, full watch for coverage."""
     f = fetcher()
-    light = heatmap(f, symbols, ttl=45)
+    light = {"quotes": [], "note": "MCX not fetched"}
+    for attempt, delay in enumerate((0, 2, 4), start=1):
+        if delay:
+            time.sleep(delay)
+            f._warmed = False
+        light = heatmap(f, symbols, ttl=45 if attempt == 1 else 0, retries=3)
+        if light.get("quotes"):
+            break
     if not light.get("quotes"):
-        # fall back to the heavy call rather than publishing an empty MCX tab
+        f._warmed = False
+        time.sleep(2)
         light = live_quotes(f, symbols)
     return {"quotes": light, "gainers": top_gainers(f, ttl=45), "full": live_quotes(f, symbols)}

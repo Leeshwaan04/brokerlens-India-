@@ -24,6 +24,10 @@ import urllib.parse
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from http_probe import REFUSED_POST_CODES, detect_static_host, http, is_spa_shell  # noqa: E402
 
 OK, FINDINGS, NOTES = [], [], []
 
@@ -78,17 +82,6 @@ def raw_request(base, raw, read_bytes=4096, timeout=8):
         return b"ERR " + str(exc).encode()
 
 
-def http(url, method="GET", data=None, headers=None, timeout=10):
-    req = urllib.request.Request(url, data=data, method=method, headers=headers or {})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.status, r.read(), dict(r.headers)
-    except urllib.error.HTTPError as e:
-        return e.code, e.read(), dict(e.headers)
-    except Exception as e:
-        return 0, str(e).encode(), {}
-
-
 # ------------------------------------------------------- A01 access control
 
 def test_traversal(base):
@@ -125,20 +118,23 @@ def test_traversal(base):
     }
     for path, what in secrets.items():
         code, body, _ = http(base + path)
-        exposed = code == 200 and len(body) > 0 and b"<div id=\"app\"" not in body
+        exposed = (code == 200 and len(body) > 0
+                   and not is_spa_shell(body)
+                   and not body.strip().startswith(b"{"))
         result("not exposed: %s (%s)" % (path, what), not exposed,
                "status %s, %d bytes" % (code, len(body)), severity="high")
 
     section("directory listing")
     for d in ["/assets/", "/data/", "/assets/js/", "/data/brokers/"]:
         code, body, _ = http(base + d)
-        listing = code == 200 and (b"Directory listing" in body or b"<li><a href=" in body)
+        listing = (code == 200 and not is_spa_shell(body)
+                   and (b"Directory listing" in body or b"<li><a href=" in body))
         result("no directory listing at %s" % d, not listing, "status %s" % code, severity="medium")
 
 
 # ------------------------------------------------------------ A03 injection
 
-def test_injection(base):
+def test_injection(base, static_host=False):
     """The site has no write endpoint, so the whole injection surface is absent.
 
     This used to fuzz POST /api/leads. That endpoint was removed along with all
@@ -153,18 +149,20 @@ def test_injection(base):
         ("site root", "/"),
         ("data path", "/data/overview.json"),
     ]
+    refused = REFUSED_POST_CODES if static_host else frozenset({404, 405})
     for label, path in probes:
         code, _, _ = http(base + path, "POST", b'{"name":"x"}',
                           {"Content-Type": "application/json"})
-        result("POST refused: %s" % label, code in (404, 405),
-               "expected 404/405, got %s" % code, severity="high")
+        result("POST refused: %s" % label, code in refused,
+               "expected %s, got %s" % (
+                   "/".join(str(c) for c in sorted(refused)), code), severity="high")
 
     # A cross-origin form post (text/plain is CORS-simple, so no preflight
     # protects it). Must be refused on the method, not on the body.
     code, _, _ = http(base + "/api/leads", "POST",
                       b'{"kind":"investor_enquiry","consent":true}',
                       {"Content-Type": "text/plain", "Origin": "https://evil.example"})
-    result("cross-origin form post refused", code in (404, 405),
+    result("cross-origin form post refused", code in refused,
            "got %s" % code, severity="high")
 
     # Malformed and hostile bodies must not crash the connection.
@@ -192,11 +190,12 @@ def test_injection(base):
                "found %s" % bad, severity="medium")
 
 
-def test_methods(base):
+def test_methods(base, static_host=False):
     section("http method handling")
+    refused = REFUSED_POST_CODES if static_host else frozenset({400, 405, 501, 0})
     for m in ["PUT", "DELETE", "PATCH", "TRACE", "CONNECT", "PROPFIND"]:
         code, body, _ = http(base + "/", m)
-        result("%s not accepted" % m, code in (400, 405, 501, 0),
+        result("%s not accepted" % m, code in refused,
                "status %s" % code, severity="low")
 
     # TRACE reflecting headers would enable cross-site tracing.
@@ -207,7 +206,7 @@ def test_methods(base):
 
 # -------------------------------------------------- A05 security misconfig
 
-def test_headers(base):
+def test_headers(base, static_host=False):
     section("security headers")
     code, _, h = http(base + "/")
     lower = {k.lower(): v for k, v in h.items()}
@@ -230,12 +229,25 @@ def test_headers(base):
            lower.get("server", ""), severity="low")
 
     section("cors")
+    # Vercel static CDN sets ACAO:* on public assets; that is read-only JSON/HTML.
+    # Gate on credentialed CORS only when probing a static host.
     code, _, h = http(base + "/data/overview.json", headers={"Origin": "https://evil.example"})
     acao = {k.lower(): v for k, v in h.items()}.get("access-control-allow-origin")
-    result("no permissive CORS on data", acao in (None, "", "null"), str(acao), severity="high")
+    if static_host:
+        acac = {k.lower(): v for k, v in h.items()}.get("access-control-allow-credentials", "")
+        result("no credentialed CORS on data",
+               acac.lower() not in ("true", "1"),
+               "acao=%s acac=%s" % (acao, acac), severity="high")
+        skip_cors_api = True
+    else:
+        result("no permissive CORS on data", acao in (None, "", "null"), str(acao), severity="high")
+        skip_cors_api = False
     code, _, h = http(base + "/api/health", headers={"Origin": "https://evil.example"})
     acao = {k.lower(): v for k, v in h.items()}.get("access-control-allow-origin")
-    result("no permissive CORS on api", acao in (None, "", "null"), str(acao), severity="high")
+    if skip_cors_api:
+        note("cors on api", "skipped on static host (no /api/health)")
+    else:
+        result("no permissive CORS on api", acao in (None, "", "null"), str(acao), severity="high")
 
 
 # ----------------------------------------------------------- availability
@@ -427,14 +439,17 @@ def main():
 
     if args.url:
         base = args.url.rstrip("/")
+        static = detect_static_host(base)
         test_traversal(base)
-        test_injection(base)
-        test_methods(base)
-        test_headers(base)
-        if not args.skip_dos:
+        test_injection(base, static_host=static)
+        test_methods(base, static_host=static)
+        test_headers(base, static_host=static)
+        if not args.skip_dos and not static:
             test_rate_limits(base)
             test_sse_limits(base)
             test_slowloris(base)
+        elif not args.skip_dos and static:
+            note("dos probes", "skipped on static host (no rate-limited API)")
     else:
         print("\n  (pass --url to run the active server probes)")
 
