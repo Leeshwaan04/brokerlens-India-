@@ -1,27 +1,21 @@
 name: Refresh market data
 
-# Vercel serves static JSON only — no /api/stream. This workflow keeps
-# ticker.json and overview market data fresh during Indian market hours.
+# Vercel is static-only (no /api/stream). This workflow republishes live
+# NSE/BSE/MCX quotes and market pulse to production on a schedule.
 #
-# Required secrets: VERCEL_TOKEN
-# Optional (faster deploys): VERCEL_ORG_ID, VERCEL_PROJECT_ID
+# Required GitHub secret: VERCEL_TOKEN (https://vercel.com/account/tokens)
 
 on:
   schedule:
-    # Every 5 min, Mon–Fri, ~NSE cash session (03:45–10:15 UTC ≈ 09:15–15:45 IST)
     - cron: '*/5 3-10 * * 1-5'
-    # Nightly full SEBI + bhavcopy refresh (02:00 IST ≈ 20:30 UTC previous day; use 20:30 UTC)
-    - cron: '30 20 * * 0-4'
+    - cron: '30 20 * * 1-5'
   workflow_dispatch:
     inputs:
       mode:
         description: 'full = make all; pulse = live quotes only'
-        required: false
         default: pulse
         type: choice
-        options:
-          - pulse
-          - full
+        options: [pulse, full]
 
 jobs:
   refresh:
@@ -34,53 +28,27 @@ jobs:
           path: |
             data/cache
             data/_ingest.json
-          key: ingest-${{ github.run_attempt }}-${{ github.run_id }}
-          restore-keys: |
-            ingest-
+          key: bl-ingest-v1
+          restore-keys: bl-ingest-
 
-      - name: Seed manual datasets
-        run: make seed
-
-      - name: Full ingest and publish
-        if: github.event.schedule == '30 20 * * 0-4' || github.event.inputs.mode == 'full'
-        env:
-          SITE_URL: https://www.brokerlens.in
-        run: make all
-
-      - name: Live quote refresh (market hours)
-        if: github.event.schedule != '30 20 * * 0-4' && github.event.inputs.mode != 'full'
+      - name: Publish market data
         env:
           SITE_URL: https://www.brokerlens.in
         run: |
-          test -f data/_ingest.json || make fetch
-          make pulse
+          make seed
+          if [ "${{ github.event.schedule }}" = "30 20 * * 1-5" ] || [ "${{ github.event.inputs.mode }}" = "full" ]; then
+            make all
+          else
+            test -f data/_ingest.json || make fetch
+            make pulse
+          fi
 
-      - name: Build deployable dist
-        run: make dist
-
-      - name: Deploy to Vercel production
+      - name: Build and deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::error::VERCEL_TOKEN secret is required to publish refreshed data."
-            exit 1
-          fi
-          npm install -g vercel@latest
+          test -n "$VERCEL_TOKEN" || { echo "::error::Add VERCEL_TOKEN to repository secrets"; exit 1; }
+          make dist
           cp site/vercel.json dist/vercel.json
-          if [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
-            cd dist && vercel deploy --prod --yes --token "$VERCEL_TOKEN"
-          else
-            cd dist && vercel deploy --prod --yes --token "$VERCEL_TOKEN" --name brokerlens-india
-          fi
-
-      - name: Save ingest cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            data/cache
-            data/_ingest.json
-          key: ingest-${{ github.run_attempt }}-${{ github.run_id }}
+          npm install -g vercel@latest
+          cd dist && vercel deploy --prod --yes --token "$VERCEL_TOKEN" --name brokerlens-india
