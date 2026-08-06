@@ -1,5 +1,5 @@
 {
-  "buildCommand": "SITE_URL=https://www.brokerlens.in python3 -m pipeline.run seed && SITE_URL=https://www.brokerlens.in python3 -m pipeline.run all",
+  "buildCommand": "bash scripts/vercel-build.sh",
   "outputDirectory": "site",
   "framework": null,
   "rewrites": [
