@@ -36,6 +36,11 @@ SITE_DATA = os.path.join(ROOT, "site", "data")
 # are willing to hold in memory, and cap decompression separately: a 1KB zip can
 # expand to gigabytes.
 MAX_RESPONSE_BYTES = 64 * 1024 * 1024      # 64MB; MCX's 1.28MB is the real-world max
+
+# How old a cached body may be before the stale-cache fallback refuses to serve
+# it. Publishing week-old exchange data with a fresh "as of" stamp is a lie the
+# reader cannot detect, so the fallback is a short outage bridge, not an archive.
+STALE_CACHE_MAX_S = 3 * 24 * 3600
 MAX_UNZIPPED_BYTES = 256 * 1024 * 1024     # 256MB across all members of one archive
 MAX_COMPRESSION_RATIO = 200                # refuse anything expanding more than 200x
 
@@ -84,6 +89,7 @@ class Fetcher:
             urllib.request.HTTPRedirectHandler(),
         )
         self._warmed = False
+        self.served_stale = False
 
     def _headers(self, extra=None):
         # Akamai Bot Manager (MCX, and NSE/BSE's edge) scores requests on the
@@ -199,11 +205,21 @@ class Fetcher:
                     time.sleep(delay)
                     delay *= 2
                     self._warmed = False  # force a fresh handshake
-        # last resort: a stale cache entry beats no data at all
+        # Last resort: a stale cache entry beats no data at all, but only up to a
+        # point. Without an age ceiling this served half-year-old regulator data
+        # as a successful fetch, and the run then stamped a fresh last_run and
+        # status "ok" over it. Past the ceiling we return nothing, so the source
+        # is reported empty and the exit code reflects reality.
         if os.path.exists(cp):
-            log("%s serving STALE cache for %s" % (self.name, _short(url)), "warn")
-            with open(cp, "rb") as fh:
-                return fh.read()
+            age_s = time.time() - os.path.getmtime(cp)
+            if age_s <= STALE_CACHE_MAX_S:
+                log("%s serving STALE cache (%.1fh old) for %s"
+                    % (self.name, age_s / 3600.0, _short(url)), "warn")
+                self.served_stale = True
+                with open(cp, "rb") as fh:
+                    return fh.read()
+            log("%s REFUSING cache for %s: %.1f days old, past the %.1f-day ceiling"
+                % (self.name, _short(url), age_s / 86400.0, STALE_CACHE_MAX_S / 86400.0), "err")
         return None
 
     def get_json(self, url, **kw):

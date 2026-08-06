@@ -1,0 +1,130 @@
+{
+  "_comment": [
+    "Market session timings per exchange and segment. CURATED: timings are set by",
+    "exchange circulars and change rarely, but they DO change (MCX evening close,",
+    "pre-open mechanics, proposed F&O extensions). Published with provenance:'curated'.",
+    "",
+    "RULES:",
+    "  - Times are IST, 24h HH:MM. `days` defaults to Mon-Fri.",
+    "  - `kind` drives the UI: pre | normal | post | special.",
+    "  - When a close time varies (MCX / US daylight saving), state BOTH in `note`",
+    "    rather than pretending one number is always right.",
+    "  - Trading-holiday calendars are yearly circulars - link to them, never copy them."
+  ],
+  "last_reviewed": "2026-08-01",
+  "timezone": "Asia/Kolkata",
+  "notes": [
+    "All sessions run Monday to Friday and are suspended on exchange trading holidays; check each exchange's holiday calendar.",
+    "Both equity exchanges hold a special ~1-hour Muhurat trading session on Diwali evening; the exact window is announced by circular each year.",
+    "Timings are reproduced from exchange material and reviewed manually. Verify against the exchange before acting on an edge case."
+  ],
+  "holiday_links": [
+    {"exchange": "NSE", "url": "https://www.nseindia.com/resources/exchange-communication-holidays"},
+    {"exchange": "BSE", "url": "https://www.bseindia.com/static/markets/marketinfo/listholi.aspx"},
+    {"exchange": "MCX", "url": "https://www.mcxindia.com/market-operations/holiday-calendar"}
+  ],
+  "exchanges": [
+    {
+      "id": "NSE",
+      "name": "National Stock Exchange",
+      "segments": [
+        {
+          "id": "equity", "label": "Equity (cash market)",
+          "sessions": [
+            {"label": "Block deal window (morning)", "start": "08:45", "end": "09:00", "kind": "special"},
+            {"label": "Pre-open: order entry", "start": "09:00", "end": "09:08", "kind": "pre", "note": "order entry stops randomly in the final minute"},
+            {"label": "Pre-open: matching and buffer", "start": "09:08", "end": "09:15", "kind": "pre"},
+            {"label": "Normal trading", "start": "09:15", "end": "15:30", "kind": "normal"},
+            {"label": "Auction session (shortages)", "start": "14:00", "end": "14:45", "kind": "special"},
+            {"label": "Block deal window (afternoon)", "start": "14:05", "end": "14:20", "kind": "special"},
+            {"label": "Closing / post-close session", "start": "15:40", "end": "16:00", "kind": "post", "note": "trades at the closing price only"}
+          ]
+        },
+        {
+          "id": "equity_fno", "label": "Equity derivatives (F&O)",
+          "sessions": [
+            {"label": "Normal trading", "start": "09:15", "end": "15:30", "kind": "normal"}
+          ],
+          "notes": ["SEBI and the exchanges have periodically floated longer F&O hours; nothing is in force unless circularised."]
+        },
+        {
+          "id": "currency", "label": "Currency & interest-rate derivatives",
+          "sessions": [
+            {"label": "Normal trading", "start": "09:00", "end": "17:00", "kind": "normal"}
+          ]
+        },
+        {
+          "id": "commodity", "label": "Commodity derivatives",
+          "sessions": [
+            {"label": "Normal trading (non-agri)", "start": "09:00", "end": "23:30", "kind": "normal", "note": "extends to 11:55 pm when US markets are on standard (winter) time"}
+          ]
+        },
+        {
+          "id": "debt", "label": "Debt / corporate bonds (NDM, RFQ)",
+          "sessions": [
+            {"label": "Normal trading", "start": "09:00", "end": "17:00", "kind": "normal"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BSE",
+      "name": "BSE (Bombay Stock Exchange)",
+      "segments": [
+        {
+          "id": "equity", "label": "Equity (cash market)",
+          "sessions": [
+            {"label": "Block deal window (morning)", "start": "08:45", "end": "09:00", "kind": "special"},
+            {"label": "Pre-open: order entry", "start": "09:00", "end": "09:08", "kind": "pre", "note": "order entry stops randomly in the final minute"},
+            {"label": "Pre-open: matching and buffer", "start": "09:08", "end": "09:15", "kind": "pre"},
+            {"label": "Normal trading", "start": "09:15", "end": "15:30", "kind": "normal"},
+            {"label": "Block deal window (afternoon)", "start": "14:05", "end": "14:20", "kind": "special"},
+            {"label": "Closing / post-close session", "start": "15:40", "end": "16:00", "kind": "post", "note": "trades at the closing price only"}
+          ]
+        },
+        {
+          "id": "equity_fno", "label": "Equity derivatives (Sensex / Bankex F&O)",
+          "sessions": [
+            {"label": "Normal trading", "start": "09:15", "end": "15:30", "kind": "normal"}
+          ]
+        },
+        {
+          "id": "currency", "label": "Currency derivatives",
+          "sessions": [
+            {"label": "Normal trading", "start": "09:00", "end": "17:00", "kind": "normal"}
+          ]
+        },
+        {
+          "id": "commodity", "label": "Commodity derivatives",
+          "sessions": [
+            {"label": "Normal trading (non-agri)", "start": "09:00", "end": "23:30", "kind": "normal", "note": "extends to 11:55 pm when US markets are on standard (winter) time"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MCX",
+      "name": "Multi Commodity Exchange",
+      "segments": [
+        {
+          "id": "non_agri", "label": "Non-agri: bullion, base metals, energy",
+          "sessions": [
+            {"label": "Normal trading", "start": "09:00", "end": "23:30", "kind": "normal", "note": "extends to 11:55 pm when US markets are on standard (winter) time"}
+          ]
+        },
+        {
+          "id": "agri_intl", "label": "Internationally linked agri (cotton, CPO, kapas)",
+          "sessions": [
+            {"label": "Normal trading", "start": "09:00", "end": "21:00", "kind": "normal"}
+          ]
+        },
+        {
+          "id": "agri", "label": "Other agri commodities",
+          "sessions": [
+            {"label": "Normal trading", "start": "09:00", "end": "17:00", "kind": "normal"}
+          ]
+        }
+      ]
+    }
+  ]
+}

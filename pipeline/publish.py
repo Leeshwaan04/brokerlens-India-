@@ -31,7 +31,27 @@ from .common import (
 )
 from .identity import Resolver, norm as inorm
 
-SITE_URL = os.environ.get("SITE_URL", "https://example.invalid")
+SITE_URL = os.environ.get("SITE_URL", "").rstrip("/")
+
+# PUBLISH_MODE=production drops every dataset flagged provenance:"sample" instead
+# of publishing it behind a banner. Set it for any build that reaches a public
+# origin. Local development stays in the default mode so the UI has data to
+# exercise.
+PRODUCTION = os.environ.get("PUBLISH_MODE", "").lower() == "production"
+
+# A sitemap and RSS feed of unresolvable URLs is worse than none: search engines
+# reject it and the failure is silent. The old default was "https://example.invalid"
+# and it shipped in the committed artefacts, so the placeholder is now refused.
+_PLACEHOLDER_HOSTS = ("example.invalid", "example.com", "localhost", "127.0.0.1")
+
+
+def _require_site_url():
+    if not SITE_URL or any(h in SITE_URL for h in _PLACEHOLDER_HOSTS):
+        raise ValueError(
+            "SITE_URL is unset or a placeholder (got %r). Set it to the public origin "
+            "before publishing, e.g. SITE_URL=https://brokerlens.in python3 -m pipeline.run all. "
+            "Refusing to write a sitemap and feed that point nowhere." % (SITE_URL or None)
+        )
 
 # Raw ingest state is internal: it must NOT live under site/, which is
 # world-readable once deployed.
@@ -160,11 +180,29 @@ def _apply_sebi(profiles, resolver, registry, defaulters):
         p.setdefault("_match", {"method": method, "score": score})
         matched.add(bid)
 
+    # Defaulter attribution is ADVERSE, so it demands an exact normalised match.
+    # A fuzzy hit here does not produce a data-quality wrinkle: it publishes
+    # "this named, regulated firm is a SEBI defaulter" on a public page. The
+    # cost of a miss is a gap; the cost of a false positive is a defamation
+    # claim. Registration numbers are matched too, since they are unambiguous.
+    reg_to_bid = {}
+    for bid, p in profiles.items():
+        for e in p.get("sebi_entities") or []:
+            if e.get("reg_no"):
+                reg_to_bid[str(e["reg_no"]).strip().upper()] = bid
+        if p.get("sebi_reg_no"):
+            reg_to_bid[str(p["sebi_reg_no"]).strip().upper()] = bid
+
     flags = {}
     for d in defaulters or []:
-        bid, _, _ = resolver.resolve(d["name"])
+        bid = None
+        reg = str(d.get("reg_no") or "").strip().upper()
+        if reg and reg in reg_to_bid:
+            bid = reg_to_bid[reg]
+        else:
+            bid, _, _ = resolver.resolve(d.get("name", ""), strict=True)
         if bid:
-            flags.setdefault(bid, []).append(d["name"])
+            flags.setdefault(bid, []).append(d.get("name"))
     return len(matched), unmatched, flags
 
 
@@ -184,11 +222,53 @@ def build():
     charges_raw = read_json(os.path.join(MANUAL, "charges.json"), {}) or {}
     listings_raw = read_json(os.path.join(MANUAL, "listings.json"), {}) or {}
 
-    sample_flags = {
-        "active_clients": clients_raw.get("provenance") == "sample",
-        "complaints": complaints_raw.get("provenance") == "sample",
-        "charges": charges_raw.get("provenance") == "sample",
+    # Provenance must be declared, not inferred. Previously anything whose flag
+    # was not literally "sample" fell through to "nse" / "sebi_annexure_b", so a
+    # hand-typed file, or one whose flag was renamed to "manual" or "estimate",
+    # published as a regulator-mandated disclosure with a green provenance dot.
+    # An unrecognised value now fails the build rather than being dressed up.
+    PROVENANCE_BY_DATASET = {
+        "active_clients": {"sample", "nse_ucc", "manual", "estimate"},
+        "complaints": {"sample", "sebi_annexure_b", "manual", "estimate"},
+        "charges": {"sample", "broker_supplied", "manual", "estimate"},
     }
+    declared, sample_flags = {}, {}
+    for name, raw in (("active_clients", clients_raw), ("complaints", complaints_raw),
+                      ("charges", charges_raw)):
+        if not raw:
+            declared[name] = None
+            sample_flags[name] = False
+            continue
+        prov = raw.get("provenance")
+        if prov not in PROVENANCE_BY_DATASET[name]:
+            raise ValueError(
+                "data/manual/%s.json declares provenance %r; expected one of %s. "
+                "Refusing to publish: an undeclared provenance would be labelled "
+                "as regulator-sourced." % (name, prov, sorted(PROVENANCE_BY_DATASET[name]))
+            )
+        declared[name] = prov
+        sample_flags[name] = prov == "sample"
+
+    # PRODUCTION MODE: sample data never reaches a public origin.
+    #
+    # The banner is not enough. Placeholder figures look plausible, they are
+    # attached to real named firms, and a screenshot carries none of the
+    # disclaimer. In production a sample dataset is DROPPED, so the fields
+    # publish empty and the UI shows an honest "not published yet" state rather
+    # than an invented number.
+    if PRODUCTION:
+        dropped = [n for n, is_sample in sample_flags.items() if is_sample]
+        if dropped:
+            log("production mode: dropping sample dataset(s): %s" % ", ".join(dropped), "warn")
+        if "active_clients" in dropped:
+            clients_raw = {}
+        if "complaints" in dropped:
+            complaints_raw = {}
+        if "charges" in dropped:
+            charges_raw = {}
+        for n in dropped:
+            declared[n] = None
+            sample_flags[n] = False
 
     profiles = {b["id"]: _profile(b) for b in brokers_cfg}
     registry = _merge_registry(sebi_d.get("registry"))
@@ -206,6 +286,9 @@ def build():
             market_totals[m] = market_totals.get(m, 0) + (v or 0)
 
     circulars = nse_d.get("circulars") or {}
+    # The regulatory picture is only "checked" if both adverse sources actually
+    # returned data this run. A failed SEBI pull must not read as a clean record.
+    regulatory_checked = bool(sebi_d.get("defaulters")) and "circulars" in nse_d
     bse_members = {}
     mt = bse_d.get("member_turnover") or {}
     for row in (mt.get("members") or []):
@@ -239,14 +322,21 @@ def build():
             "listing": listing,
             "bse_activity": bse_members.get(bid),
             "regulatory_flags": {
+                # `checked` records that the regulatory scan actually ran against
+                # real source data. Without it, "no flags found" was indistinguishable
+                # from "we never looked", and the reliability score treated the
+                # latter as a clean record worth full marks.
+                "checked": regulatory_checked,
                 "defaulter": bid in defaulter_flags,
                 "defaulter_names": defaulter_flags.get(bid, []),
                 "circulars": circulars.get(bid, []),
             },
+            # Each field carries the provenance its source file DECLARED, never a
+            # default. `None` means we hold no data, which the UI renders as a gap.
             "provenance": {
-                "active_clients": "sample" if sample_flags["active_clients"] else "nse",
-                "complaints": "sample" if sample_flags["complaints"] else "sebi_annexure_b",
-                "charges": ("sample" if sample_flags["charges"] else "broker_supplied") if ch else None,
+                "active_clients": declared["active_clients"] if cm.get("active_clients") is not None else None,
+                "complaints": declared["complaints"] if comp.get("available") else None,
+                "charges": declared["charges"] if ch else None,
                 "identity": "sebi_registry" if p["legal_name_verified"] else "curated",
             },
         })
@@ -289,7 +379,13 @@ def build():
         "spark": [v for _, v in (b["clients"].get("series") or [])][-12:],
         "complaints_per_10k": b["complaints"].get("per_10k_clients_12m"),
         "resolution": b["complaints"].get("resolution_rate_pct"),
-        "reliability": (b.get("reliability") or {}).get("score"),
+        # A bare score next to other brokers implies like-for-like comparison, so
+        # the index carries it only when enough inputs back it. A score built on
+        # tenure and "no adverse findings" alone reads as a quality signal it is
+        # not. The full profile still shows the breakdown with its confidence.
+        "reliability": ((b.get("reliability") or {}).get("score")
+                        if (b.get("reliability") or {}).get("rankable") else None),
+        "reliability_confidence": (b.get("reliability") or {}).get("confidence"),
         "cost": (b.get("cost") or {}).get("monthly_total"),
         "tier": b["listing"].get("tier"),
         "claimed": bool(b["listing"].get("claimed")),
@@ -306,6 +402,16 @@ def build():
             "claimed_count": sum(1 for b in built if b["listing"].get("claimed")),
             "entity_linked_count": sum(1 for b in built if b["profile"]["sebi_entities"]),
             "sample_data": sample_flags,
+            "production": PRODUCTION,
+            # What the site does and does not yet hold, so the UI can say so
+            # plainly instead of rendering an empty chart that reads as broken.
+            "data_status": {
+                "active_clients": bool(clients_raw.get("brokers")),
+                "complaints": bool(complaints_raw.get("brokers")),
+                "charges": bool(charges_raw.get("brokers")),
+                "registry": bool(registry),
+                "market": bool((nse_d.get("pulse") or {}).get("indices")),
+            },
             "data_months": clients_raw.get("months") or [],
         },
         "market": {
@@ -320,6 +426,7 @@ def build():
         "leaderboards": boards,
         "brokers": index,
         "registry_count": len(registry),
+        "defaulter_count": len(sebi_d.get("defaulters") or []),
         "untracked_count": len(untracked),
     }
     size = write_json(os.path.join(SITE_DATA, "overview.json"), overview, compact=True)
@@ -350,6 +457,8 @@ def build():
                  "h": b["profile"]["hq"]} for b in built], compact=True)
 
     _write_sources(sources_cfg, ingest, sample_flags)
+    _write_algo(brokers_cfg)
+    _write_timings()
     _write_sitemap(built)
     _write_feed(built, aggregates)
     build_ticker()
@@ -431,9 +540,60 @@ def _write_sources(cfg, ingest, sample_flags):
                 "licensing": cfg.get("licensing"), "sample_data": sample_flags})
 
 
+def _write_algo(brokers_cfg):
+    """Emit site/data/algo.json — the curated algo-platform directory.
+
+    Entirely curated (config/algo_platforms.json), so every record is published
+    with provenance:'curated' and the page must say so. `works_with` broker ids
+    are validated against brokers_master and enriched with the brand name so the
+    front end can cross-link to /broker/:id without a second lookup.
+    """
+    cfg = read_json(os.path.join(CONFIG, "algo_platforms.json"), {}) or {}
+    brands = {b["id"]: b.get("brand") for b in brokers_cfg}
+    platforms = []
+    for p in cfg.get("platforms") or []:
+        links, dropped = [], []
+        for bid in p.get("works_with") or []:
+            (links if bid in brands else dropped).append(bid)
+        if dropped:
+            log("algo: %s references unknown broker id(s): %s"
+                % (p.get("id"), ", ".join(dropped)), "warn")
+        platforms.append(dict(p, works_with=[
+            {"id": bid, "brand": brands[bid]} for bid in links
+        ], provenance="curated"))
+
+    payload = {
+        "generated_at": now_iso(),
+        "last_reviewed": cfg.get("last_reviewed"),
+        "provenance": "curated",
+        "categories": cfg.get("categories") or {},
+        "count": len(platforms),
+        "platforms": platforms,
+    }
+    size = write_json(os.path.join(SITE_DATA, "algo.json"), payload, compact=True)
+    log("algo.json %.1f KB, %d platforms" % (size / 1024, len(platforms)), "ok")
+
+
+def _write_timings():
+    """Emit site/data/timings.json — curated session timings for the nav mega menu."""
+    cfg = read_json(os.path.join(CONFIG, "market_timings.json"), {}) or {}
+    payload = {
+        "generated_at": now_iso(),
+        "last_reviewed": cfg.get("last_reviewed"),
+        "provenance": "curated",
+        "timezone": cfg.get("timezone") or "Asia/Kolkata",
+        "notes": cfg.get("notes") or [],
+        "holiday_links": cfg.get("holiday_links") or [],
+        "exchanges": cfg.get("exchanges") or [],
+    }
+    size = write_json(os.path.join(SITE_DATA, "timings.json"), payload, compact=True)
+    log("timings.json %.1f KB, %d exchanges" % (size / 1024, len(payload["exchanges"])), "ok")
+
+
 def _write_sitemap(built):
+    _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
-            "/for-brokers", "/methodology", "/sources"]
+            "/registry", "/algo", "/methodology", "/sources"]
     urls += ["/broker/%s" % b["id"] for b in built]
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     body = "".join(
@@ -442,11 +602,11 @@ def _write_sitemap(built):
     )
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)
-    with open(os.path.join(SITE_DATA, "..", "sitemap.xml"), "w", encoding="utf-8") as fh:
-        fh.write(xml)
+    _write_text(os.path.join(SITE_DATA, "..", "sitemap.xml"), xml)
 
 
 def _write_feed(built, aggregates):
+    _require_site_url()
     """RSS of notable monthly movements - the SEO/discovery surface."""
     movers = sorted(
         [b for b in built if b["clients"].get("mom_pct") is not None],
@@ -467,8 +627,34 @@ def _write_feed(built, aggregates):
            "<title>Indian Stock Broker Marketplace - monthly movers</title>"
            "<link>%s</link><description>Broker statistics from NSE, BSE and SEBI disclosures.</description>"
            "%s</channel></rss>" % (SITE_URL, "".join(items)))
-    with open(os.path.join(SITE_DATA, "..", "feed.xml"), "w", encoding="utf-8") as fh:
-        fh.write(xml)
+    _write_text(os.path.join(SITE_DATA, "..", "feed.xml"), xml)
+    _write_robots()
+
+
+def _write_text(path, body):
+    """Atomic write, so a crash or a CDN read mid-write cannot serve half a file."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write(body)
+    os.replace(tmp, path)
+
+
+def _write_robots():
+    """Advertise the sitemap; keep crawlers out of raw JSON and the API.
+
+    Without this, /data/*.json competes with the rendered pages in search
+    results and every soft-404 URL is crawlable.
+    """
+    body = "\n".join([
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /api/",
+        "Disallow: /data/",
+        "",
+        "Sitemap: %s/sitemap.xml" % SITE_URL,
+        "",
+    ])
+    _write_text(os.path.join(SITE_DATA, "..", "robots.txt"), body)
 
 
 def _esc(s):

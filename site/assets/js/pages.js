@@ -3,9 +3,9 @@
  */
 
 import {
-  CONFIG, cls, count, esc, full, initials, inr, loadBroker, loadOverview,
+  cls, count, esc, full, initials, inr, loadAlgo, loadBroker, loadOverview,
   loadRegistry, loadSources, markColor, month, pct, provDot, safeUrl,
-  SEGMENT_LABEL, submitLead, TYPE_LABEL,
+  SEGMENT_LABEL, TYPE_LABEL,
 } from './store.js';
 import { barChart, donut, lineChart, registerRedraw, sparkline } from './chart.js';
 
@@ -14,6 +14,19 @@ export const runAfter = () => { while (after.length) { try { after.shift()(); } 
 const onMount = (fn) => after.push(fn);
 
 /* ------------------------------------------------------------- shared bits */
+
+/* Says plainly what the site does not yet publish, and why, instead of leaving
+ * an empty chart or a table of dashes that reads as a broken page. */
+function pending(what, detail) {
+  return `<div class="pending">
+    <strong>${esc(what)} not published yet</strong>
+    ${esc(detail)} We publish a figure only once it comes from the primary source,
+    so this section is empty rather than estimated.
+    <a href="/sources" data-link>What is live today</a>.
+  </div>`;
+}
+
+const HAS = (o, key) => Boolean(o?.metadata?.data_status?.[key]);
 
 function sampleBanner(meta) {
   const s = meta?.sample_data || {};
@@ -69,13 +82,7 @@ function statTile(label, value, sub, extra = '') {
 
 function adSlot(overview, placement) {
   const featured = (overview.brokers || []).filter((b) => b.tier === 'featured');
-  if (!featured.length) {
-    return `<div class="ad-slot">
-      <div class="ad-tag">Sponsor slot — ${esc(placement)}</div>
-      <div style="margin-top:6px" class="small">This placement is available.
-      <a href="/for-brokers#advertise" data-link>See rates →</a></div>
-    </div>`;
-  }
+  if (!featured.length) return '';
   const b = featured[Math.floor(Math.random() * featured.length)];
   return `<div class="ad-slot">
     <div class="ad-tag">Sponsored — ${esc(placement)}</div>
@@ -95,7 +102,10 @@ function adSlot(overview, placement) {
 export async function home() {
   const o = await loadOverview();
   const m = o.market || {}, agg = o.aggregates || {}, meta = o.metadata || {};
-  const top = [...(o.brokers || [])].sort((a, b) => (b.clients || 0) - (a.clients || 0)).slice(0, 12);
+  const hasClients = HAS(o, 'active_clients');
+  const top = hasClients
+    ? [...(o.brokers || [])].sort((a, b) => (b.clients || 0) - (a.clients || 0)).slice(0, 12)
+    : [...(o.brokers || [])].sort((a, b) => String(a.brand).localeCompare(String(b.brand))).slice(0, 12);
   const conc = agg.concentration || {};
 
   onMount(() => {
@@ -137,29 +147,38 @@ export async function home() {
     <h1 style="max-width:22ch">Every Indian stock broker, measured the same way.</h1>
     <p class="muted" style="max-width:62ch;margin-top:12px">
       ${meta.broker_count} brokers tracked in depth and ${count(o.registry_count)} SEBI-registered entities on file.
-      Active clients, market share, investor-complaint records, regulatory registrations and real cost — assembled from
-      NSE, BSE and SEBI primary disclosures, not from marketing pages.
+      ${hasClients
+        ? 'Active clients, market share, investor-complaint records, regulatory registrations and real cost, assembled from NSE, BSE and SEBI primary disclosures, not from marketing pages.'
+        : 'Legal entities, SEBI registration numbers, exchange memberships and regulatory standing, taken straight from the regulator\'s own register rather than from marketing pages.'}
     </p>
     <div class="row-wrap" style="margin-top:18px">
       <a class="btn btn-primary" href="/brokers" data-link>Browse brokers</a>
       <a class="btn" href="/compare" data-link>Compare side by side</a>
-      <a class="btn" href="/calculator" data-link>What will it cost me?</a>
+      ${hasClients ? '<a class="btn" href="/calculator" data-link>What will it cost me?</a>'
+                   : '<a class="btn" href="/registry" data-link>Search the SEBI register</a>'}
     </div>
   </section>
 
   <div class="grid g4" style="margin-top:24px">
-    ${statTile('Total active clients', count(agg.total_active_clients),
-      `<span class="${cls(agg.total_yoy_pct)}">${pct(agg.total_yoy_pct)}</span> year on year`,
-      provDot(meta.sample_data?.active_clients ? 'sample' : 'nse'))}
-    ${statTile('Top 5 brokers hold', pct(conc.top5_pct, { sign: false }),
-      `top 1 is ${pct(conc.top1_pct, { sign: false })} · top 10 is ${pct(conc.top10_pct, { sign: false })}`)}
-    ${statTile('Market concentration', (agg.hhi ?? 0).toFixed(0),
-      'HHI — above 1,500 is moderately concentrated')}
+    ${hasClients
+      ? `${statTile('Total active clients', count(agg.total_active_clients),
+            `<span class="${cls(agg.total_yoy_pct)}">${pct(agg.total_yoy_pct)}</span> year on year`,
+            provDot(meta.sample_data?.active_clients ? 'sample' : 'nse'))}
+         ${statTile('Top 5 brokers hold', pct(conc.top5_pct, { sign: false }),
+            `top 1 is ${pct(conc.top1_pct, { sign: false })} · top 10 is ${pct(conc.top10_pct, { sign: false })}`)}
+         ${statTile('Market concentration', (agg.hhi ?? 0).toFixed(0),
+            'HHI, above 1,500 is moderately concentrated')}`
+      : `${statTile('Brokers profiled', String(meta.broker_count),
+            'matched to the SEBI register', provDot('sebi_registry'))}
+         ${statTile('Entity records verified', String(meta.verified_count),
+            'legal name and registration confirmed', provDot('sebi_registry'))}
+         ${statTile('Defaulter records on file', count(o.defaulter_count ?? 0),
+            'firms declared defaulter or expelled', provDot('sebi_registry'))}`}
     ${statTile('SEBI-registered on file', count(o.registry_count),
       `${meta.verified_count} tracked brokers matched to the register`, provDot('sebi_registry'))}
   </div>
 
-  <div class="grid g-main" style="margin-top:16px">
+  ${hasClients ? `<div class="grid g-main" style="margin-top:16px">
     <div class="card">
       <div class="card-head">
         <div>
@@ -176,20 +195,23 @@ export async function home() {
       </div>
       <div class="legend" id="share-legend" style="margin-top:12px"></div>
     </div>
-  </div>
+  </div>` : `<div style="margin-top:16px">${pending('Client and complaint statistics',
+      'NSE publishes member-wise active-client counts monthly, and every broker must publish its complaint record in SEBI\'s Annexure-B format. Both are being brought in from those primary sources.')}</div>`}
 
   <div class="grid g-main" style="margin-top:16px">
     <div>
-      <div class="section-title"><h2>Largest brokers by active clients</h2>
+      <div class="section-title"><h2>${hasClients ? 'Largest brokers by active clients' : 'Brokers on the SEBI register'}</h2>
         <a class="small" href="/brokers" data-link>All ${meta.broker_count} →</a></div>
       <div class="table-scroll">
         <table class="data">
           <thead><tr>
-            <th>#</th><th>Broker</th><th class="right">Active clients</th><th class="right">Share</th>
-            <th class="right">12-month</th><th>Trend</th><th class="right">Complaints /10k</th><th class="right">Reliability</th>
+            ${hasClients
+              ? `<th>#</th><th>Broker</th><th class="right">Active clients</th><th class="right">Share</th>
+                 <th class="right">12-month</th><th>Trend</th><th class="right">Complaints /10k</th><th class="right">Reliability</th>`
+              : `<th>Broker</th><th>Registration</th><th>Type</th><th>Segments</th><th>Head office</th>`}
           </tr></thead>
           <tbody>
-            ${top.map((b) => `<tr class="${b.tier === 'featured' ? 'promoted' : ''}">
+            ${top.map((b) => hasClients ? `<tr>
               <td class="rank-cell">${b.rank ?? '—'}</td>
               <td><div class="bname">${mark(b.id, b.brand)}<span>${brokerLink(b)}</span> ${badge(b)}</div></td>
               <td class="right num">${count(b.clients)}</td>
@@ -198,6 +220,12 @@ export async function home() {
               <td>${sparkCell(b)}</td>
               <td class="right num">${b.complaints_per_10k?.toFixed(2) ?? '—'}</td>
               <td class="right num">${b.reliability?.toFixed(1) ?? '—'}</td>
+            </tr>` : `<tr>
+              <td><div class="bname">${mark(b.id, b.brand)}<span>${brokerLink(b)}</span> ${badge(b)}</div></td>
+              <td class="small num">${esc(b.sebi_reg_no || '—')}</td>
+              <td class="small">${esc(TYPE_LABEL[b.type] || b.type || '—')}</td>
+              <td class="xs muted">${(b.segments || []).map((x) => esc(SEGMENT_LABEL[x] || x)).join(' · ') || '—'}</td>
+              <td class="small">${esc(b.hq || '—')}</td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -226,12 +254,6 @@ export async function home() {
         <div class="chart-box"><canvas id="bse-delivery"></canvas></div>
       </div>` : ''}
 
-      <div class="card">
-        <div class="card-title">Are you a broker?</div>
-        <p class="small" style="margin-top:8px">Your profile is already live, built from regulator filings. Claim it to
-        publish your pricing, correct anything wrong, and receive the account-opening enquiries this page generates.</p>
-        <a class="btn btn-primary" href="/for-brokers" data-link>Claim your profile</a>
-      </div>
     </div>
   </div>
 
@@ -333,15 +355,22 @@ export async function brokers(params) {
   <div class="table-scroll" style="margin-top:16px">
     <table class="data">
       <thead><tr>
-        <th>#</th>
-        <th class="sortable" data-sort="brand">Broker <span class="arrow">↕</span></th>
-        <th class="sortable right sorted" data-sort="clients">Active clients <span class="arrow">↕</span></th>
-        <th class="sortable right" data-sort="clients_yoy">12-month <span class="arrow">↕</span></th>
-        <th>Trend</th>
-        <th class="sortable right" data-sort="complaints_per_10k">Complaints /10k <span class="arrow">↕</span></th>
-        <th class="sortable right" data-sort="reliability">Reliability <span class="arrow">↕</span></th>
-        <th class="sortable right" data-sort="cost">Cost /month <span class="arrow">↕</span></th>
-        <th>Type</th>
+        <th data-tip="Rank by active clients. A dash means the client count is not available yet.">#</th>
+        <th class="sortable" data-sort="brand"
+          data-tip="Consumer brand. The SEBI badge means we matched the legal entity and registration number to SEBI's own register; a flag means the broker appears in an exchange circular or on the defaulter list.">Broker <span class="arrow">↕</span></th>
+        <th class="sortable right sorted" data-sort="clients"
+          data-tip="Unique clients who placed at least one trade in the last 12 months, as reported to the exchange (NSE UCC data). The standard measure of a broker's real, active user base; L is lakh (100,000).">Active clients <span class="arrow">↕</span></th>
+        <th class="sortable right" data-sort="clients_yoy"
+          data-tip="Change in active clients over the last 12 months, in percent. Positive means the broker is gaining active users; negative means clients are leaving or going inactive.">12-month <span class="arrow">↕</span></th>
+        <th data-tip="Active client count month by month over the last 12 months, so you can see whether growth is steady, recent or fading.">Trend</th>
+        <th class="sortable right" data-sort="complaints_per_10k"
+          data-tip="Investor complaints received in the last 12 months per 10,000 active clients, from SEBI-mandated disclosures. Dividing by size lets small and large brokers be compared fairly. Lower is better.">Complaints /10k <span class="arrow">↕</span></th>
+        <th class="sortable right tip-end" data-sort="reliability"
+          data-tip="BrokerLens composite score out of 100: complaint rate vs peers (40%), complaint resolution rate (20%), regulatory record (20%), complaint backlog (10%) and years in business (10%). Built only from regulator and exchange disclosures; full formula on the methodology page.">Reliability <span class="arrow">↕</span></th>
+        <th class="sortable right tip-end" data-sort="cost"
+          data-tip="Estimated brokerage for a fixed monthly basket (4 delivery trades, 10 intraday, 10 F&O orders) plus AMC, priced on each broker's published charges. Statutory taxes are excluded since they are identical across brokers. Shows 'unverified' until a broker publishes charges on its claimed profile.">Cost /month <span class="arrow">↕</span></th>
+        <th class="tip-end"
+          data-tip="Business model. Discount: flat per-order fee, app first. Full service: research, advisory and branch network. Bank backed: the broking arm of a bank, usually with a 3-in-1 account.">Type</th>
       </tr></thead>
       <tbody id="dir-body"></tbody>
     </table>
@@ -420,7 +449,6 @@ export async function broker(id) {
       })), { height: 150, fmt: (v) => v.toFixed(0), labelW: 100 });
       draw(); registerRedraw(draw);
     }
-    wireLeadForm();
   });
 
   const shareOfMkt = c.market_share_pct;
@@ -563,8 +591,7 @@ export async function broker(id) {
           <div class="xs faint" style="margin-top:8px">${provDot(b.provenance?.charges)} Statutory charges excluded —
             identical at every broker. <a href="/methodology" data-link>Basket definition</a></div>`
           : `<p class="small muted" style="margin-top:8px">This broker has not published verified pricing here yet, so we
-             show nothing rather than guess.</p>
-             <a class="btn btn-sm btn-primary" href="/for-brokers#claim" data-link>Are you ${esc(p.brand)}? Publish your pricing</a>`}
+             show nothing rather than guess. Check the broker's own website for current charges.</p>`}
       </div>
     </div>
   </div>
@@ -583,7 +610,15 @@ export async function broker(id) {
   </div>` : ''}
 
   <div class="grid g-main" style="margin-top:16px">
-    ${leadCard(p, b.listing)}
+    <div class="card">
+      <div class="card-title">Open an account with ${esc(p.brand)}</div>
+      <p class="small muted" style="margin-top:6px">BrokerLens does not open accounts or forward your details to
+      anyone. Account opening happens on the broker's own website, where their current charges and terms apply.</p>
+      ${safeUrl(p.website) ? `<a class="btn btn-primary" style="margin-top:10px" href="${safeUrl(p.website)}"
+        rel="nofollow noopener external" target="_blank">Visit ${esc(p.brand)} \u2197</a>` : ''}
+      <p class="xs faint" style="margin-top:10px">Not a recommendation. Verify charges and registration status
+      with the broker and with SEBI before opening an account.</p>
+    </div>
     <div class="card">
       <div class="card-title">Closest comparable brokers</div>
       <table class="data" style="margin-top:8px"><tbody>
@@ -596,69 +631,6 @@ export async function broker(id) {
       </tbody></table>
     </div>
   </div>`;
-}
-
-/* --------------------------------------------------------- lead capture */
-
-function leadCard(p, listing) {
-  const claimed = listing?.claimed;
-  return `<div class="card card-pad-lg">
-    <div class="card-title">${claimed ? `Open an account with ${esc(p.brand)}` : `Interested in ${esc(p.brand)}?`}</div>
-    <p class="small muted" style="margin-top:6px">
-      ${claimed
-        ? `${esc(p.brand)} receives enquiries submitted here. We pass on only what you enter below.`
-        : `${esc(p.brand)} has not claimed this profile, so we cannot hand your details to them. Tell us you are
-           interested and we will notify you if they join — or see brokers who did.`}
-    </p>
-    <form id="lead-form" data-broker="${esc(p.id)}" data-kind="investor_enquiry" style="margin-top:12px">
-      <div class="grid g2">
-        <div class="field"><label for="ld-name">Name</label><input id="ld-name" name="name" required autocomplete="name"></div>
-        <div class="field"><label for="ld-phone">Phone</label><input id="ld-phone" name="phone" type="tel" required autocomplete="tel" pattern="[0-9+ ]{8,15}"></div>
-      </div>
-      <div class="field"><label for="ld-email">Email</label><input id="ld-email" name="email" type="email" required autocomplete="email"></div>
-      <div class="field"><label for="ld-interest">Mainly interested in</label>
-        <select id="ld-interest" name="interest">
-          <option value="equity_delivery">Long-term investing (delivery)</option>
-          <option value="intraday">Intraday trading</option>
-          <option value="fno">F&amp;O trading</option>
-          <option value="commodity">Commodities</option>
-          <option value="mutual_funds">Mutual funds only</option>
-        </select>
-      </div>
-      <label style="display:flex;gap:8px;text-transform:none;letter-spacing:0;font-size:var(--fs-xs);align-items:flex-start;margin-top:10px">
-        <input type="checkbox" name="consent" required style="width:auto;margin-top:2px">
-        <span class="muted">I agree that my details may be shared with the selected broker so they can contact me
-        about opening an account. I understand BrokerLens is not an investment adviser.</span>
-      </label>
-      <button class="btn btn-primary" type="submit" style="margin-top:12px">Request a callback</button>
-      <div id="lead-msg" class="small" style="margin-top:8px"></div>
-    </form>
-  </div>`;
-}
-
-export function wireLeadForm() {
-  document.querySelectorAll('form[id="lead-form"], form.lead-form').forEach((form) => {
-    if (form.dataset.wired) return;
-    form.dataset.wired = '1';
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = form.querySelector('#lead-msg') || form.querySelector('.lead-msg');
-      const btn = form.querySelector('button[type="submit"]');
-      const data = Object.fromEntries(new FormData(form).entries());
-      btn.disabled = true;
-      if (msg) { msg.className = 'small muted'; msg.textContent = 'Sending…'; }
-      try {
-        await submitLead({ ...data, broker_id: form.dataset.broker || null, kind: form.dataset.kind || 'enquiry' });
-        form.innerHTML = `<div class="banner banner-info"><span>✓</span><div><strong>Received.</strong>
-          ${form.dataset.kind === 'broker_partner'
-            ? `We will reply from ${esc(CONFIG.contactEmail)} within one working day.`
-            : 'Expect a callback shortly. We do not sell your details to anyone else.'}</div></div>`;
-      } catch (err) {
-        btn.disabled = false;
-        if (msg) { msg.className = 'small down'; msg.textContent = `Could not send: ${err.message}`; }
-      }
-    });
-  });
 }
 
 /* =========================================================== COMPARE */
@@ -772,7 +744,7 @@ function fmtPlan(plan) {
 export async function leaderboards() {
   const o = await loadOverview();
   onMount(() => {
-    (o.leaderboards || []).forEach((bd, i) => {
+    (o.leaderboards || []).filter((bd) => (bd.rows || []).length).forEach((bd, i) => {
       const c = document.getElementById(`lb-${i}`);
       if (!c) return;
       const draw = () => barChart(c, bd.rows.slice(0, 10).map((r) => ({ label: r.brand, value: r.value })),
@@ -787,7 +759,11 @@ export async function leaderboards() {
   <p class="muted" style="max-width:64ch">Every ranking states the metric it sorts on and where that metric comes from.
   We do not publish an overall "best broker" — that depends on what you trade.</p>
 
-  ${(o.leaderboards || []).map((bd, i) => `
+  ${!(o.leaderboards || []).some((bd) => (bd.rows || []).length)
+    ? `<div style="margin-top:16px">${pending('Rankings',
+        'Every ranking here sorts on active clients, complaint records or published charges. Those come from NSE and SEBI monthly disclosures, which are being brought in from the primary sources now.')}</div>`
+    : ''}
+  ${(o.leaderboards || []).filter((bd) => (bd.rows || []).length).map((bd, i) => `
     <div class="card" style="margin-top:16px">
       <div class="card-head">
         <div>
@@ -814,6 +790,18 @@ export async function leaderboards() {
 export async function calculator(params) {
   const o = await loadOverview();
   const priced = (o.brokers || []).filter((b) => b.cost != null);
+
+  // With no verified charges there is nothing to price. Showing an interactive
+  // form that returns an empty table is worse than saying so.
+  if (!priced.length) {
+    return `<h1 style="margin-top:16px">Brokerage cost calculator</h1>
+      <p class="muted" style="max-width:70ch">Work out what a month of your actual trading costs at each broker.</p>
+      <div style="margin-top:16px">${pending('Broker charges',
+        'Charges are published only where they can be traced to the broker\'s own disclosed rate card. Until those are verified, we show nothing rather than an estimate you might act on.')}</div>
+      <p class="small muted" style="margin-top:16px">In the meantime, the
+      <a href="/brokers" data-link>broker directory</a> and the
+      <a href="/registry" data-link>SEBI register</a> carry regulator-sourced facts on every firm.</p>`;
+  }
 
   onMount(() => {
     const form = document.getElementById('calc-form');
@@ -954,123 +942,101 @@ export async function registry() {
   pulled ${esc((r.generated_at || '').slice(0, 10))}. <a href="/sources" data-link>Lineage →</a></p>`;
 }
 
-/* =========================================================== FOR BROKERS */
+/* =========================================================== ALGO PLATFORMS */
 
-export async function forBrokers() {
-  const o = await loadOverview();
-  onMount(wireLeadForm);
-  const tiers = [
-    { key: 'free', name: 'Listed', price: 'Free', hi: false,
-      items: ['Auto-generated profile from SEBI and exchange filings', 'Appears in the directory, comparisons and rankings',
-              'Factual badges earned from the data', 'No control over what is shown'] },
-    { key: 'verified', name: 'Verified', price: '₹25,000/mo', hi: true,
-      items: ['Claimed and verified badge', 'Publish your own charges, plans and app links',
-              'Correct anything we got wrong, with an audit trail', 'Enquiry inbox with full contact details',
-              'Monthly competitive benchmark against your peer set'] },
-    { key: 'featured', name: 'Featured', price: '₹90,000/mo', hi: false,
-      items: ['Everything in Verified', 'Priority placement in the directory and category rankings',
-              'Homepage and comparison-page placement', 'Category sponsorship, e.g. "Best for F&O"',
-              'Leads pushed to your CRM by webhook', 'Quarterly market-share deep dive'] },
-  ];
+const algoState = { q: '', cat: 'all' };
+
+const PRICING_LABEL = {
+  free: 'Free', freemium: 'Freemium', subscription: 'Subscription',
+  'per-seat licence': 'Per-seat licence', 'enterprise licence': 'Enterprise licence',
+};
+
+function algoCard(p) {
+  const site = safeUrl(p.website);
+  const works = (p.works_with || []).map((b) =>
+    `<a class="badge" href="/broker/${esc(b.id)}" data-link title="Executes through ${esc(b.brand)} — view broker profile">${esc(b.brand)}</a>`).join(' ');
+  return `<div class="card" style="display:flex;flex-direction:column;gap:8px">
+    <div class="row">
+      ${mark(p.id, p.name, 30)}
+      <div class="grow">
+        <div style="font-weight:600">${site ? `<a href="${safeUrl(p.website)}" target="_blank" rel="noopener nofollow">${esc(p.name)}</a>` : esc(p.name)}</div>
+        <div class="xs muted">${esc(p.operator || '')}${p.hq ? ` · ${esc(p.hq)}` : ''}</div>
+      </div>
+      ${p.pricing ? `<span class="badge">${esc(PRICING_LABEL[p.pricing] || p.pricing)}</span>` : ''}
+    </div>
+    <p class="small" style="margin:0">${esc(p.summary || '')}</p>
+    ${works ? `<div class="row-wrap xs"><span class="faint">Executes via:</span> ${works}</div>` : ''}
+  </div>`;
+}
+
+export async function algo(params) {
+  const a = await loadAlgo();
+  const cats = a.categories || {};
+  const catKeys = Object.keys(cats);
+  if (params?.get('cat') && catKeys.includes(params.get('cat'))) algoState.cat = params.get('cat');
+
+  onMount(() => {
+    const render = () => {
+      const q = algoState.q.trim().toLowerCase();
+      const rows = (a.platforms || []).filter((p) =>
+        (algoState.cat === 'all' || p.category === algoState.cat)
+        && (!q || `${p.name} ${p.operator || ''} ${p.hq || ''} ${p.summary || ''} ${
+          (p.works_with || []).map((b) => b.brand).join(' ')}`.toLowerCase().includes(q)));
+      const groups = catKeys
+        .filter((k) => rows.some((p) => p.category === k))
+        .map((k) => `
+          <section style="margin-top:20px">
+            <h2 style="margin-bottom:2px">${esc(cats[k].label || k)}</h2>
+            <p class="small muted" style="max-width:75ch;margin-top:2px">${esc(cats[k].blurb || '')}</p>
+            <div class="grid g3" style="margin-top:10px">${rows.filter((p) => p.category === k).map(algoCard).join('')}</div>
+          </section>`).join('');
+      document.getElementById('algo-list').innerHTML =
+        groups || `<div class="empty" style="margin-top:20px"><h2>Nothing matches</h2>
+          <p class="muted small">No platform matches “${esc(algoState.q)}” in this category.</p></div>`;
+      document.getElementById('algo-meta').textContent = `${rows.length} of ${a.count} platforms`;
+      document.querySelectorAll('[data-algo-cat]').forEach((btn) =>
+        btn.classList.toggle('btn-primary', btn.dataset.algoCat === algoState.cat));
+    };
+    document.getElementById('algo-q').addEventListener('input', (e) => { algoState.q = e.target.value; render(); });
+    document.querySelectorAll('[data-algo-cat]').forEach((btn) =>
+      btn.addEventListener('click', () => { algoState.cat = btn.dataset.algoCat; render(); }));
+    render();
+  });
 
   return `
-  <section class="pitch" style="margin-top:16px">
-    <span class="badge badge-featured">For brokers</span>
-    <h1 style="margin-top:12px;max-width:26ch">Your next customer is comparing you right now.</h1>
-    <p class="muted" style="max-width:64ch;margin-top:12px">
-      We already publish a profile for you, built from SEBI registrations, exchange filings and your mandated complaint
-      disclosures. Investors use it to shortlist. Claiming it lets you publish your real pricing, fix errors, and
-      receive the enquiries your profile generates.
-    </p>
-    <div class="row-wrap" style="margin-top:18px">
-      <a class="btn btn-primary" href="#claim">Claim your profile</a>
-      <a class="btn" href="#advertise">Advertising rates</a>
-    </div>
-  </section>
+  <h1 style="margin-top:16px">Algo trading platforms in India</h1>
+  <p class="muted" style="max-width:75ch">The execution and automation layer around the brokers we track:
+  official broker APIs, no-code strategy builders, backtesting tools and the institutional vendors behind
+  broker dealing desks. Platform details are curated and verified against each platform's own material —
+  not regulator filings — so treat them as a directory, not an endorsement.</p>
 
-  <div class="grid g4" style="margin-top:24px">
-    ${statTile('Brokers profiled in depth', String(o.metadata.broker_count), 'each with a live comparison page')}
-    ${statTile('Registered entities on file', count(o.registry_count), 'the full SEBI register')}
-    ${statTile('Profiles already claimed', String(o.metadata.claimed_count), 'competitors publishing their pricing')}
-    ${statTile('Comparison pages', String((o.brokers || []).length * 3), 'directory, profile and head-to-head views')}
+  <div class="banner" style="margin-top:14px">
+    <span>§</span>
+    <div><strong>SEBI's retail algo framework (February 2025).</strong>
+    SEBI has brought retail algo trading inside a formal perimeter: brokers remain responsible for every
+    algo order, API access requires authentication with static-IP whitelisting, orders above an exchange-set
+    rate threshold need an exchange-issued algo ID, and algo providers must be empanelled with the exchanges.
+    Strategies split into <em>white-box</em> (logic disclosed) and <em>black-box</em> (undisclosed — the provider
+    needs a Research Analyst registration and audit trail). Implementation timelines have moved; check the
+    latest SEBI and exchange circulars before relying on any platform's compliance claims.</div>
   </div>
 
-  <div class="section-title" id="advertise"><h2>What it costs</h2></div>
-  <div class="tier-grid">
-    ${tiers.map((t) => `<div class="tier ${t.hi ? 'hi' : ''}">
-      ${t.hi ? '<span class="badge badge-featured" style="align-self:flex-start">Most popular</span>' : ''}
-      <h3 style="margin-top:8px">${esc(t.name)}</h3>
-      <div class="price">${esc(t.price)}</div>
-      <ul>${t.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>
-      <a class="btn ${t.hi ? 'btn-primary' : ''}" href="#claim">${t.key === 'free' ? 'Already live' : 'Enquire'}</a>
-    </div>`).join('')}
-  </div>
-  <p class="xs faint" style="margin-top:12px">Indicative rate card. Placement is labelled "Sponsored" wherever it
-  appears, and paid placement never changes a broker's position on a ranking that sorts by a factual metric —
-  rankings stay honest or the site is worthless to the investors you want to reach.</p>
-
-  <div class="section-title" id="leads"><h2>How leads work</h2></div>
-  <div class="grid g3">
-    <div class="card"><div class="card-title">1 · Investor compares</div>
-      <p class="small" style="margin-top:8px">They filter by cost, complaint record and segment, then land on your profile.</p></div>
-    <div class="card"><div class="card-title">2 · They ask for a callback</div>
-      <p class="small" style="margin-top:8px">Name, phone, email and what they intend to trade — with explicit consent to share with you.</p></div>
-    <div class="card"><div class="card-title">3 · You receive it</div>
-      <p class="small" style="margin-top:8px">Emailed instantly, or pushed to your CRM by webhook on the Featured tier.</p></div>
-  </div>
-
-  <div class="grid g-main" style="margin-top:24px" id="claim">
-    <div class="card card-pad-lg">
-      <h3>Claim your profile or start a listing</h3>
-      <p class="small muted" style="margin-top:6px">Use an email address on your firm's domain so we can verify you
-      against the SEBI register. We will not change anything on your profile until identity is confirmed.</p>
-      <form class="lead-form" data-kind="broker_partner" style="margin-top:12px">
-        <div class="grid g2">
-          <div class="field"><label for="bp-broker">Broker / firm</label>
-            <select id="bp-broker" name="broker_id">
-              <option value="">Select your firm…</option>
-              ${(o.brokers || []).map((b) => `<option value="${esc(b.id)}">${esc(b.brand)}</option>`).join('')}
-              <option value="__other">Not listed — other</option>
-            </select>
-          </div>
-          <div class="field"><label for="bp-name">Your name</label><input id="bp-name" name="name" required></div>
-          <div class="field"><label for="bp-role">Role</label><input id="bp-role" name="role" placeholder="e.g. Head of Growth"></div>
-          <div class="field"><label for="bp-email">Work email</label><input id="bp-email" name="email" type="email" required></div>
-          <div class="field"><label for="bp-phone">Phone</label><input id="bp-phone" name="phone" type="tel"></div>
-          <div class="field"><label for="bp-tier">Interested in</label>
-            <select id="bp-tier" name="tier">
-              <option value="verified">Verified — claim and publish pricing</option>
-              <option value="featured">Featured — placement and lead delivery</option>
-              <option value="correction">Just correcting an error</option>
-              <option value="data">Data licensing / API</option>
-            </select>
-          </div>
-        </div>
-        <div class="field"><label for="bp-msg">Anything else</label>
-          <textarea id="bp-msg" name="message" rows="3" placeholder="Corrections, questions, volumes you care about…"></textarea></div>
-        <button class="btn btn-primary" type="submit" style="margin-top:12px">Send enquiry</button>
-        <div class="lead-msg small" style="margin-top:8px"></div>
-      </form>
-    </div>
-
-    <div class="stack">
-      <div class="card">
-        <div class="card-title">What we will not do</div>
-        <ul class="small" style="padding-left:18px;margin-top:8px">
-          <li>Change a ranking because someone paid for it</li>
-          <li>Remove a complaint statistic or a regulatory flag</li>
-          <li>Publish a pricing claim we cannot point at a source for</li>
-          <li>Sell the same enquiry to several brokers</li>
-        </ul>
+  <div class="card" style="margin-top:14px">
+    <div class="row-wrap">
+      <div class="grow" style="min-width:220px">
+        <input type="search" id="algo-q" placeholder="Search platforms, operators or connected brokers…">
       </div>
-      <div class="card">
-        <div class="card-title">Corrections are free, always</div>
-        <p class="small" style="margin-top:8px">If a number about your firm is wrong, tell us and we will fix it whether
-        or not you pay for anything. Accuracy is the product.</p>
-        <p class="small muted">Write to <a href="${safeUrl('mailto:' + CONFIG.contactEmail, { allowMailto: true })}">${esc(CONFIG.contactEmail)}</a>.</p>
-      </div>
+      <button class="btn btn-sm" data-algo-cat="all">All</button>
+      ${catKeys.map((k) => `<button class="btn btn-sm" data-algo-cat="${esc(k)}">${esc(cats[k].label || k)}</button>`).join('')}
+      <span class="small faint" id="algo-meta"></span>
     </div>
-  </div>`;
+  </div>
+
+  <div id="algo-list"></div>
+
+  <p class="xs faint" style="margin-top:10px">${provDot('curated')} Curated directory, last reviewed
+  ${esc((a.last_reviewed || a.generated_at || '').slice(0, 10))}. Pricing models are indicative; integrations
+  change frequently. Nothing here is investment advice or a recommendation of any platform.</p>`;
 }
 
 /* =========================================================== METHODOLOGY */

@@ -133,17 +133,20 @@ def test_metrics():
     check("pct_change zero base is None", metrics.pct_change(10, 0) is None)
     check("pct_change None-safe", metrics.pct_change(None, 100) is None)
 
-    series = [["2025-07", 100], ["2025-08", 110], ["2026-06", 200]]
-    totals = {"2025-07": 1000, "2025-08": 1000, "2026-06": 1000}
+    # Contiguous months: period maths is calendar-based, so a gap deliberately
+    # yields None rather than silently comparing non-adjacent months.
+    series = [["2026-04", 100], ["2026-05", 110], ["2026-06", 200]]
+    totals = {"2026-04": 1000, "2026-05": 1000, "2026-06": 1000}
     cm = metrics.client_metrics(series, totals)
     check("client_metrics latest", cm["active_clients"] == 200)
     check("client_metrics share", cm["market_share_pct"] == 20.0, str(cm["market_share_pct"]))
     check("client_metrics mom", cm["mom_pct"] == metrics.pct_change(200, 110))
 
-    monthly = [{"month": "2026-0%d" % i, "received": 10, "resolved": 9, "pending": 1}
-               for i in range(1, 7)]
+    # A full 12 months, because a rate is only published over a complete window.
+    monthly = [{"month": "2026-%02d" % i, "received": 10, "resolved": 9, "pending": 1}
+               for i in range(1, 13)]
     km = metrics.complaint_metrics(monthly, active_clients=100000)
-    check("complaints per 10k", km["per_10k_clients_12m"] == round(60 / 100000 * 10000, 2),
+    check("complaints per 10k", km["per_10k_clients_12m"] == round(120 / 100000 * 10000, 2),
           str(km["per_10k_clients_12m"]))
     check("resolution rate", km["resolution_rate_pct"] == 90.0, str(km["resolution_rate_pct"]))
     check("empty complaints -> unavailable", metrics.complaint_metrics([], 100)["available"] is False)
@@ -162,23 +165,111 @@ def test_metrics():
     # Reliability must renormalise when inputs are missing rather than penalising.
     full = {"complaints": {"per_10k_clients_12m": 1.0, "resolution_rate_pct": 95,
                            "pending_latest": 1, "received_12m": 120},
-            "regulatory_flags": {}, "profile": {"founded": 2010}}
+            "regulatory_flags": {"checked": True}, "profile": {"founded": 2010}}
     peers = [full, {"complaints": {"per_10k_clients_12m": 5.0}}]
     r_full = metrics.reliability_score(full, peers)
     check("reliability in range", 0 <= r_full["score"] <= 100, str(r_full["score"]))
+    # Weights must renormalise to 1 over the components actually present, so a
+    # broker is not penalised for a dataset we have not ingested yet. Comparing
+    # the sum to itself (as this once did) asserts nothing.
     check("reliability weights renormalise to 1",
-          abs(sum(r_full["weights"].values()) - sum(r_full["weights"].values())) < 1e-9)
+          abs(sum(r_full["weights"].values()) - 1.0) < 1e-9,
+          "sum=%s" % sum(r_full["weights"].values()))
     sparse = {"complaints": {}, "regulatory_flags": {}, "profile": {}}
     r_sparse = metrics.reliability_score(sparse, peers)
     check("sparse input lowers confidence, not score to zero",
           r_sparse["confidence"] in ("low", "medium", "none"), r_sparse["confidence"])
 
-    flagged = dict(full, regulatory_flags={"defaulter": True})
+    flagged = dict(full, regulatory_flags={"checked": True, "defaulter": True})
     check("defaulter flag drives regulatory component to 0",
           metrics.reliability_score(flagged, peers)["components"]["regulatory"] == 0)
 
 
 # ---------------------------------------------------------------- published
+
+def test_regression_guards():
+    """One test per defect found in the 2026-08-01 audit. Each of these shipped."""
+    section("audit regressions")
+
+    # Cost basket used max() where Indian brokers charge "whichever is lower",
+    # overstating Zerodha's monthly cost by 6.7x and inverting cost rankings.
+    z = {"delivery": {"flat_per_order": 0},
+         "intraday": {"flat_per_order": 20, "pct_of_turnover": 0.03, "cap_per_order": 20},
+         "fno": {"flat_per_order": 20}, "demat_amc_annual": 300}
+    c = metrics.cost_of_basket(z)
+    check("cost basket takes the LOWER of flat vs percentage", c["intraday"] == 30.0,
+          "intraday=%s (expected 30.0)" % c["intraday"])
+    check("cost basket total is right", c["monthly_total"] == 255.0, str(c["monthly_total"]))
+    check("'whichever is higher' plans still honoured",
+          metrics.cost_of_basket({"intraday": {"flat_per_order": 20, "pct_of_turnover": 0.03,
+                                               "pricing": "higher"}})["intraday"] == 200)
+    check("a cap-only plan is priceable",
+          metrics.cost_of_basket({"fno": {"cap_per_order": 20}})["fno"] == 200)
+
+    # A broker with no data scored 100/100 and topped the reliability board.
+    r = metrics.reliability_score({"id": "x", "profile": {}}, [])
+    check("no data yields no reliability score", r["score"] is None, str(r["score"]))
+    check("no data is never rankable", not r.get("rankable"))
+    unchecked = metrics.reliability_score(
+        {"id": "y", "profile": {"founded": 2010}, "regulatory_flags": {}}, [])
+    check("an unscanned regulatory record is not scored as clean",
+          "regulatory" not in (unchecked.get("components") or {}))
+
+    # Positional date maths published a 16-month gap as "month-on-month".
+    gap = metrics.client_metrics([["2025-01", 100], ["2025-02", 110], ["2026-06", 200]], {})
+    check("a gap yields no month-on-month figure", gap["mom_pct"] is None, str(gap["mom_pct"]))
+    adjacent = metrics.client_metrics([["2026-05", 110], ["2026-06", 200]], {})
+    check("genuinely adjacent months still compute", adjacent["mom_pct"] == 81.82)
+    reversed_in = metrics.client_metrics([["2026-06", 200], ["2026-05", 100]], {})
+    check("newest-first input does not invert growth", reversed_in["mom_pct"] == 100.0,
+          str(reversed_in["mom_pct"]))
+
+    # Complaint windows: partial history was published as a 12-month figure.
+    three = [{"month": "2026-%02d" % i, "received": 100, "resolved": 90, "pending": 10}
+             for i in range(1, 4)]
+    t = metrics.complaint_metrics(three, 100000)
+    check("a 3-month history publishes no 12-month total", t["received_12m"] is None)
+    check("a 3-month history publishes no normalised rate", t["per_10k_clients_12m"] is None)
+    check("months_covered is disclosed", t["months_covered"] == 3)
+    over = metrics.complaint_metrics(
+        [{"month": "2026-01", "received": 10, "resolved": 50, "pending": 0}], 10000)
+    check("resolution rate is capped at 100", over["resolution_rate_pct"] == 100.0,
+          str(over["resolution_rate_pct"]))
+    flat = [{"month": "2025-%02d" % i, "received": 100, "resolved": 100, "pending": 0}
+            for i in range(1, 13)]
+    check("a flat complaint record is not reported as a trend",
+          metrics.complaint_metrics(flat, 100000)["trend_pct"] is None)
+
+    # Substring matching attributed unrelated companies, including on the
+    # defaulter list. Adverse attribution now demands an exact match.
+    master = load("config/brokers_master.json") or {}
+    res = Resolver(master.get("brokers", []))
+    for name in ("ARIHANT ACADEMY LIMITED", "VENTURA TEXTILES LIMITED",
+                 "CHOICE FINSTOCK PRIVATE LIMITED"):
+        bid, method, _ = res.resolve(name)
+        check("unrelated company not resolved: %s" % name.split()[0].title(),
+              bid is None, "matched %s via %s" % (bid, method))
+    check("real broker still resolves", res.resolve("ZERODHA BROKING LIMITED")[0] == "zerodha")
+    check("strict mode refuses anything but an exact match",
+          res.resolve("CHOICE FINSTOCK PRIVATE LIMITED", strict=True)[0] is None)
+
+    # Provenance must be declared; an unknown value must abort the publish.
+    for name in ("active_clients", "complaints", "charges"):
+        raw = load("data/manual/%s.json" % name)
+        if raw is not None:
+            check("data/manual/%s.json declares a provenance" % name,
+                  raw.get("provenance") in ("sample", "nse_ucc", "sebi_annexure_b",
+                                            "broker_supplied", "manual", "estimate"),
+                  "got %r" % raw.get("provenance"))
+
+    # The exit-code contract: an all-empty adapter result must not read as ok.
+    from pipeline import run as runmod
+    check("an empty source is detected as a shortfall",
+          runmod._shortfalls("nse", {"pulse": {}, "live": {}, "circulars": {}}),
+          "empty NSE payload reported no shortfall")
+    check("a populated source reports no shortfall",
+          not runmod._shortfalls("nse", {"pulse": {"indices": [1]}, "live": {"quotes": [1]}}))
+
 
 def test_published():
     section("published payloads")
@@ -194,9 +285,24 @@ def test_published():
     check("ranks are unique", len(ranks) == len(set(ranks)))
     check("ranks start at 1", min(ranks) == 1 if ranks else True)
 
+    # In production mode the client dataset is dropped, so there are no shares to
+    # sum. That is the correct state, not a failure.
     shares = [b["share"] for b in brokers if b.get("share")]
-    check("market shares sum to ~100", abs(sum(shares) - 100) < 1.0, "sum=%.2f" % sum(shares))
-    check("no share exceeds 100", all(s <= 100 for s in shares))
+    if shares:
+        check("market shares sum to ~100", abs(sum(shares) - 100) < 1.0, "sum=%.2f" % sum(shares))
+        check("no share exceeds 100", all(s <= 100 for s in shares))
+    else:
+        skip("market shares sum to ~100", "no client data published (production mode)")
+
+    # Production mode must publish nothing that is flagged sample.
+    meta = ov.get("metadata") or {}
+    if meta.get("production"):
+        check("production build publishes no sample data",
+              not any((meta.get("sample_data") or {}).values()),
+              "sample flags: %s" % meta.get("sample_data"))
+        check("production build drops sample-derived client counts",
+              all(b.get("clients") is None for b in brokers)
+              or meta.get("data_status", {}).get("active_clients"))
 
     for b in brokers[:10]:
         p = os.path.join(ROOT, "site", "data", "brokers", "%s.json" % b["id"])
@@ -248,7 +354,7 @@ def test_ticker():
         return
     check("declares a feed order", isinstance(t.get("order"), list) and t["order"])
     check("every ordered feed exists", all(f in t["feeds"] for f in t["order"]))
-    check("all seven feeds present", set(t["feeds"]) >= set(feedmod.FEED_ORDER),
+    check("all configured feeds present", set(t["feeds"]) >= set(feedmod.FEED_ORDER),
           "missing %s" % (set(feedmod.FEED_ORDER) - set(t["feeds"])))
 
     for fid, f in t["feeds"].items():
@@ -363,7 +469,7 @@ def http(url, method="GET", data=None, headers=None, timeout=10):
 def test_server(base):
     section("http routes")
     routes = ["/", "/brokers", "/broker/zerodha", "/compare", "/leaderboards",
-              "/calculator", "/registry", "/for-brokers", "/methodology", "/sources"]
+              "/calculator", "/registry", "/algo", "/methodology", "/sources"]
     for r in routes:
         code, body, _ = http(base + r)
         check("GET %s" % r, code == 200 and b'id="app"' in body, "code=%s" % code)
@@ -379,37 +485,29 @@ def test_server(base):
     code, body, _ = http(base + "/api/health")
     check("health endpoint responds", code == 200 and b"ok" in body)
 
-    section("lead api")
-    def post(payload):
-        return http(base + "/api/leads", "POST", json.dumps(payload).encode(),
-                    {"Content-Type": "application/json"})
+    section("no data collection")
+    # The site collects no personal data at all: no lead capture, no contact
+    # form, no write endpoint. POST must be refused, and nothing may persist.
+    for path in ("/api/leads", "/api/contact", "/"):
+        code, _, _ = http(base + path, "POST", b'{"name":"x"}',
+                          {"Content-Type": "application/json"})
+        check("POST %s is refused" % path, code in (404, 405),
+              "expected 404 or 405, got %s" % code)
 
-    def expect(name, payload, want, needle=None):
-        """The rate limiter is a separate concern (see vapt.py); a 429 here means
-        the budget is spent, not that validation is broken."""
-        code, body, _ = post(payload)
-        if code == 429:
-            skip(name, "rate-limited (429) — validation not exercised this run")
-            return
-        ok = code == want and (needle is None or needle in body)
-        check(name, ok, "code=%s %s" % (code, body[:70]))
+    check("no lead store on disk", not os.path.exists(os.path.join(ROOT, "data", "leads")))
 
-    good = {"kind": "broker_partner", "name": "QA", "email": "qa@example.com", "message": "qa run"}
-    code, body, _ = post(good)
-    if code == 429:
-        skip("valid broker enquiry accepted", "rate-limited (429)")
-    else:
-        check("valid broker enquiry accepted", code == 201, "code=%s %s" % (code, body[:80]))
+    for fn, needles in (("store.js", ("submitLead", "leadEndpoint")),
+                        ("pages.js", ("lead-form", "wireLeadForm"))):
+        try:
+            src = open(os.path.join(ROOT, "site", "assets", "js", fn), encoding="utf-8").read()
+        except OSError:
+            src = ""
+        found = [n for n in needles if n in src]
+        check("%s has no lead-capture code" % fn, not found, "still present: %s" % found)
 
-    expect("investor enquiry without consent is rejected",
-           {"kind": "investor_enquiry", "name": "QA", "email": "qa@example.com",
-            "phone": "9876543210"}, 422, b"consent")
-    expect("malformed email rejected",
-           {"kind": "broker_partner", "name": "QA", "email": "nope"}, 422, b"email")
-    expect("unknown lead kind rejected",
-           {"kind": "spam", "name": "QA", "email": "qa@example.com"}, 422)
-    expect("missing name rejected",
-           {"kind": "broker_partner", "email": "qa@example.com"}, 422, b"name")
+    src = open(os.path.join(ROOT, "site", "index.html"), encoding="utf-8").read()
+    check("no input elements anywhere in the shell",
+          "<input" not in src.lower(), "the shell must not collect input")
 
 
 def _dechunk(raw):
@@ -490,6 +588,7 @@ def main():
     test_config()
     test_identity()
     test_metrics()
+    test_regression_guards()
     test_published()
     test_ticker()
     test_hub()

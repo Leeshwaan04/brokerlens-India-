@@ -1,0 +1,85 @@
+{
+  "_comment": [
+    "Where each broker publishes its SEBI Annexure-B investor-complaint table.",
+    "",
+    "SEBI requires every registered broker to publish monthly received / resolved /",
+    "pending complaint counts on its own website. The URL is curated here because",
+    "every broker puts it in a different place. THE NUMBERS ARE NEVER CURATED: they",
+    "are parsed from the broker's own page, and a page that cannot be parsed with",
+    "confidence produces no record at all.",
+    "",
+    "VERIFICATION STATUS: these URLs are starting points and MUST be checked one by",
+    "one against each broker's live site before the data is published. Run",
+    "`python3 -m pipeline.run complaints` and read the gap log: a wrong URL shows up",
+    "as an unparsed broker, never as a wrong number. `verified` records the date a",
+    "human last confirmed the URL actually serves the Annexure-B table.",
+    "",
+    "Add a broker by adding its id (must exist in brokers_master.json) and the URL",
+    "of the page carrying the table. If a broker publishes only a PDF, leave it out",
+    "for now and note it in `format`: PDF parsing is not implemented."
+  ],
+  "last_reviewed": null,
+  "brokers": {
+    "zerodha": {
+      "url": "https://zerodha.com/investor-attention/",
+      "format": "html",
+      "verified": null,
+      "note": "Zerodha publishes complaint data under investor attention/charter."
+    },
+    "groww": {
+      "url": "https://groww.in/investor-charter",
+      "format": "html",
+      "verified": null
+    },
+    "angel-one": {
+      "url": "https://www.angelone.in/investor-charter",
+      "format": "html",
+      "verified": null
+    },
+    "upstox": {
+      "url": "https://upstox.com/investor-charter/",
+      "format": "html",
+      "verified": null
+    },
+    "5paisa": {
+      "url": "https://www.5paisa.com/investor-charter",
+      "format": "html",
+      "verified": null
+    },
+    "dhan": {
+      "url": "https://dhan.co/investor-charter/",
+      "format": "html",
+      "verified": null
+    },
+    "fyers": {
+      "url": "https://fyers.in/investor-charter/",
+      "format": "html",
+      "verified": null
+    },
+    "icici-direct": {
+      "url": "https://www.icicidirect.com/investor-charter",
+      "format": "html",
+      "verified": null
+    },
+    "hdfc-securities": {
+      "url": "https://www.hdfcsec.com/investor-charter",
+      "format": "html",
+      "verified": null
+    },
+    "kotak-securities": {
+      "url": "https://www.kotaksecurities.com/investor-charter/",
+      "format": "html",
+      "verified": null
+    },
+    "motilal-oswal": {
+      "url": "https://www.motilaloswal.com/investor-charter",
+      "format": "html",
+      "verified": null
+    },
+    "sharekhan": {
+      "url": "https://www.sharekhan.com/investor-charter",
+      "format": "html",
+      "verified": null
+    }
+  }
+}

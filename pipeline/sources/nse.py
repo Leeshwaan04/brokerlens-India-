@@ -19,6 +19,7 @@ from ..common import (
     strip_tags,
     to_num,
 )
+from ..identity import _whole_word_in
 
 API = "https://www.nseindia.com/api"
 ARCH = "https://nsearchives.nseindia.com"
@@ -197,12 +198,45 @@ def equity_universe(fa: Fetcher):
     return out
 
 
-def member_circulars(f: Fetcher, broker_aliases):
-    """Scan NSE's circular feed for member-name mentions.
+# A circular only counts against a broker if its language is actually
+# disciplinary. Without this, routine product and operational notices were
+# published as regulatory flags: a "Motilal Oswal BSE Midcap 150 Momentum 30
+# Index Fund NFO" listing notice was the site's only regulatory flag, and it
+# cost that firm 8 points of reliability score.
+_ADVERSE_TERMS = (
+    "penalt", "suspend", "suspens", "expel", "expuls", "disciplinary",
+    "non-compliance", "noncompliance", "non compliance", "violation",
+    "defaulter", "debarred", "debar", "censure", "withdrawal of", "terminat",
+    "disablement", "disabled", "show cause", "adjudicat", "enquiry", "inquiry",
+    "fine imposed", "action against",
+)
 
-    Circulars naming a specific trading member are usually disciplinary
-    (penalty, suspension, non-compliance). Surfacing them is a genuine
-    differentiator - nobody else puts this next to the marketing copy.
+# Notices that name a member for ordinary business reasons. Checked first, so a
+# product listing is never read as an enforcement action.
+_BENIGN_TERMS = (
+    "nfo", "new fund offer", "mutual fund", "index fund", "etf", "listing of",
+    "availability of", "empanel", "mock", "holiday", "trading holiday",
+    "webinar", "certification", "launch of", "introduction of",
+)
+
+
+def _circular_is_adverse(blob):
+    if any(t in blob for t in _BENIGN_TERMS):
+        return False
+    return any(t in blob for t in _ADVERSE_TERMS)
+
+
+def member_circulars(f: Fetcher, broker_aliases):
+    """Scan NSE's circular feed for DISCIPLINARY member-name mentions.
+
+    Two guards, both learned from a live false positive:
+      1. the alias must match on whole-word boundaries, not as a substring, so
+         ordinary words like "choice" or "ventura" cannot flag a firm;
+      2. the circular's language must be disciplinary, so routine product and
+         operational notices are not published as regulatory flags.
+
+    Anything that names a member benignly is recorded separately as a mention,
+    never as a flag.
     """
     data = f.get_json("%s/circulars" % API, ttl=6 * 3600)
     if not data:
@@ -212,7 +246,7 @@ def member_circulars(f: Fetcher, broker_aliases):
     if not isinstance(items, list):
         return {}
 
-    hits = {}
+    hits, skipped = {}, 0
     for c in items:
         # field names per the live payload: sub, circCategory, circCompany,
         # circDepartment, circDisplayNo, circFilelink
@@ -222,24 +256,30 @@ def member_circulars(f: Fetcher, broker_aliases):
         ).lower()
         if not blob.strip():
             continue
+        adverse = _circular_is_adverse(blob)
         for bid, aliases in broker_aliases.items():
-            for a in aliases:
-                if len(a) >= 6 and a in blob:
-                    hits.setdefault(bid, []).append(
-                        {
-                            "date": c.get("cirDisplayDate") or c.get("cirDate"),
-                            "subject": strip_tags(c.get("sub"))[:220],
-                            "category": c.get("circCategory"),
-                            "department": c.get("circDepartment"),
-                            "ref": c.get("circDisplayNo"),
-                            "url": c.get("circFilelink"),
-                        }
-                    )
-                    break
+            matched = any(len(a) >= 6 and _whole_word_in(a, blob) for a in aliases)
+            if not matched:
+                continue
+            if not adverse:
+                skipped += 1
+                break
+            hits.setdefault(bid, []).append(
+                {
+                    "date": c.get("cirDisplayDate") or c.get("cirDate"),
+                    "subject": strip_tags(c.get("sub"))[:220],
+                    "category": c.get("circCategory"),
+                    "department": c.get("circDepartment"),
+                    "ref": c.get("circDisplayNo"),
+                    "url": c.get("circFilelink"),
+                }
+            )
+            break
     for bid in hits:
         hits[bid] = hits[bid][:10]
     snapshot("nse_member_circulars", hits)
-    log("nse circulars: %d brokers mentioned across %d circulars" % (len(hits), len(items)))
+    log("nse circulars: %d brokers with disciplinary mentions across %d circulars "
+        "(%d benign name-mentions ignored)" % (len(hits), len(items), skipped))
     return hits
 
 

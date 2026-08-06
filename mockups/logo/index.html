@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BrokerLens India: logo mark exploration</title>
+<style>
+  /* ---------- page tokens (subset of site/assets/css/tokens.css) ---------- */
+  :root {
+    color-scheme: light dark;
+    --bg: #fbfbfa; --bg-raised: #ffffff; --bg-sunken: #f2f2f0;
+    --border: #e3e3df; --border-strong: #cfcfc9;
+    --text: #1a1a18; --text-muted: #6b6b64; --text-faint: #96968d;
+    --accent: #2f4a8f; --accent-soft: #eaeefa;
+    --up: #0f7a4d; --up-soft: #e6f4ec;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
+            "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --shadow: 0 2px 8px rgba(20,20,18,.08), 0 1px 2px rgba(20,20,18,.04);
+    --maxw: 1160px;
+
+    /* mark inks, light context by default */
+    --lg-a: #2f4a8f;   /* structure: lens ring, brackets, monogram */
+    --lg-b: #0f7a4d;   /* accent: the in-focus trend, the uptick, the bars */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413; --bg-raised: #1d1d1c; --bg-sunken: #0e0e0d;
+      --border: #2e2e2c; --border-strong: #414140;
+      --text: #ececea; --text-muted: #a2a29c; --text-faint: #74746e;
+      --accent: #8fa8e8; --accent-soft: #1e2438;
+      --up: #4cc38a; --up-soft: #14291f;
+      --shadow: 0 2px 8px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.3);
+      --lg-a: #8fa8e8; --lg-b: #4cc38a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141413; --bg-raised: #1d1d1c; --bg-sunken: #0e0e0d;
+    --border: #2e2e2c; --border-strong: #414140;
+    --text: #ececea; --text-muted: #a2a29c; --text-faint: #74746e;
+    --accent: #8fa8e8; --accent-soft: #1e2438;
+    --up: #4cc38a; --up-soft: #14291f;
+    --shadow: 0 2px 8px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.3);
+    --lg-a: #8fa8e8; --lg-b: #4cc38a;
+  }
+  :root[data-theme="light"] {
+    --bg: #fbfbfa; --bg-raised: #ffffff; --bg-sunken: #f2f2f0;
+    --border: #e3e3df; --border-strong: #cfcfc9;
+    --text: #1a1a18; --text-muted: #6b6b64; --text-faint: #96968d;
+    --accent: #2f4a8f; --accent-soft: #eaeefa;
+    --up: #0f7a4d; --up-soft: #e6f4ec;
+    --shadow: 0 2px 8px rgba(20,20,18,.08), 0 1px 2px rgba(20,20,18,.04);
+    --lg-a: #2f4a8f; --lg-b: #0f7a4d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font); background: var(--bg); color: var(--text);
+    font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+  a { color: var(--accent); text-decoration: none; }
+  svg { display: block; }
+
+  /* ---------- fixed-context ink overrides ----------
+     Panels that are always light or always dark pin the mark inks
+     regardless of the page theme. Mono panels collapse both inks. */
+  .ink-light { --lg-a: #2f4a8f; --lg-b: #0f7a4d; }
+  .ink-dark  { --lg-a: #8fa8e8; --lg-b: #4cc38a; }
+  .ink-mono  { --lg-a: currentColor; --lg-b: currentColor; }
+
+  /* ---------- masthead ---------- */
+  .masthead { border-bottom: 1px solid var(--border); }
+  .masthead .wrap {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px; gap: 16px;
+  }
+  .mast-label { font-size: 12.5px; font-weight: 640; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+  .mast-meta { font-size: 12.5px; color: var(--text-faint); font-family: var(--font-mono); }
+  .theme-btn {
+    border: 1px solid var(--border-strong); background: var(--bg-raised); color: var(--text);
+    width: 30px; height: 30px; border-radius: 7px; cursor: pointer; font-size: 14px; line-height: 1;
+  }
+  .theme-btn:hover { background: var(--bg-sunken); }
+  .theme-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 72px 0 56px; border-bottom: 1px solid var(--border); }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 56px; align-items: center; }
+  .eyebrow {
+    font-size: 12px; font-weight: 680; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--up); margin-bottom: 18px;
+  }
+  h1 {
+    font-size: clamp(32px, 4.6vw, 52px); line-height: 1.06; letter-spacing: -0.025em;
+    font-weight: 720; margin-bottom: 20px;
+  }
+  h1 .soft { color: var(--text-faint); font-weight: 480; }
+  .lede { font-size: 16.5px; color: var(--text-muted); max-width: 52ch; margin-bottom: 26px; }
+  .hero-mark {
+    background: var(--bg-raised); border: 1px solid var(--border); border-radius: 16px;
+    box-shadow: var(--shadow); padding: 34px; display: grid; place-items: center;
+  }
+  .hero-mark svg { width: min(352px, 100%); height: auto; }
+  .before-after {
+    display: inline-flex; align-items: center; gap: 14px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--bg-raised);
+    padding: 10px 16px; font-size: 12.5px; color: var(--text-muted);
+  }
+  .before-after .cell { display: inline-flex; align-items: center; gap: 8px; }
+  .before-after .arrow { color: var(--text-faint); }
+  .old-tile {
+    width: 26px; height: 26px; border-radius: 6px; flex: none;
+    background: linear-gradient(140deg, #2f4a8f, #0f7a4d);
+    display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 700;
+  }
+
+  /* ---------- sections ---------- */
+  section.concept { padding: 64px 0; border-bottom: 1px solid var(--border); }
+  .c-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+  .c-num {
+    font-family: var(--font-mono); font-size: 13px; color: var(--text-faint);
+    border: 1px solid var(--border-strong); border-radius: 6px; padding: 2px 8px;
+  }
+  h2 { font-size: 27px; letter-spacing: -0.018em; font-weight: 700; }
+  .badge-rec {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--up); background: var(--up-soft); border-radius: 999px; padding: 4px 11px;
+  }
+  .rationale { color: var(--text-muted); max-width: 74ch; margin-bottom: 30px; }
+  .rationale strong { color: var(--text); font-weight: 640; }
+
+  h3.sub {
+    font-size: 12px; font-weight: 680; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text-faint); margin: 34px 0 12px;
+  }
+
+  /* stage: 512px hero renders, light and dark side by side */
+  .stage { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .panel {
+    border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .panel .art { flex: 1; display: grid; place-items: center; padding: 36px; }
+  .panel .cap {
+    font-family: var(--font-mono); font-size: 11.5px; padding: 9px 14px;
+    border-top: 1px solid transparent;
+  }
+  .p-light { background: #fbfbfa; }
+  .p-light .cap { color: #6b6b64; border-color: #e3e3df; }
+  .p-dark  { background: #141413; }
+  .p-dark .cap { color: #a2a29c; border-color: #2e2e2c; }
+  .stage svg.hero-render { width: min(512px, 100%); height: auto; }
+
+  /* size ladder */
+  .ladder { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .ladder .row { display: flex; align-items: flex-end; gap: 34px; padding: 26px 30px; flex-wrap: wrap; }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 9px; }
+  .step .sz { font-family: var(--font-mono); font-size: 10.5px; }
+  .p-light .step .sz { color: #96968d; }
+  .p-dark  .step .sz { color: #74746e; }
+  .mono-note { font-size: 12.5px; color: var(--text-faint); margin-top: 10px; max-width: 70ch; }
+
+  /* favicon strip: browser tab mockups */
+  .tabbar {
+    display: flex; align-items: flex-end; gap: 4px; padding: 10px 12px 0;
+    border-radius: 12px 12px 0 0; overflow-x: auto;
+  }
+  .tabbar-shell { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .tb-light { background: #e9e9e6; }
+  .tb-dark  { background: #0e0e0d; }
+  .tab {
+    display: inline-flex; align-items: center; gap: 8px; flex: none;
+    border-radius: 9px 9px 0 0; padding: 8px 12px; font-size: 12px; min-width: 176px;
+  }
+  .tb-light .tab.active { background: #fbfbfa; color: #1a1a18; }
+  .tb-light .tab.idle   { color: #6b6b64; }
+  .tb-dark  .tab.active { background: #141413; color: #ececea; border: 1px solid #2e2e2c; border-bottom: none; }
+  .tb-dark  .tab.idle   { color: #74746e; }
+  .tab .x { margin-left: auto; opacity: .45; font-size: 13px; }
+  .tab svg { width: 16px; height: 16px; flex: none; }
+  .urlbar { padding: 8px 12px; font-family: var(--font-mono); font-size: 11px; }
+  .tb-light .urlbar { background: #fbfbfa; color: #6b6b64; border-top: 1px solid #e3e3df; }
+  .tb-dark  .urlbar { background: #141413; color: #a2a29c; border-top: 1px solid #2e2e2c; }
+  .fav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* nav replica: mirrors site header at 58px with the 26px mark */
+  .navrep {
+    display: flex; align-items: center; gap: 24px; height: 58px; padding: 0 20px;
+    border-radius: 12px; border: 1px solid transparent;
+  }
+  .navrep + .navrep { margin-top: 12px; }
+  .nr-light { background: #ffffff; border-color: #e3e3df; }
+  .nr-dark  { background: #1d1d1c; border-color: #2e2e2c; }
+  .nr-brand { display: flex; align-items: center; gap: 8px; font-weight: 680; letter-spacing: -0.02em; font-size: 16px; }
+  .nr-brand svg { width: 26px; height: 26px; flex: none; }
+  .nr-light .nr-brand { color: #1a1a18; }
+  .nr-dark  .nr-brand { color: #ececea; }
+  .nr-brand .in { font-weight: 400; }
+  .nr-light .nr-brand .in { color: #6b6b64; }
+  .nr-dark  .nr-brand .in { color: #a2a29c; }
+  .nr-links { display: flex; gap: 16px; flex: 1; font-size: 12.5px; font-weight: 520; overflow: hidden; }
+  .nr-links span { white-space: nowrap; padding: 4px 0; border-bottom: 2px solid transparent; }
+  .nr-light .nr-links { color: #6b6b64; }
+  .nr-dark  .nr-links { color: #a2a29c; }
+  .nr-light .nr-links .on { color: #1a1a18; border-bottom-color: #2f4a8f; }
+  .nr-dark  .nr-links .on { color: #ececea; border-bottom-color: #8fa8e8; }
+  .nr-gear { font-size: 14px; }
+  .nr-light .nr-gear { color: #6b6b64; }
+  .nr-dark  .nr-gear { color: #a2a29c; }
+
+  /* ---------- comparison table ---------- */
+  .compare { padding: 64px 0; border-bottom: 1px solid var(--border); }
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 760px; background: var(--bg-raised); }
+  th, td { text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  thead th {
+    font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--text-faint); font-weight: 660; background: var(--bg-sunken);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.c-name { font-weight: 640; white-space: nowrap; }
+  td .mini { width: 22px; height: 22px; display: inline-block; vertical-align: -5px; margin-right: 9px; }
+  .score { font-family: var(--font-mono); font-size: 12px; font-weight: 600; border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+  .s-good { color: var(--up); background: var(--up-soft); }
+  .s-ok   { color: var(--accent); background: var(--accent-soft); }
+  .s-weak { color: var(--text-muted); background: var(--bg-sunken); }
+  td .note { display: block; color: var(--text-muted); margin-top: 5px; font-size: 12.5px; }
+  tr.rec-row td { background: color-mix(in srgb, var(--up-soft) 46%, var(--bg-raised)); }
+
+  /* ---------- recommendation ---------- */
+  .verdict { padding: 64px 0 88px; }
+  .verdict-card {
+    border: 1px solid var(--border); border-left: 4px solid var(--up);
+    background: var(--bg-raised); border-radius: 12px; padding: 34px 38px;
+    box-shadow: var(--shadow);
+  }
+  .verdict-card h2 { margin-bottom: 14px; }
+  .verdict-card p { color: var(--text-muted); max-width: 78ch; margin-bottom: 14px; }
+  .verdict-card p:last-child { margin-bottom: 0; }
+  .verdict-card code {
+    font-family: var(--font-mono); font-size: 12.5px; background: var(--bg-sunken);
+    border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px;
+  }
+
+  footer { padding: 26px 0 48px; font-size: 12.5px; color: var(--text-faint); }
+
+  /* ---------- motion ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { opacity: 0; transform: translateY(14px); animation: rise .7s cubic-bezier(.2,0,.2,1) forwards; }
+    .reveal.d1 { animation-delay: .08s; }
+    .reveal.d2 { animation-delay: .16s; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 640px) {
+    .mast-meta { display: none; }
+  }
+  @media (max-width: 940px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 36px; }
+    .hero-mark svg { width: min(280px, 100%); }
+    .stage, .ladder, .fav-grid { grid-template-columns: 1fr; }
+    .nr-links { display: none; }
+    .nr-gear { margin-left: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================================================================
+     SVG sprite: the three marks, hand authored, 512 viewBox.
+     Inks are CSS variables with copy-safe fallbacks:
+       - -lg-a structure ink, indigo #2f4a8f (dark theme: #8fa8e8)
+       - -lg-b accent ink, market green #0f7a4d (dark theme: #4cc38a)
+     Minimum stroke is 30 units, which is 1.5px when rendered at 26px.
+     Any <use> below can be replaced by the symbol's inner nodes verbatim.
+====================================================================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- inner edge of the lens ring: the in-focus zone -->
+    <clipPath id="lens-in"><circle cx="256" cy="256" r="143"/></clipPath>
+  </defs>
+
+  <!-- Concept 1: Lens on the line -->
+  <symbol id="m-lens" viewBox="0 0 512 512">
+    <g fill="none" stroke="var(--lg-a, #2f4a8f)" stroke-width="30" stroke-linecap="round">
+      <path d="M50 369 L84 359" opacity=".38"/>
+      <path d="M18 379 L30 375" opacity=".18"/>
+      <path d="M438 161 L470 149" opacity=".38"/>
+      <path d="M486 143 L496 140" opacity=".18"/>
+    </g>
+    <circle cx="256" cy="256" r="166"
+            fill="none" stroke="var(--lg-a, #2f4a8f)" stroke-width="46"/>
+    <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128"
+          fill="none" stroke="var(--lg-b, #0f7a4d)" stroke-width="46"
+          stroke-linecap="round" stroke-linejoin="round"
+          clip-path="url(#lens-in)"/>
+  </symbol>
+
+  <!-- Concept 2: Aperture monogram -->
+  <symbol id="m-mono" viewBox="0 0 512 512">
+    <line x1="172" y1="108" x2="172" y2="400"
+          stroke="var(--lg-a, #2f4a8f)" stroke-width="48" stroke-linecap="round"/>
+    <circle cx="256" cy="170" r="62"
+            fill="none" stroke="var(--lg-a, #2f4a8f)" stroke-width="48"/>
+    <circle cx="256" cy="316" r="84"
+            fill="none" stroke="var(--lg-a, #2f4a8f)" stroke-width="48"/>
+    <path d="M224 344 L252 352 L294 296" fill="none"
+          stroke="var(--lg-b, #0f7a4d)" stroke-width="34"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <!-- Concept 3: Focus bracket -->
+  <symbol id="m-bracket" viewBox="0 0 512 512">
+    <path d="M72 168 V72 H168 M344 72 H440 V168 M440 344 V440 H344 M168 440 H72 V344"
+          fill="none" stroke="var(--lg-a, #2f4a8f)" stroke-width="44"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="var(--lg-b, #0f7a4d)">
+      <rect x="153" y="264" width="50" height="104" rx="12"/>
+      <rect x="231" y="208" width="50" height="160" rx="12"/>
+      <rect x="309" y="144" width="50" height="224" rx="12"/>
+    </g>
+  </symbol>
+</svg>
+
+<header class="masthead">
+  <div class="wrap">
+    <span class="mast-label">BrokerLens India: brand mark exploration</span>
+    <span class="mast-meta">3 concepts, inline SVG, tokens.css palette</span>
+    <button class="theme-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <p class="eyebrow">Recommended: Concept 1, Lens on the line</p>
+      <h1>The lens makes the market readable. <span class="soft">Sharp inside, soft outside.</span></h1>
+      <p class="lede">
+        Three text-free marks for BrokerLens India, each hand drawn as inline SVG and built
+        only from the site's existing inks: data indigo <code style="font-family:var(--font-mono);font-size:.86em">#2f4a8f</code>
+        and market green <code style="font-family:var(--font-mono);font-size:.86em">#0f7a4d</code>.
+        Every concept is proven from 512px down to a 16px favicon, in both themes, and in one color.
+      </p>
+      <div class="before-after">
+        <span class="cell"><span class="old-tile">BL</span> current placeholder</span>
+        <span class="arrow">&rarr;</span>
+        <span class="cell"><svg width="26" height="26" role="img" aria-label="Proposed lens mark"><use href="#m-lens"/></svg> proposed mark, 26px</span>
+      </div>
+    </div>
+    <div class="hero-mark reveal d1">
+      <svg viewBox="0 0 512 512" role="img" aria-label="Lens on the line mark at large size"><use href="#m-lens"/></svg>
+    </div>
+  </div>
+</section>
+
+<!-- ================================ CONCEPT 1 ================================ -->
+<section class="concept" id="c1">
+  <div class="wrap">
+    <div class="c-head">
+      <span class="c-num">01</span>
+      <h2>Lens on the line</h2>
+      <span class="badge-rec">Recommended</span>
+    </div>
+    <p class="rationale">
+      A single lens ring holds a rising trend line in focus: <strong>bold and green inside the glass,
+      thin and faint where it leaves it</strong>. The metaphor is the product itself: the market is noisy,
+      and the part BrokerLens examines becomes legible. At 26px it reduces to exactly two shapes,
+      a ring and a rising line, so nothing is lost in the nav. There is deliberately no handle:
+      this is an analyst's lens, not a search icon.
+    </p>
+
+    <h3 class="sub">512px, light and dark</h3>
+    <div class="stage">
+      <div class="panel p-light ink-light">
+        <div class="art"><svg class="hero-render" viewBox="0 0 512 512" role="img" aria-label="Lens mark on light"><use href="#m-lens"/></svg></div>
+        <div class="cap">light #fbfbfa &middot; ring #2f4a8f &middot; line #0f7a4d</div>
+      </div>
+      <div class="panel p-dark ink-dark">
+        <div class="art"><svg class="hero-render" viewBox="0 0 512 512" role="img" aria-label="Lens mark on dark"><use href="#m-lens"/></svg></div>
+        <div class="cap">dark #141413 &middot; ring #8fa8e8 &middot; line #4cc38a</div>
+      </div>
+    </div>
+
+    <h3 class="sub">Size ladder: 64, 32, 26</h3>
+    <div class="ladder">
+      <div class="panel p-light ink-light"><div class="row">
+        <span class="step"><svg width="64" height="64"><use href="#m-lens"/></svg><span class="sz">64</span></span>
+        <span class="step"><svg width="32" height="32"><use href="#m-lens"/></svg><span class="sz">32</span></span>
+        <span class="step"><svg width="26" height="26"><use href="#m-lens"/></svg><span class="sz">26</span></span>
+        <span class="step ink-mono" style="color:#1a1a18"><svg width="64" height="64"><use href="#m-lens"/></svg><span class="sz">1-color</span></span>
+      </div></div>
+      <div class="panel p-dark ink-dark"><div class="row">
+        <span class="step"><svg width="64" height="64"><use href="#m-lens"/></svg><span class="sz">64</span></span>
+        <span class="step"><svg width="32" height="32"><use href="#m-lens"/></svg><span class="sz">32</span></span>
+        <span class="step"><svg width="26" height="26"><use href="#m-lens"/></svg><span class="sz">26</span></span>
+        <span class="step ink-mono" style="color:#fbfbfa"><svg width="64" height="64"><use href="#m-lens"/></svg><span class="sz">1-color</span></span>
+      </div></div>
+    </div>
+    <p class="mono-note">One-color reduction keeps the focus story: the out-of-focus tail is carried by opacity, not by a second ink, so a single-color stamp still reads sharp inside, soft outside.</p>
+
+    <h3 class="sub">Favicon context, 16px effective</h3>
+    <div class="fav-grid">
+      <div class="tabbar-shell tb-light ink-light"><div class="tabbar">
+        <span class="tab active"><svg width="16" height="16"><use href="#m-lens"/></svg><span>BrokerLens India</span><span class="x">&times;</span></span>
+        <span class="tab idle"><span>NSE India</span></span>
+      </div><div class="urlbar">brokerlens.in/brokers</div></div>
+      <div class="tabbar-shell tb-dark ink-dark"><div class="tabbar">
+        <span class="tab active"><svg width="16" height="16"><use href="#m-lens"/></svg><span>BrokerLens India</span><span class="x">&times;</span></span>
+        <span class="tab idle"><span>SEBI SCORES</span></span>
+      </div><div class="urlbar">brokerlens.in/compare</div></div>
+    </div>
+
+    <h3 class="sub">In the real nav, 26px</h3>
+    <div class="navrep nr-light ink-light">
+      <span class="nr-brand"><svg viewBox="0 0 512 512"><use href="#m-lens"/></svg><span>BrokerLens<span class="in"> India</span></span></span>
+      <span class="nr-links"><span class="on">Brokers</span><span>Compare</span><span>Rankings</span><span>Cost calculator</span><span>SEBI registry</span></span>
+      <span class="nr-gear">&#9680;</span>
+    </div>
+    <div class="navrep nr-dark ink-dark">
+      <span class="nr-brand"><svg viewBox="0 0 512 512"><use href="#m-lens"/></svg><span>BrokerLens<span class="in"> India</span></span></span>
+      <span class="nr-links"><span class="on">Brokers</span><span>Compare</span><span>Rankings</span><span>Cost calculator</span><span>SEBI registry</span></span>
+      <span class="nr-gear">&#9680;</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================================ CONCEPT 2 ================================ -->
+<section class="concept" id="c2">
+  <div class="wrap">
+    <div class="c-head">
+      <span class="c-num">02</span>
+      <h2>Aperture monogram</h2>
+    </div>
+    <p class="rationale">
+      A geometric B assembled from optics: <strong>two tangent lens elements sharing one axis on a stem</strong>,
+      with a bent green uptick sitting inside the larger glass. It keeps a monogram's instant brand recall
+      while replacing typography with construction, so the mark stays text-free.
+      Compact and confident, though at favicon size the two bowls begin to read as a figure 8.
+    </p>
+
+    <h3 class="sub">512px, light and dark</h3>
+    <div class="stage">
+      <div class="panel p-light ink-light">
+        <div class="art"><svg class="hero-render" viewBox="0 0 512 512" role="img" aria-label="Aperture monogram on light"><use href="#m-mono"/></svg></div>
+        <div class="cap">light #fbfbfa &middot; monogram #2f4a8f &middot; tick #0f7a4d</div>
+      </div>
+      <div class="panel p-dark ink-dark">
+        <div class="art"><svg class="hero-render" viewBox="0 0 512 512" role="img" aria-label="Aperture monogram on dark"><use href="#m-mono"/></svg></div>
+        <div class="cap">dark #141413 &middot; monogram #8fa8e8 &middot; tick #4cc38a</div>
+      </div>
+    </div>
+
+    <h3 class="sub">Size ladder: 64, 32, 26</h3>
+    <div class="ladder">
+      <div class="panel p-light ink-light"><div class="row">
+        <span class="step"><svg width="64" height="64"><use href="#m-mono"/></svg><span class="sz">64</span></span>
+        <span class="step"><svg width="32" height="32"><use href="#m-mono"/></svg><span class="sz">32</span></span>
+        <span class="step"><svg width="26" height="26"><use href="#m-mono"/></svg><span class="sz">26</span></span>
+        <span class="step ink-mono" style="color:#1a1a18"><svg width="64" height="64"><use href="#m-mono"/></svg><span class="sz">1-color</span></span>
+      </div></div>
+      <div class="panel p-dark ink-dark"><div class="row">
+        <span class="step"><svg width="64" height="64"><use href="#m-mono"/></svg><span class="sz">64</span></span>
+        <span class="step"><svg width="32" height="32"><use href="#m-mono"/></svg><span class="sz">32</span></span>
+        <span class="step"><svg width="26" height="26"><use href="#m-mono"/></svg><span class="sz">26</span></span>
+        <span class="step ink-mono" style="color:#fbfbfa"><svg width="64" height="64"><use href="#m-mono"/></svg><span class="sz">1-color</span></span>
+      </div></div>
+    </div>
+    <p class="mono-note">In one color the bent tick stays visible inside the glass, so the bowl never reads as a slashed O; the letterform still carries the mark on its own.</p>
+
+    <h3 class="sub">Favicon context, 16px effective</h3>
+    <div class="fav-grid">
+      <div class="tabbar-shell tb-light ink-light"><div class="tabbar">
+        <span class="tab active"><svg width="16" height="16"><use href="#m-mono"/></svg><span>BrokerLens India</span><span class="x">&times;</span></span>
+        <span class="tab idle"><span>NSE India</span></span>
+      </div><div class="urlbar">brokerlens.in/leaderboards</div></div>
+      <div class="tabbar-shell tb-dark ink-dark"><div class="tabbar">
+        <span class="tab active"><svg width="16" height="16"><use href="#m-mono"/></svg><span>BrokerLens India</span><span class="x">&times;</span></span>
+        <span class="tab idle"><span>SEBI SCORES</span></span>
+      </div><div class="urlbar">brokerlens.in/calculator</div></div>
+    </div>
+
+    <h3 class="sub">In the real nav, 26px</h3>
+    <div class="navrep nr-light ink-light">
+      <span class="nr-brand"><svg viewBox="0 0 512 512"><use href="#m-mono"/></svg><span>BrokerLens<span class="in"> India</span></span></span>
+      <span class="nr-links"><span class="on">Brokers</span><span>Compare</span><span>Rankings</span><span>Cost calculator</span><span>SEBI registry</span></span>
+      <span class="nr-gear">&#9680;</span>
+    </div>
+    <div class="navrep nr-dark ink-dark">
+      <span class="nr-brand"><svg viewBox="0 0 512 512"><use href="#m-mono"/></svg><span>BrokerLens<span class="in"> India</span></span></span>
+      <span class="nr-links"><span class="on">Brokers</span><span>Compare</span><span>Rankings</span><span>Cost calculator</span><span>SEBI registry</span></span>
+      <span class="nr-gear">&#9680;</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================================ CONCEPT 3 ================================ -->
+<section class="concept" id="c3">
+  <div class="wrap">
+    <div class="c-head">
+      <span class="c-num">03</span>
+      <h2>Focus bracket</h2>
+    </div>
+    <p class="rationale">
+      Camera focus brackets frame a compact rising chart: <strong>the market, held in focus</strong>.
+      It is the most literal measurement image of the three, feels native next to data tables,
+      and survives one-color reduction perfectly. Its weakness is density: below 20px the gaps
+      between the bars start to close and the mark loses its rhythm.
+    </p>
+
+    <h3 class="sub">512px, light and dark</h3>
+    <div class="stage">
+      <div class="panel p-light ink-light">
+        <div class="art"><svg class="hero-render" viewBox="0 0 512 512" role="img" aria-label="Focus bracket on light"><use href="#m-bracket"/></svg></div>
+        <div class="cap">light #fbfbfa &middot; brackets #2f4a8f &middot; bars #0f7a4d</div>
+      </div>
+      <div class="panel p-dark ink-dark">
+        <div class="art"><svg class="hero-render" viewBox="0 0 512 512" role="img" aria-label="Focus bracket on dark"><use href="#m-bracket"/></svg></div>
+        <div class="cap">dark #141413 &middot; brackets #8fa8e8 &middot; bars #4cc38a</div>
+      </div>
+    </div>
+
+    <h3 class="sub">Size ladder: 64, 32, 26</h3>
+    <div class="ladder">
+      <div class="panel p-light ink-light"><div class="row">
+        <span class="step"><svg width="64" height="64"><use href="#m-bracket"/></svg><span class="sz">64</span></span>
+        <span class="step"><svg width="32" height="32"><use href="#m-bracket"/></svg><span class="sz">32</span></span>
+        <span class="step"><svg width="26" height="26"><use href="#m-bracket"/></svg><span class="sz">26</span></span>
+        <span class="step ink-mono" style="color:#1a1a18"><svg width="64" height="64"><use href="#m-bracket"/></svg><span class="sz">1-color</span></span>
+      </div></div>
+      <div class="panel p-dark ink-dark"><div class="row">
+        <span class="step"><svg width="64" height="64"><use href="#m-bracket"/></svg><span class="sz">64</span></span>
+        <span class="step"><svg width="32" height="32"><use href="#m-bracket"/></svg><span class="sz">32</span></span>
+        <span class="step"><svg width="26" height="26"><use href="#m-bracket"/></svg><span class="sz">26</span></span>
+        <span class="step ink-mono" style="color:#fbfbfa"><svg width="64" height="64"><use href="#m-bracket"/></svg><span class="sz">1-color</span></span>
+      </div></div>
+    </div>
+    <p class="mono-note">The strongest one-color performer: brackets plus bars keep full meaning in a single ink, which suits press use and rubber-stamp contexts.</p>
+
+    <h3 class="sub">Favicon context, 16px effective</h3>
+    <div class="fav-grid">
+      <div class="tabbar-shell tb-light ink-light"><div class="tabbar">
+        <span class="tab active"><svg width="16" height="16"><use href="#m-bracket"/></svg><span>BrokerLens India</span><span class="x">&times;</span></span>
+        <span class="tab idle"><span>NSE India</span></span>
+      </div><div class="urlbar">brokerlens.in/registry</div></div>
+      <div class="tabbar-shell tb-dark ink-dark"><div class="tabbar">
+        <span class="tab active"><svg width="16" height="16"><use href="#m-bracket"/></svg><span>BrokerLens India</span><span class="x">&times;</span></span>
+        <span class="tab idle"><span>SEBI SCORES</span></span>
+      </div><div class="urlbar">brokerlens.in/algo</div></div>
+    </div>
+
+    <h3 class="sub">In the real nav, 26px</h3>
+    <div class="navrep nr-light ink-light">
+      <span class="nr-brand"><svg viewBox="0 0 512 512"><use href="#m-bracket"/></svg><span>BrokerLens<span class="in"> India</span></span></span>
+      <span class="nr-links"><span class="on">Brokers</span><span>Compare</span><span>Rankings</span><span>Cost calculator</span><span>SEBI registry</span></span>
+      <span class="nr-gear">&#9680;</span>
+    </div>
+    <div class="navrep nr-dark ink-dark">
+      <span class="nr-brand"><svg viewBox="0 0 512 512"><use href="#m-bracket"/></svg><span>BrokerLens<span class="in"> India</span></span></span>
+      <span class="nr-links"><span class="on">Brokers</span><span>Compare</span><span>Rankings</span><span>Cost calculator</span><span>SEBI registry</span></span>
+      <span class="nr-gear">&#9680;</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================================ COMPARISON ================================ -->
+<section class="compare">
+  <div class="wrap">
+    <div class="c-head" style="margin-bottom:18px">
+      <span class="c-num">04</span>
+      <h2>Side by side</h2>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Concept</th>
+            <th>Legibility at 26px</th>
+            <th>Distinctiveness</th>
+            <th>Theme robustness</th>
+            <th>1-color survival</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="rec-row">
+            <td class="c-name"><svg class="mini" viewBox="0 0 512 512"><use href="#m-lens"/></svg>01 Lens on the line</td>
+            <td><span class="score s-good">strong</span><span class="note">Two shapes only: ring plus rising line. The kink stays visible at 16px.</span></td>
+            <td><span class="score s-good">strong</span><span class="note">Reads as lens plus market, not search. No known collision in the Indian broker space.</span></td>
+            <td><span class="score s-good">strong</span><span class="note">Ring swaps #2f4a8f for lifted indigo #8fa8e8 on dark, green swaps to #4cc38a. No fill to fight the background.</span></td>
+            <td><span class="score s-good">strong</span><span class="note">Focus story survives: the soft tail is opacity, not a second ink.</span></td>
+          </tr>
+          <tr>
+            <td class="c-name"><svg class="mini" viewBox="0 0 512 512"><use href="#m-mono"/></svg>02 Aperture monogram</td>
+            <td><span class="score s-ok">good</span><span class="note">The B holds at 26px; at 16px the bowls flirt with reading as an 8.</span></td>
+            <td><span class="score s-ok">good</span><span class="note">Handsome, but monograms are a crowded field and it leans on the name less than the lens does.</span></td>
+            <td><span class="score s-good">strong</span><span class="note">Pure strokes, so both themes are a single ink swap.</span></td>
+            <td><span class="score s-ok">good</span><span class="note">Letterform stands alone; the bent tick stays legible in one ink, though the market cue softens.</span></td>
+          </tr>
+          <tr>
+            <td class="c-name"><svg class="mini" viewBox="0 0 512 512"><use href="#m-bracket"/></svg>03 Focus bracket</td>
+            <td><span class="score s-weak">fair</span><span class="note">Five elements. Bar gaps are about 1.3px at 26px and start merging at 16px.</span></td>
+            <td><span class="score s-ok">good</span><span class="note">The focus-frame idea is fresh for finance, but bracket-plus-chart edges toward screener territory.</span></td>
+            <td><span class="score s-good">strong</span><span class="note">Solid bars keep contrast on both backgrounds.</span></td>
+            <td><span class="score s-good">strong</span><span class="note">Best of the three: full meaning in one ink.</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================================ VERDICT ================================ -->
+<section class="verdict">
+  <div class="wrap">
+    <div class="verdict-card reveal">
+      <h2>Recommendation: ship Concept 1</h2>
+      <p>
+        <strong>Lens on the line</strong> is the only concept where the name, the product, and the mark say
+        the same thing in half a second: the market is blurry until BrokerLens looks at it. It wins the 26px
+        test with just two shapes, holds a 16px tab, and its one-color version keeps the focus story intact.
+        Concept 3 is a worthy secondary device for social cards and report covers, where its density has room.
+        Concept 2 can be retired without loss.
+      </p>
+      <p>
+        <strong>On the gradient:</strong> the placeholder's 140deg indigo to green blend averages into a muddy teal
+        below 32px and cannot survive one-color reduction, so the new marks use flat inks: indigo structure with a
+        single green accent. Two colors, zero gradients, one asset from favicon to hero.
+      </p>
+      <p>
+        <strong>Implementation:</strong> drop the SVG into <code>.brand-mark</code> in <code>site/index.html</code>
+        at 26px and remove the gradient tile background (the mark sits directly on the header, no container).
+        For the favicon, serialize the same symbol with the light-theme fallback inks into the existing data URI, and keep the pullback in the line pronounced: a lens with a plain diagonal can scan as a cancel glyph at 16px, the deep kink is what prevents that.
+        Colors are wired to <code>--lg-a</code> and <code>--lg-b</code> with hex fallbacks, so the markup works
+        verbatim inside the production CSP with no external assets.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    BrokerLens India brand exploration. All marks are original inline SVG, drawn on a 512 unit grid,
+    minimum stroke 30 units (1.5px at 26px). Palette per site/assets/css/tokens.css.
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.getElementById('theme-toggle');
+    var root = document.documentElement;
+    btn.addEventListener('click', function () {
+      var dark = root.dataset.theme
+        ? root.dataset.theme === 'dark'
+        : matchMedia('(prefers-color-scheme: dark)').matches;
+      root.dataset.theme = dark ? 'light' : 'dark';
+    });
+  })();
+</script>
+
+</body>
+</html>

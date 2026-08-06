@@ -37,11 +37,31 @@ const niceMax = (v) => {
   return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
 };
 
+/* A chart with nothing to plot must say so. Leaving a correctly-sized but empty
+ * canvas reads to a visitor as a broken page rather than as missing data. */
+function emptyCanvas(canvas, message) {
+  if (!canvas) return;
+  const box = canvas.parentElement;
+  if (!box) return;
+  canvas.style.display = 'none';
+  let note = box.querySelector('.chart-empty');
+  if (!note) {
+    note = document.createElement('div');
+    note.className = 'chart-empty';
+    box.appendChild(note);
+  }
+  note.textContent = message || 'Not published yet.';
+}
+
+
 /* ------------------------------------------------------------------ sparkline */
 
 export function sparkline(canvas, values, opts = {}) {
   const vals = (values || []).filter((v) => v != null);
-  if (vals.length < 2) return;
+  // No series means no slot: hide the element entirely rather than leaving 48
+  // empty 72x22 boxes down the "Trend" column.
+  if (vals.length < 2) { canvas.style.display = 'none'; return; }
+  canvas.style.display = '';
   const { ctx, w, h } = setup(canvas, opts.height || 22);
   const min = Math.min(...vals), max = Math.max(...vals);
   const span = max - min || 1;
@@ -77,9 +97,9 @@ export function sparkline(canvas, values, opts = {}) {
 
 export function lineChart(canvas, series, opts = {}) {
   const height = opts.height || 240;
-  const { ctx, w, h } = setup(canvas, height);
   const sets = (series || []).filter((s) => (s.data || []).length);
-  if (!sets.length) return;
+  if (!sets.length) return emptyCanvas(canvas, opts.empty);
+  const { ctx, w, h } = setup(canvas, height);
 
   const padL = opts.padL ?? 52, padR = 12, padT = 12, padB = 26;
   const labels = sets[0].data.map((d) => d[0]);
@@ -186,9 +206,9 @@ function attachTooltip(canvas, s) {
 
 export function barChart(canvas, rows, opts = {}) {
   const height = opts.height || 240;
-  const { ctx, w, h } = setup(canvas, height);
   const data = (rows || []).filter((r) => r.value != null);
-  if (!data.length) return;
+  if (!data.length) return emptyCanvas(canvas, opts.empty);
+  const { ctx, w, h } = setup(canvas, height);
 
   const horizontal = opts.horizontal !== false;
   const cols = palette();

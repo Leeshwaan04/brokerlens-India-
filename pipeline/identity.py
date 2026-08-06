@@ -28,10 +28,35 @@ _NOISE = {
 }
 
 
+# A containing alias must account for at least this share of the candidate name,
+# so a 6-character brand cannot claim a 40-character unrelated company.
+CONTAINS_MIN_RATIO = 0.55
+
+
 def norm(s):
     s = (s or "").lower()
     s = re.sub(r"[^a-z0-9 ]+", " ", s)
     return re.sub(r"\s+", " ", s).strip()
+
+
+def _whole_word_in(needle, haystack):
+    """True if `needle` occurs in `haystack` on word boundaries.
+
+    Plain `in` matched "arihant" inside "ARIHANT ACADEMY" (fine) but equally
+    inside any longer word, and matched brand words like "choice" or "ventura"
+    inside unrelated prose. Both strings are already normalised to lowercase
+    words separated by single spaces, so boundary checking is a token-window
+    comparison rather than a regex.
+    """
+    if not needle or not haystack:
+        return False
+    n_tokens, h_tokens = needle.split(), haystack.split()
+    if not n_tokens or len(n_tokens) > len(h_tokens):
+        return False
+    for i in range(len(h_tokens) - len(n_tokens) + 1):
+        if h_tokens[i:i + len(n_tokens)] == n_tokens:
+            return True
+    return False
 
 
 def tokens(s, drop_noise=True):
@@ -61,8 +86,15 @@ class Resolver:
             )
         self.stats = {"exact": 0, "contains": 0, "token": 0, "ambiguous": 0, "miss": 0}
 
-    def resolve(self, raw_name, threshold=0.62, margin=0.12):
-        """Return (broker_id, method, score) or (None, reason, score)."""
+    def resolve(self, raw_name, threshold=0.62, margin=0.12, strict=False):
+        """Return (broker_id, method, score) or (None, reason, score).
+
+        `strict=True` refuses everything except an exact normalised match. Use it
+        for any ADVERSE attribution (defaulter list, disciplinary circulars):
+        wrongly telling readers that a named, regulated firm is a defaulter is
+        not a data-quality issue, it is a defamation exposure, and the cost of a
+        miss is only a gap.
+        """
         n = norm(raw_name)
         if not n:
             return None, "empty", 0.0
@@ -71,11 +103,35 @@ class Resolver:
             self.stats["exact"] += 1
             return self.exact[n], "exact", 1.0
 
-        # containment: registry names are usually the brand plus corporate suffix
-        hits = [bid for alias, bid in self.exact.items() if len(alias) >= 5 and (alias in n or n in alias)]
-        if len(set(hits)) == 1:
-            self.stats["contains"] += 1
-            return hits[0], "contains", 0.9
+        if strict:
+            self.stats["miss"] += 1
+            return None, "strict_no_exact_match", 0.0
+
+        # Containment: registry names are usually the brand plus a corporate
+        # suffix. This must be WHOLE-WORD. A bare substring test resolved
+        # "ARIHANT ACADEMY LIMITED" to the broker Arihant and "VENTURA TEXTILES"
+        # to Ventura, at 0.9 confidence, because it matched inside unrelated
+        # company names. It must also be unambiguous AND carry enough of the
+        # candidate name to be meaningful.
+        hits = set()
+        for alias, bid in self.exact.items():
+            if len(alias) < 5:
+                continue
+            if _whole_word_in(alias, n) or _whole_word_in(n, alias):
+                hits.add(bid)
+        if len(hits) == 1:
+            bid = next(iter(hits))
+            # Guard against a short alias swallowing a long unrelated name:
+            # require the alias to account for a real share of the candidate.
+            longer, shorter = max(len(n), 1), 0
+            for alias, abid in self.exact.items():
+                if abid == bid and (_whole_word_in(alias, n) or _whole_word_in(n, alias)):
+                    shorter = max(shorter, len(alias))
+            if shorter / longer >= CONTAINS_MIN_RATIO:
+                self.stats["contains"] += 1
+                return bid, "contains", 0.9
+            self.stats["ambiguous"] += 1
+            return None, "contains_too_weak", round(shorter / longer, 3)
 
         cand = set(tokens(raw_name))
         if not cand:

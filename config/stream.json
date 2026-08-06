@@ -27,20 +27,13 @@
       "note": "gzipped 7.5KB -> 1.8KB",
       "feed": "NSE"
     },
-    "nse_gainers": {
-      "label": "NSE top gainers",
-      "exchange": "NSE",
-      "interval": 2,
-      "wire_bytes": 9000,
-      "max_mb_per_min": 4,
-      "feed": "GAINERS"
-    },
     "nse_pulse": {
       "label": "NSE indices + status",
       "exchange": "NSE",
       "interval": 2,
       "wire_bytes": 22000,
       "max_mb_per_min": 6,
+      "note": "Feeds the Indices dropdown and drives the open/closed dot for every feed.",
       "feed": "INDICES"
     },
     "bse_quotes": {
@@ -78,24 +71,6 @@
       "max_mb_per_min": 3,
       "note": "1.28MB uncompressed. Slow loop only - contract list, units, expiries. NEVER put this on the fast path.",
       "feed": "MCX"
-    },
-    "nse_losers": {
-      "label": "NSE top losers",
-      "exchange": "NSE",
-      "feed": "LOSERS",
-      "interval": 2,
-      "wire_bytes": 6451,
-      "max_mb_per_min": 4
-    },
-    "broker_stocks": {
-      "label": "Broker stocks",
-      "exchange": "BSE",
-      "feed": "BROKERS",
-      "interval": 2,
-      "wire_bytes": 10700,
-      "max_mb_per_min": 4,
-      "concurrency": 4,
-      "note": "18 listed brokers and broker parents, quoted via BSE getScripHeaderData. 594b per scrip."
     }
   },
   "limits": {

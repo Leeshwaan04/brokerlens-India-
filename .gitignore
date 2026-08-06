@@ -21,3 +21,6 @@ __pycache__/
 *.log
 .venv/
 venv/
+.claude/
+dist/
+*.zip

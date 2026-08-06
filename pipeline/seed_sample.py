@@ -77,15 +77,9 @@ SAMPLE_ANCHORS = {
     "espresso": (68_000, 0.09), "stoxkart": (22_000, 0.03), "jio-blackrock": (310_000, 1.20),
 }
 
-# Only these are marked "claimed" in the sample, to demonstrate the difference
-# between a claimed profile (pricing published) and an unclaimed one (CTA shown).
-SAMPLE_CLAIMED = {
-    "zerodha": {"tier": "verified"},
-    "groww": {"tier": "featured"},
-    "dhan": {"tier": "verified"},
-    "angel-one": {"tier": "featured"},
-}
-
+# No sample broker is marked claimed, verified or featured: the site must not
+# display monetisation signals (badges, sponsored slots, promoted rows) to end
+# users. Every listing stays at the free/unclaimed default.
 SAMPLE_CHARGES = {
     "zerodha":   {"delivery": {"flat_per_order": 0}, "intraday": {"flat_per_order": 20, "pct_of_turnover": 0.03, "cap_per_order": 20}, "fno": {"flat_per_order": 20}, "demat_amc_annual": 300, "account_opening": 200},
     "groww":     {"delivery": {"flat_per_order": 20, "pct_of_turnover": 0.1, "cap_per_order": 20}, "intraday": {"flat_per_order": 20, "pct_of_turnover": 0.1, "cap_per_order": 20}, "fno": {"flat_per_order": 20}, "demat_amc_annual": 0, "account_opening": 0},
@@ -104,7 +98,7 @@ def build():
     complaints = {"provenance": "sample", "months": months,
                   "source_note": "SAMPLE DATA - replace with per-broker SEBI Annexure-B disclosures.", "brokers": {}}
     charges = {"provenance": "sample", "as_of": "2026-06",
-               "source_note": "SAMPLE pricing for claimed demo profiles only. Unclaimed brokers stay null by design.",
+               "source_note": "SAMPLE pricing for a handful of demo brokers. Others stay null by design.",
                "brokers": {}}
     listings = {"provenance": "sample", "brokers": {}}
 
@@ -125,9 +119,6 @@ def build():
 
         if bid in SAMPLE_CHARGES:
             charges["brokers"][bid] = SAMPLE_CHARGES[bid]
-        if bid in SAMPLE_CLAIMED:
-            listings["brokers"][bid] = dict(SAMPLE_CLAIMED[bid], claimed=True,
-                                            claimed_on="2026-06-01", provenance="sample")
 
     write_json(os.path.join(MANUAL, "active_clients.json"), clients)
     write_json(os.path.join(MANUAL, "complaints.json"), complaints)

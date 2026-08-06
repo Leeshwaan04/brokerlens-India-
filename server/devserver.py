@@ -1,4 +1,4 @@
-"""Static server + lead capture + live-quote stream, for local development.
+"""Static server + live-quote stream, for local development.
 
   python3 server/devserver.py [--port 8000] [--no-stream]
 
@@ -7,7 +7,7 @@ Three jobs:
      client-side routes like /broker/zerodha work on a hard refresh. Any
      production host needs the same rewrite (Cloudflare Pages: a _redirects
      entry; Netlify: the same; nginx: try_files ... /index.html).
-  2. Accept POST /api/leads and append to data/leads/leads.jsonl.
+  2. Refuse every POST: the site collects and stores no user data.
   3. Push live quotes over Server-Sent Events at GET /api/stream, backed by the
      poller in server/quotes.py, plus GET /api/ticker for the current snapshot.
 
@@ -25,18 +25,14 @@ import argparse
 import json
 import os
 import queue
-import re
 import sys
 import threading
 import time
-from datetime import datetime, timezone
 import socket
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, "site")
-LEADS = os.path.join(ROOT, "data", "leads")
-os.makedirs(LEADS, exist_ok=True)
 
 MAX_BODY = 16 * 1024
 REQUEST_TIMEOUT_S = 20          # slowloris: a client gets 20s to finish a request
@@ -44,9 +40,13 @@ ALLOWED_METHODS = {"GET", "HEAD", "POST", "OPTIONS"}
 
 # Match production (site/_headers) so dev and prod behave the same. The CSP holds
 # because the site makes no third-party requests at all.
+#
+# style-src needs 'unsafe-inline': the renderers emit style="" attributes and
+# without it the browser silently drops them. script-src stays 'self', which is
+# the part that actually defends against XSS.
 SECURITY_HEADERS = {
     "Content-Security-Policy":
-        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
         "font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; "
         "form-action 'self'; object-src 'none'",
     "X-Content-Type-Options": "nosniff",
@@ -62,17 +62,7 @@ FORBIDDEN_PREFIXES = ("/data/_ingest", "/.git", "/.env", "/config", "/pipeline",
 
 # Simple in-memory rate limiting. Enough for a single-process dev/edge server;
 # put a real limiter in front of a production deployment.
-RATE_LIMITS = {"/api/leads": (10, 300), "/api/stream": (30, 300)}   # (requests, window_s)
-EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$")
-PHONE_RE = re.compile(r"^[0-9+\-\s()]{8,20}$")
-ALLOWED_KINDS = {"investor_enquiry", "broker_partner", "enquiry"}
-
-# Only these keys are persisted. An unknown key is dropped rather than stored,
-# so a malicious or buggy client cannot inflate records with arbitrary content.
-FIELDS = {
-    "kind", "broker_id", "name", "email", "phone", "role", "interest",
-    "tier", "message", "consent", "submitted_at", "path",
-}
+RATE_LIMITS = {"/api/stream": (30, 300)}   # (requests, window_s)
 
 
 class RateLimiter:
@@ -261,78 +251,14 @@ class Handler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     # ----------------------------------------------------------------- POST
+    #
+    # The site collects no personal data. There is deliberately no lead capture,
+    # no contact form, and no write endpoint of any kind: nothing to forge, no
+    # consent record to defend, nothing in scope for the DPDP Act. Every POST is
+    # refused outright.
 
     def do_POST(self):
-        if self.path.split("?")[0] != "/api/leads":
-            self._json(404, {"error": "not found"})
-            return
-
-        ok, retry = LIMITER.check("leads:" + self._client_ip(), *RATE_LIMITS["/api/leads"])
-        if not ok:
-            self._json(429, {"error": "too many submissions", "retry_after_s": retry})
-            return
-
-        try:
-            length = int(self.headers.get("Content-Length") or 0)
-        except ValueError:
-            self._json(400, {"error": "bad content-length"})
-            return
-        if length <= 0 or length > MAX_BODY:
-            self._json(413, {"error": "body too large or empty"})
-            return
-
-        try:
-            payload = json.loads(self.rfile.read(length).decode("utf-8"))
-        except Exception:
-            self._json(400, {"error": "invalid json"})
-            return
-        if not isinstance(payload, dict):
-            self._json(400, {"error": "expected an object"})
-            return
-
-        rec = {k: payload.get(k) for k in FIELDS if k in payload}
-        errors = self._validate(rec)
-        if errors:
-            self._json(422, {"error": "validation failed", "fields": errors})
-            return
-
-        rec["received_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
-        rec["remote"] = self.client_address[0]
-        rec["user_agent"] = (self.headers.get("User-Agent") or "")[:200]
-
-        with open(os.path.join(LEADS, "leads.jsonl"), "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
-
-        sys.stderr.write(
-            "  LEAD  %s  broker=%s  %s <%s>\n"
-            % (rec.get("kind"), rec.get("broker_id"), rec.get("name"), rec.get("email"))
-        )
-        self._json(201, {"ok": True})
-
-    @staticmethod
-    def _validate(rec):
-        errors = {}
-        kind = rec.get("kind")
-        if kind not in ALLOWED_KINDS:
-            errors["kind"] = "must be one of %s" % sorted(ALLOWED_KINDS)
-        if not (rec.get("name") or "").strip():
-            errors["name"] = "required"
-        email = (rec.get("email") or "").strip()
-        if not EMAIL_RE.match(email):
-            errors["email"] = "must be a valid email address"
-        phone = (rec.get("phone") or "").strip()
-        if phone and not PHONE_RE.match(phone):
-            errors["phone"] = "must look like a phone number"
-        if kind == "investor_enquiry":
-            if not phone:
-                errors["phone"] = "required for an investor enquiry"
-            # Sharing contact details with a broker requires explicit opt-in.
-            if not rec.get("consent"):
-                errors["consent"] = "explicit consent is required before sharing details with a broker"
-        for k, v in list(rec.items()):
-            if isinstance(v, str) and len(v) > 2000:
-                errors[k] = "too long"
-        return errors
+        self._json(405, {"error": "method not allowed"})
 
     def _json(self, code, obj):
         body = json.dumps(obj).encode()
@@ -349,7 +275,7 @@ def main():
     ap.add_argument("--port", type=int, default=8000)
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--no-stream", action="store_true",
-                    help="serve static + leads only; the front end falls back to polling")
+                    help="serve static only; the front end falls back to polling")
     args = ap.parse_args()
 
     if not os.path.exists(os.path.join(SITE, "data", "overview.json")):
@@ -372,9 +298,9 @@ def main():
         global POOL
         from quotes import start as start_hub   # imported late: pulls in pipeline.*
         HUB, POOL = start_hub()
-    sys.stderr.write("serving %s on http://%s:%d  (leads -> data/leads/leads.jsonl%s)\n"
+    sys.stderr.write("serving %s on http://%s:%d  (%s)\n"
                      % (SITE, args.host, args.port,
-                        ", live stream at /api/stream" if HUB else ", stream OFF"))
+                        "live stream at /api/stream" if HUB else "stream OFF"))
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

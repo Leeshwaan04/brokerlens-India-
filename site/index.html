@@ -7,13 +7,17 @@
 <meta name="description" content="Compare every SEBI-registered Indian stock broker on active clients, market share, complaint records and cost. Built from primary NSE, BSE and SEBI disclosures.">
 <link rel="canonical" href="/">
 <meta name="theme-color" content="#2f4a8f">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232f4a8f'/%3E%3Cpath d='M7 22l5-7 4 4 5-9 4 5' stroke='%23fff' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3CclipPath id='c'%3E%3Ccircle cx='256' cy='256' r='143'/%3E%3C/clipPath%3E%3C/defs%3E%3Cpath d='M50 369 L84 359' stroke='%232f4a8f' stroke-width='30' stroke-linecap='round' opacity='.38' fill='none'/%3E%3Cpath d='M438 161 L470 149' stroke='%232f4a8f' stroke-width='30' stroke-linecap='round' opacity='.38' fill='none'/%3E%3Ccircle cx='256' cy='256' r='166' fill='none' stroke='%232f4a8f' stroke-width='46'/%3E%3Cpath d='M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128' fill='none' stroke='%230f7a4d' stroke-width='46' stroke-linecap='round' stroke-linejoin='round' clip-path='url(%23c)'/%3E%3C/svg%3E">
 <link rel="alternate" type="application/rss+xml" title="Monthly broker movers" href="/feed.xml">
 <link rel="stylesheet" href="/assets/css/app.css">
 
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="BrokerLens India">
+<meta property="og:locale" content="en_IN">
+<meta property="og:url" content="/">
 <meta property="og:title" content="BrokerLens India — broker statistics from primary sources">
 <meta property="og:description" content="Active clients, market share, SEBI complaint records and cost, for every registered Indian stock broker.">
+<meta name="twitter:card" content="summary">
 
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"BrokerLens India",
@@ -39,25 +43,41 @@
       <span class="exch-status xs" id="exch-status"></span>
     </div>
     <div class="ticker-rail" id="ticker-rail"><div class="ticker-track" id="ticker-track"></div></div>
-    <span class="ticker-time xs faint" id="ticker-time" title="Time of the last pipeline refresh"></span>
   </div>
 </div>
 
 <header class="site">
   <div class="wrap nav">
     <a class="brand" href="/" data-link>
-      <span class="brand-mark">BL</span>
+      <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" role="img" aria-label="BrokerLens India">
+        <defs><clipPath id="bl-lens-nav"><circle cx="256" cy="256" r="143"/></clipPath></defs>
+        <g fill="none" stroke="var(--accent)" stroke-width="30" stroke-linecap="round">
+          <path d="M50 369 L84 359" opacity=".38"/><path d="M18 379 L30 375" opacity=".18"/>
+          <path d="M438 161 L470 149" opacity=".38"/><path d="M486 143 L496 140" opacity=".18"/>
+        </g>
+        <circle cx="256" cy="256" r="166" fill="none" stroke="var(--accent)" stroke-width="46"/>
+        <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="var(--up)"
+              stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-nav)"/>
+      </svg>
       <span>BrokerLens<span class="muted" style="font-weight:400"> India</span></span>
     </a>
+    <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
+            aria-label="Menu"><span aria-hidden="true">☰</span></button>
     <nav class="nav-links" id="navlinks">
       <a href="/brokers" data-link>Brokers</a>
       <a href="/compare" data-link>Compare</a>
       <a href="/leaderboards" data-link>Rankings</a>
       <a href="/calculator" data-link>Cost calculator</a>
       <a href="/registry" data-link>SEBI registry</a>
-      <a href="/for-brokers" data-link>For brokers</a>
+      <a href="/algo" data-link>Algo platforms</a>
+      <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">▾</span></button>
     </nav>
     <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">◐</button>
+  </div>
+  <div class="mega" id="mega-timings" hidden>
+    <div class="wrap">
+      <div id="mega-timings-body" class="mega-grid"><div class="small faint" style="padding:16px 0">Loading timings…</div></div>
+    </div>
   </div>
 </header>
 
@@ -73,7 +93,17 @@
   <div class="wrap">
     <div class="cols">
       <div>
-        <div class="brand" style="margin-bottom:8px"><span class="brand-mark">BL</span> BrokerLens India</div>
+        <div class="brand" style="margin-bottom:8px">
+          <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" aria-hidden="true">
+            <defs><clipPath id="bl-lens-foot"><circle cx="256" cy="256" r="143"/></clipPath></defs>
+            <g fill="none" stroke="var(--accent)" stroke-width="30" stroke-linecap="round">
+              <path d="M50 369 L84 359" opacity=".38"/><path d="M18 379 L30 375" opacity=".18"/>
+              <path d="M438 161 L470 149" opacity=".38"/><path d="M486 143 L496 140" opacity=".18"/>
+            </g>
+            <circle cx="256" cy="256" r="166" fill="none" stroke="var(--accent)" stroke-width="46"/>
+            <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="var(--up)"
+                  stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-foot)"/>
+          </svg> BrokerLens India</div>
         <p class="small">Broker statistics assembled from primary NSE, BSE and SEBI disclosures. We publish facts and
         normalised ratios so you can compare brokers yourself.</p>
       </div>
@@ -84,6 +114,7 @@
           <li><a href="/leaderboards" data-link>Rankings</a></li>
           <li><a href="/calculator" data-link>Cost calculator</a></li>
           <li><a href="/registry" data-link>SEBI registry</a></li>
+          <li><a href="/algo" data-link>Algo platforms</a></li>
         </ul>
       </div>
       <div>
@@ -96,12 +127,10 @@
         </ul>
       </div>
       <div>
-        <h5>Brokers</h5>
+        <h5>Explore</h5>
         <ul>
-          <li><a href="/for-brokers" data-link>Get listed</a></li>
-          <li><a href="/for-brokers#claim" data-link>Claim your profile</a></li>
-          <li><a href="/for-brokers#advertise" data-link>Advertise</a></li>
-          <li><a href="/for-brokers#leads" data-link>Buy leads</a></li>
+          <li><a href="/compare" data-link>Compare brokers</a></li>
+          <li><a href="/algo" data-link>Algo platforms</a></li>
         </ul>
       </div>
     </div>

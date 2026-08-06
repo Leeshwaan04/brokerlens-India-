@@ -1,0 +1,213 @@
+{
+  "_comment": [
+    "Pan-India algo trading platforms and entities: broker APIs, retail no-code platforms,",
+    "backtesting/analytics tools and institutional algo vendors.",
+    "",
+    "RULES:",
+    "  - Everything in this file is CURATED. It is published with provenance:'curated' and the",
+    "    UI must say so. No figure here is regulator-verified.",
+    "  - `works_with` entries are broker ids from brokers_master.json, so the site can",
+    "    cross-link a platform to the broker profiles it executes through. Only list brokers",
+    "    we track; an integration with an untracked broker goes in `notes` instead.",
+    "  - Do NOT record SEBI/exchange empanelment status per platform until it can be pulled",
+    "    from the exchanges' published empanelment lists. Guessing a compliance status is",
+    "    worse than omitting it.",
+    "  - `pricing` is a broad indication (free / freemium / subscription / per-order), not a",
+    "    rate card. Platforms change pricing constantly; the profile-claim flow is how a",
+    "    platform publishes exact numbers.",
+    "  - Keep summaries factual and neutral: what the thing is, not whether it is good."
+  ],
+  "last_reviewed": "2026-07-31",
+  "provenance": "curated",
+  "categories": {
+    "broker_api": {
+      "label": "Broker trading APIs",
+      "blurb": "Official REST/WebSocket APIs from brokers themselves — the execution layer most retail algos ultimately trade through."
+    },
+    "no_code": {
+      "label": "No-code algo platforms",
+      "blurb": "Build, backtest and deploy strategies without writing code; execution routed to a connected broker account."
+    },
+    "analytics": {
+      "label": "Backtesting & options analytics",
+      "blurb": "Strategy research, options chains, Greeks and historical simulation. Some offer one-click execution via broker integrations."
+    },
+    "institutional": {
+      "label": "Institutional algo & OMS/EMS vendors",
+      "blurb": "Exchange-empanelled software vendors supplying algo engines, order and execution management systems to brokers and institutions."
+    }
+  },
+  "platforms": [
+    {
+      "id": "kite-connect", "name": "Kite Connect", "category": "broker_api",
+      "operator": "Zerodha", "hq": "Bengaluru", "website": "https://kite.trade",
+      "pricing": "subscription", "works_with": ["zerodha"],
+      "summary": "Zerodha's HTTP/WebSocket trading API: orders, positions, holdings, historical candles and live market data for individual and startup use."
+    },
+    {
+      "id": "smartapi", "name": "SmartAPI", "category": "broker_api",
+      "operator": "Angel One", "hq": "Mumbai", "website": "https://smartapi.angelbroking.com",
+      "pricing": "free", "works_with": ["angel-one"],
+      "summary": "Angel One's free trading and market-data API with SDKs in Python, Java, NodeJS and Go; widely used by third-party algo platforms as an execution venue."
+    },
+    {
+      "id": "upstox-api", "name": "Upstox Developer API", "category": "broker_api",
+      "operator": "Upstox", "hq": "Mumbai", "website": "https://upstox.com/developer/",
+      "pricing": "free", "works_with": ["upstox"],
+      "summary": "Upstox's v2 REST and WebSocket API for orders and market feeds, free for personal trading use."
+    },
+    {
+      "id": "fyers-api", "name": "FYERS API", "category": "broker_api",
+      "operator": "FYERS", "hq": "Bengaluru", "website": "https://myapi.fyers.in",
+      "pricing": "free", "works_with": ["fyers"],
+      "summary": "Trading and data API from FYERS with granular historical data access, positioned squarely at the DIY algo-trader segment."
+    },
+    {
+      "id": "dhanhq", "name": "DhanHQ API", "category": "broker_api",
+      "operator": "Dhan", "hq": "Mumbai", "website": "https://dhanhq.co",
+      "pricing": "free", "works_with": ["dhan"],
+      "summary": "Dhan's trading API with live order streaming and a Trader's Control panel for API-based traders; no charge for API access itself."
+    },
+    {
+      "id": "breeze", "name": "Breeze API", "category": "broker_api",
+      "operator": "ICICI Securities", "hq": "Mumbai", "website": "https://api.icicidirect.com",
+      "pricing": "free", "works_with": ["icici-direct"],
+      "summary": "ICICI Direct's Breeze API — a bank-broker opening its execution and data stack to retail algo traders."
+    },
+    {
+      "id": "kotak-neo-api", "name": "Kotak Neo Trade API", "category": "broker_api",
+      "operator": "Kotak Securities", "hq": "Mumbai", "website": "https://www.kotaksecurities.com",
+      "pricing": "free", "works_with": ["kotak-securities"],
+      "summary": "Kotak Securities' Neo API suite for order placement and market quotes, offered free after the broker scrapped API charges."
+    },
+    {
+      "id": "shoonya-api", "name": "Shoonya API", "category": "broker_api",
+      "operator": "Finvasia", "hq": "Mohali", "website": "https://shoonya.com",
+      "pricing": "free", "works_with": ["shoonya"],
+      "summary": "Finvasia's zero-brokerage platform exposes a free trading API, making it a common execution leg for cost-sensitive algo setups."
+    },
+    {
+      "id": "aliceblue-ant", "name": "ANT API", "category": "broker_api",
+      "operator": "Alice Blue", "hq": "Bengaluru", "website": "https://aliceblueonline.com",
+      "pricing": "free", "works_with": ["alice-blue"],
+      "summary": "Alice Blue's ANT (Analyse aNd Trade) API platform, plus ready integrations with most third-party algo platforms."
+    },
+    {
+      "id": "motilal-api", "name": "MO Trading API", "category": "broker_api",
+      "operator": "Motilal Oswal", "hq": "Mumbai", "website": "https://www.motilaloswal.com",
+      "pricing": "free", "works_with": ["motilal-oswal"],
+      "summary": "Motilal Oswal's investor API programme offering order and data endpoints from a full-service house."
+    },
+    {
+      "id": "paytm-money-api", "name": "Paytm Money Equity API", "category": "broker_api",
+      "operator": "Paytm Money", "hq": "Bengaluru", "website": "https://www.paytmmoney.com",
+      "pricing": "free", "works_with": ["paytm-money"],
+      "summary": "Paytm Money's developer API for equity and F&O order placement aimed at retail algo users."
+    },
+
+    {
+      "id": "streak", "name": "Streak", "category": "no_code",
+      "operator": "Streak AI Technologies", "hq": "Bengaluru", "website": "https://www.streak.tech",
+      "pricing": "subscription", "works_with": ["zerodha", "angel-one", "dhan"],
+      "summary": "No-code strategy creation, backtesting and live deployment; grew up inside the Zerodha ecosystem and now connects to multiple brokers."
+    },
+    {
+      "id": "tradetron", "name": "Tradetron", "category": "no_code",
+      "operator": "Tradetron Tech", "hq": "Mumbai", "website": "https://tradetron.tech",
+      "pricing": "freemium", "works_with": ["zerodha", "angel-one", "upstox", "fyers", "alice-blue", "dhan", "shoonya", "5paisa"],
+      "summary": "Condition-builder algo platform with a strategy marketplace where creators rent strategies to subscribers; executes across dozens of Indian brokers."
+    },
+    {
+      "id": "algotest", "name": "AlgoTest", "category": "no_code",
+      "operator": "AlgoTest", "hq": "Gurugram", "website": "https://algotest.in",
+      "pricing": "freemium", "works_with": ["zerodha", "angel-one", "fyers", "dhan", "5paisa", "upstox"],
+      "summary": "Free options-strategy backtesting on historical F&O data with paid forward-testing and live execution through connected brokers."
+    },
+    {
+      "id": "algobulls", "name": "AlgoBulls", "category": "no_code",
+      "operator": "AlgoBulls Technologies", "hq": "Mumbai", "website": "https://www.algobulls.com",
+      "pricing": "subscription", "works_with": ["zerodha", "angel-one", "upstox", "alice-blue"],
+      "summary": "Algo marketplace and execution platform spanning retail packs and a developer-facing Python framework (pyalgotrading)."
+    },
+    {
+      "id": "quantman", "name": "Quantman", "category": "no_code",
+      "operator": "Quantman", "hq": "Chennai", "website": "https://www.quantman.in",
+      "pricing": "subscription", "works_with": ["zerodha", "angel-one", "fyers", "shoonya", "alice-blue"],
+      "summary": "Template-driven F&O strategy builder with deep historical backtests and one-click live deployment via broker APIs."
+    },
+    {
+      "id": "speedbot", "name": "Speedbot", "category": "no_code",
+      "operator": "Speedbot", "hq": "Ahmedabad", "website": "https://speedbot.tech",
+      "pricing": "subscription", "works_with": ["angel-one", "alice-blue", "fyers"],
+      "summary": "App-first algo platform with an options bot builder and per-strategy marketplace pricing."
+    },
+    {
+      "id": "utrade-algos", "name": "uTrade Algos", "category": "no_code",
+      "operator": "uTrade Solutions", "hq": "Mohali", "website": "https://www.utradealgos.com",
+      "pricing": "subscription", "works_with": [],
+      "summary": "Retail no-code strategy builder from institutional vendor uTrade Solutions, sold through partner brokers."
+    },
+    {
+      "id": "keev", "name": "Keev", "category": "no_code",
+      "operator": "Mirae Asset Sharekhan", "hq": "Mumbai", "website": "https://www.keev.tech",
+      "pricing": "subscription", "works_with": ["sharekhan"],
+      "summary": "Sharekhan-backed strategy automation platform: build or pick strategies and auto-execute through a Sharekhan account."
+    },
+    {
+      "id": "squareoff", "name": "Squareoff", "category": "no_code",
+      "operator": "Squareoff Technologies", "hq": "Chennai", "website": "https://squareoff.in",
+      "pricing": "subscription", "works_with": ["zerodha", "angel-one"],
+      "summary": "Pre-built trading bots with fixed monthly pricing that place trades automatically in the user's own broker account."
+    },
+
+    {
+      "id": "sensibull", "name": "Sensibull", "category": "analytics",
+      "operator": "Sensibull", "hq": "Bengaluru", "website": "https://sensibull.com",
+      "pricing": "freemium", "works_with": ["zerodha", "angel-one", "upstox", "icici-direct", "dhan", "5paisa"],
+      "summary": "India's largest options-trading platform: chains, Greeks, strategy builder and broker-connected execution. Analytics rather than automation — no unattended algos."
+    },
+    {
+      "id": "quantsapp", "name": "Quantsapp", "category": "analytics",
+      "operator": "Quantsapp", "hq": "Mumbai", "website": "https://www.quantsapp.com",
+      "pricing": "freemium", "works_with": [],
+      "summary": "Options analytics suite with open-interest tooling, strategy scanners and structured F&O education."
+    },
+    {
+      "id": "opstra", "name": "Opstra", "category": "analytics",
+      "operator": "Definedge", "hq": "Pune", "website": "https://opstra.definedge.com",
+      "pricing": "freemium", "works_with": [],
+      "summary": "Options strategy builder, IV charts and positional analytics from the Definedge stable, which also runs its own SEBI-registered broking arm."
+    },
+    {
+      "id": "stockmock", "name": "StockMock", "category": "analytics",
+      "operator": "StockMock", "hq": null, "website": "https://www.stockmock.in",
+      "pricing": "freemium", "works_with": [],
+      "summary": "Popular options backtesting tool for NIFTY/BANKNIFTY strategies with slippage modelling; research only, no live execution."
+    },
+
+    {
+      "id": "symphony-presto", "name": "Symphony Presto / XTS", "category": "institutional",
+      "operator": "Symphony Fintech", "hq": "Mumbai", "website": "https://symphonyfintech.com",
+      "pricing": "per-seat licence", "works_with": [],
+      "summary": "Exchange-empanelled algo trading system (Presto ATS) and the XTS API stack that several brokers resell to their own API clients."
+    },
+    {
+      "id": "greeksoft", "name": "Greeksoft", "category": "institutional",
+      "operator": "Greeksoft Technologies", "hq": "Mumbai", "website": "https://www.greeksoft.co.in",
+      "pricing": "per-seat licence", "works_with": [],
+      "summary": "Low-latency algo and options-market-making software deployed at broker dealing desks across NSE, BSE and MCX."
+    },
+    {
+      "id": "odin", "name": "ODIN / 63 moons", "category": "institutional",
+      "operator": "63 moons technologies", "hq": "Mumbai", "website": "https://www.63moons.com",
+      "pricing": "per-seat licence", "works_with": [],
+      "summary": "The incumbent multi-exchange OMS deployed across Indian broking for decades; its ecosystem spans dealer terminals and algo modules."
+    },
+    {
+      "id": "utrade-solutions", "name": "uTrade Solutions", "category": "institutional",
+      "operator": "uTrade Solutions", "hq": "Mohali", "website": "https://utradesolutions.com",
+      "pricing": "enterprise licence", "works_with": [],
+      "summary": "Trading-technology vendor supplying algo engines, risk layers and white-label platforms to brokers; parent of the retail uTrade Algos product."
+    }
+  ]
+}

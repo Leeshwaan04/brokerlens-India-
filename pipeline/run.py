@@ -17,7 +17,7 @@ import sys
 import traceback
 
 from . import publish, seed_sample
-from .common import CONFIG, DATA, log, now_iso, read_json, write_json
+from .common import CONFIG, DATA, MANUAL, log, now_iso, read_json, write_json
 from .identity import Resolver
 from .sources import bse as bse_src
 from .sources import mcx as mcx_src
@@ -34,6 +34,37 @@ def _watchlist():
     return read_json(os.path.join(CONFIG, "watchlist.json"), {}) or {}
 
 
+# What each adapter must actually return for the run to count as a success.
+# `bool(result)` was useless: every collect() returns a dict with fixed keys, so
+# a total upstream blackout still evaluated True and the pipeline exited 0 with
+# every source showing green. Each entry is a dotted path into the adapter's
+# result that must be non-empty.
+EXPECTED_ROWS = {
+    "nse": ["pulse.indices", "live.quotes"],
+    "bse": ["live.quotes"],
+    "mcx": ["quotes.quotes"],
+    "sebi": ["registry.commodity_broker", "defaulters"],
+}
+
+
+def _dig(obj, path):
+    for part in path.split("."):
+        if not isinstance(obj, dict):
+            return None
+        obj = obj.get(part)
+    return obj
+
+
+def _shortfalls(key, val):
+    """Paths that should have carried rows and did not."""
+    missing = []
+    for path in EXPECTED_ROWS.get(key, []):
+        got = _dig(val, path) if isinstance(val, dict) else None
+        if not got:
+            missing.append(path)
+    return missing
+
+
 def fetch(sebi_pages=None):
     out = {"_status": {}, "fetched_at": now_iso()}
     problems = []
@@ -43,10 +74,13 @@ def fetch(sebi_pages=None):
         try:
             val = fn()
             out[key] = val
-            ok = bool(val)
+            missing = _shortfalls(key, val)
+            ok = bool(val) and not missing
+            status = "ok" if ok else ("empty: %s" % ", ".join(missing) if missing else "empty")
             for sid in source_ids:
-                out["_status"][sid] = {"last_run": now_iso(), "status": "ok" if ok else "empty"}
+                out["_status"][sid] = {"last_run": now_iso(), "status": status}
             if not ok:
+                log("%s returned no rows for: %s" % (key, ", ".join(missing) or "everything"), "err")
                 problems.append(key)
             return val
         except Exception as exc:
@@ -107,6 +141,41 @@ def pulse():
     log("pulse refreshed", "ok")
 
 
+def complaints():
+    """Crawl each broker's SEBI Annexure-B disclosure and write the real dataset.
+
+    Writes data/manual/complaints.json with provenance:"sebi_annexure_b", which
+    is the same slot the sample data occupies, so the site picks it up with no
+    further changes. Brokers that could not be parsed simply get no record; they
+    are listed in the run log and in the file's `gaps` block so the coverage is
+    always visible rather than implied.
+    """
+    from .sources import complaints as complaints_src
+
+    res = complaints_src.collect()
+    brokers = res.get("brokers") or {}
+    if not brokers:
+        log("complaints: nothing parsed; leaving the existing file untouched", "err")
+        return 1
+
+    months = sorted({r["month"] for rows in brokers.values() for r in rows})
+    payload = {
+        "provenance": "sebi_annexure_b",
+        "source_note": ("Parsed from each broker's own SEBI Annexure-B disclosure. "
+                        "Brokers absent from this file did not publish a parseable "
+                        "table; they are listed under `gaps`."),
+        "generated_at": now_iso(),
+        "months": months,
+        "coverage": {"parsed": len(brokers), "attempted": res.get("attempted", 0)},
+        "gaps": res.get("failures") or {},
+        "brokers": brokers,
+    }
+    write_json(os.path.join(MANUAL, "complaints.json"), payload)
+    log("complaints: wrote %d brokers across %d months (%s)"
+        % (len(brokers), len(months), months[0] + " to " + months[-1] if months else "-"), "ok")
+    return 0
+
+
 def main(argv):
     cmd = argv[1] if len(argv) > 1 else "all"
     pages = int(os.environ.get("SEBI_MAX_PAGES", "0")) or None
@@ -123,6 +192,8 @@ def main(argv):
     if cmd == "ticker":
         ticker()
         return 0
+    if cmd == "complaints":
+        return complaints()
     if cmd == "pulse":
         pulse()
         return 0

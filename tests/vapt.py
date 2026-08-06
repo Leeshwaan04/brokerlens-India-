@@ -139,64 +139,57 @@ def test_traversal(base):
 # ------------------------------------------------------------ A03 injection
 
 def test_injection(base):
-    section("injection into the lead endpoint")
-    xss = "<script>alert(1)</script>"
-    payload = json.dumps({
-        "kind": "broker_partner",
-        "name": xss,
-        "email": "vapt@example.com",
-        "message": "'; DROP TABLE leads;-- \x00 %0d%0aSet-Cookie: evil=1",
-        "role": "a" * 5000,
-        "__proto__": {"polluted": True},
-        "constructor": {"x": 1},
-        "admin": True,
-        "tier": "featured",
-    }).encode()
-    code, body, hdrs = http(base + "/api/leads", "POST", payload,
-                            {"Content-Type": "application/json"})
-    if not rate_limited("oversized field rejected or truncated", code):
-        result("oversized field rejected or truncated", code in (201, 422),
-               "status %s" % code, severity="low")
-    result("no header injection from payload",
-           "evil" not in json.dumps(hdrs).lower(), str(hdrs)[:80], severity="high")
+    """The site has no write endpoint, so the whole injection surface is absent.
 
-    # Whatever was stored must be inert data, with unknown keys dropped.
-    store = os.path.join(ROOT, "data", "leads", "leads.jsonl")
-    if os.path.exists(store):
-        last = None
-        for line in open(store, encoding="utf-8"):
-            if "vapt@example.com" in line:
-                last = line
-        if last:
-            rec = json.loads(last)
-            result("unknown keys dropped from stored lead",
-                   "admin" not in rec and "__proto__" not in rec and "constructor" not in rec,
-                   str(sorted(rec))[:120], severity="medium")
-            result("stored payload is escaped JSON, not raw markup",
-                   "\\u003c" in last or "<script>" in rec.get("name", ""),
-                   "stored name=%r" % rec.get("name"), severity="low")
-            note("stored lead keys", sorted(rec))
-    else:
-        note("lead store", "no leads.jsonl yet")
+    This used to fuzz POST /api/leads. That endpoint was removed along with all
+    personal-data collection, so the strongest assertion available is that no
+    POST is accepted anywhere and nothing is persisted.
+    """
+    section("write surface (should not exist)")
 
-    section("malformed request handling")
-    for label, body_bytes, ctype in [
+    probes = [
+        ("lead endpoint", "/api/leads"),
+        ("contact endpoint", "/api/contact"),
+        ("site root", "/"),
+        ("data path", "/data/overview.json"),
+    ]
+    for label, path in probes:
+        code, _, _ = http(base + path, "POST", b'{"name":"x"}',
+                          {"Content-Type": "application/json"})
+        result("POST refused: %s" % label, code in (404, 405),
+               "expected 404/405, got %s" % code, severity="high")
+
+    # A cross-origin form post (text/plain is CORS-simple, so no preflight
+    # protects it). Must be refused on the method, not on the body.
+    code, _, _ = http(base + "/api/leads", "POST",
+                      b'{"kind":"investor_enquiry","consent":true}',
+                      {"Content-Type": "text/plain", "Origin": "https://evil.example"})
+    result("cross-origin form post refused", code in (404, 405),
+           "got %s" % code, severity="high")
+
+    # Malformed and hostile bodies must not crash the connection.
+    for label, body, ctype in [
         ("not json", b"<<<not json>>>", "application/json"),
-        ("json array not object", b"[1,2,3]", "application/json"),
+        ("json array", b"[1,2,3]", "application/json"),
         ("empty body", b"", "application/json"),
-        ("wrong content type", json.dumps({"kind": "enquiry", "name": "a",
-                                           "email": "a@b.co"}).encode(), "text/plain"),
+        ("type confusion", b'{"kind":{},"name":123}', "application/json"),
+        ("oversized body", b'{"x":"' + b"A" * 200000 + b'"}', "application/json"),
     ]:
-        code, _, _ = http(base + "/api/leads", "POST", body_bytes, {"Content-Type": ctype})
-        if rate_limited("handled cleanly: %s" % label, code):
-            continue
-        result("handled cleanly: %s" % label, code in (400, 411, 413, 415, 422, 201),
-               "status %s" % code, severity="low")
+        code, _, _ = http(base + "/api/leads", "POST", body, {"Content-Type": ctype})
+        result("no crash on %s" % label, code != 0,
+               "connection died (code 0)", severity="high")
 
-    big = json.dumps({"kind": "enquiry", "name": "x" * 100000, "email": "a@b.co"}).encode()
-    code, _, _ = http(base + "/api/leads", "POST", big, {"Content-Type": "application/json"})
-    if not rate_limited("oversized body rejected", code):
-        result("oversized body rejected", code in (413, 422, 400), "status %s" % code, severity="medium")
+    # Nothing may persist to disk.
+    result("no lead store exists", not os.path.isdir(os.path.join(ROOT, "data", "leads")),
+           "data/leads exists", severity="high")
+    for fn in ("store.js", "pages.js"):
+        src = ""
+        fp = os.path.join(ROOT, "site", "assets", "js", fn)
+        if os.path.exists(fp):
+            src = open(fp, encoding="utf-8").read()
+        bad = [n for n in ("submitLead", "leadEndpoint", "wireLeadForm") if n in src]
+        result("no lead-capture code in %s" % fn, not bad,
+               "found %s" % bad, severity="medium")
 
 
 def test_methods(base):

@@ -377,8 +377,10 @@ class Worker(threading.Thread):
             if "capital" in mk:
                 self.hub.set_status_everywhere("NSE", s.get("status"))
                 self.hub.set_status_everywhere("BSE", s.get("status"))
-            elif "commodity" in mk:
-                self.hub.set_status_everywhere("MCX", s.get("status"))
+        # MCX is a separate exchange with its own hours (non-agri trades to
+        # 23:30). Matching NSE's "commodity" segment here reported MCX closed
+        # while it was trading. Compute it from MCX's own published sessions.
+        self.hub.set_status_everywhere("MCX", feedmod._session_status("MCX"))
         idx = [dict(i, symbol=i.get("name")) for i in (pulse.get("indices") or [])]
         self.hub.apply("INDICES", instruments=idx)
         return self.spec.get("wire_bytes")
@@ -388,17 +390,6 @@ class Worker(threading.Thread):
         if not rows:
             raise RuntimeError("NSE most-active returned nothing")
         self.hub.apply("NSE", instruments=rows, as_of=stamp, note=None)
-        return self.spec.get("wire_bytes")
-
-    def _poll_nse_gainers(self):
-        live = nse_src.live_quotes(self._fetcher, ttl=0, want_active=False, want_gainers=True)
-        self.hub.apply("GAINERS", instruments=live.get("gainers") or [])
-        return self.spec.get("wire_bytes")
-
-    def _poll_nse_losers(self):
-        live = nse_src.live_quotes(self._fetcher, ttl=0, want_active=False,
-                                   want_gainers=False, want_losers=True)
-        self.hub.apply("LOSERS", instruments=live.get("losers") or [])
         return self.spec.get("wire_bytes")
 
     def _fetch_scrips(self, watch):
@@ -431,26 +422,6 @@ class Worker(threading.Thread):
         want = [i.get("label") for i in self._bse_watch]
         results.sort(key=lambda q: want.index(q["symbol"]) if q.get("symbol") in want else 999)
         self.hub.apply("BSE", instruments=results)
-        return self.spec.get("wire_bytes")
-
-    def _poll_broker_stocks(self):
-        defs = feedmod.broker_stock_defs()
-        watch = [{"scrip": d["bse_scrip"], "label": d["symbol"]} for d in defs]
-        quotes = {q["symbol"]: q for q in self._fetch_scrips(watch)}
-        if not quotes:
-            raise RuntimeError("no broker stock quotes returned")
-        rows = []
-        for d in defs:
-            q = quotes.get(d["symbol"])
-            if not q:
-                continue
-            rows.append({
-                "symbol": d["symbol"], "name": d.get("label") or q.get("name"),
-                "last": q.get("last"), "change": q.get("change"),
-                "change_pct": q.get("change_pct"),
-                "broker_id": d.get("broker_id"), "relation": d.get("relation"),
-            })
-        self.hub.apply("BROKERS", instruments=rows)
         return self.spec.get("wire_bytes")
 
     def _poll_mcx_heatmap(self):
