@@ -167,6 +167,40 @@ th[data-tip]:not(.sortable) { cursor: help; }
 }
 [data-tip].tip-end:hover::after { left: auto; right: 0; }
 
+.timings-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4); margin-top: var(--space-4);
+}
+@media (max-width: 900px) { .timings-grid { grid-template-columns: 1fr; } }
+.timings-col h3 {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2);
+  font-size: var(--fs-md); margin-bottom: var(--space-3);
+}
+.timings-seg {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--bg); padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.timings-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: var(--space-3); font-size: var(--fs-sm); font-weight: 620; color: var(--text);
+}
+.timings-head .t, .timings-sess .t { font-family: var(--font-mono); white-space: nowrap; }
+.timings-head.live { color: var(--up); }
+.timings-head + .timings-sess {
+  margin-top: var(--space-1); padding-top: var(--space-1);
+  border-top: 1px dashed var(--border);
+}
+.timings-sess {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: var(--space-3); font-size: var(--fs-xs); padding: 1px 0 1px var(--space-2);
+  color: var(--text-muted);
+}
+.timings-sess.live { color: var(--up); font-weight: 620; }
+.timings-head.live .t::before, .timings-sess.live .t::before {
+  content: "●"; font-size: 8px; margin-right: 5px; vertical-align: 2px;
+}
+
 .icon-btn {
   border: 1px solid var(--border); background: var(--bg-raised); color: var(--text-muted);
   width: 32px; height: 32px; border-radius: var(--radius-sm); cursor: pointer;

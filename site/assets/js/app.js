@@ -23,6 +23,7 @@ const ROUTES = [
   [/^\/algo\/?$/, (_m, q) => pages.algo(q)],
   [/^\/algo-platforms\/?$/, (_m, q) => pages.algo(q)],
   [/^\/methodology\/?$/, () => pages.methodology()],
+  [/^\/timings\/?$/, () => pages.timings()],
   [/^\/sources\/?$/, () => pages.sources()],
 ];
 
@@ -34,6 +35,7 @@ const TITLES = {
   '/calculator': 'Brokerage cost calculator — BrokerLens India',
   '/registry': 'SEBI-registered brokers and intermediaries — BrokerLens India',
   '/algo': 'Algo trading platforms in India — APIs, no-code builders and vendors | BrokerLens India',
+  '/timings': 'NSE, BSE and MCX market session timings — BrokerLens India',
   '/methodology': 'Methodology — BrokerLens India',
   '/sources': 'Data sources and lineage — BrokerLens India',
 };
@@ -48,6 +50,7 @@ const DESCRIPTIONS = {
   '/calculator': 'Work out what a month of your actual trading costs at each Indian broker, using their published charges.',
   '/registry': 'Search every SEBI-registered broking and depository-participant entity: legal name, registration number, city, exchange memberships and validity.',
   '/algo': 'Algo trading platforms in India: official broker APIs, no-code strategy builders, backtesting tools and institutional vendors, with SEBI framework context.',
+  '/timings': 'Trading session timings for NSE, BSE and MCX by segment, in IST, with live open/closed status and links to each exchange holiday calendar.',
   '/methodology': 'How every figure on BrokerLens is calculated: the cost basket, the reliability weights, and what each provenance marker means.',
   '/sources': 'Every data source behind BrokerLens, when it last ran, and exactly which fields it feeds.',
 };
