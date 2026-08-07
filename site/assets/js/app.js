@@ -5,7 +5,7 @@
  * server (and any production host) must rewrite unknown paths to /index.html.
  */
 
-import { cls, esc, loadOverview, loadTicker, loadTimings, pct, safeUrl } from './store.js';
+import { cls, esc, loadOverview, loadTicker, pct, safeUrl } from './store.js';
 import * as pages from './pages.js';
 import { clearRedraws } from './chart.js';
 
@@ -23,6 +23,7 @@ const ROUTES = [
   [/^\/algo\/?$/, (_m, q) => pages.algo(q)],
   [/^\/algo-platforms\/?$/, (_m, q) => pages.algo(q)],
   [/^\/methodology\/?$/, () => pages.methodology()],
+  [/^\/timings\/?$/, () => pages.timings()],
   [/^\/sources\/?$/, () => pages.sources()],
 ];
 
@@ -34,6 +35,7 @@ const TITLES = {
   '/calculator': 'Brokerage cost calculator — BrokerLens India',
   '/registry': 'SEBI-registered brokers and intermediaries — BrokerLens India',
   '/algo': 'Algo trading platforms in India — APIs, no-code builders and vendors | BrokerLens India',
+  '/timings': 'NSE, BSE and MCX market session timings — BrokerLens India',
   '/methodology': 'Methodology — BrokerLens India',
   '/sources': 'Data sources and lineage — BrokerLens India',
 };
@@ -48,6 +50,7 @@ const DESCRIPTIONS = {
   '/calculator': 'Work out what a month of your actual trading costs at each Indian broker, using their published charges.',
   '/registry': 'Search every SEBI-registered broking and depository-participant entity: legal name, registration number, city, exchange memberships and validity.',
   '/algo': 'Algo trading platforms in India: official broker APIs, no-code strategy builders, backtesting tools and institutional vendors, with SEBI framework context.',
+  '/timings': 'Trading session timings for NSE, BSE and MCX by segment, in IST, with live open/closed status and links to each exchange holiday calendar.',
   '/methodology': 'How every figure on BrokerLens is calculated: the cost basket, the reliability weights, and what each provenance marker means.',
   '/sources': 'Every data source behind BrokerLens, when it last ran, and exactly which fields it feeds.',
 };
@@ -127,30 +130,6 @@ async function render() {
   }
 }
 
-/* ------------------------------------------------------------- mobile nav */
-
-const navToggle = document.getElementById('nav-toggle');
-const navLinks = document.getElementById('navlinks');
-
-function setNav(open) {
-  if (!navLinks || !navToggle) return;
-  navLinks.classList.toggle('open', open);
-  navToggle.setAttribute('aria-expanded', String(open));
-}
-
-navToggle?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  setNav(!navLinks.classList.contains('open'));
-});
-// Following a link inside the drawer must close it, or the next page renders
-// behind an open menu.
-navLinks?.addEventListener('click', (e) => {
-  if (e.target.closest('a[data-link]')) setNav(false);
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') setNav(false);
-});
-
 /* ---------------------------------------------------------------- links */
 
 document.addEventListener('click', (e) => {
@@ -165,161 +144,6 @@ document.addEventListener('click', (e) => {
 });
 
 window.addEventListener('popstate', render);
-
-/* ------------------------------------------------- timings mega menu
- *
- * Session timings per exchange/segment, curated in config/market_timings.json
- * and published as /data/timings.json. Highlighting is computed in IST at open
- * time, so the menu shows which sessions are live right now. Holiday calendars
- * are yearly circulars — we link to them rather than mirroring them, so a
- * highlighted session on an exchange holiday is the one known blind spot.
- */
-
-const megaBtn = document.getElementById('timings-toggle');
-const megaPanel = document.getElementById('mega-timings');
-const megaBody = document.getElementById('mega-timings-body');
-
-/* Minutes since midnight + weekday, in IST, regardless of the viewer's zone. */
-function istNow() {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit',
-    weekday: 'short', hour12: false,
-  }).formatToParts(new Date());
-  const get = (t) => parts.find((p) => p.type === t)?.value;
-  return {
-    min: Number(get('hour')) * 60 + Number(get('minute')),
-    weekday: get('weekday'),
-    hhmm: `${get('hour')}:${get('minute')}`,
-  };
-}
-
-const toMin = (hhmm) => {
-  const [h, m] = String(hhmm).split(':').map(Number);
-  return h * 60 + m;
-};
-
-const DAY_ORDER = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-/* Sessions are stored 24h for comparisons; the audience reads 12h. */
-const fmt12 = (min) => {
-  const h = Math.floor(min / 60);
-  const h12 = h % 12 || 12;
-  return `${h12}:${String(min % 60).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
-};
-
-/* When the next normal session starts, ignoring holidays (footer carries that
- * caveat). Returns e.g. "today 09:00", "tomorrow 09:15", "Mon 09:00". */
-function nextOpen(ex, now) {
-  const starts = [];
-  (ex.segments || []).forEach((sg) => (sg.sessions || []).forEach((s) => {
-    if (s.kind === 'normal') starts.push(toMin(s.start));
-  }));
-  if (!starts.length) return null;
-  const earliest = Math.min(...starts);
-  const hhmm = fmt12(earliest);
-  const today = DAY_ORDER.indexOf(now.weekday);
-  for (let d = 0; d <= 7; d++) {
-    const wd = (today + d) % 7;
-    if (wd === 0 || wd === 6) continue;                 // weekend
-    if (d === 0 && now.min >= earliest) continue;       // today's open already passed
-    const when = d === 0 ? 'today' : d === 1 ? 'tomorrow' : DAY_ORDER[wd];
-    return `${when} ${hhmm}`;
-  }
-  return null;
-}
-
-function renderMega(t) {
-  const now = istNow();
-  const tradingDay = !['Sat', 'Sun'].includes(now.weekday);
-  const liveNow = (s) => tradingDay && now.min >= toMin(s.start) && now.min < toMin(s.end);
-  const range = (s) => `${fmt12(toMin(s.start))} to ${fmt12(toMin(s.end))}`;
-
-  const cols = (t.exchanges || []).map((ex) => {
-    const anyLive = (ex.segments || []).some((sg) => (sg.sessions || []).some(liveNow));
-    const opens = anyLive ? null : nextOpen(ex, now);
-
-    const segs = (ex.segments || []).map((sg) => {
-      const sessions = sg.sessions || [];
-      const main = sessions.find((s) => s.kind === 'normal') || sessions[0];
-      const subs = sessions.filter((s) => s !== main);
-      return `<div class="mega-seg">
-        <div class="mega-seg-head ${liveNow(main) ? 'live' : ''}"${main.note ? ` title="${esc(main.note)}"` : ''}>
-          <span>${esc(sg.label)}${main.note ? '\u00a0*' : ''}</span>
-          <span class="t">${range(main)}</span>
-        </div>
-        ${subs.map((s) => `
-          <div class="sess ${liveNow(s) ? 'live' : ''}"${s.note ? ` title="${esc(s.note)}"` : ''}>
-            <span>${esc(s.label)}${s.note ? '\u00a0*' : ''}</span>
-            <span class="t">${range(s)}</span>
-          </div>`).join('')}
-      </div>`;
-    }).join('');
-
-    return `<div class="mega-col">
-      <h4>${esc(ex.id)}
-        <span class="badge ${anyLive ? 'badge-up' : ''}">${anyLive ? 'Open' : 'Closed'}</span>
-        ${opens ? `<span class="xs faint">opens ${esc(opens)} IST</span>` : ''}
-      </h4>
-      ${segs}
-    </div>`;
-  }).join('');
-
-  const holidays = (t.holiday_links || []).map((h) =>
-    `<a href="${safeUrl(h.url)}" target="_blank" rel="noopener">${esc(h.exchange)}</a>`).join(' · ');
-
-  megaBody.innerHTML = `${cols}
-    <div class="mega-foot">
-      All times IST. Now ${fmt12(now.min)}${tradingDay ? '' : ' (weekend, markets closed)'}.
-      Sessions run Mon to Fri except exchange holidays: ${holidays}.
-      * hover for detail. Curated from exchange material, last reviewed ${esc((t.last_reviewed || '').slice(0, 10))}.
-      Verify with the exchange before relying on an edge case.
-    </div>`;
-}
-
-function setMega(open) {
-  if (!megaPanel || !megaBtn) return;
-  megaPanel.hidden = !open;
-  megaBtn.setAttribute('aria-expanded', String(open));
-  if (open) {
-    loadTimings().then(renderMega).catch(() => {
-      megaBody.innerHTML = `<div class="small faint" style="padding:16px 0">
-        Timings unavailable — run <code>python3 -m pipeline.run build</code> first.</div>`;
-    });
-  }
-}
-
-/* On hover devices the pointer already opened the panel, so a click must not
- * toggle it straight back shut — it only ever opens. Touch keeps the toggle. */
-const HOVER_CAPABLE = window.matchMedia('(hover: hover)').matches;
-
-megaBtn?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  if (megaPanel.hidden) setMega(true);
-  else if (!HOVER_CAPABLE) setMega(false);
-});
-
-/* Hover behaviour, only on devices that actually hover (desktop). The close is
- * delayed a beat so the pointer can travel from the button into the panel, and
- * cancelled the moment it arrives. Hovering a sibling nav link dismisses. */
-if (HOVER_CAPABLE && megaBtn && megaPanel) {
-  let megaCloseTimer = null;
-  const cancelClose = () => { clearTimeout(megaCloseTimer); megaCloseTimer = null; };
-  const scheduleClose = () => { cancelClose(); megaCloseTimer = setTimeout(() => setMega(false), 250); };
-
-  megaBtn.addEventListener('mouseenter', () => { cancelClose(); if (megaPanel.hidden) setMega(true); });
-  megaPanel.addEventListener('mouseenter', cancelClose);
-  megaBtn.addEventListener('mouseleave', scheduleClose);
-  megaPanel.addEventListener('mouseleave', scheduleClose);
-  document.querySelectorAll('#navlinks a').forEach((a) =>
-    a.addEventListener('mouseenter', () => { if (!megaPanel.hidden) setMega(false); }));
-}
-document.addEventListener('click', (e) => {
-  if (!megaPanel || megaPanel.hidden) return;
-  if (!megaPanel.contains(e.target) && e.target !== megaBtn) setMega(false);
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && megaPanel && !megaPanel.hidden) setMega(false);
-});
 
 /* ---------------------------------------------------------------- theme */
 

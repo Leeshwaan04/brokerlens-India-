@@ -4,7 +4,7 @@
 
 import {
   cls, count, esc, full, initials, inr, loadAlgo, loadBroker, loadOverview,
-  loadRegistry, loadSources, markColor, month, pct, provDot, safeUrl,
+  loadRegistry, loadSources, loadTimings, markColor, month, pct, provDot, safeUrl,
   SEGMENT_LABEL, TYPE_LABEL,
 } from './store.js';
 import { barChart, donut, lineChart, registerRedraw, sparkline } from './chart.js';
@@ -1037,6 +1037,109 @@ export async function algo(params) {
   <p class="xs faint" style="margin-top:10px">${provDot('curated')} Curated directory, last reviewed
   ${esc((a.last_reviewed || a.generated_at || '').slice(0, 10))}. Pricing models are indicative; integrations
   change frequently. Nothing here is investment advice or a recommendation of any platform.</p>`;
+}
+
+/* =========================================================== TIMINGS */
+
+const DAY_ORDER = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function istNow() {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit',
+    weekday: 'short', hour12: false,
+  }).formatToParts(new Date());
+  const get = (t) => parts.find((p) => p.type === t)?.value;
+  return {
+    min: Number(get('hour')) * 60 + Number(get('minute')),
+    weekday: get('weekday'),
+  };
+}
+
+const toMin = (hhmm) => {
+  const [h, m] = String(hhmm).split(':').map(Number);
+  return h * 60 + m;
+};
+
+const fmt12 = (min) => {
+  const h = Math.floor(min / 60);
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(min % 60).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+};
+
+function nextOpen(ex, now) {
+  const starts = [];
+  (ex.segments || []).forEach((sg) => (sg.sessions || []).forEach((s) => {
+    if (s.kind === 'normal') starts.push(toMin(s.start));
+  }));
+  if (!starts.length) return null;
+  const earliest = Math.min(...starts);
+  const hhmm = fmt12(earliest);
+  const today = DAY_ORDER.indexOf(now.weekday);
+  for (let d = 0; d <= 7; d++) {
+    const wd = (today + d) % 7;
+    if (wd === 0 || wd === 6) continue;
+    if (d === 0 && now.min >= earliest) continue;
+    const when = d === 0 ? 'today' : d === 1 ? 'tomorrow' : DAY_ORDER[wd];
+    return `${when} ${hhmm}`;
+  }
+  return null;
+}
+
+export async function timings() {
+  const t = await loadTimings();
+  const now = istNow();
+  const tradingDay = !['Sat', 'Sun'].includes(now.weekday);
+  const liveNow = (s) => tradingDay && now.min >= toMin(s.start) && now.min < toMin(s.end);
+  const range = (s) => `${fmt12(toMin(s.start))} to ${fmt12(toMin(s.end))}`;
+
+  const cols = (t.exchanges || []).map((ex) => {
+    const anyLive = (ex.segments || []).some((sg) => (sg.sessions || []).some(liveNow));
+    const opens = anyLive ? null : nextOpen(ex, now);
+
+    const segs = (ex.segments || []).map((sg) => {
+      const sessions = sg.sessions || [];
+      const main = sessions.find((s) => s.kind === 'normal') || sessions[0];
+      const subs = sessions.filter((s) => s !== main);
+      return `<div class="timings-seg">
+        <div class="timings-head ${liveNow(main) ? 'live' : ''}"${main.note ? ` title="${esc(main.note)}"` : ''}>
+          <span>${esc(sg.label)}${main.note ? '\u00a0*' : ''}</span>
+          <span class="t">${range(main)}</span>
+        </div>
+        ${subs.map((s) => `
+          <div class="timings-sess ${liveNow(s) ? 'live' : ''}"${s.note ? ` title="${esc(s.note)}"` : ''}>
+            <span>${esc(s.label)}${s.note ? '\u00a0*' : ''}</span>
+            <span class="t">${range(s)}</span>
+          </div>`).join('')}
+      </div>`;
+    }).join('');
+
+    return `<div class="timings-col card">
+      <h3>${esc(ex.id)}
+        <span class="badge ${anyLive ? 'badge-up' : ''}">${anyLive ? 'Open' : 'Closed'}</span>
+        ${opens ? `<span class="xs faint">opens ${esc(opens)} IST</span>` : ''}
+      </h3>
+      ${segs}
+    </div>`;
+  }).join('');
+
+  const holidays = (t.holiday_links || []).map((h) =>
+    `<a href="${safeUrl(h.url)}" target="_blank" rel="noopener">${esc(h.exchange)}</a>`).join(' · ');
+
+  return `
+  <h1 style="margin-top:16px">Market timings</h1>
+  <p class="muted" style="max-width:70ch">Trading sessions for NSE, BSE and MCX by segment. Times are IST; the
+  highlighted row is the session in progress right now on a normal weekday.</p>
+
+  <div class="timings-grid">${cols}</div>
+
+  <div class="card" style="margin-top:var(--space-5)">
+    <p class="small faint" style="margin:0">
+      All times IST. Now ${fmt12(now.min)}${tradingDay ? '' : ' (weekend, markets closed)'}.
+      Sessions run Monday to Friday except exchange holidays: ${holidays}.
+      * hover for detail. Curated from exchange material, last reviewed ${esc((t.last_reviewed || '').slice(0, 10))}.
+      Verify with the exchange before relying on an edge case.
+    </p>
+  </div>`;
 }
 
 /* =========================================================== METHODOLOGY */
