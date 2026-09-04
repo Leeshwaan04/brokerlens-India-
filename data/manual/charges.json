@@ -1,7 +1,7 @@
 {
   "provenance": "sample",
   "as_of": "2026-06",
-  "source_note": "SAMPLE pricing for claimed demo profiles only. Unclaimed brokers stay null by design.",
+  "source_note": "SAMPLE pricing for a handful of demo brokers. Others stay null by design.",
   "brokers": {
     "zerodha": {
       "delivery": {

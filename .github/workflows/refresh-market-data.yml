@@ -1,0 +1,54 @@
+name: Refresh market data
+
+# Vercel is static-only (no /api/stream). This workflow republishes live
+# NSE/BSE/MCX quotes and market pulse to production on a schedule.
+#
+# Required GitHub secret: VERCEL_TOKEN (https://vercel.com/account/tokens)
+
+on:
+  schedule:
+    - cron: '*/5 3-10 * * 1-5'
+    - cron: '30 20 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'full = make all; pulse = live quotes only'
+        default: pulse
+        type: choice
+        options: [pulse, full]
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            data/cache
+            data/_ingest.json
+          key: bl-ingest-v1
+          restore-keys: bl-ingest-
+
+      - name: Publish market data
+        env:
+          SITE_URL: https://www.brokerlens.in
+        run: |
+          make seed
+          if [ "${{ github.event.schedule }}" = "30 20 * * 1-5" ] || [ "${{ github.event.inputs.mode }}" = "full" ]; then
+            make all
+          else
+            test -f data/_ingest.json || make fetch
+            make pulse
+          fi
+
+      - name: Build and deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          test -n "$VERCEL_TOKEN" || { echo "::error::Add VERCEL_TOKEN to repository secrets"; exit 1; }
+          make dist
+          cp site/vercel.json dist/vercel.json
+          npm install -g vercel@latest
+          cd dist && vercel deploy --prod --yes --token "$VERCEL_TOKEN" --name brokerlens-india

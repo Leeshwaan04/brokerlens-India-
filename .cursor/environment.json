@@ -1,6 +1,6 @@
 {
   "name": "BrokerLens India",
-  "install": "make seed\nmake all",
+  "install": "export SITE_URL=https://www.brokerlens.in\nmake seed\nmake all",
   "start": "python3 server/devserver.py --port 8000",
   "ports": [{"port": 8000, "name": "dev server"}]
 }
