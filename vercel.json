@@ -1,5 +1,5 @@
 {
-  "buildCommand": "make seed && make build",
+  "buildCommand": "SITE_URL=https://brokerlens.in PUBLISH_MODE=production python3 -m pipeline.run build",
   "outputDirectory": "site",
   "framework": null,
   "rewrites": [
