@@ -11,6 +11,7 @@ data/_ingest.json
 site/data/
 site/sitemap.xml
 site/feed.xml
+site/sebi-registry/
 
 # Personal data. Leads are DPDP-regulated and must never reach a repo.
 data/leads/

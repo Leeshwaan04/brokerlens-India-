@@ -342,6 +342,34 @@ def test_published():
         check("registry entities carry a name",
               all(e.get("name") for e in reg["entities"][:200]))
 
+        # A directory literally named site/registry/ makes os.path.exists("/registry")
+        # true on the file system, which silences the SPA-fallback rewrite for
+        # the bare /registry route (the interactive search page) and turns it
+        # into a broken directory listing. This shipped once; the static entity
+        # pages must live under a sibling path (site/sebi-registry/) instead.
+        check("no site/registry/ directory shadowing the SPA /registry route",
+              not os.path.isdir(os.path.join(ROOT, "site", "registry")))
+
+        slugs = [e["slug"] for e in reg["entities"] if e.get("slug")]
+        check("every registry entity has a slug", len(slugs) == len(reg["entities"]))
+        check("registry slugs are unique", len(slugs) == len(set(slugs)),
+              "dupes: %s" % [s for s in set(slugs) if slugs.count(s) > 1][:5])
+
+        reg_dir = os.path.join(ROOT, "site", "sebi-registry")
+        check("sebi-registry/ static pages exist on disk", os.path.isdir(reg_dir))
+        if os.path.isdir(reg_dir):
+            on_disk = {d for d in os.listdir(reg_dir) if os.path.isdir(os.path.join(reg_dir, d))}
+            missing = [s for s in slugs if s not in on_disk]
+            check("every registry slug has a static page", not missing,
+                  "missing: %s" % missing[:5])
+            sample = slugs[0]
+            sample_path = os.path.join(reg_dir, sample, "index.html")
+            html = open(sample_path, encoding="utf-8").read() if os.path.exists(sample_path) else ""
+            check("static entity page has no leaked 'None' from an unset field",
+                  ">None<" not in html and "None</p>" not in html)
+            check("static entity page loads no app bundle (must be readable with zero JS)",
+                  "/assets/js/app.js" not in html)
+
     src = load("site/data/sources.json")
     check("sources.json lists every configured source",
           len(src["sources"]) == len((load("config/sources.json") or {}).get("sources", {})))
@@ -473,6 +501,17 @@ def test_server(base):
     for r in routes:
         code, body, _ = http(base + r)
         check("GET %s" % r, code == 200 and b'id="app"' in body, "code=%s" % code)
+
+    # Static SEBI-registry entity pages live outside the SPA (see test_published
+    # for why: site/registry/ would shadow the /registry SPA route on disk).
+    # They must serve directly, with zero redirect, and carry real content with
+    # no client bundle - a crawler that cannot run JS must still see the facts.
+    reg = load("site/data/registry.json") or {}
+    sample_slug = next((e["slug"] for e in (reg.get("entities") or []) if e.get("slug")), None)
+    if sample_slug:
+        code, body, _ = http(base + "/sebi-registry/%s/" % sample_slug)
+        check("GET /sebi-registry/<slug>/ serves the static entity page",
+              code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
 
     for a in ["/assets/js/app.js", "/assets/js/pages.js", "/assets/css/app.css",
               "/data/overview.json", "/data/ticker.json", "/sitemap.xml", "/feed.xml"]:

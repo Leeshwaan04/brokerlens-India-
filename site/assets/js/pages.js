@@ -898,7 +898,7 @@ export async function registry() {
       const start = regState.page * regState.per;
       const page = rows.slice(start, start + regState.per);
       document.getElementById('reg-body').innerHTML = page.length ? page.map((e) => `<tr>
-        <td>${esc(e.name)}${e.trade_name ? `<div class="xs faint">trading as ${esc(e.trade_name)}</div>` : ''}</td>
+        <td>${e.slug ? `<a href="/sebi-registry/${esc(e.slug)}/">${esc(e.name)}</a>` : esc(e.name)}${e.trade_name ? `<div class="xs faint">trading as ${esc(e.trade_name)}</div>` : ''}</td>
         <td class="num small">${esc(e.reg || '—')}</td>
         <td class="small">${esc(e.city || '—')}</td>
         <td class="xs muted">${(e.exchanges || []).slice(0, 3).map(esc).join(' · ')}${(e.exchanges || []).length > 3 ? ` +${e.exchanges.length - 3}` : ''}</td>

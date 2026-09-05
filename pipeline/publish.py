@@ -13,6 +13,7 @@ down.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 from datetime import datetime, timezone
@@ -446,6 +447,20 @@ def build():
         "validity": r.get("validity"),
         "slug": slugify(r.get("legal_name") or ""),
     } for r in untracked]
+
+    # A broking + DP registration for the same firm produces the same name and
+    # therefore the same slug, which silently overwrote one entity's page with
+    # another's. Disambiguate with the registration number so every entity
+    # keeps a stable, unique URL.
+    seen_slugs = {}
+    for row in reg_rows:
+        base = row["slug"] or "entity"
+        n = seen_slugs.get(base, 0)
+        seen_slugs[base] = n + 1
+        if n:
+            suffix = re.sub(r"[^a-z0-9]", "", (row.get("reg") or "").lower())[-6:] or str(n)
+            row["slug"] = "%s-%s" % (base, suffix)
+
     reg_size = write_json(os.path.join(SITE_DATA, "registry.json"),
                           {"generated_at": now_iso(), "source": "SEBI recognised intermediaries",
                            "count": len(reg_rows), "entities": reg_rows}, compact=True)
@@ -459,7 +474,8 @@ def build():
     _write_sources(sources_cfg, ingest, sample_flags)
     _write_algo(brokers_cfg)
     _write_timings()
-    _write_sitemap(built)
+    _write_registry_pages(reg_rows)
+    _write_sitemap(built, reg_rows)
     _write_feed(built, aggregates)
     build_ticker()
     return overview
@@ -590,7 +606,151 @@ def _write_timings():
     log("timings.json %.1f KB, %d exchanges" % (size / 1024, len(payload["exchanges"])), "ok")
 
 
-def _write_sitemap(built):
+CATEGORY_LABELS = {
+    "stock_broker": "Stock broker",
+    "commodity_broker": "Commodity broker",
+    "dp_cdsl": "Depository participant (CDSL)",
+    "dp_nsdl": "Depository participant (NSDL)",
+}
+
+_REGISTRY_PAGE_HEAD = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>%(title)s</title>
+<meta name="description" content="%(description)s">
+<link rel="canonical" href="%(canonical)s">
+<meta name="theme-color" content="#2f4a8f">
+<link rel="stylesheet" href="/assets/css/app.css">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrokerLens India">
+<meta property="og:locale" content="en_IN">
+<meta property="og:url" content="%(canonical)s">
+<meta property="og:title" content="%(title)s">
+<meta property="og:description" content="%(description)s">
+<script type="application/ld+json">%(jsonld)s</script>
+</head>
+<body>
+<header class="site"><div class="wrap nav">
+  <a class="brand" href="/">
+    <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" role="img" aria-label="BrokerLens India">
+      <defs><clipPath id="bl-lens-reg"><circle cx="256" cy="256" r="143"/></clipPath></defs>
+      <g fill="none" stroke="var(--accent)" stroke-width="30" stroke-linecap="round">
+        <path d="M50 369 L84 359" opacity=".38"/><path d="M18 379 L30 375" opacity=".18"/>
+        <path d="M438 161 L470 149" opacity=".38"/><path d="M486 143 L496 140" opacity=".18"/>
+      </g>
+      <circle cx="256" cy="256" r="166" fill="none" stroke="var(--accent)" stroke-width="46"/>
+      <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="var(--up)"
+            stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-reg)"/>
+    </svg>
+    <span>BrokerLens<span class="muted" style="font-weight:400"> India</span></span>
+  </a>
+  <nav class="nav-links" style="display:flex">
+    <a href="/brokers">Brokers</a>
+    <a href="/registry">SEBI registry</a>
+    <a href="/algo">Algo platforms</a>
+  </nav>
+</div></header>
+<main class="wrap" style="padding-top:24px;padding-bottom:24px">
+"""
+
+_REGISTRY_PAGE_FOOT = """</main>
+<footer class="site"><div class="wrap">
+  <p class="small muted" style="max-width:70ch">This page is generated directly from SEBI's recognised-intermediary
+  register. It is not curated, scored or ranked, and nothing on it is investment advice. BrokerLens is not a
+  SEBI-registered investment adviser or research analyst.</p>
+  <p class="small"><a href="/registry">Search the full SEBI registry →</a> ·
+  <a href="/brokers">Brokers tracked in depth →</a> · <a href="/">BrokerLens India home →</a></p>
+</div></footer>
+</body>
+</html>
+"""
+
+
+def _write_registry_pages(reg_rows):
+    """One static, server-rendered page per SEBI-registered entity.
+
+    Everything else on this site is a client-rendered SPA: a crawler that
+    cannot execute JS - including every current AI answer engine - sees an
+    empty <main id="app"> for every route. These pages are deliberately plain
+    static HTML with no script tag at all, so the ~1,700 entities that are not
+    one of the 48 tracked in depth are actually indexable, and so the highest-
+    volume, lowest-competition search intent this site can serve ("is
+    <legal name> SEBI registered") has an answer that exists outside
+    JavaScript. Links off this page are plain <a> (no data-link): there is no
+    app.js here to intercept the click, so a normal browser navigation to the
+    SPA is exactly what should happen.
+    """
+    base = os.path.join(SITE_DATA, "..", "sebi-registry")
+    written = 0
+    for r in reg_rows:
+        slug = r.get("slug")
+        if not slug:
+            continue
+        name = r.get("name") or "Unnamed entity"
+        cats = [CATEGORY_LABELS.get(c, c) for c in (r.get("categories") or [])]
+        canonical = "%s/sebi-registry/%s/" % (SITE_URL, slug)
+
+        title = "%s — SEBI Registration | BrokerLens India" % name
+        description = ("%s: SEBI registration number, category, exchange memberships and validity, "
+                       "sourced from SEBI's recognised-intermediary register." % name)[:300]
+
+        jsonld = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": name,
+            "url": canonical,
+        }
+        if r.get("trade_name"):
+            jsonld["alternateName"] = r["trade_name"]
+        if r.get("reg"):
+            jsonld["identifier"] = r["reg"]
+        if r.get("city"):
+            jsonld["address"] = {"@type": "PostalAddress", "addressLocality": r["city"], "addressCountry": "IN"}
+
+        def fact(raw):
+            # _esc() stringifies before escaping, so _esc(None) == "None" (a
+            # truthy string) - the missing-value check must happen first.
+            return _esc(raw) if raw else "Not disclosed"
+
+        facts = [
+            ("SEBI registration number", fact(r.get("reg"))),
+            ("Category", fact(", ".join(cats))),
+            ("Exchange / register memberships", fact(", ".join(r.get("exchanges") or []))),
+            ("City", fact(r.get("city"))),
+            ("Validity", fact(r.get("validity"))),
+        ]
+        facts_html = "".join(
+            '<div class="mega-seg"><div class="mega-seg-label">%s</div>'
+            '<div style="margin-top:2px">%s</div></div>' % (label, value)
+            for label, value in facts
+        )
+
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": _esc(description),
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            '<h1 style="margin-top:0">%s</h1>' % _esc(name)
+            + (('<p class="muted">Trading as %s</p>' % _esc(r["trade_name"])) if r.get("trade_name") else "")
+            + '<p class="muted" style="max-width:70ch">This entity is registered with SEBI but is not one of the '
+              'brokers BrokerLens tracks in depth, so no client, complaint or cost data is shown here - only what '
+              'the regulator itself discloses.</p>'
+            + '<div class="card" style="margin-top:16px;padding:16px">' + facts_html + '</div>'
+            + '<p class="xs faint" style="margin-top:12px">Source: SEBI recognised-intermediary register.</p>'
+        )
+        body += _REGISTRY_PAGE_FOOT
+
+        dest_dir = os.path.join(base, slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+
+    log("registry pages: %d static entity pages written" % written, "ok")
+
+
+def _write_sitemap(built, reg_rows=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
             "/registry", "/algo", "/methodology", "/sources"]
@@ -599,6 +759,13 @@ def _write_sitemap(built):
     body = "".join(
         "<url><loc>%s%s</loc><lastmod>%s</lastmod><changefreq>daily</changefreq></url>"
         % (SITE_URL, u, today) for u in urls
+    )
+    # The registry long tail rarely changes (a SEBI registration is stable
+    # month to month), so these get a lower changefreq than the daily-moving
+    # broker pages rather than falsely claiming they're refreshed as often.
+    body += "".join(
+        "<url><loc>%s/sebi-registry/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
+        % (SITE_URL, r["slug"], today) for r in (reg_rows or []) if r.get("slug")
     )
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)
