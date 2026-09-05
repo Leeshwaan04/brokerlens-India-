@@ -202,6 +202,7 @@
     "bse": "Same posture as NSE. BSE licenses data commercially.",
     "sebi": "Regulator disclosures are public records. Attribution required; no redistribution licence needed.",
     "aggregators": "Never ingest from Chittorgarh / IPO Central / broker-comparison sites. Primary sources only - this is both a legal and a trust requirement.",
+    "reuse": "The figures BrokerLens compiles and publishes are free to view, cite and link to with attribution to BrokerLens India. Bulk export, scraping, or redistributing the compiled dataset (as opposed to citing an individual figure) requires a data licence - contact us before building on it programmatically.",
     "mcx": "Same commercial-redistribution posture to assume as NSE and BSE: fine for internal use, needs clearance before monetising a public display."
   }
 }
