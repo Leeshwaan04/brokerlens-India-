@@ -312,6 +312,29 @@ def test_published():
     else:
         check("profile files exist for indexed brokers", True)
 
+    # Static, server-rendered /broker/:id pages (progressive enhancement: real
+    # facts with zero JS, app.js hydrates the same #app element on top). These
+    # reuse the SPA's own URL, so the biggest risk is silent corruption of the
+    # shell template rather than a missing file.
+    broker_dir = os.path.join(ROOT, "site", "broker")
+    check("site/broker/ static pages exist on disk", os.path.isdir(broker_dir))
+    if os.path.isdir(broker_dir) and brokers:
+        ids = {b["id"] for b in brokers}
+        on_disk = {d for d in os.listdir(broker_dir) if os.path.isdir(os.path.join(broker_dir, d))}
+        check("every tracked broker has a static page", ids <= on_disk,
+              "missing: %s" % sorted(ids - on_disk)[:5])
+        sample_id = brokers[0]["id"]
+        sample_path = os.path.join(broker_dir, sample_id, "index.html")
+        html = open(sample_path, encoding="utf-8").read() if os.path.exists(sample_path) else ""
+        check("broker page carries the app.js hydration script",
+              "/assets/js/app.js" in html)
+        check("broker page has no leaked 'None' from an unset field",
+              ">None<" not in html and "None</p>" not in html)
+        check("broker page has an id=app element for app.js to hydrate",
+              'id="app"' in html)
+        check("broker page has real FinancialService JSON-LD",
+              '"@type": "FinancialService"' in html or '"@type":"FinancialService"' in html)
+
     # Leaderboards must actually be sorted the way they claim.
     ok = True
     for bd in ov["leaderboards"]:
@@ -512,6 +535,16 @@ def test_server(base):
         code, body, _ = http(base + "/sebi-registry/%s/" % sample_slug)
         check("GET /sebi-registry/<slug>/ serves the static entity page",
               code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
+
+    # /broker/:id/ reuses the SPA's own URL (unlike the registry pages), so the
+    # static file must carry BOTH real content and id="app", ready for app.js
+    # to hydrate on top of it.
+    ov = load("site/data/overview.json") or {}
+    sample_bid = next((b["id"] for b in (ov.get("brokers") or [])), None)
+    if sample_bid:
+        code, body, _ = http(base + "/broker/%s/" % sample_bid)
+        check("GET /broker/<id>/ serves the static profile page",
+              code == 200 and b"<h1" in body and b'id="app"' in body, "code=%s" % code)
 
     for a in ["/assets/js/app.js", "/assets/js/pages.js", "/assets/css/app.css",
               "/data/overview.json", "/data/ticker.json", "/sitemap.xml", "/feed.xml"]:

@@ -22,6 +22,7 @@ from . import feeds, metrics
 from .common import (
     CONFIG,
     DATA,
+    ROOT,
     MANUAL,
     SITE_DATA,
     log,
@@ -475,6 +476,7 @@ def build():
     _write_algo(brokers_cfg)
     _write_timings()
     _write_registry_pages(reg_rows)
+    _write_broker_pages(built)
     _write_sitemap(built, reg_rows)
     _write_feed(built, aggregates)
     build_ticker()
@@ -750,11 +752,199 @@ def _write_registry_pages(reg_rows):
     log("registry pages: %d static entity pages written" % written, "ok")
 
 
+TYPE_LABEL = {"discount": "Discount", "full_service": "Full service", "bank_backed": "Bank-backed"}
+SEGMENT_LABEL = {
+    "equity_cash": "Equity delivery", "equity_fno": "Equity F&O",
+    "currency": "Currency", "commodity": "Commodity",
+}
+
+
+def _broker_facts_html(b):
+    """The server-rendered <main> content for one broker's static page.
+
+    Deliberately mirrors pages.js's broker() renderer in substance (same
+    facts, same production-mode honesty about what isn't published yet) but
+    stays plain HTML with no canvas/chart markup - charts need JS and have no
+    server-rendered equivalent. Once app.js boots client-side, its own
+    broker() render replaces this with the full interactive version; this is
+    what a crawler, an answer engine, or a visitor with JS disabled actually
+    sees, and it is also what paints first (better LCP) for everyone else.
+    """
+    p, c, k = b["profile"], b.get("clients") or {}, b.get("complaints") or {}
+    rel, cost, flags = b.get("reliability") or {}, b.get("cost") or {}, b.get("regulatory_flags") or {}
+
+    def fact(raw):
+        return _esc(raw) if raw else None
+
+    identity_rows = [
+        ("Legal name", fact(p.get("legal_name"))),
+        ("SEBI registration", fact(p.get("sebi_reg_no")) or ("Not yet matched to the SEBI register" if not p.get("legal_name_verified") else None)),
+        ("Type", fact(TYPE_LABEL.get(p.get("type"), p.get("type")))),
+        ("Segments", fact(", ".join(SEGMENT_LABEL.get(s, s) for s in (p.get("segments") or [])))),
+        ("Head office", fact(p.get("hq"))),
+        ("Founded", fact(p.get("founded"))),
+    ]
+    identity_html = "".join(
+        '<div class="mega-seg"><div class="mega-seg-label">%s</div><div style="margin-top:2px">%s</div></div>'
+        % (label, value) for label, value in identity_rows if value
+    )
+
+    rel_html = (
+        '<div class="card" style="padding:16px"><div class="stat-label">Reliability score</div>'
+        '<div class="stat-value">%.1f<span class="muted" style="font-size:var(--fs-base)">/100</span></div>'
+        '<div class="xs faint" style="margin-top:6px">confidence: %s</div></div>'
+        % (rel["score"], _esc(rel.get("confidence") or "none"))
+        if rel.get("score") is not None else
+        '<div class="pending"><strong>Reliability score not available</strong>'
+        'Not enough regulator-sourced inputs exist yet to compute one.</div>'
+    )
+
+    client_html = (
+        '<div class="mega-seg"><div class="mega-seg-label">Active clients</div>'
+        '<div style="margin-top:2px">%s as of %s</div></div>'
+        % (_esc(format(c["active_clients"], ",")), _esc(c.get("as_of") or ""))
+        if c.get("active_clients") is not None else
+        '<div class="pending"><strong>Active clients not published yet</strong>'
+        'NSE publishes member-wise active-client counts monthly; this figure is populated once that '
+        'ingestion is live, never estimated.</div>'
+    )
+
+    complaint_html = (
+        '<div class="mega-seg"><div class="mega-seg-label">Complaints per 10,000 clients (12 months)</div>'
+        '<div style="margin-top:2px">%.2f</div></div>' % k["per_10k_clients_12m"]
+        if k.get("per_10k_clients_12m") is not None else
+        '<div class="pending"><strong>Complaint record not published yet</strong>'
+        'Sourced from each broker\'s SEBI Annexure-B disclosure once crawled; shown only when a full '
+        '12-month window is confirmed.</div>'
+    )
+
+    cost_html = (
+        '<div class="mega-seg"><div class="mega-seg-label">Monthly cost, standard basket</div>'
+        '<div style="margin-top:2px">%s</div></div>' % _esc("Rs %.2f" % cost["monthly_total"])
+        if cost.get("monthly_total") is not None else
+        '<div class="pending"><strong>Charges not verified yet</strong>'
+        'Shown only once traced to the broker\'s own disclosed rate card.</div>'
+    )
+
+    flag_html = ""
+    if flags.get("defaulter"):
+        flag_html = (
+            '<div class="banner" style="margin-top:16px"><span>&#9873;</span><div>'
+            '<strong>This entity appears on SEBI\'s defaulter / expelled broker list.</strong> '
+            'Matched names: %s. Verify directly with SEBI before proceeding.</div></div>'
+            % _esc("; ".join(flags.get("defaulter_names") or []))
+        )
+
+    website = p.get("website") or ""
+    website_html = (
+        '<a class="btn btn-sm" href="%s" rel="nofollow noopener external" target="_blank">Website &#8599;</a>'
+        % _esc(website) if website.startswith(("http://", "https://")) else ""
+    )
+
+    return (
+        '<h1 style="margin-top:16px">%s</h1>' % _esc(p.get("brand") or b["id"])
+        + '<p class="muted small">%s</p>' % _esc(p.get("legal_name") or "")
+        + flag_html
+        + '<div class="row-wrap" style="margin-top:10px">%s'
+          '<a class="btn btn-sm" href="/compare?b=%s">Compare</a></div>'
+          % (website_html, _esc(b["id"]))
+        + '<div class="grid g4" style="margin-top:16px">' + client_html + complaint_html + cost_html + rel_html + '</div>'
+        + '<div class="section-title" style="margin-top:20px"><h2>Registration and identity</h2></div>'
+        + '<div class="grid g3">' + identity_html + '</div>'
+        + '<p class="xs faint" style="margin-top:16px">Source: SEBI recognised-intermediary register and, where '
+          'noted above, NSE/BSE/SEBI primary disclosures. <a href="/methodology">Methodology</a> &middot; '
+          '<a href="/sources">Sources &amp; lineage</a> &middot; <a href="/brokers">All brokers</a></p>'
+    )
+
+
+def _write_broker_pages(built):
+    """Static, server-rendered pages at the SAME /broker/:id URL the SPA already
+    uses - not a sibling path like the registry pages needed.
+
+    That's safe here in a way it wasn't for /registry: /broker/:id has no bare
+    /broker route to protect (every valid request under this prefix names a
+    real, existing id), so writing site/broker/<id>/index.html cannot shadow
+    any route the way site/registry/ once did. The file also keeps the exact
+    same <script src="/assets/js/app.js"> as the shell, so a JS-capable visitor
+    gets this static content first (fast LCP, real content for crawlers) and
+    then transparently upgrades to the full interactive profile (charts,
+    theme-aware redraws) via the same client route that already renders it for
+    in-app navigation - this is progressive enhancement, not a fork to keep in
+    sync by hand.
+    """
+    shell = open(os.path.join(ROOT, "site", "index.html"), encoding="utf-8").read()
+    written = 0
+    for b in built:
+        bid, brand = b["id"], b["profile"].get("brand") or b["id"]
+        canonical = "%s/broker/%s/" % (SITE_URL, bid)
+        title = "%s — active clients, complaints and charges | BrokerLens India" % _esc(brand)
+        description = _esc(
+            "%s: active client count, market share, SEBI complaint record, regulatory registrations "
+            "and cost, from primary NSE, BSE and SEBI disclosures." % brand
+        )[:300]
+        jsonld = {"@context": "https://schema.org", "@type": "FinancialService", "name": brand, "url": canonical}
+        if b["profile"].get("legal_name"):
+            jsonld["legalName"] = b["profile"]["legal_name"]
+        if b["profile"].get("sebi_reg_no"):
+            jsonld["identifier"] = b["profile"]["sebi_reg_no"]
+        if b["profile"].get("hq"):
+            jsonld["address"] = {"@type": "PostalAddress", "addressLocality": b["profile"]["hq"], "addressCountry": "IN"}
+        jsonld["areaServed"] = "IN"
+
+        page = shell
+        page = page.replace(
+            "<title>BrokerLens India — Indian stock broker statistics from NSE, BSE and SEBI</title>",
+            "<title>%s</title>" % title, 1)
+        page = page.replace(
+            'content="Compare every SEBI-registered Indian stock broker on active clients, market share, '
+            'complaint records and cost. Built from primary NSE, BSE and SEBI disclosures.">',
+            'content="%s">' % description, 1)
+        page = page.replace('<link rel="canonical" href="/">', '<link rel="canonical" href="%s">' % canonical, 1)
+        page = page.replace('<meta property="og:url" content="/">', '<meta property="og:url" content="%s">' % canonical, 1)
+        page = page.replace(
+            '<meta property="og:title" content="BrokerLens India — broker statistics from primary sources">',
+            '<meta property="og:title" content="%s">' % title, 1)
+        page = page.replace(
+            '<meta property="og:description" content="Active clients, market share, SEBI complaint records '
+            'and cost, for every registered Indian stock broker.">',
+            '<meta property="og:description" content="%s">' % description, 1)
+        page = page.replace(
+            "</head>",
+            '<script type="application/ld+json">%s</script>\n</head>' % json.dumps(jsonld, ensure_ascii=False), 1)
+
+        old_main = (
+            '<main id="app" class="wrap" style="padding-top:24px;padding-bottom:24px">\n'
+            '  <div class="grid g3">\n'
+            '    <div class="card skeleton" style="height:96px"></div>\n'
+            '    <div class="card skeleton" style="height:96px"></div>\n'
+            '    <div class="card skeleton" style="height:96px"></div>\n'
+            '  </div>\n'
+            '</main>'
+        )
+        new_main = ('<main id="app" class="wrap" style="padding-top:24px;padding-bottom:24px">'
+                    + _broker_facts_html(b) + '</main>')
+        if old_main not in page:
+            log("broker pages: shell <main> markup did not match expected text for %s; skipping" % bid, "err")
+            continue
+        page = page.replace(old_main, new_main, 1)
+
+        dest_dir = os.path.join(ROOT, "site", "broker", bid)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), page)
+        written += 1
+
+    log("broker pages: %d static profile pages written" % written, "ok")
+
+
 def _write_sitemap(built, reg_rows=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
             "/registry", "/algo", "/methodology", "/sources"]
-    urls += ["/broker/%s" % b["id"] for b in built]
+    # Trailing slash: /broker/<id>/ is now a real static directory on disk (see
+    # _write_broker_pages), and every static host 301s the no-slash form to add
+    # it. The sitemap should point straight at the canonical form rather than
+    # make every crawl hop through a redirect first.
+    urls += ["/broker/%s/" % b["id"] for b in built]
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     body = "".join(
         "<url><loc>%s%s</loc><lastmod>%s</lastmod><changefreq>daily</changefreq></url>"
