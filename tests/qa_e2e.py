@@ -525,6 +525,24 @@ def test_published():
         check("fund page shows real NAV figures, not placeholders",
               "2245.0720" in fund_html)
 
+    # The single hand-written data report. Its defaulter-count claim was
+    # caught overstating a relationship the raw data didn't support (only 2
+    # of 445 defaulters actually overlap the 1,690-entity registry by
+    # registration number) - this checks the corrected, honest phrasing
+    # stays in place rather than silently regressing back.
+    report_path = os.path.join(ROOT, "site", "reports", "state-of-indian-broking-2026", "index.html")
+    check("state-of-indian-broking-2026 report exists", os.path.exists(report_path))
+    if os.path.exists(report_path):
+        report_html = open(report_path, encoding="utf-8").read()
+        check("report has no leaked 'None' from an unset field",
+              ">None<" not in report_html and "None</p>" not in report_html)
+        check("report has real Article JSON-LD",
+              '"@type": "Article"' in report_html or '"@type":"Article"' in report_html)
+        check("report does not claim defaulters are a subset of the registry count",
+              "not a subset of the entities counted above" in report_html)
+        check("report loads no app bundle (must be readable with zero JS)",
+              "/assets/js/app.js" not in report_html)
+
     # No page title anywhere on the site should carry an em dash - a standing
     # copy rule ("—" isn't in the "no em dashes" allowance) applied here as an
     # automated check since it has silently regressed before.
@@ -534,6 +552,7 @@ def test_published():
         ("index sample", os.path.join(index_dir, "nifty-50", "index.html") if index_slugs else ""),
         ("etf sample", niftybees_path if os.path.isdir(etf_dir) and os.path.exists(niftybees_path) else ""),
         ("fund sample", hdfc_flexicap_path if os.path.isdir(fund_dir) and os.path.exists(hdfc_flexicap_path) else ""),
+        ("report", report_path if os.path.exists(report_path) else ""),
     ]:
         if path and os.path.exists(path):
             title_html = open(path, encoding="utf-8").read()
@@ -715,6 +734,11 @@ def test_server(base):
     # /fund/:slug/ - AMFI-sourced, same static shape.
     code, body, _ = http(base + "/fund/hdfc-mutual-fund-hdfc-flexi-cap-fund/")
     check("GET /fund/<slug>/ serves the static mutual fund scheme page",
+          code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
+
+    # /reports/:slug/ - the hand-written data report, same static shape.
+    code, body, _ = http(base + "/reports/state-of-indian-broking-2026/")
+    check("GET /reports/<slug>/ serves the static report page",
           code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
 
     for a in ["/assets/js/app.js", "/assets/js/pages.js", "/assets/css/app.css",

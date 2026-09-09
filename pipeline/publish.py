@@ -490,8 +490,10 @@ def build():
     _write_etf_pages(etf_universe, index_universe)
     mf_schemes = amfi_d.get("schemes") or []
     _funds, fund_slugs = _write_mutual_fund_pages(mf_schemes)
+    report_slugs = _write_reports(built, reg_rows, equity_companies, index_universe, etf_universe,
+                                   _funds, len(sebi_d.get("defaulters") or []))
     _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
-                    fund_slugs)
+                    fund_slugs, report_slugs)
     _write_feed(built, aggregates)
     build_ticker()
     return overview
@@ -666,6 +668,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
     <a href="/brokers">Brokers</a>
     <a href="/registry">SEBI registry</a>
     <a href="/algo">Algo platforms</a>
+    <a href="/reports/state-of-indian-broking-2026/">Reports</a>
   </nav>
 </div></header>
 <main class="wrap" style="padding-top:24px;padding-bottom:24px">
@@ -1459,8 +1462,122 @@ def _write_mutual_fund_pages(schemes):
     return funds, used_slugs
 
 
+_REPORT_SLUG = "state-of-indian-broking-2026"
+
+
+def _write_reports(built, reg_rows, companies, indices, etfs, funds, defaulter_count):
+    """A single, hand-written, data-driven report page - not a per-entity
+    template like everything else this file generates. The point is
+    citability: every figure here is one this pipeline already computed for
+    its own pages, just aggregated and stated plainly, so it is exactly as
+    defensible as the rest of the site and nothing here is estimated.
+
+    Path is /reports/<slug>/, checked against the live SPA route list before
+    use (nothing named "reports" exists there).
+    """
+    by_cat = {}
+    for r in reg_rows:
+        for c in (r.get("categories") or []):
+            by_cat[c] = by_cat.get(c, 0) + 1
+
+    amc_scheme_counts = {}
+    for f in funds:
+        amc_scheme_counts[f["amc"]] = amc_scheme_counts.get(f["amc"], 0) + 1
+    top_amcs = sorted(amc_scheme_counts.items(), key=lambda kv: -kv[1])[:5]
+
+    total_registered = len(built) + len(reg_rows)
+    per_household_name = round(len(reg_rows) / len(built)) if built else 0
+
+    canonical = "%s/reports/%s/" % (SITE_URL, _REPORT_SLUG)
+    title = "State of Indian Broking & Investing 2026 | BrokerLens India"
+    description = _esc(
+        "How many SEBI-registered brokers, NSE-listed companies, ETFs and mutual fund schemes actually "
+        "exist in India, counted directly from primary regulator and exchange data."
+    )[:300]
+
+    jsonld = {
+        "@context": "https://schema.org", "@type": "Article", "headline": "State of Indian Broking & Investing 2026",
+        "url": canonical, "datePublished": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "author": {"@type": "Organization", "name": "BrokerLens India", "url": SITE_URL},
+        "publisher": {"@type": "Organization", "name": "BrokerLens India", "url": SITE_URL},
+    }
+
+    def stat(n, label):
+        return '<div class="mega-seg"><div class="stat-value" style="font-size:28px">%s</div><div class="mega-seg-label">%s</div></div>' % (n, _esc(label))
+
+    stats_html = "".join([
+        stat(f"{total_registered:,}", "SEBI-registered broking/DP entities, total"),
+        stat(f"{len(reg_rows):,}", "registered but not a household name"),
+        stat(f"{defaulter_count:,}", "entities on SEBI's defaulter list"),
+        stat(f"{len(companies):,}", "companies listed on NSE"),
+        stat(f"{len(etfs):,}", "ETFs listed on NSE"),
+        stat(f"{len(indices):,}", "NSE indices with a published constituent list"),
+        stat(f"{len(funds):,}", "distinct mutual fund schemes quoting daily NAV"),
+        stat(f"{len(amc_scheme_counts):,}", "AMCs running those schemes"),
+    ])
+
+    amc_rows = "".join(
+        '<tr><td>%s</td><td class="right num">%s</td></tr>' % (_esc(amc), f"{count:,}")
+        for amc, count in top_amcs
+    )
+
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": description,
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += (
+        '<p class="xs faint">Published %s</p>' % datetime.now(timezone.utc).strftime("%-d %B %Y")
+        + '<h1 style="margin-top:4px">State of Indian Broking &amp; Investing, 2026</h1>'
+        + '<p class="muted" style="max-width:68ch">Every figure below is counted directly from SEBI, NSE and '
+          'AMFI\'s own published registers, the same primary sources this pipeline pulls for every other page '
+          'on the site. Nothing here is a survey estimate or a rounded guess.</p>'
+        + '<div class="grid g3" style="margin-top:20px">' + stats_html + '</div>'
+
+        + '<h2 style="margin-top:32px">The broking universe is much bigger than the brands you know</h2>'
+        + '<p style="max-width:68ch">%s consumer-facing brokers are what most Indian investors could name if asked. '
+          "SEBI's own recognised-intermediary register lists %s more: roughly %d further registered entities for "
+          'every household name, spanning commodity brokers, and depository participants registered with CDSL and NSDL. '
+          "Separately, %s entities appear on SEBI's own defaulter/expelled-broker list; that list draws on a different, "
+          'longer historical record and is not a subset of the entities counted above.</p>'
+          % (len(built), f"{len(reg_rows):,}", per_household_name, f"{defaulter_count:,}")
+        + '<div class="table-scroll" style="margin-top:12px"><table class="data"><thead><tr>'
+          '<th>Registration category</th><th class="right">Entities</th></tr></thead><tbody>'
+          + "".join('<tr><td>%s</td><td class="right num">%s</td></tr>'
+                    % (_esc(CATEGORY_LABELS.get(c, c)), f"{n:,}") for c, n in sorted(by_cat.items(), key=lambda kv: -kv[1]))
+          + '</tbody></table></div>'
+
+        + '<h2 style="margin-top:32px">The mutual fund industry, counted at the scheme level</h2>'
+        + '<p style="max-width:68ch">AMFI\'s daily NAV file lists %s distinct schemes (Direct/Regular and Growth/IDCW '
+          'variants collapsed into one page per real fund, not counted separately) run by %s Asset Management '
+          'Companies. The five largest by scheme count:</p>'
+          % (f"{len(funds):,}", len(amc_scheme_counts))
+        + '<div class="table-scroll" style="margin-top:12px"><table class="data"><thead><tr>'
+          '<th>AMC</th><th class="right">Distinct schemes</th></tr></thead><tbody>' + amc_rows + '</tbody></table></div>'
+
+        + '<h2 style="margin-top:32px">Listed markets</h2>'
+        + '<p style="max-width:68ch">NSE currently lists %s companies and %s exchange-traded funds. This site '
+          'tracks %s of NSE\'s own published index-constituent lists, from Nifty 50 down to sector indices '
+          'like Nifty PSU Bank and Nifty Realty.</p>'
+          % (f"{len(companies):,}", f"{len(etfs):,}", len(indices))
+
+        + '<p class="xs faint" style="margin-top:24px">Methodology: every count on this page is derived from the '
+          'same SEBI, NSE and AMFI source files BrokerLens ingests for its registry, stock, ETF and mutual fund '
+          'pages, snapshotted at publish time. See <a href="/methodology">methodology</a> and '
+          '<a href="/sources">sources</a> for exactly how each figure is computed and how often it refreshes.</p>'
+    )
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page aggregates counts already computed from SEBI's recognised-intermediary register, "
+        "NSE's own listed-securities and index files, and AMFI's daily NAV master file.")}
+
+    dest_dir = os.path.join(ROOT, "site", "reports", _REPORT_SLUG)
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("reports: 1 written (%s)" % _REPORT_SLUG, "ok")
+    return [_REPORT_SLUG]
+
+
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
-                    fund_slugs=None):
+                    fund_slugs=None, report_slugs=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
             "/registry", "/algo", "/methodology", "/sources"]
@@ -1509,6 +1626,9 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     # stable - weekly matches the other data-heavy static families.
     for slug in (fund_slugs or {}):
         body += ("<url><loc>%s/fund/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
+                 % (SITE_URL, slug, today))
+    for slug in (report_slugs or []):
+        body += ("<url><loc>%s/reports/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
                  % (SITE_URL, slug, today))
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)
