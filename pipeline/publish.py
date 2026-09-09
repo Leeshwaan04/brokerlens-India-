@@ -492,8 +492,9 @@ def build():
     _funds, fund_slugs = _write_mutual_fund_pages(mf_schemes)
     report_slugs = _write_reports(built, reg_rows, equity_companies, index_universe, etf_universe,
                                    _funds, len(sebi_d.get("defaulters") or []))
+    calc_slugs = _write_calculator_pages()
     _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
-                    fund_slugs, report_slugs)
+                    fund_slugs, report_slugs, calc_slugs)
     _write_feed(built, aggregates)
     build_ticker()
     return overview
@@ -1576,8 +1577,159 @@ def _write_reports(built, reg_rows, companies, indices, etfs, funds, defaulter_c
     return [_REPORT_SLUG]
 
 
+# Every formula below was verified against hand-computed reference values
+# before being written into calculators.js (see the session's own worked
+# examples). Path is /calculators/:slug/, deliberately NOT nested under
+# /calculator/ - that bare route already exists as the SPA's brokerage
+# calculator, and nesting under it would shadow it on disk exactly like
+# site/registry/ once shadowed the SPA's /registry route.
+CALCULATORS = [
+    {
+        "slug": "sip-calculator", "calc": "sip", "h1": "SIP Calculator",
+        "title": "SIP Calculator: Estimate Mutual Fund SIP Returns | BrokerLens India",
+        "description": "Work out what a monthly SIP could grow to at a given return rate, using the standard "
+                        "future-value-of-annuity formula every SIP calculator is built on.",
+        "intro": "A Systematic Investment Plan (SIP) invests a fixed amount every month. This estimates the "
+                  "maturity value using the standard future-value-of-an-annuity formula, assuming the return "
+                  "rate holds steady every month, which real markets never do exactly.",
+        "formula": "FV = P &times; [((1+r)<sup>n</sup> - 1) / r] &times; (1+r), where P is the monthly amount, "
+                   "r is the monthly return rate, and n is the number of months.",
+        "fields": [
+            ("sip-monthly", "Monthly investment (Rs)", "5000", "500"),
+            ("sip-rate", "Expected annual return (%)", "12", "0.5"),
+            ("sip-years", "Investment period (years)", "10", "1"),
+        ],
+    },
+    {
+        "slug": "lumpsum-calculator", "calc": "lumpsum", "h1": "Lumpsum Investment Calculator",
+        "title": "Lumpsum Calculator: Estimate One-Time Investment Growth | BrokerLens India",
+        "description": "Work out what a one-time lumpsum investment could grow to at a given annual return rate, "
+                        "using standard compound growth.",
+        "intro": "A lumpsum calculator answers a simpler question than a SIP calculator: what does one investment "
+                  "made today become after compounding at a steady annual rate?",
+        "formula": "FV = P &times; (1+r)<sup>t</sup>, where P is the amount invested, r is the annual return rate, "
+                   "and t is the number of years.",
+        "fields": [
+            ("ls-principal", "Investment amount (Rs)", "100000", "1000"),
+            ("ls-rate", "Expected annual return (%)", "12", "0.5"),
+            ("ls-years", "Investment period (years)", "10", "1"),
+        ],
+    },
+    {
+        "slug": "emi-calculator", "calc": "emi", "h1": "EMI Calculator",
+        "title": "EMI Calculator: Monthly Loan Instalment | BrokerLens India",
+        "description": "Work out the monthly EMI, total interest and total payment for a loan, using the standard "
+                        "reducing-balance EMI formula.",
+        "intro": "Every standard reducing-balance loan (home, personal, vehicle) uses the same EMI formula, "
+                  "regardless of lender. This computes the fixed monthly instalment for a given principal, "
+                  "interest rate and tenure.",
+        "formula": "EMI = P &times; r &times; (1+r)<sup>n</sup> / ((1+r)<sup>n</sup> - 1), where P is the loan "
+                   "amount, r is the monthly interest rate, and n is the number of monthly instalments.",
+        "fields": [
+            ("emi-principal", "Loan amount (Rs)", "1000000", "10000"),
+            ("emi-rate", "Annual interest rate (%)", "9", "0.1"),
+            ("emi-years", "Loan tenure (years)", "20", "1"),
+        ],
+    },
+    {
+        "slug": "cagr-calculator", "calc": "cagr", "h1": "CAGR Calculator",
+        "title": "CAGR Calculator: Compound Annual Growth Rate | BrokerLens India",
+        "description": "Work out the compound annual growth rate (CAGR) between a starting and ending value over "
+                        "a given number of years.",
+        "intro": "CAGR smooths an investment's actual (bumpy) year-to-year path into a single, comparable annual "
+                  "growth rate, as if it had grown at exactly that steady rate every year.",
+        "formula": "CAGR = ((End value / Start value)<sup>(1/years)</sup> - 1) &times; 100.",
+        "fields": [
+            ("cagr-start", "Starting value (Rs)", "100000", "1000"),
+            ("cagr-end", "Ending value (Rs)", "250000", "1000"),
+            ("cagr-years", "Number of years", "5", "1"),
+        ],
+    },
+    {
+        "slug": "compound-interest-calculator", "calc": "compound", "h1": "Compound Interest Calculator",
+        "title": "Compound Interest Calculator | BrokerLens India",
+        "description": "Work out the maturity value of a principal amount compounding at a given rate and "
+                        "frequency over a given period.",
+        "intro": "Unlike the lumpsum investment calculator above, this lets the compounding frequency vary "
+                  "(annual, half-yearly, quarterly, monthly) since bank deposits and bonds often compound more "
+                  "often than once a year.",
+        "formula": "A = P &times; (1 + r/n)<sup>(n&times;t)</sup>, where P is the principal, r is the annual rate, "
+                   "n is the number of times interest compounds per year, and t is the number of years.",
+        "fields": [
+            ("ci-principal", "Principal (Rs)", "50000", "1000"),
+            ("ci-rate", "Annual interest rate (%)", "8", "0.1"),
+            ("ci-freq", "Compounding frequency per year", "4", "1"),
+            ("ci-years", "Period (years)", "5", "1"),
+        ],
+    },
+    {
+        "slug": "capital-gains-tax-calculator", "calc": "capital-gains", "h1": "Capital Gains Tax Calculator",
+        "title": "Capital Gains Tax Calculator: Equity LTCG & STCG | BrokerLens India",
+        "description": "Estimate long-term or short-term capital gains tax on listed equity shares or equity "
+                        "mutual funds at current FY 2025-26 rates.",
+        "intro": "For listed equity shares and equity-oriented mutual funds, India taxes gains differently by how "
+                  "long the asset was held: over 365 days is long-term (LTCG), 365 days or under is short-term "
+                  "(STCG). This uses the FY 2025-26 rates confirmed at publish time and excludes cess and "
+                  "surcharge, which depend on total income.",
+        "formula": "LTCG: 12.5% on gains above a Rs 1,25,000 annual exemption. STCG: 20% flat on the full gain. "
+                   "Neither rate changed in Budget 2025 or Budget 2026.",
+        "fields": [
+            ("cg-buy", "Purchase value (Rs)", "100000", "1000"),
+            ("cg-sell", "Sale value (Rs)", "300000", "1000"),
+            ("cg-days", "Holding period (days)", "400", "1"),
+        ],
+    },
+]
+
+
+def _write_calculator_pages():
+    written = []
+    for c in CALCULATORS:
+        canonical = "%s/calculators/%s/" % (SITE_URL, c["slug"])
+        jsonld = {
+            "@context": "https://schema.org", "@type": "WebApplication", "name": c["h1"],
+            "url": canonical, "applicationCategory": "FinanceApplication",
+            "operatingSystem": "Any (runs in browser)",
+            "offers": {"@type": "Offer", "price": "0", "priceCurrency": "INR"},
+        }
+        fields_html = "".join(
+            '<div class="field"><label for="%s">%s</label>'
+            '<input id="%s" type="number" min="0" step="%s" value="%s"></div>'
+            % (fid, _esc(label), fid, step, default)
+            for fid, label, default, step in c["fields"]
+        )
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(c["title"]), "description": _esc(c["description"])[:300],
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            '<h1 style="margin-top:0">%s</h1>' % _esc(c["h1"])
+            + '<p class="muted" style="max-width:68ch">%s</p>' % c["intro"]
+            + '<p class="xs faint" style="max-width:68ch;margin-top:8px">%s</p>' % c["formula"]
+            + '<div data-calc="%s" class="card" style="margin-top:20px;padding:20px;max-width:480px">' % c["calc"]
+            + fields_html
+            + '<button type="button" id="calc-btn" class="btn" style="margin-top:8px">Calculate</button>'
+            + '<div id="calc-result" class="grid g3" style="margin-top:16px" hidden></div>'
+            + '</div>'
+            + '<p class="xs faint" style="margin-top:20px">This is a generic financial calculation, not investment, '
+              'loan or tax advice specific to you. BrokerLens is not a SEBI-registered investment adviser.</p>'
+        )
+        body = body.replace("</head>", '<script src="/assets/js/calculators.js" defer></script></head>')
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page runs a standard, published financial formula entirely in your browser; it is not "
+            "generated from any BrokerLens-ingested regulator or exchange dataset.")}
+
+        dest_dir = os.path.join(ROOT, "site", "calculators", c["slug"])
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written.append(c["slug"])
+
+    log("calculator pages: %d written" % len(written), "ok")
+    return written
+
+
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
-                    fund_slugs=None, report_slugs=None):
+                    fund_slugs=None, report_slugs=None, calc_slugs=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
             "/registry", "/algo", "/methodology", "/sources"]
@@ -1629,6 +1781,11 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
                  % (SITE_URL, slug, today))
     for slug in (report_slugs or []):
         body += ("<url><loc>%s/reports/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
+                 % (SITE_URL, slug, today))
+    # A calculator's own formula never changes; monthly matches other stable,
+    # non-data-driven pages rather than overclaiming daily freshness.
+    for slug in (calc_slugs or []):
+        body += ("<url><loc>%s/calculators/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
                  % (SITE_URL, slug, today))
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)

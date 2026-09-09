@@ -19,6 +19,7 @@ site/index/
 site/etf/
 site/fund/
 site/reports/
+site/calculators/
 
 # Personal data. Leads are DPDP-regulated and must never reach a repo.
 data/leads/

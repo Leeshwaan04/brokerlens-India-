@@ -543,6 +543,31 @@ def test_published():
         check("report loads no app bundle (must be readable with zero JS)",
               "/assets/js/app.js" not in report_html)
 
+    # Static /calculators/:slug pages. /calculator (singular) is a real SPA
+    # route already, so these must never collide with it on disk - checked
+    # explicitly since that exact collision class (site/registry/ shadowing
+    # the SPA's own /registry route) has shipped once before.
+    calc_dir = os.path.join(ROOT, "site", "calculators")
+    check("no site/calculator/ directory shadowing the SPA /calculator route",
+          not os.path.isdir(os.path.join(ROOT, "site", "calculator")))
+    check("site/calculators/ static pages exist on disk", os.path.isdir(calc_dir))
+    if os.path.isdir(calc_dir):
+        calc_slugs = sorted(d for d in os.listdir(calc_dir) if os.path.isdir(os.path.join(calc_dir, d)))
+        check("all 6 calculator pages were written", len(calc_slugs) == 6, "found %d: %s" % (len(calc_slugs), calc_slugs))
+        sip_path = os.path.join(calc_dir, "sip-calculator", "index.html")
+        sip_html = open(sip_path, encoding="utf-8").read() if os.path.exists(sip_path) else ""
+        check("calculator page has no leaked 'None' from an unset field",
+              ">None<" not in sip_html and "None</p>" not in sip_html)
+        check("calculator page has real WebApplication JSON-LD",
+              '"@type": "WebApplication"' in sip_html or '"@type":"WebApplication"' in sip_html)
+        check("calculator page loads calculators.js, not app.js (no SPA hydration target here)",
+              "/assets/js/calculators.js" in sip_html and "/assets/js/app.js" not in sip_html)
+        check("calculator page has a data-calc container matching its dispatch key",
+              'data-calc="sip"' in sip_html)
+        calc_js = open(os.path.join(ROOT, "site", "assets", "js", "calculators.js"), encoding="utf-8").read()
+        check("calculators.js defines all 6 calculator functions",
+              all(k in calc_js for k in ["sip()", "lumpsum()", "emi()", "cagr()", "compound()", "'capital-gains'()"]))
+
     # No page title anywhere on the site should carry an em dash - a standing
     # copy rule ("—" isn't in the "no em dashes" allowance) applied here as an
     # automated check since it has silently regressed before.
@@ -553,6 +578,7 @@ def test_published():
         ("etf sample", niftybees_path if os.path.isdir(etf_dir) and os.path.exists(niftybees_path) else ""),
         ("fund sample", hdfc_flexicap_path if os.path.isdir(fund_dir) and os.path.exists(hdfc_flexicap_path) else ""),
         ("report", report_path if os.path.exists(report_path) else ""),
+        ("calculator sample", sip_path if os.path.isdir(calc_dir) and os.path.exists(sip_path) else ""),
     ]:
         if path and os.path.exists(path):
             title_html = open(path, encoding="utf-8").read()
@@ -740,6 +766,13 @@ def test_server(base):
     code, body, _ = http(base + "/reports/state-of-indian-broking-2026/")
     check("GET /reports/<slug>/ serves the static report page",
           code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
+
+    # /calculators/:slug/ - static shell + calculators.js, not app.js.
+    code, body, _ = http(base + "/calculators/sip-calculator/")
+    check("GET /calculators/<slug>/ serves the static calculator page",
+          code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
+    code, body, _ = http(base + "/assets/js/calculators.js")
+    check("GET /assets/js/calculators.js is served", code == 200 and len(body) > 0, "code=%s" % code)
 
     for a in ["/assets/js/app.js", "/assets/js/pages.js", "/assets/css/app.css",
               "/data/overview.json", "/data/ticker.json", "/sitemap.xml", "/feed.xml"]:
