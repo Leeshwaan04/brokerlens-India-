@@ -220,6 +220,7 @@ def build():
     nse_d = ingest.get("nse") or {}
     bse_d = ingest.get("bse") or {}
     sebi_d = ingest.get("sebi") or {}
+    amfi_d = ingest.get("amfi") or {}
 
     clients_raw = read_json(os.path.join(MANUAL, "active_clients.json"), {}) or {}
     complaints_raw = read_json(os.path.join(MANUAL, "complaints.json"), {}) or {}
@@ -487,7 +488,10 @@ def build():
     _write_index_pages(index_universe, equity_companies)
     etf_universe = nse_d.get("etfs") or []
     _write_etf_pages(etf_universe, index_universe)
-    _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe)
+    mf_schemes = amfi_d.get("schemes") or []
+    _funds, fund_slugs = _write_mutual_fund_pages(mf_schemes)
+    _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
+                    fund_slugs)
     _write_feed(built, aggregates)
     build_ticker()
     return overview
@@ -1346,7 +1350,117 @@ def _write_etf_pages(etfs, indices):
     return written
 
 
-def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None):
+def _group_mutual_funds(schemes):
+    """One page per real scheme, not per NAV row - AMFI's file carries every
+    Plan x Option combination as its own row (confirmed live: 14,300+ rows
+    collapse to ~3,400 real schemes), and shipping one page per row would be
+    exactly the thin, combinatorial page pattern this project's own scale
+    plan rules out. Grouped by (AMC, scheme name); every variant is kept and
+    shown on the one page for its scheme, the same way an index page shows
+    every constituent rather than getting a page each."""
+    groups = {}
+    order = []
+    for s in schemes or []:
+        amc, name = s.get("amc"), s.get("name")
+        if not amc or not name:
+            continue
+        key = (amc, name)
+        if key not in groups:
+            groups[key] = {"amc": amc, "name": name, "categories": [], "variants": []}
+            order.append(key)
+        g = groups[key]
+        if s.get("category") and s["category"] not in g["categories"]:
+            g["categories"].append(s["category"])
+        g["variants"].append(s)
+    return [groups[k] for k in order]
+
+
+def _write_mutual_fund_pages(schemes):
+    """One static page per mutual fund scheme, sourced from AMFI's own daily
+    NAV master file - the biggest single lever in docs/SCALE_TO_60K_PLAN.md.
+
+    Path is /fund/:slug/, checked against the live SPA route list before use
+    (nothing named "fund" exists there). Slugs are derived from (AMC, scheme
+    name); a defensive numeric suffix handles any future collision even
+    though today's data produces none, once AMFI's own whitespace and
+    trailing-punctuation inconsistencies are normalised (see amfi.py).
+    """
+    funds = _group_mutual_funds(schemes)
+    used_slugs = {}
+    written = 0
+    for fund in funds:
+        amc, name = fund["amc"], fund["name"]
+        base_slug = slugify("%s %s" % (amc, name))
+        if not base_slug:
+            continue
+        slug = base_slug
+        n = 2
+        while slug in used_slugs and used_slugs[slug] != (amc, name):
+            slug = "%s-%d" % (base_slug, n)
+            n += 1
+        used_slugs[slug] = (amc, name)
+
+        canonical = "%s/fund/%s/" % (SITE_URL, slug)
+        title = "%s: Mutual Fund Scheme Details | BrokerLens India" % _esc(name)
+        description = _esc(
+            "%s from %s: NAV, ISIN and plan/option details for every variant of this scheme, "
+            "sourced directly from AMFI's own daily NAV master file." % (name, amc)
+        )[:300]
+
+        jsonld = {"@context": "https://schema.org", "@type": "FinancialProduct", "name": name,
+                  "url": canonical, "provider": {"@type": "Organization", "name": amc}}
+        if fund["categories"]:
+            jsonld["category"] = fund["categories"][0]
+
+        variants_sorted = sorted(
+            fund["variants"], key=lambda v: (v.get("plan") or "", v.get("option") or ""))
+        rows_html = "".join(
+            "<tr><td>%s</td><td>%s</td><td class=\"right num\">%s</td><td class=\"small\">%s</td>"
+            "<td class=\"small num\">%s</td><td class=\"small num\">%s</td></tr>"
+            % (
+                _esc(v.get("plan") or "Not disclosed"), _esc(v.get("option") or "Not disclosed"),
+                ("%.4f" % v["nav"]) if isinstance(v.get("nav"), (int, float)) else "Not disclosed",
+                _esc(v.get("nav_date") or "Not disclosed"),
+                _esc(v.get("isin_growth") or "-"), _esc(v.get("isin_div_reinvest") or "-"),
+            )
+            for v in variants_sorted
+        )
+
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            '<h1 style="margin-top:0">%s</h1>' % _esc(name)
+            + '<p class="muted">%s</p>' % _esc(amc)
+            + (('<p class="xs faint">%s</p>' % _esc(" / ".join(fund["categories"])))
+               if fund["categories"] else "")
+            + '<div class="table-scroll" style="margin-top:16px">'
+              '<table class="data"><thead><tr>'
+              '<th>Plan</th><th>Option</th><th class="right">NAV (Rs)</th><th>As of</th>'
+              '<th>ISIN (growth/payout)</th><th>ISIN (reinvestment)</th>'
+              '</tr></thead><tbody>' + rows_html + '</tbody></table></div>'
+            + '<p class="xs faint" style="margin-top:16px">Source: AMFI daily NAV master file. '
+              'Historical NAV, returns and portfolio holdings are not carried on this page.</p>'
+        )
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page is generated directly from AMFI's (Association of Mutual Funds in India) "
+            "own published daily NAV master file.")}
+
+        dest_dir = os.path.join(ROOT, "site", "fund", slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "fund"), set(used_slugs.keys()))
+    log("mutual fund pages: %d written across %d AMCs%s" % (
+        written, len(set(f["amc"] for f in funds)),
+        (", %d stale pruned" % pruned) if pruned else ""), "ok")
+    return funds, used_slugs
+
+
+def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
+                    fund_slugs=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
             "/registry", "/algo", "/methodology", "/sources"]
@@ -1391,6 +1505,11 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         if slug:
             body += ("<url><loc>%s/etf/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
                      % (SITE_URL, slug, today))
+    # A fund's NAV moves daily, but its own scheme facts (plans, ISINs) are
+    # stable - weekly matches the other data-heavy static families.
+    for slug in (fund_slugs or {}):
+        body += ("<url><loc>%s/fund/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
+                 % (SITE_URL, slug, today))
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)
     _write_text(os.path.join(SITE_DATA, "..", "sitemap.xml"), xml)

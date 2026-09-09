@@ -497,6 +497,34 @@ def test_published():
         check("niftybees ETF page cross-links to the Nifty 50 index page",
               "/index/nifty-50/" in etf_html)
 
+    # Static /fund/:slug pages - the biggest single lever in the 60k-page
+    # plan, one page per real scheme (not per NAV row: AMFI's file carries
+    # every Plan x Option combination as its own row, and a page per row
+    # would be exactly the thin/combinatorial pattern the plan rules out).
+    fund_dir = os.path.join(ROOT, "site", "fund")
+    check("site/fund/ static pages exist on disk", os.path.isdir(fund_dir))
+    hdfc_flexicap_path = ""
+    if os.path.isdir(fund_dir):
+        fund_slugs = sorted(d for d in os.listdir(fund_dir) if os.path.isdir(os.path.join(fund_dir, d)))
+        check("a real number of mutual fund pages were written", len(fund_slugs) > 2000,
+              "found %d" % len(fund_slugs))
+        check("fund page slugs are unique", len(fund_slugs) == len(set(fund_slugs)))
+        check("no fund slug collides with a stock or etf slug",
+              not (set(fund_slugs) & set(slugs)) and not (set(fund_slugs) & set(etf_slugs)))
+        hdfc_flexicap_path = os.path.join(fund_dir, "hdfc-mutual-fund-hdfc-flexi-cap-fund", "index.html")
+        fund_html = open(hdfc_flexicap_path, encoding="utf-8").read() if os.path.exists(hdfc_flexicap_path) else ""
+        check("HDFC Flexi Cap Fund page exists with all 4 plan/option variants",
+              fund_html.count("<tr><td>") == 4, "found %d" % fund_html.count("<tr><td>"))
+        check("fund page has no leaked 'None' from an unset field",
+              ">None<" not in fund_html and "None</p>" not in fund_html)
+        check("fund page has real FinancialProduct JSON-LD with a provider (the AMC)",
+              ('"@type": "FinancialProduct"' in fund_html or '"@type":"FinancialProduct"' in fund_html)
+              and '"provider"' in fund_html)
+        check("fund page loads no app bundle (must be readable with zero JS)",
+              "/assets/js/app.js" not in fund_html)
+        check("fund page shows real NAV figures, not placeholders",
+              "2245.0720" in fund_html)
+
     # No page title anywhere on the site should carry an em dash - a standing
     # copy rule ("—" isn't in the "no em dashes" allowance) applied here as an
     # automated check since it has silently regressed before.
@@ -505,6 +533,7 @@ def test_published():
         ("stock sample", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
         ("index sample", os.path.join(index_dir, "nifty-50", "index.html") if index_slugs else ""),
         ("etf sample", niftybees_path if os.path.isdir(etf_dir) and os.path.exists(niftybees_path) else ""),
+        ("fund sample", hdfc_flexicap_path if os.path.isdir(fund_dir) and os.path.exists(hdfc_flexicap_path) else ""),
     ]:
         if path and os.path.exists(path):
             title_html = open(path, encoding="utf-8").read()
@@ -681,6 +710,11 @@ def test_server(base):
     # /etf/:symbol/ - separate instrument universe, same static shape.
     code, body, _ = http(base + "/etf/niftybees/")
     check("GET /etf/<symbol>/ serves the static ETF listing page",
+          code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
+
+    # /fund/:slug/ - AMFI-sourced, same static shape.
+    code, body, _ = http(base + "/fund/hdfc-mutual-fund-hdfc-flexi-cap-fund/")
+    check("GET /fund/<slug>/ serves the static mutual fund scheme page",
           code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
 
     for a in ["/assets/js/app.js", "/assets/js/pages.js", "/assets/css/app.css",

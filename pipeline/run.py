@@ -19,6 +19,7 @@ import traceback
 from . import publish, seed_sample
 from .common import CONFIG, DATA, MANUAL, log, now_iso, read_json, write_json
 from .identity import Resolver
+from .sources import amfi as amfi_src
 from .sources import bse as bse_src
 from .sources import mcx as mcx_src
 from .sources import nse as nse_src
@@ -44,6 +45,7 @@ EXPECTED_ROWS = {
     "bse": ["live.quotes"],
     "mcx": ["quotes.quotes"],
     "sebi": ["registry.commodity_broker", "defaulters"],
+    "amfi": ["schemes"],
 }
 
 
@@ -99,6 +101,7 @@ def fetch(sebi_pages=None):
     run("mcx", lambda: mcx_src.collect(wl.get("mcx")), ["mcx_market_watch"])
     run("sebi", lambda: sebi_src.collect(max_pages=sebi_pages),
         ["sebi_stock_brokers", "sebi_commodity_brokers", "sebi_defaulter_brokers"])
+    run("amfi", lambda: amfi_src.collect(), ["amfi_nav_master"])
 
     write_json(os.path.join(DATA, "_ingest.json"), out, compact=True)
     if problems:

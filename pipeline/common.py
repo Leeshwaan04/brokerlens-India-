@@ -304,6 +304,10 @@ def sebi():
     return Fetcher("sebi", referer="https://www.sebi.gov.in/", timeout=45)
 
 
+def amfi():
+    return Fetcher("amfi", referer="https://www.amfiindia.com/")
+
+
 # ------------------------------------------------------------------------- io
 
 
