@@ -15,6 +15,7 @@ site/sebi-registry/
 site/broker/
 site/brokers-by/
 site/stock/
+site/index/
 
 # Personal data. Leads are DPDP-regulated and must never reach a repo.
 data/leads/

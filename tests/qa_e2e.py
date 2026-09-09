@@ -442,12 +442,43 @@ def test_published():
             check("NSE-listed broker parent cross-links to its BrokerLens profile",
                   "/broker/angel-one/" in angel_html)
 
+    # Static /index/:slug pages - Phase 2 of the 60-70k-page plan. Sourced
+    # from NSE's own published index-constituent files (Nifty 50, sectoral
+    # indices), cross-linked both ways with the /stock/ pages above. No SPA
+    # route is named "index" or "indices".
+    index_dir = os.path.join(ROOT, "site", "index")
+    check("site/index/ static pages exist on disk", os.path.isdir(index_dir))
+    index_slugs = []
+    if os.path.isdir(index_dir):
+        index_slugs = sorted(d for d in os.listdir(index_dir) if os.path.isdir(os.path.join(index_dir, d)))
+        check("a real number of NSE index pages were written", len(index_slugs) >= 20,
+              "found %d" % len(index_slugs))
+        check("index page slugs are unique", len(index_slugs) == len(set(index_slugs)))
+        idx_path = os.path.join(index_dir, "nifty-50", "index.html")
+        idx_html = open(idx_path, encoding="utf-8").read() if os.path.exists(idx_path) else ""
+        check("nifty-50 index page exists with 50 constituents",
+              idx_html.count('class="mega-seg-head"') == 50, "found %d" % idx_html.count('class="mega-seg-head"'))
+        check("index page has no leaked 'None' from an unset field",
+              ">None<" not in idx_html and "None</p>" not in idx_html)
+        check("index page has real ItemList JSON-LD",
+              '"@type": "ItemList"' in idx_html or '"@type":"ItemList"' in idx_html)
+        check("index page constituent cross-links to a real /stock/ page",
+              "/stock/reliance/" in idx_html)
+        check("index page loads no app bundle (must be readable with zero JS)",
+              "/assets/js/app.js" not in idx_html)
+        reliance_path = os.path.join(stock_dir, "reliance", "index.html")
+        if os.path.exists(reliance_path):
+            reliance_html = open(reliance_path, encoding="utf-8").read()
+            check("a stock page reverse-links to the indices it's a constituent of",
+                  "/index/nifty-50/" in reliance_html)
+
     # No page title anywhere on the site should carry an em dash - a standing
     # copy rule ("—" isn't in the "no em dashes" allowance) applied here as an
     # automated check since it has silently regressed before.
     for label, path in [
         ("homepage", os.path.join(ROOT, "site", "index.html")),
         ("stock sample", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
+        ("index sample", os.path.join(index_dir, "nifty-50", "index.html") if index_slugs else ""),
     ]:
         if path and os.path.exists(path):
             title_html = open(path, encoding="utf-8").read()
@@ -615,6 +646,11 @@ def test_server(base):
         code, body, _ = http(base + "/stock/%s/" % sample_stock)
         check("GET /stock/<symbol>/ serves the static equity page",
               code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
+
+    # /index/:slug/ - same static, zero-JS shape as /stock/ and /sebi-registry/.
+    code, body, _ = http(base + "/index/nifty-50/")
+    check("GET /index/<slug>/ serves the static index constituent page",
+          code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
 
     for a in ["/assets/js/app.js", "/assets/js/pages.js", "/assets/css/app.css",
               "/data/overview.json", "/data/ticker.json", "/sitemap.xml", "/feed.xml"]:

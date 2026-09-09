@@ -480,8 +480,11 @@ def build():
     _write_broker_pages(built)
     hub_groups = _write_broker_hub_pages(built)
     equity_companies = ((nse_d.get("universe") or {}).get("companies")) or []
-    _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"))
-    _write_sitemap(built, reg_rows, hub_groups, equity_companies)
+    index_universe = nse_d.get("indices") or {}
+    _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"),
+                        index_universe)
+    _write_index_pages(index_universe, equity_companies)
+    _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe)
     _write_feed(built, aggregates)
     build_ticker()
     return overview
@@ -663,15 +666,23 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
 
 _REGISTRY_PAGE_FOOT = """</main>
 <footer class="site"><div class="wrap">
-  <p class="small muted" style="max-width:70ch">This page is generated directly from SEBI's recognised-intermediary
-  register. It is not curated, scored or ranked, and nothing on it is investment advice. BrokerLens is not a
-  SEBI-registered investment adviser or research analyst.</p>
+  <p class="small muted" style="max-width:70ch">%(source_note)s</p>
   <p class="small"><a href="/registry">Search the full SEBI registry →</a> ·
   <a href="/brokers">Brokers tracked in depth →</a> · <a href="/">BrokerLens India home →</a></p>
 </div></footer>
 </body>
 </html>
 """
+
+
+def _source_note(claim):
+    """Every static page's footer states, in plain language, exactly what it
+    is (and isn't). The claim differs by page type - SEBI's register, NSE's
+    listed-securities master and NSE's own index files are three different
+    sources, and stating the wrong one on a page is a factual error, not a
+    stylistic one - so this is never reused verbatim across page types."""
+    return ("%s It is not curated, scored or ranked, and nothing on it is investment advice. "
+            "BrokerLens is not a SEBI-registered investment adviser or research analyst." % claim)
 
 
 def _write_registry_pages(reg_rows):
@@ -748,7 +759,8 @@ def _write_registry_pages(reg_rows):
             + '<div class="card" style="margin-top:16px;padding:16px">' + facts_html + '</div>'
             + '<p class="xs faint" style="margin-top:12px">Source: SEBI recognised-intermediary register.</p>'
         )
-        body += _REGISTRY_PAGE_FOOT
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page is generated directly from SEBI's recognised-intermediary register.")}
 
         dest_dir = os.path.join(base, slug)
         os.makedirs(dest_dir, exist_ok=True)
@@ -1030,7 +1042,8 @@ def _write_broker_hub_pages(built):
             + '<p class="xs faint" style="margin-top:16px">'
               '<a href="/brokers">Full broker directory (search and filter) &rarr;</a></p>'
         )
-        body += _REGISTRY_PAGE_FOOT
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page groups the brokers BrokerLens tracks in depth by type, segment or head-office city.")}
 
         dest_dir = os.path.join(ROOT, "site", "brokers-by", dim, slug)
         os.makedirs(dest_dir, exist_ok=True)
@@ -1062,7 +1075,14 @@ def _long_date(nse_date):
         return nse_date
 
 
-def _write_stock_pages(companies, brokers_cfg):
+def _stock_slug(symbol):
+    """Same transform used for every /stock/:symbol/ directory name - shared
+    so an index page's constituent links always land on the real stock page
+    for the same company instead of a slightly different slug."""
+    return re.sub(r"[^a-z0-9]+", "-", (symbol or "").lower()).strip("-")
+
+
+def _write_stock_pages(companies, brokers_cfg, indices=None):
     """One static page per NSE-listed equity - Phase 1 of docs/SCALE_TO_60K_PLAN.md.
 
     The data (NSE's own EQUITY_L.csv) was already being fetched on every run;
@@ -1075,12 +1095,18 @@ def _write_stock_pages(companies, brokers_cfg):
     two prior collisions (site/registry/, site/brokers/).
     """
     by_symbol = {s["symbol"].upper(): s for s in (brokers_cfg or [])}
+    membership = {}
+    for slug, idx in (indices or {}).items():
+        for con in idx["constituents"]:
+            sym = (con.get("symbol") or "").upper()
+            if sym:
+                membership.setdefault(sym, []).append((slug, idx["label"]))
     written = 0
     for c in companies:
         symbol = (c.get("symbol") or "").strip()
         if not symbol:
             continue
-        slug = re.sub(r"[^a-z0-9]+", "-", symbol.lower()).strip("-")
+        slug = _stock_slug(symbol)
         if not slug:
             continue
         name = c.get("name") or symbol
@@ -1122,6 +1148,15 @@ def _write_stock_pages(companies, brokers_cfg):
                 % (rel or "is", _esc(match["broker_id"]), _esc(match.get("label") or match["broker_id"]))
             )
 
+        member_of = sorted(membership.get(symbol.upper(), []), key=lambda x: x[1])
+        index_html = ""
+        if member_of:
+            index_html = (
+                '<p class="xs faint" style="margin-top:12px">Constituent of: '
+                + ", ".join('<a href="/index/%s/">%s</a>' % (_esc(s), _esc(l)) for s, l in member_of)
+                + '</p>'
+            )
+
         body = _REGISTRY_PAGE_HEAD % {
             "title": _esc(title), "description": description,
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
@@ -1133,27 +1168,95 @@ def _write_stock_pages(companies, brokers_cfg):
             + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L). '
               'Live price and trading data are not carried on this page.</p>'
+            + index_html
         )
-        body += _REGISTRY_PAGE_FOOT
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page is generated directly from NSE's own listed-securities master file (EQUITY_L).")}
 
         dest_dir = os.path.join(ROOT, "site", "stock", slug)
         os.makedirs(dest_dir, exist_ok=True)
         _write_text(os.path.join(dest_dir, "index.html"), body)
         written += 1
 
-    keep = set()
-    for c in companies:
-        sym = (c.get("symbol") or "").strip()
-        s = re.sub(r"[^a-z0-9]+", "-", sym.lower()).strip("-")
-        if s:
-            keep.add(s)
+    keep = {_stock_slug(c.get("symbol")) for c in companies if _stock_slug(c.get("symbol"))}
     pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "stock"), keep)
     log("stock pages: %d NSE-listed equity pages written%s" % (
         written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
     return written
 
 
-def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None):
+def _write_index_pages(indices, companies):
+    """One static page per NSE index (Nifty 50, Nifty Bank, sectoral indices),
+    listing every constituent with a cross-link to its /stock/:symbol/ page.
+
+    Path is /index/:slug/, checked against the live SPA route list before use
+    (nothing named "index" or "indices" exists there) - same discipline as
+    every other static-page prefix on this site. Constituents only link to a
+    /stock/ page when that symbol is confirmed to exist in the current NSE
+    equity universe, so a stale or misspelled index-file symbol can never
+    produce a dead link.
+    """
+    known = {_stock_slug(c.get("symbol")) for c in (companies or []) if c.get("symbol")}
+    written = 0
+    for slug, idx in indices.items():
+        label = idx["label"]
+        constituents = idx["constituents"]
+        canonical = "%s/index/%s/" % (SITE_URL, slug)
+        title = "%s: Constituent Stocks List | BrokerLens India" % label
+        description = _esc(
+            "Every constituent of the %s index, sourced directly from NSE's own published index list, "
+            "with each company's ISIN and a link to its NSE listing details." % label
+        )[:300]
+
+        rows_sorted = sorted(constituents, key=lambda c: c.get("name") or c.get("symbol") or "")
+        jsonld = {
+            "@context": "https://schema.org", "@type": "ItemList", "name": label, "url": canonical,
+            "itemListElement": [
+                {"@type": "ListItem", "position": i + 1,
+                 "url": "%s/stock/%s/" % (SITE_URL, _stock_slug(c["symbol"])), "name": c.get("name") or c["symbol"]}
+                for i, c in enumerate(rows_sorted) if c.get("symbol") and _stock_slug(c["symbol"]) in known
+            ],
+        }
+
+        def fact(raw):
+            return _esc(raw) if raw else "Not disclosed"
+
+        list_html = "".join(
+            '<div class="mega-seg"><div class="mega-seg-head">%s</div>'
+            '<div class="xs faint" style="margin-top:2px">%s%s</div></div>'
+            % (
+                ('<a href="/stock/%s/">%s</a>' % (_esc(_stock_slug(c["symbol"])), _esc(c.get("name") or c["symbol"]))
+                 if _stock_slug(c.get("symbol") or "") in known else fact(c.get("name"))),
+                _esc(c.get("symbol") or ""),
+                (" &middot; %s" % _esc(c["industry"])) if c.get("industry") else "",
+            )
+            for c in rows_sorted
+        )
+
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            '<h1 style="margin-top:0">%s</h1>' % _esc(label)
+            + '<p class="muted">%d constituent%s</p>' % (len(rows_sorted), "" if len(rows_sorted) == 1 else "s")
+            + '<div class="grid g3" style="margin-top:16px">' + list_html + '</div>'
+        )
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page is generated directly from NSE's own published index-constituent list.")}
+
+        dest_dir = os.path.join(ROOT, "site", "index", slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "index"), set(indices.keys()))
+    log("index pages: %d NSE index constituent pages written%s" % (
+        written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
+    return written
+
+
+def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
             "/registry", "/algo", "/methodology", "/sources"]
@@ -1182,11 +1285,16 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None):
     # A company's own listing facts (ISIN, listing date, face value) almost
     # never change, so these get the lowest changefreq of anything published.
     for c in (companies or []):
-        symbol = (c.get("symbol") or "").strip()
-        slug = re.sub(r"[^a-z0-9]+", "-", symbol.lower()).strip("-") if symbol else ""
+        slug = _stock_slug(c.get("symbol"))
         if slug:
             body += ("<url><loc>%s/stock/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
                      % (SITE_URL, slug, today))
+    # An index's constituent list changes only at NSE's periodic
+    # rebalancing (quarterly/semi-annually), so weekly matches the hub pages
+    # rather than overclaiming daily freshness.
+    for slug in (indices or {}):
+        body += ("<url><loc>%s/index/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
+                 % (SITE_URL, slug, today))
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)
     _write_text(os.path.join(SITE_DATA, "..", "sitemap.xml"), xml)

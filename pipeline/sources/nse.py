@@ -224,6 +224,83 @@ def equity_universe(fa: Fetcher):
     return out
 
 
+# NSE's own published index-constituent files, confirmed live one by one
+# against nsearchives.nseindia.com/content/indices/ before being added here -
+# every filename in this dict was checked to return real, non-empty rows.
+# Broad-market and sectoral indices only; thematic/strategy indices (momentum,
+# quality, low-volatility, etc.) are deliberately left out for now since they
+# rebalance more often and would need a shorter re-fetch interval to stay
+# accurate rather than the same daily cache as the rest of this file.
+INDEX_FILES = {
+    "nifty-50": ("ind_nifty50list", "Nifty 50"),
+    "nifty-next-50": ("ind_niftynext50list", "Nifty Next 50"),
+    "nifty-100": ("ind_nifty100list", "Nifty 100"),
+    "nifty-200": ("ind_nifty200list", "Nifty 200"),
+    "nifty-500": ("ind_nifty500list", "Nifty 500"),
+    "nifty-bank": ("ind_niftybanklist", "Nifty Bank"),
+    "nifty-auto": ("ind_niftyautolist", "Nifty Auto"),
+    "nifty-it": ("ind_niftyitlist", "Nifty IT"),
+    "nifty-pharma": ("ind_niftypharmalist", "Nifty Pharma"),
+    "nifty-fmcg": ("ind_niftyfmcglist", "Nifty FMCG"),
+    "nifty-metal": ("ind_niftymetallist", "Nifty Metal"),
+    "nifty-realty": ("ind_niftyrealtylist", "Nifty Realty"),
+    "nifty-energy": ("ind_niftyenergylist", "Nifty Energy"),
+    "nifty-psu-bank": ("ind_niftypsubanklist", "Nifty PSU Bank"),
+    "nifty-midcap-50": ("ind_niftymidcap50list", "Nifty Midcap 50"),
+    "nifty-midcap-100": ("ind_niftymidcap100list", "Nifty Midcap 100"),
+    "nifty-smallcap-100": ("ind_niftysmallcap100list", "Nifty Smallcap 100"),
+    "nifty-media": ("ind_niftymedialist", "Nifty Media"),
+    "nifty-consumer-durables": ("ind_niftyconsumerdurableslist", "Nifty Consumer Durables"),
+    "nifty-healthcare": ("ind_niftyhealthcarelist", "Nifty Healthcare"),
+    "nifty-oil-gas": ("ind_niftyoilgaslist", "Nifty Oil & Gas"),
+    "nifty-commodities": ("ind_niftycommoditieslist", "Nifty Commodities"),
+    "nifty-cpse": ("ind_niftycpselist", "Nifty CPSE"),
+    "nifty-infrastructure": ("ind_niftyinfralist", "Nifty Infrastructure"),
+    "nifty-consumption": ("ind_niftyconsumptionlist", "Nifty Consumption"),
+}
+
+
+def index_universe(fa: Fetcher):
+    """Constituent lists for NSE's own published indices.
+
+    Same primary-source tier and same archive host as EQUITY_L.csv - these
+    files are NSE's own index-methodology documents, published for exactly
+    this purpose (who is currently in Nifty 50, Nifty Bank, etc).
+    """
+    out = {}
+    for slug, (filename, label) in INDEX_FILES.items():
+        text = fa.get_text("%s/content/indices/%s.csv" % (ARCH, filename), ttl=86400)
+        if not text:
+            continue
+        rows = list(csv.DictReader(io.StringIO(text)))
+        cols = {}
+        for k in (rows[0].keys() if rows else []):
+            cols[k.strip().upper()] = k
+
+        def field(row, name):
+            k = cols.get(name)
+            return (row.get(k) or "").strip() if k else ""
+
+        constituents = []
+        for r in rows:
+            symbol = field(r, "SYMBOL")
+            if not symbol:
+                continue
+            constituents.append({
+                "symbol": symbol,
+                "name": field(r, "COMPANY NAME"),
+                "industry": field(r, "INDUSTRY"),
+                "isin": field(r, "ISIN CODE"),
+            })
+        if constituents:
+            out[slug] = {"label": label, "constituents": constituents}
+
+    log("nse indices: %d of %d index constituent lists fetched" % (len(out), len(INDEX_FILES)),
+        "ok" if out else "warn")
+    snapshot("nse_index_universe", {k: len(v["constituents"]) for k, v in out.items()})
+    return out
+
+
 # A circular only counts against a broker if its language is actually
 # disciplinary. Without this, routine product and operational notices were
 # published as regulatory flags: a "Motilal Oswal BSE Midcap 150 Momentum 30
@@ -353,6 +430,7 @@ def collect(broker_aliases):
         "live": live_quotes(f),
         "fii_dii": fii_dii(f),
         "universe": equity_universe(fa),
+        "indices": index_universe(fa),
         "circulars": member_circulars(f, broker_aliases),
         "turnover": cm_turnover(fa),
     }
