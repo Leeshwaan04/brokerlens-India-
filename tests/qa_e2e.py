@@ -472,6 +472,31 @@ def test_published():
             check("a stock page reverse-links to the indices it's a constituent of",
                   "/index/nifty-50/" in reliance_html)
 
+    # Static /etf/:symbol pages - a genuinely separate NSE instrument
+    # universe from EQUITY_L.csv (confirmed zero symbol overlap), so these
+    # need their own slug-collision check against /stock/ as well as
+    # against the SPA route list.
+    etf_dir = os.path.join(ROOT, "site", "etf")
+    check("site/etf/ static pages exist on disk", os.path.isdir(etf_dir))
+    if os.path.isdir(etf_dir):
+        etf_slugs = sorted(d for d in os.listdir(etf_dir) if os.path.isdir(os.path.join(etf_dir, d)))
+        check("a real number of NSE ETF pages were written", len(etf_slugs) > 200,
+              "found %d" % len(etf_slugs))
+        check("etf page slugs are unique", len(etf_slugs) == len(set(etf_slugs)))
+        check("no etf slug collides with a stock slug",
+              not (set(etf_slugs) & set(slugs)) if os.path.isdir(stock_dir) else True,
+              "overlap: %s" % sorted(set(etf_slugs) & set(slugs))[:5])
+        niftybees_path = os.path.join(etf_dir, "niftybees", "index.html")
+        etf_html = open(niftybees_path, encoding="utf-8").read() if os.path.exists(niftybees_path) else ""
+        check("etf page has no leaked 'None' from an unset field",
+              ">None<" not in etf_html and "None</p>" not in etf_html)
+        check("etf page has real FinancialProduct JSON-LD (not Corporation - an ETF is a fund, not a company)",
+              '"@type": "FinancialProduct"' in etf_html or '"@type":"FinancialProduct"' in etf_html)
+        check("etf page loads no app bundle (must be readable with zero JS)",
+              "/assets/js/app.js" not in etf_html)
+        check("niftybees ETF page cross-links to the Nifty 50 index page",
+              "/index/nifty-50/" in etf_html)
+
     # No page title anywhere on the site should carry an em dash - a standing
     # copy rule ("—" isn't in the "no em dashes" allowance) applied here as an
     # automated check since it has silently regressed before.
@@ -479,6 +504,7 @@ def test_published():
         ("homepage", os.path.join(ROOT, "site", "index.html")),
         ("stock sample", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
         ("index sample", os.path.join(index_dir, "nifty-50", "index.html") if index_slugs else ""),
+        ("etf sample", niftybees_path if os.path.isdir(etf_dir) and os.path.exists(niftybees_path) else ""),
     ]:
         if path and os.path.exists(path):
             title_html = open(path, encoding="utf-8").read()
@@ -650,6 +676,11 @@ def test_server(base):
     # /index/:slug/ - same static, zero-JS shape as /stock/ and /sebi-registry/.
     code, body, _ = http(base + "/index/nifty-50/")
     check("GET /index/<slug>/ serves the static index constituent page",
+          code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
+
+    # /etf/:symbol/ - separate instrument universe, same static shape.
+    code, body, _ = http(base + "/etf/niftybees/")
+    check("GET /etf/<symbol>/ serves the static ETF listing page",
           code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
 
     for a in ["/assets/js/app.js", "/assets/js/pages.js", "/assets/css/app.css",

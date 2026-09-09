@@ -301,6 +301,43 @@ def index_universe(fa: Fetcher):
     return out
 
 
+def etf_universe(fa: Fetcher):
+    """NSE's own list of listed ETFs - a separate instrument universe from
+    EQUITY_L.csv (confirmed: zero symbol overlap), same archive host and
+    trust tier."""
+    text = fa.get_text("%s/content/equities/eq_etfseclist.csv" % ARCH, ttl=86400)
+    if not text:
+        return None
+    rows = list(csv.DictReader(io.StringIO(text)))
+    cols = {}
+    for k in (rows[0].keys() if rows else []):
+        cols[k.strip().upper()] = k
+
+    def field(row, name):
+        k = cols.get(name)
+        return (row.get(k) or "").strip() if k else ""
+
+    etfs = []
+    for r in rows:
+        symbol = field(r, "SYMBOL")
+        if not symbol:
+            continue
+        etfs.append({
+            "symbol": symbol,
+            "name": field(r, "SECURITYNAME"),
+            "underlying_asset": field(r, "UNDERLYING ASSET"),
+            "underlying_key": field(r, "UNDERLYING KEY"),
+            "category": field(r, "ETF UNDERLYING"),
+            "listing_date": field(r, "DATEOFLISTING"),
+            "isin": field(r, "ISINNUMBER"),
+            "face_value": field(r, "FACEVALUE"),
+            "market_lot": field(r, "MARKETLOT"),
+        })
+    log("nse etfs: %d listed ETFs fetched" % len(etfs), "ok" if etfs else "warn")
+    snapshot("nse_etf_universe", {"count": len(etfs)})
+    return etfs
+
+
 # A circular only counts against a broker if its language is actually
 # disciplinary. Without this, routine product and operational notices were
 # published as regulatory flags: a "Motilal Oswal BSE Midcap 150 Momentum 30
@@ -431,6 +468,7 @@ def collect(broker_aliases):
         "fii_dii": fii_dii(f),
         "universe": equity_universe(fa),
         "indices": index_universe(fa),
+        "etfs": etf_universe(fa),
         "circulars": member_circulars(f, broker_aliases),
         "turnover": cm_turnover(fa),
     }

@@ -20,6 +20,7 @@ import shutil
 from datetime import datetime, timezone
 
 from . import feeds, metrics
+from .sources.nse import INDEX_FILES
 from .common import (
     CONFIG,
     DATA,
@@ -484,7 +485,9 @@ def build():
     _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"),
                         index_universe)
     _write_index_pages(index_universe, equity_companies)
-    _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe)
+    etf_universe = nse_d.get("etfs") or []
+    _write_etf_pages(etf_universe, index_universe)
+    _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe)
     _write_feed(built, aggregates)
     build_ticker()
     return overview
@@ -1256,7 +1259,94 @@ def _write_index_pages(indices, companies):
     return written
 
 
-def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None):
+def _write_etf_pages(etfs, indices):
+    """One static page per NSE-listed ETF - a separate instrument universe
+    from EQUITY_L.csv (confirmed zero symbol overlap), so this needed its own
+    fetch and its own URL prefix rather than reusing /stock/.
+
+    An ETF is a fund, not a company, so its JSON-LD type is FinancialProduct
+    rather than the Corporation type used for stock pages - getting this
+    wrong would be a real factual error, the same class of mistake the
+    per-page-type source note already exists to prevent.
+
+    Path is /etf/:symbol/, checked against the live SPA route list before use
+    (nothing named "etf" exists there).
+    """
+    by_label = {lbl.lower(): slug for slug, (_f, lbl) in INDEX_FILES.items()}
+    written = 0
+    for e in etfs or []:
+        symbol = (e.get("symbol") or "").strip()
+        if not symbol:
+            continue
+        slug = _stock_slug(symbol)
+        if not slug:
+            continue
+        name = e.get("name") or symbol
+        canonical = "%s/etf/%s/" % (SITE_URL, slug)
+        title = "%s (%s): ETF Listing Details | BrokerLens India" % (_esc(name), _esc(symbol))
+        description = _esc(
+            "%s (NSE: %s): the ETF's underlying benchmark, ISIN, listing date and market lot, "
+            "sourced directly from NSE's own listed-ETF register." % (name, symbol)
+        )[:300]
+
+        jsonld = {"@context": "https://schema.org", "@type": "FinancialProduct", "name": name, "url": canonical}
+        if e.get("isin"):
+            jsonld["identifier"] = e["isin"]
+        if e.get("underlying_key"):
+            jsonld["category"] = e["underlying_key"]
+
+        def fact(raw):
+            return _esc(raw) if raw else "Not disclosed"
+
+        facts_html = "".join(
+            '<div class="mega-seg"><div class="mega-seg-label">%s</div><div style="margin-top:2px">%s</div></div>'
+            % (label, value) for label, value in [
+                ("NSE symbol", fact(symbol)),
+                ("Tracks", fact(e.get("underlying_key") or e.get("underlying_asset"))),
+                ("Category", fact(e.get("category"))),
+                ("ISIN", fact(e.get("isin"))),
+                ("Listed on NSE since", fact(_long_date(e["listing_date"]) if e.get("listing_date") else None)),
+                ("Face value", fact(("Rs %s" % e["face_value"]) if e.get("face_value") else None)),
+                ("Market lot", fact(e.get("market_lot"))),
+            ]
+        )
+
+        index_slug = by_label.get((e.get("underlying_key") or "").strip().lower())
+        index_html = ""
+        if index_slug:
+            index_html = (
+                '<p class="xs faint" style="margin-top:12px">Tracks the same benchmark as: '
+                '<a href="/index/%s/">%s constituent list</a></p>' % (_esc(index_slug), _esc(INDEX_FILES[index_slug][1]))
+            )
+
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            '<h1 style="margin-top:0">%s</h1>' % _esc(name)
+            + '<p class="muted">NSE: %s</p>' % _esc(symbol)
+            + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
+            + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-ETF register. '
+              'Live price and trading data are not carried on this page.</p>'
+            + index_html
+        )
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page is generated directly from NSE's own listed-ETF register.")}
+
+        dest_dir = os.path.join(ROOT, "site", "etf", slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+
+    keep = {_stock_slug(e.get("symbol")) for e in (etfs or []) if e.get("symbol")}
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "etf"), keep)
+    log("etf pages: %d NSE-listed ETF pages written%s" % (
+        written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
+    return written
+
+
+def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
             "/registry", "/algo", "/methodology", "/sources"]
@@ -1295,6 +1385,12 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     for slug in (indices or {}):
         body += ("<url><loc>%s/index/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
                  % (SITE_URL, slug, today))
+    # An ETF's own listing facts change as rarely as a stock's.
+    for e in (etfs or []):
+        slug = _stock_slug(e.get("symbol"))
+        if slug:
+            body += ("<url><loc>%s/etf/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
+                     % (SITE_URL, slug, today))
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)
     _write_text(os.path.join(SITE_DATA, "..", "sitemap.xml"), xml)
