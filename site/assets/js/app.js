@@ -27,15 +27,15 @@ const ROUTES = [
 ];
 
 const TITLES = {
-  '/': 'BrokerLens India — Indian stock broker statistics from NSE, BSE and SEBI',
-  '/brokers': 'All Indian stock brokers, compared — BrokerLens India',
-  '/compare': 'Compare Indian stock brokers side by side — BrokerLens India',
-  '/leaderboards': 'Broker rankings by clients, complaints and cost — BrokerLens India',
-  '/calculator': 'Brokerage cost calculator — BrokerLens India',
-  '/registry': 'SEBI-registered brokers and intermediaries — BrokerLens India',
-  '/algo': 'Algo trading platforms in India — APIs, no-code builders and vendors | BrokerLens India',
-  '/methodology': 'Methodology — BrokerLens India',
-  '/sources': 'Data sources and lineage — BrokerLens India',
+  '/': 'BrokerLens India: Indian stock broker statistics from NSE, BSE and SEBI',
+  '/brokers': 'All Indian stock brokers, compared: BrokerLens India',
+  '/compare': 'Compare Indian stock brokers side by side: BrokerLens India',
+  '/leaderboards': 'Broker rankings by clients, complaints and cost: BrokerLens India',
+  '/calculator': 'Brokerage cost calculator: BrokerLens India',
+  '/registry': 'SEBI-registered brokers and intermediaries: BrokerLens India',
+  '/algo': 'Algo trading platforms in India (APIs, no-code builders and vendors) | BrokerLens India',
+  '/methodology': 'Methodology: BrokerLens India',
+  '/sources': 'Data sources and lineage: BrokerLens India',
 };
 
 /* Per-route descriptions. Without these every page inherited the homepage copy,
@@ -85,10 +85,10 @@ async function render() {
   if (TITLES[path]) {
     document.title = TITLES[path];
   } else if (isBroker && h1) {
-    document.title = `${h1.textContent.trim()} — active clients, complaints and charges | BrokerLens India`;
+    document.title = `${h1.textContent.trim()}: active clients, complaints and charges | BrokerLens India`;
   } else {
     // Anything else (a 404, an alias) must not inherit the broker template.
-    document.title = h1 ? `${h1.textContent.trim()} — BrokerLens India` : 'BrokerLens India';
+    document.title = h1 ? `${h1.textContent.trim()}: BrokerLens India` : 'BrokerLens India';
   }
 
   // Description must be RESET on every route, not only set on broker pages:

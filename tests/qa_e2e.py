@@ -417,6 +417,43 @@ def test_published():
             check("hub page links at least one broker profile",
                   "/broker/" in html)
 
+    # Static, server-rendered /stock/:symbol pages - Phase 1 of the
+    # 60-70k-page plan, built entirely from NSE's own already-ingested
+    # EQUITY_L.csv. No SPA route is named "stock", so this prefix cannot
+    # shadow an existing client route the way site/registry/ once did.
+    stock_dir = os.path.join(ROOT, "site", "stock")
+    check("site/stock/ static pages exist on disk", os.path.isdir(stock_dir))
+    if os.path.isdir(stock_dir):
+        slugs = sorted(d for d in os.listdir(stock_dir) if os.path.isdir(os.path.join(stock_dir, d)))
+        check("a large number of NSE equity pages were written", len(slugs) > 2000,
+              "found %d" % len(slugs))
+        check("stock page slugs are unique", len(slugs) == len(set(slugs)))
+        sample_path = os.path.join(stock_dir, slugs[0], "index.html") if slugs else ""
+        html = open(sample_path, encoding="utf-8").read() if slugs and os.path.exists(sample_path) else ""
+        check("stock page has no leaked 'None' from an unset field",
+              ">None<" not in html and "None</p>" not in html)
+        check("stock page has real Corporation JSON-LD",
+              '"@type": "Corporation"' in html or '"@type":"Corporation"' in html)
+        check("stock page loads no app bundle (must be readable with zero JS)",
+              "/assets/js/app.js" not in html)
+        angel_path = os.path.join(stock_dir, "angelone", "index.html")
+        if os.path.exists(angel_path):
+            angel_html = open(angel_path, encoding="utf-8").read()
+            check("NSE-listed broker parent cross-links to its BrokerLens profile",
+                  "/broker/angel-one/" in angel_html)
+
+    # No page title anywhere on the site should carry an em dash - a standing
+    # copy rule ("—" isn't in the "no em dashes" allowance) applied here as an
+    # automated check since it has silently regressed before.
+    for label, path in [
+        ("homepage", os.path.join(ROOT, "site", "index.html")),
+        ("stock sample", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
+    ]:
+        if path and os.path.exists(path):
+            title_html = open(path, encoding="utf-8").read()
+            m = re.search(r"<title>(.*?)</title>", title_html)
+            check("%s <title> has no em dash" % label, bool(m) and "—" not in m.group(1))
+
     src = load("site/data/sources.json")
     check("sources.json lists every configured source",
           len(src["sources"]) == len((load("config/sources.json") or {}).get("sources", {})))
@@ -569,6 +606,15 @@ def test_server(base):
         code, body, _ = http(base + "/broker/%s/" % sample_bid)
         check("GET /broker/<id>/ serves the static profile page",
               code == 200 and b"<h1" in body and b'id="app"' in body, "code=%s" % code)
+
+    # /stock/:symbol/ is a genuinely new prefix (no SPA route named "stock"),
+    # pure static like the registry pages - real facts, no client bundle.
+    stock_dir = os.path.join(ROOT, "site", "stock")
+    sample_stock = next(iter(sorted(os.listdir(stock_dir))), None) if os.path.isdir(stock_dir) else None
+    if sample_stock:
+        code, body, _ = http(base + "/stock/%s/" % sample_stock)
+        check("GET /stock/<symbol>/ serves the static equity page",
+              code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
 
     for a in ["/assets/js/app.js", "/assets/js/pages.js", "/assets/css/app.css",
               "/data/overview.json", "/data/ticker.json", "/sitemap.xml", "/feed.xml"]:

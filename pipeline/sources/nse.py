@@ -182,18 +182,44 @@ def fii_dii(f: Fetcher):
 
 
 def equity_universe(fa: Fetcher):
-    """Count of tradable equity symbols + the listed brokers among them."""
+    """The full NSE-listed equity master list, not just a count.
+
+    EQUITY_L.csv is NSE's own published list of every listed equity symbol -
+    already fetched on every run, previously discarded down to a bare count.
+    Column names carry a leading space in the source file (NSE's own quirk,
+    not a parsing bug here), so lookups below normalise on strip().upper().
+    """
     text = fa.get_text("%s/content/equities/EQUITY_L.csv" % ARCH, ttl=86400)
     if not text:
         return None
     rows = list(csv.DictReader(io.StringIO(text)))
-    key = None
+    cols = {}
     for k in (rows[0].keys() if rows else []):
-        if k.strip().upper() == "NAME OF COMPANY":
-            key = k
-            break
-    names = [(r.get(key) or "").strip() for r in rows] if key else []
-    out = {"symbol_count": len(rows), "company_names": names}
+        cols[k.strip().upper()] = k
+
+    def field(row, name):
+        k = cols.get(name)
+        return (row.get(k) or "").strip() if k else ""
+
+    companies = []
+    for r in rows:
+        symbol = field(r, "SYMBOL")
+        if not symbol:
+            continue
+        companies.append({
+            "symbol": symbol,
+            "name": field(r, "NAME OF COMPANY"),
+            "series": field(r, "SERIES"),
+            "listing_date": field(r, "DATE OF LISTING"),
+            "isin": field(r, "ISIN NUMBER"),
+            "face_value": field(r, "FACE VALUE"),
+            "market_lot": field(r, "MARKET LOT"),
+        })
+    out = {
+        "symbol_count": len(rows),
+        "company_names": [c["name"] for c in companies],
+        "companies": companies,
+    }
     snapshot("nse_equity_universe", {"symbol_count": len(rows)})
     return out
 

@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 from datetime import datetime, timezone
 
 from . import feeds, metrics
@@ -478,7 +479,9 @@ def build():
     _write_registry_pages(reg_rows)
     _write_broker_pages(built)
     hub_groups = _write_broker_hub_pages(built)
-    _write_sitemap(built, reg_rows, hub_groups)
+    equity_companies = ((nse_d.get("universe") or {}).get("companies")) or []
+    _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"))
+    _write_sitemap(built, reg_rows, hub_groups, equity_companies)
     _write_feed(built, aggregates)
     build_ticker()
     return overview
@@ -687,6 +690,8 @@ def _write_registry_pages(reg_rows):
     """
     base = os.path.join(SITE_DATA, "..", "sebi-registry")
     written = 0
+    keep = {r["slug"] for r in reg_rows if r.get("slug")}
+    pruned = _prune_stale_dirs(base, keep)
     for r in reg_rows:
         slug = r.get("slug")
         if not slug:
@@ -695,7 +700,7 @@ def _write_registry_pages(reg_rows):
         cats = [CATEGORY_LABELS.get(c, c) for c in (r.get("categories") or [])]
         canonical = "%s/sebi-registry/%s/" % (SITE_URL, slug)
 
-        title = "%s — SEBI Registration | BrokerLens India" % name
+        title = "%s: SEBI Registration | BrokerLens India" % name
         description = ("%s: SEBI registration number, category, exchange memberships and validity, "
                        "sourced from SEBI's recognised-intermediary register." % name)[:300]
 
@@ -750,7 +755,8 @@ def _write_registry_pages(reg_rows):
         _write_text(os.path.join(dest_dir, "index.html"), body)
         written += 1
 
-    log("registry pages: %d static entity pages written" % written, "ok")
+    log("registry pages: %d static entity pages written%s" % (
+        written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
 
 
 TYPE_LABEL = {"discount": "Discount", "full_service": "Full service", "bank_backed": "Bank-backed"}
@@ -878,7 +884,7 @@ def _write_broker_pages(built):
     for b in built:
         bid, brand = b["id"], b["profile"].get("brand") or b["id"]
         canonical = "%s/broker/%s/" % (SITE_URL, bid)
-        title = "%s — active clients, complaints and charges | BrokerLens India" % _esc(brand)
+        title = "%s: active clients, complaints and charges | BrokerLens India" % _esc(brand)
         description = _esc(
             "%s: active client count, market share, SEBI complaint record, regulatory registrations "
             "and cost, from primary NSE, BSE and SEBI disclosures." % brand
@@ -894,7 +900,7 @@ def _write_broker_pages(built):
 
         page = shell
         page = page.replace(
-            "<title>BrokerLens India — Indian stock broker statistics from NSE, BSE and SEBI</title>",
+            "<title>BrokerLens India: Indian stock broker statistics from NSE, BSE and SEBI</title>",
             "<title>%s</title>" % title, 1)
         page = page.replace(
             'content="Compare every SEBI-registered Indian stock broker on active clients, market share, '
@@ -903,7 +909,7 @@ def _write_broker_pages(built):
         page = page.replace('<link rel="canonical" href="/">', '<link rel="canonical" href="%s">' % canonical, 1)
         page = page.replace('<meta property="og:url" content="/">', '<meta property="og:url" content="%s">' % canonical, 1)
         page = page.replace(
-            '<meta property="og:title" content="BrokerLens India — broker statistics from primary sources">',
+            '<meta property="og:title" content="BrokerLens India: broker statistics from primary sources">',
             '<meta property="og:title" content="%s">' % title, 1)
         page = page.replace(
             '<meta property="og:description" content="Active clients, market share, SEBI complaint records '
@@ -934,7 +940,9 @@ def _write_broker_pages(built):
         _write_text(os.path.join(dest_dir, "index.html"), page)
         written += 1
 
-    log("broker pages: %d static profile pages written" % written, "ok")
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "broker"), {b["id"] for b in built})
+    log("broker pages: %d static profile pages written%s" % (
+        written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
 
 
 def _write_broker_hub_pages(built):
@@ -1029,11 +1037,123 @@ def _write_broker_hub_pages(built):
         _write_text(os.path.join(dest_dir, "index.html"), body)
         written += 1
 
-    log("broker hub pages: %d written (type/segment/city)" % written, "ok")
+    pruned = 0
+    hub_base = os.path.join(ROOT, "site", "brokers-by")
+    for dim in ("type", "segment", "city"):
+        keep = {slugify(key.replace("_", "-")) for d, key, _, _ in groups if d == dim}
+        pruned += _prune_stale_dirs(os.path.join(hub_base, dim), keep)
+    log("broker hub pages: %d written (type/segment/city)%s" % (
+        written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
     return groups
 
 
-def _write_sitemap(built, reg_rows=None, hub_groups=None):
+_MONTH_ABBR = {"JAN": "January", "FEB": "February", "MAR": "March", "APR": "April",
+               "MAY": "May", "JUN": "June", "JUL": "July", "AUG": "August",
+               "SEP": "September", "OCT": "October", "NOV": "November", "DEC": "December"}
+
+
+def _long_date(nse_date):
+    """'06-OCT-2008' -> '6 October 2008'. Falls back to the raw string on
+    anything unexpected rather than dropping a real, verifiable fact."""
+    try:
+        d, mon, y = nse_date.split("-")
+        return "%d %s %s" % (int(d), _MONTH_ABBR.get(mon.upper(), mon.title()), y)
+    except (ValueError, AttributeError):
+        return nse_date
+
+
+def _write_stock_pages(companies, brokers_cfg):
+    """One static page per NSE-listed equity - Phase 1 of docs/SCALE_TO_60K_PLAN.md.
+
+    The data (NSE's own EQUITY_L.csv) was already being fetched on every run;
+    only the page-generation step is new. Unlike the sample-gated broker
+    metrics, every field here is always real and always available - there is
+    no "not published yet" state for a company's own listing facts.
+
+    Path is /stock/:symbol/, checked against the live SPA route list before
+    use (nothing named "stock" exists there) - same discipline that avoided
+    two prior collisions (site/registry/, site/brokers/).
+    """
+    by_symbol = {s["symbol"].upper(): s for s in (brokers_cfg or [])}
+    written = 0
+    for c in companies:
+        symbol = (c.get("symbol") or "").strip()
+        if not symbol:
+            continue
+        slug = re.sub(r"[^a-z0-9]+", "-", symbol.lower()).strip("-")
+        if not slug:
+            continue
+        name = c.get("name") or symbol
+        canonical = "%s/stock/%s/" % (SITE_URL, slug)
+        title = "%s (%s): NSE Listing Details | BrokerLens India" % (_esc(name), _esc(symbol))
+        description = _esc(
+            "%s (NSE: %s): ISIN, listing date, face value and market lot, "
+            "sourced directly from NSE's own listed-securities register." % (name, symbol)
+        )[:300]
+
+        jsonld = {"@context": "https://schema.org", "@type": "Corporation", "name": name,
+                  "tickerSymbol": symbol, "url": canonical}
+        if c.get("isin"):
+            jsonld["identifier"] = c["isin"]
+
+        def fact(raw):
+            return _esc(raw) if raw else "Not disclosed"
+
+        facts_html = "".join(
+            '<div class="mega-seg"><div class="mega-seg-label">%s</div><div style="margin-top:2px">%s</div></div>'
+            % (label, value) for label, value in [
+                ("NSE symbol", fact(symbol)),
+                ("ISIN", fact(c.get("isin"))),
+                ("Series", fact(c.get("series"))),
+                ("Listed on NSE since", fact(_long_date(c.get("listing_date")) if c.get("listing_date") else None)),
+                ("Face value", fact(("Rs %s" % c["face_value"]) if c.get("face_value") else None)),
+                ("Market lot", fact(c.get("market_lot"))),
+            ]
+        )
+
+        broker_link = ""
+        match = by_symbol.get(symbol.upper())
+        if match and match.get("broker_id"):
+            rel = "the listed parent of" if match.get("relation") == "parent" else ""
+            broker_link = (
+                '<div class="pending" style="border-style:solid;background:var(--accent-soft)">'
+                '<strong>This company %s a BrokerLens-tracked broker.</strong> '
+                '<a href="/broker/%s/">View %s\'s broker profile &rarr;</a></div>'
+                % (rel or "is", _esc(match["broker_id"]), _esc(match.get("label") or match["broker_id"]))
+            )
+
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            '<h1 style="margin-top:0">%s</h1>' % _esc(name)
+            + '<p class="muted">NSE: %s</p>' % _esc(symbol)
+            + broker_link
+            + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
+            + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L). '
+              'Live price and trading data are not carried on this page.</p>'
+        )
+        body += _REGISTRY_PAGE_FOOT
+
+        dest_dir = os.path.join(ROOT, "site", "stock", slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+
+    keep = set()
+    for c in companies:
+        sym = (c.get("symbol") or "").strip()
+        s = re.sub(r"[^a-z0-9]+", "-", sym.lower()).strip("-")
+        if s:
+            keep.add(s)
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "stock"), keep)
+    log("stock pages: %d NSE-listed equity pages written%s" % (
+        written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
+    return written
+
+
+def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
             "/registry", "/algo", "/methodology", "/sources"]
@@ -1059,6 +1179,14 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None):
         if slug:
             body += ("<url><loc>%s/brokers-by/%s/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
                      % (SITE_URL, dim, slug, today))
+    # A company's own listing facts (ISIN, listing date, face value) almost
+    # never change, so these get the lowest changefreq of anything published.
+    for c in (companies or []):
+        symbol = (c.get("symbol") or "").strip()
+        slug = re.sub(r"[^a-z0-9]+", "-", symbol.lower()).strip("-") if symbol else ""
+        if slug:
+            body += ("<url><loc>%s/stock/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
+                     % (SITE_URL, slug, today))
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)
     _write_text(os.path.join(SITE_DATA, "..", "sitemap.xml"), xml)
@@ -1096,6 +1224,21 @@ def _write_text(path, body):
     with open(tmp, "w", encoding="utf-8") as fh:
         fh.write(body)
     os.replace(tmp, path)
+
+
+def _prune_stale_dirs(base_dir, keep_slugs):
+    """Remove subdirectories left behind by a source entity that was renamed,
+    delisted or dropped between runs - otherwise its page keeps being served
+    (and stays crawlable) forever, silently drifting out of step with the
+    source of truth it claims to reflect."""
+    if not os.path.isdir(base_dir):
+        return 0
+    removed = 0
+    for name in os.listdir(base_dir):
+        if name not in keep_slugs and os.path.isdir(os.path.join(base_dir, name)):
+            shutil.rmtree(os.path.join(base_dir, name))
+            removed += 1
+    return removed
 
 
 def _write_robots():
