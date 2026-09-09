@@ -15,7 +15,12 @@ PY=python3
 command -v "$PY" >/dev/null 2>&1 || PY=python
 
 export SITE_URL="${SITE_URL:-https://www.brokerlens.in}"
-export SEBI_MAX_PAGES="${SEBI_MAX_PAGES:-25}"
+# SEBI's own paginated registers currently need up to 83 pages (commodity
+# broker) - a cap of 25 was silently truncating that category to ~30% of its
+# real size (and dp_cdsl to ~83%), understating the live registry by roughly
+# 660 real, already-indexable entities. 100 covers today's real page counts
+# with headroom for organic growth in SEBI's own register.
+export SEBI_MAX_PAGES="${SEBI_MAX_PAGES:-100}"
 export PUBLISH_MODE=production
 
 "$PY" -m pipeline.run fetch || true
