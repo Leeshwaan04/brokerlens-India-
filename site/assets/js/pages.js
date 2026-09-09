@@ -337,6 +337,14 @@ export async function brokers(params) {
     <a class="btn" href="/compare" data-link>Compare selected →</a>
   </div>
 
+  <p class="xs faint" style="margin-top:8px">Browse by category:
+    ${Object.entries(TYPE_LABEL).map(([k, v]) =>
+      `<a href="/brokers-by/type/${k.replace(/_/g, '-')}/">${esc(v)}</a>`).join(' &middot; ')}
+    &nbsp;|&nbsp;
+    ${Object.entries(SEGMENT_LABEL).map(([k, v]) =>
+      `<a href="/brokers-by/segment/${k.replace(/_/g, '-')}/">${esc(v)}</a>`).join(' &middot; ')}
+  </p>
+
   <div class="card" style="margin-top:16px">
     <div class="row-wrap">
       <div class="grow" style="min-width:220px">

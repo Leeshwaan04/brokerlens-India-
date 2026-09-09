@@ -477,7 +477,8 @@ def build():
     _write_timings()
     _write_registry_pages(reg_rows)
     _write_broker_pages(built)
-    _write_sitemap(built, reg_rows)
+    hub_groups = _write_broker_hub_pages(built)
+    _write_sitemap(built, reg_rows, hub_groups)
     _write_feed(built, aggregates)
     build_ticker()
     return overview
@@ -936,7 +937,103 @@ def _write_broker_pages(built):
     log("broker pages: %d static profile pages written" % written, "ok")
 
 
-def _write_sitemap(built, reg_rows=None):
+def _write_broker_hub_pages(built):
+    """Category hub pages: brokers grouped by type, segment and HQ city.
+
+    Standalone static pages, not a shell-hydration pair like the broker
+    profiles - the /brokers directory's type/segment filter chips are pure
+    client-side state with no URL reflection at all (confirmed: dirState only
+    reads `q` from the query string), so there is no existing client route for
+    "/brokers filtered by type=discount" to hydrate into. These are genuinely
+    new URLs.
+
+    Path prefix is /brokers-by/..., deliberately NOT /brokers/... - creating a
+    real site/brokers/ directory would shadow the SPA's own /brokers route on
+    disk exactly the way site/registry/ once shadowed /registry. Every prefix
+    chosen for a static-page tree in this file must be checked against the
+    live SPA route list before use; this one isn't in it.
+    """
+    by_type, by_segment, by_city = {}, {}, {}
+    for b in built:
+        p = b["profile"]
+        if p.get("type"):
+            by_type.setdefault(p["type"], []).append(b)
+        for seg in p.get("segments") or []:
+            by_segment.setdefault(seg, []).append(b)
+        if p.get("hq"):
+            by_city.setdefault(p["hq"], []).append(b)
+
+    groups = (
+        [("type", key, TYPE_LABEL.get(key, key), rows) for key, rows in by_type.items()]
+        + [("segment", key, SEGMENT_LABEL.get(key, key), rows) for key, rows in by_segment.items()]
+        + [("city", key, key, rows) for key, rows in by_city.items()]
+    )
+
+    written = 0
+    for dim, key, label, rows in groups:
+        slug = slugify(key.replace("_", "-"))
+        if not slug:
+            continue
+        canonical = "%s/brokers-by/%s/%s/" % (SITE_URL, dim, slug)
+        noun = {"type": "Stock brokers", "segment": "Brokers registered for", "city": "Stock brokers headquartered in"}[dim]
+        title = ("%s %s | BrokerLens India" % (noun, label)) if dim != "type" else ("%s: %s | BrokerLens India" % (noun, label))
+        h1 = {
+            "type": "%s stock brokers in India" % label,
+            "segment": "Brokers registered for %s" % label,
+            "city": "Stock brokers headquartered in %s" % label,
+        }[dim]
+        description = _esc(
+            "%s, matched to their SEBI registration where confirmed. %d brokers tracked in depth on BrokerLens."
+            % (h1, len(rows))
+        )[:300]
+
+        rows_sorted = sorted(rows, key=lambda b: b["profile"].get("brand") or b["id"])
+        list_html = "".join(
+            '<div class="mega-seg"><div class="mega-seg-head"><a href="/broker/%s/">%s</a></div>'
+            '<div class="xs faint" style="margin-top:2px">%s%s</div></div>'
+            % (
+                _esc(b["id"]), _esc(b["profile"].get("brand") or b["id"]),
+                _esc(b["profile"].get("hq") or ""),
+                " &middot; SEBI verified" if b["profile"].get("legal_name_verified") else "",
+            )
+            for b in rows_sorted
+        )
+
+        jsonld = {
+            "@context": "https://schema.org", "@type": "ItemList", "name": h1, "url": canonical,
+            "itemListElement": [
+                {"@type": "ListItem", "position": i + 1, "url": "%s/broker/%s/" % (SITE_URL, b["id"]),
+                 "name": b["profile"].get("brand") or b["id"]}
+                for i, b in enumerate(rows_sorted)
+            ],
+        }
+
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            '<h1 style="margin-top:0">%s</h1>' % _esc(h1)
+            + '<p class="muted" style="max-width:70ch">%d broker%s tracked in depth on BrokerLens match this. '
+              'Client, complaint and cost figures on each profile follow the same production-mode rules as the '
+              'rest of the site: shown only once traced to a primary source.</p>'
+              % (len(rows_sorted), "" if len(rows_sorted) == 1 else "s")
+            + '<div class="grid g3" style="margin-top:16px">' + list_html + '</div>'
+            + '<p class="xs faint" style="margin-top:16px">'
+              '<a href="/brokers">Full broker directory (search and filter) &rarr;</a></p>'
+        )
+        body += _REGISTRY_PAGE_FOOT
+
+        dest_dir = os.path.join(ROOT, "site", "brokers-by", dim, slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+
+    log("broker hub pages: %d written (type/segment/city)" % written, "ok")
+    return groups
+
+
+def _write_sitemap(built, reg_rows=None, hub_groups=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
             "/registry", "/algo", "/methodology", "/sources"]
@@ -957,6 +1054,11 @@ def _write_sitemap(built, reg_rows=None):
         "<url><loc>%s/sebi-registry/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
         % (SITE_URL, r["slug"], today) for r in (reg_rows or []) if r.get("slug")
     )
+    for dim, key, _label, _rows in (hub_groups or []):
+        slug = slugify(key.replace("_", "-"))
+        if slug:
+            body += ("<url><loc>%s/brokers-by/%s/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
+                     % (SITE_URL, dim, slug, today))
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)
     _write_text(os.path.join(SITE_DATA, "..", "sitemap.xml"), xml)

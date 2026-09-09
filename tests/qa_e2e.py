@@ -393,6 +393,30 @@ def test_published():
             check("static entity page loads no app bundle (must be readable with zero JS)",
                   "/assets/js/app.js" not in html)
 
+    # Category hub pages (type/segment/city). Same collision class as the
+    # registry pages: site/brokers/ would shadow the SPA's own /brokers
+    # directory route, so these must live under a sibling prefix instead.
+    check("no site/brokers/ directory shadowing the SPA /brokers route",
+          not os.path.isdir(os.path.join(ROOT, "site", "brokers")))
+    hub_dir = os.path.join(ROOT, "site", "brokers-by")
+    check("brokers-by/ hub pages exist on disk", os.path.isdir(hub_dir))
+    if os.path.isdir(hub_dir):
+        dims = {d for d in os.listdir(hub_dir) if os.path.isdir(os.path.join(hub_dir, d))}
+        check("hub pages cover type, segment and city", {"type", "segment", "city"} <= dims,
+              "found: %s" % sorted(dims))
+        sample_hub = next(
+            (os.path.join(hub_dir, dim, slug, "index.html")
+             for dim in sorted(dims) for slug in sorted(os.listdir(os.path.join(hub_dir, dim)))),
+            None)
+        if sample_hub and os.path.exists(sample_hub):
+            html = open(sample_hub, encoding="utf-8").read()
+            check("hub page has no leaked 'None' from an unset field",
+                  ">None<" not in html and "None</p>" not in html)
+            check("hub page has real ItemList JSON-LD",
+                  '"@type": "ItemList"' in html or '"@type":"ItemList"' in html)
+            check("hub page links at least one broker profile",
+                  "/broker/" in html)
+
     src = load("site/data/sources.json")
     check("sources.json lists every configured source",
           len(src["sources"]) == len((load("config/sources.json") or {}).get("sources", {})))

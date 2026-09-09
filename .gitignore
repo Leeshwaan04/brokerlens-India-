@@ -13,6 +13,7 @@ site/sitemap.xml
 site/feed.xml
 site/sebi-registry/
 site/broker/
+site/brokers-by/
 
 # Personal data. Leads are DPDP-regulated and must never reach a repo.
 data/leads/
