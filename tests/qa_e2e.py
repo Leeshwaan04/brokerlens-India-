@@ -599,6 +599,59 @@ def test_published():
         check("homepage/broker shell also loads theme-init.js (covers broker pages too)",
               "theme-init.js" in homepage_html)
 
+        # A visible toggle, not just a stored preference, needs to be present
+        # on every static page - otherwise a first-time visitor arriving
+        # directly on a stock/fund/report/calculator page (the common case:
+        # most organic traffic never lands on the homepage first) has no way
+        # to switch themes at all.
+        for label, path in [
+            ("stock", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
+            ("fund", hdfc_flexicap_path if os.path.isdir(fund_dir) and os.path.exists(hdfc_flexicap_path) else ""),
+            ("report", report_path if os.path.exists(report_path) else ""),
+            ("calculator", sip_path if os.path.isdir(calc_dir) and os.path.exists(sip_path) else ""),
+        ]:
+            if not path or not os.path.exists(path):
+                continue
+            html = open(path, encoding="utf-8").read()
+            check("%s page has a visible theme-toggle button" % label, 'id="theme-toggle"' in html)
+        theme_init_full = open(theme_init_path, encoding="utf-8").read()
+        check("theme-init.js wires up the toggle button's click handler",
+              "theme-toggle" in theme_init_full and "addEventListener" in theme_init_full)
+
+        # Full nav parity with the homepage/SPA shell. Found live (a user
+        # pointed out only 4 of the homepage's 7 nav items, and no mega
+        # menu at all, appeared on ~8,000 static pages): a stock page had
+        # Brokers/SEBI registry/Algo platforms/Reports but was missing
+        # Compare, Rankings, a calculators link and the market-timings mega
+        # menu entirely, so navigation felt different depending on which
+        # page a visitor landed on first.
+        NAV_LINKS = ["Brokers", "Compare", "Rankings", "SEBI registry", "Algo platforms", "Reports"]
+        for label, path in [
+            ("stock", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
+            ("fund", hdfc_flexicap_path if os.path.isdir(fund_dir) and os.path.exists(hdfc_flexicap_path) else ""),
+        ]:
+            if not path or not os.path.exists(path):
+                continue
+            html = open(path, encoding="utf-8").read()
+            check("%s page nav has the same link set as the homepage" % label,
+                  all(n in html for n in NAV_LINKS), "missing: %s" % [n for n in NAV_LINKS if n not in html])
+            check("%s page has a hamburger nav-toggle for mobile" % label, 'id="nav-toggle"' in html)
+            check("%s page has the market-timings mega menu" % label,
+                  'id="timings-toggle"' in html and 'id="mega-timings"' in html and 'id="mega-timings-body"' in html)
+            check("%s page loads nav-widgets.js (mega menu / hamburger logic)" % label,
+                  "nav-widgets.js" in html)
+
+    nav_widgets_path = os.path.join(ROOT, "site", "assets", "js", "nav-widgets.js")
+    check("nav-widgets.js exists", os.path.exists(nav_widgets_path))
+    if os.path.exists(nav_widgets_path):
+        nav_widgets_js = open(nav_widgets_path, encoding="utf-8").read()
+        check("nav-widgets.js implements both the hamburger and the mega menu",
+              "nav-toggle" in nav_widgets_js and "timings-toggle" in nav_widgets_js and "loadTimings" in nav_widgets_js)
+    app_js_src = open(os.path.join(ROOT, "site", "assets", "js", "app.js"), encoding="utf-8").read()
+    check("app.js delegates nav/theme widgets to the shared files instead of duplicating them",
+          "./nav-widgets.js" in app_js_src
+          and "megaBtn" not in app_js_src and "themeBtn" not in app_js_src)
+
     # No page title anywhere on the site should carry an em dash - a standing
     # copy rule ("—" isn't in the "no em dashes" allowance) applied here as an
     # automated check since it has silently regressed before.

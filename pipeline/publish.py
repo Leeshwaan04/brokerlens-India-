@@ -666,13 +666,26 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
     </svg>
     <span>BrokerLens<span class="muted" style="font-weight:400"> India</span></span>
   </a>
-  <nav class="nav-links" style="display:flex">
+  <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
+          aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
+  <nav class="nav-links" id="navlinks">
     <a href="/brokers">Brokers</a>
+    <a href="/compare">Compare</a>
+    <a href="/leaderboards">Rankings</a>
+    <a href="/calculators/sip-calculator/">Calculators</a>
     <a href="/registry">SEBI registry</a>
     <a href="/algo">Algo platforms</a>
     <a href="/reports/state-of-indian-broking-2026/">Reports</a>
+    <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
   </nav>
-</div></header>
+  <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
+</div>
+<div class="mega" id="mega-timings" hidden>
+  <div class="wrap">
+    <div id="mega-timings-body" class="mega-grid"><div class="small faint" style="padding:16px 0">Loading timings...</div></div>
+  </div>
+</div>
+</header>
 <main class="wrap" style="padding-top:24px;padding-bottom:24px">
 """
 
@@ -682,6 +695,7 @@ _REGISTRY_PAGE_FOOT = """</main>
   <p class="small"><a href="/registry">Search the full SEBI registry →</a> ·
   <a href="/brokers">Brokers tracked in depth →</a> · <a href="/">BrokerLens India home →</a></p>
 </div></footer>
+<script type="module" src="/assets/js/nav-widgets.js"></script>
 </body>
 </html>
 """
