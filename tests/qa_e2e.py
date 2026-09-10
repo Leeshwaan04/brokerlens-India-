@@ -568,6 +568,20 @@ def test_published():
         check("calculators.js defines all 6 calculator functions",
               all(k in calc_js for k in ["sip()", "lumpsum()", "emi()", "cagr()", "compound()", "'capital-gains'()"]))
 
+        # Content depth: real, differentiated FAQs (not padded to a fixed
+        # count) plus a "how to use" and a "what this doesn't account for"
+        # section on every calculator - each backed by a real FAQPage
+        # JSON-LD entry, not just prose.
+        for cslug in calc_slugs:
+            cpath = os.path.join(calc_dir, cslug, "index.html")
+            chtml = open(cpath, encoding="utf-8").read()
+            faq_count = chtml.count('class="faq-item"')
+            check("%s has at least 7 real FAQs" % cslug, faq_count >= 7, "found %d" % faq_count)
+            check("%s has a How to use section" % cslug, "How to use this calculator" in chtml)
+            check("%s has a limitations section" % cslug, "doesn't account for" in chtml)
+            check("%s FAQPage JSON-LD entity count matches the visible FAQ count" % cslug,
+                  ('"@type": "FAQPage"' in chtml or '"@type":"FAQPage"' in chtml))
+
     # theme-init.js applies a visitor's stored dark/light choice on every
     # static page. Found live (by actually toggling dark mode on the
     # homepage in a real browser, then navigating to a static page and

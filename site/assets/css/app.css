@@ -258,6 +258,15 @@ th[data-tip]:not(.sortable) { cursor: help; }
   border-radius: var(--radius); padding: var(--space-4);
 }
 .card-pad-lg { padding: var(--space-5); }
+/* Native <details>/<summary> for calculator FAQs - no JS needed to read or
+   expand, matching the rest of the site's zero-dependency-for-content rule. */
+.faq-item { border-bottom: 1px solid var(--border); padding: var(--space-3) 0; }
+.faq-item:last-child { border-bottom: none; }
+.faq-item summary { cursor: pointer; font-weight: 600; color: var(--text); list-style: none; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::before { content: "+"; display: inline-block; width: 1.2em; color: var(--accent); font-weight: 700; }
+.faq-item[open] summary::before { content: "\2212"; }
+.faq-item p { margin: var(--space-2) 0 0; color: var(--text-muted); }
 .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
 .card-title { font-size: var(--fs-sm); font-weight: 620; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
 

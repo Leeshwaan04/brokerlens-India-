@@ -1614,6 +1614,44 @@ CALCULATORS = [
             ("sip-rate", "Expected annual return (%)", "12", "0.5"),
             ("sip-years", "Investment period (years)", "10", "1"),
         ],
+        "how_to": "Enter the amount you plan to invest every month, an assumed annual return rate, and how many "
+                  "years you'll keep investing. The calculator applies the formula below and shows the invested "
+                  "amount, estimated returns, and total maturity value.",
+        "limits": "This assumes the return rate is exactly constant every single month, which no real market "
+                   "does. It doesn't subtract a fund's expense ratio, doesn't model a step-up SIP (increasing the "
+                   "monthly amount over time), and doesn't account for capital gains tax on withdrawal.",
+        "faqs": [
+            ("What is a SIP?", "A Systematic Investment Plan invests a fixed amount at a fixed interval, usually "
+             "monthly, into a mutual fund scheme, regardless of the unit price on that date."),
+            ("How is a SIP different from a lumpsum investment?", "A SIP spreads purchases across many dates, "
+             "buying more units when prices are low and fewer when prices are high, rather than committing the "
+             "full amount at a single price point the way a lumpsum investment does."),
+            ("Does this calculator account for expense ratio?", "No. It computes growth at the return rate you "
+             "enter. A mutual fund's actual expense ratio reduces its NAV growth, so real returns are typically "
+             "lower than this estimate unless your assumed rate already reflects post-expense returns."),
+            ("What return rate should I assume?", "This calculator doesn't recommend one. Historical mutual fund "
+             "returns vary widely by fund, category and period; use a rate you can source, such as a specific "
+             "fund's own disclosed trailing returns, not a guess."),
+            ("Does a SIP guarantee returns?", "No. Every SIP is subject to market risk. The formula here assumes "
+             "a constant monthly return, which real markets never deliver exactly."),
+            ("Can I increase my SIP amount over time?", "This calculator assumes a fixed monthly amount for the "
+             "whole period. A step-up SIP, where the amount rises periodically, compounds faster than this "
+             "estimate shows."),
+            ("What happens if I miss a SIP instalment?", "This calculator assumes no missed instalments. Missing "
+             "months reduces the total invested amount and the resulting maturity value proportionally."),
+            ("Is a SIP only for equity mutual funds?", "No. SIPs can run into debt funds, hybrid funds and index "
+             "funds too. The same formula applies regardless of the underlying asset class; only the realistic "
+             "return assumption changes."),
+            ("Does this calculator include tax on withdrawal?", "No. Capital gains tax applies when you redeem, "
+             "not during the investment period. Use BrokerLens's capital gains tax calculator for that separately."),
+            ("Where does the monthly return rate come from?", "This calculator divides your entered annual rate "
+             "by 12 as a simplification. A real fund's actual compounding behaviour may differ slightly."),
+            ("Can I use this for a one-time lumpsum investment instead?", "No, use the separate lumpsum "
+             "calculator, which applies compound growth to a single deposit instead of a monthly annuity formula."),
+            ("Why does the total value grow faster in later years?", "Compounding: returns earned in early years "
+             "themselves start earning returns, so growth accelerates over time even with a constant monthly "
+             "contribution."),
+        ],
     },
     {
         "slug": "lumpsum-calculator", "calc": "lumpsum", "h1": "Lumpsum Investment Calculator",
@@ -1628,6 +1666,38 @@ CALCULATORS = [
             ("ls-principal", "Investment amount (Rs)", "100000", "1000"),
             ("ls-rate", "Expected annual return (%)", "12", "0.5"),
             ("ls-years", "Investment period (years)", "10", "1"),
+        ],
+        "how_to": "Enter the amount you're investing as a single deposit, an assumed annual return rate, and the "
+                  "number of years you'll hold it. The calculator applies compound growth and shows the invested "
+                  "amount, estimated returns, and total value at the end of the period.",
+        "limits": "This assumes one deposit and a perfectly constant annual return, with no withdrawals, top-ups, "
+                   "entry or exit loads, or tax along the way. Real investments rarely grow at a smooth, constant "
+                   "rate.",
+        "faqs": [
+            ("What is a lumpsum investment?", "A single deposit made at one point in time, left to grow at a "
+             "compounding rate, as opposed to periodic monthly SIP contributions."),
+            ("How is this different from a fixed deposit?", "The mechanics, a single deposit compounding over "
+             "time, are similar, but a bank fixed deposit's rate is contractually guaranteed, while a mutual fund "
+             "or equity lumpsum's return is market-linked and not guaranteed."),
+            ("Does this account for entry or exit load?", "No. Some funds charge an exit load if redeemed within "
+             "a specified period; this calculator only computes gross growth at your assumed rate."),
+            ("Is a lumpsum better than a SIP?", "Neither is universally better. A lumpsum invested right before a "
+             "market fall underperforms a SIP that averages in over time, while a lumpsum invested right before a "
+             "rally outperforms it. Timing risk is the key difference."),
+            ("What return rate should I use?", "Use a rate you can source for the specific instrument you're "
+             "evaluating. Don't use a generic market-average assumption as a promise of future performance."),
+            ("Does this calculator show inflation-adjusted returns?", "No, all figures are nominal. To estimate "
+             "real returns, subtract your assumed inflation rate from the return rate before entering it."),
+            ("Can I model a lumpsum plus later top-ups?", "Not with this calculator; it computes a single deposit "
+             "only. Combine its result with the SIP calculator's output for additional planned contributions."),
+            ("Does this include taxes?", "No. Capital gains tax applies on redemption and depends on holding "
+             "period and instrument type; see the capital gains tax calculator for that separately."),
+            ("What's the difference between CAGR and the return rate entered here?", "They're the same concept "
+             "for a single deposit compounding at a constant rate. The CAGR calculator instead works backward "
+             "from a known start and end value to find that rate."),
+            ("Why does compounding matter more over longer periods?", "Returns generated in early years "
+             "themselves earn returns in later years, so the growth curve steepens with time even at a constant "
+             "rate."),
         ],
     },
     {
@@ -1645,6 +1715,40 @@ CALCULATORS = [
             ("emi-rate", "Annual interest rate (%)", "9", "0.1"),
             ("emi-years", "Loan tenure (years)", "20", "1"),
         ],
+        "how_to": "Enter the loan amount, the annual interest rate your lender quotes, and the loan tenure in "
+                  "years. The calculator applies the standard reducing-balance formula and shows your fixed "
+                  "monthly instalment, total interest paid, and total repayment over the full tenure.",
+        "limits": "This assumes a fixed interest rate for the entire tenure, no prepayment, and no processing "
+                   "fees or insurance premiums, which most real loans add on top of principal and interest.",
+        "faqs": [
+            ("What is EMI?", "Equated Monthly Instalment: a fixed amount paid every month toward a loan, "
+             "covering both interest and principal, until the loan is fully repaid."),
+            ("Does the EMI amount stay the same for the whole loan?", "Under a fixed-rate reducing-balance loan, "
+             "which this calculator assumes, yes. A floating-rate loan's EMI or tenure can change if the lender's "
+             "rate changes."),
+            ("Why does most of my early EMI go toward interest?", "Interest is charged on the outstanding "
+             "balance, which is highest at the start, so early instalments are interest-heavy. The principal "
+             "share grows as the balance shrinks."),
+            ("Does this include processing fees or insurance?", "No, only principal and interest at the stated "
+             "rate. Lenders often add a one-time processing fee and may require insurance, which this calculator "
+             "doesn't include."),
+            ("What happens if I prepay part of the loan?", "This calculator assumes no prepayment. Prepaying "
+             "reduces the outstanding principal, which either shortens the tenure or lowers future EMIs depending "
+             "on what your lender allows."),
+            ("Can I use this for a floating-rate loan?", "You can approximate one snapshot in time, but a "
+             "floating rate can change, which would change the real EMI or tenure versus this fixed-rate "
+             "estimate."),
+            ("Is a longer tenure always cheaper per month?", "Yes, but at the cost of paying more total interest "
+             "over the life of the loan. Compare the total-interest figure alongside the monthly EMI, not the "
+             "EMI alone."),
+            ("Does this work the same for a home loan, personal loan and vehicle loan?", "Yes, the "
+             "reducing-balance EMI formula is identical across loan types; only the typical interest rate and "
+             "tenure ranges differ."),
+            ("What's the difference between flat rate and reducing balance interest?", "This calculator assumes "
+             "reducing balance, the standard for most loans in India. A flat-rate loan charges interest on the "
+             "full original principal for the whole tenure, which works out to a materially higher effective "
+             "rate for the same stated percentage."),
+        ],
     },
     {
         "slug": "cagr-calculator", "calc": "cagr", "h1": "CAGR Calculator",
@@ -1658,6 +1762,37 @@ CALCULATORS = [
             ("cagr-start", "Starting value (Rs)", "100000", "1000"),
             ("cagr-end", "Ending value (Rs)", "250000", "1000"),
             ("cagr-years", "Number of years", "5", "1"),
+        ],
+        "how_to": "Enter the value you started with, the value you ended with, and the number of years between "
+                  "them. The calculator works backward to find the single, constant annual rate that reconciles "
+                  "the two.",
+        "limits": "CAGR smooths out every year in between into one number; it says nothing about how bumpy the "
+                   "path was, and a fund that fell sharply then recovered can show the same CAGR as one that grew "
+                   "steadily the whole time.",
+        "faqs": [
+            ("What does CAGR stand for?", "Compound Annual Growth Rate: the constant annual rate an investment "
+             "would need to grow at, uniformly, to go from its starting value to its ending value over the "
+             "stated period."),
+            ("How is CAGR different from average annual return?", "A simple average of yearly returns can "
+             "overstate real growth because it ignores compounding and the order of gains and losses. CAGR is "
+             "the single smoothed rate that actually reconciles the start and end values."),
+            ("Does CAGR account for volatility along the way?", "No. Two investments with the same start value, "
+             "end value and duration have the same CAGR even if one had wild swings and the other grew "
+             "steadily."),
+            ("Can CAGR be negative?", "Yes, if the ending value is lower than the starting value, CAGR is "
+             "negative, representing an average annual decline."),
+            ("Is CAGR the same as XIRR?", "No. CAGR assumes a single lumpsum invested once. XIRR (extended "
+             "internal rate of return) handles multiple cash flows at different dates, such as SIP instalments, "
+             "which CAGR cannot."),
+            ("What counts as a good CAGR?", "This calculator doesn't judge that; it depends entirely on the "
+             "asset class, risk taken and time period being compared. Compare like for like, such as only "
+             "against similar funds over the same period."),
+            ("Does CAGR include dividends or only price appreciation?", "That depends entirely on what ending "
+             "value you enter. Including reinvested dividends in your ending value reflects total return; "
+             "excluding them reflects only price return."),
+            ("Can I use CAGR to compare two investments with different durations?", "Yes, that's exactly what "
+             "CAGR is designed for, since it's already annualised, unlike a simple total-return percentage which "
+             "isn't directly comparable across different time periods."),
         ],
     },
     {
@@ -1676,6 +1811,33 @@ CALCULATORS = [
             ("ci-freq", "Compounding frequency per year", "4", "1"),
             ("ci-years", "Period (years)", "5", "1"),
         ],
+        "how_to": "Enter the principal, the annual interest rate, how many times per year it compounds (1 for "
+                  "annual, 4 for quarterly, 12 for monthly), and the period in years. The calculator shows the "
+                  "interest earned and the final maturity value.",
+        "limits": "This assumes the rate and compounding frequency stay fixed for the whole period and doesn't "
+                   "account for TDS on interest, which banks deduct at source above a threshold.",
+        "faqs": [
+            ("What's the difference between this and the lumpsum calculator?", "This lets you set a compounding "
+             "frequency (annual, half-yearly, quarterly, monthly); the lumpsum calculator assumes annual "
+             "compounding only. Otherwise the underlying math is the same."),
+            ("Does more frequent compounding always mean more money?", "Yes, all else equal, more frequent "
+             "compounding produces a usually small additional gain, since interest starts earning its own "
+             "interest sooner."),
+            ("What compounding frequency do Indian bank fixed deposits use?", "This varies by bank and product; "
+             "check your specific FD's terms rather than assuming a frequency."),
+            ("Does this account for TDS on interest?", "No. Banks deduct tax at source on FD interest above a "
+             "threshold; this calculator shows gross growth before any tax."),
+            ("Is this the same formula banks use for recurring deposits?", "No, a recurring deposit involves "
+             "periodic contributions like a SIP, not a single principal. Use the SIP calculator to approximate a "
+             "recurring deposit instead."),
+            ("Can the interest rate change during the period?", "This calculator assumes a constant rate for the "
+             "whole period; a real product's rate could change, or could be fixed by contract, depending on what "
+             "you're modelling."),
+            ("Why is quarterly compounding more common in India than continuous compounding?", "Continuous "
+             "compounding is a mathematical limit rarely used in real products. Indian banks and post-office "
+             "schemes typically compound quarterly or annually by convention, not out of mathematical "
+             "necessity."),
+        ],
     },
     {
         "slug": "capital-gains-tax-calculator", "calc": "capital-gains", "h1": "Capital Gains Tax Calculator",
@@ -1693,6 +1855,43 @@ CALCULATORS = [
             ("cg-sell", "Sale value (Rs)", "300000", "1000"),
             ("cg-days", "Holding period (days)", "400", "1"),
         ],
+        "how_to": "Enter what you paid, what you sold for, and how many days you held the position. The "
+                  "calculator classifies the holding as long-term or short-term at the 365-day mark and applies "
+                  "the matching rate.",
+        "limits": "This shows base tax only, excluding cess and surcharge, and does not model set-off of losses "
+                   "against other gains, carry-forward of losses, or any instrument other than listed equity "
+                   "shares and equity-oriented mutual funds. It is not tax advice.",
+        "faqs": [
+            ("What counts as long-term for equity?", "Holding a listed equity share or equity mutual fund unit "
+             "for more than 365 days (over one year) at the time of sale."),
+            ("What is the LTCG exemption?", "The first Rs 1,25,000 of long-term capital gains from listed "
+             "equity or equity mutual funds in a financial year is tax-free; only the amount above that is "
+             "taxed at 12.5%."),
+            ("Is the exemption per transaction or per year?", "Per financial year, aggregated across all your "
+             "long-term equity gains, not per individual sale."),
+            ("Does STCG have any exemption?", "No, short-term capital gains on listed equity are taxed at a "
+             "flat 20% from the first rupee of gain, with no exemption threshold."),
+            ("Do these rates include cess?", "No. A 4% health and education cess applies on top of the tax "
+             "amount, and a surcharge may apply at higher income levels; this calculator shows the base tax "
+             "only."),
+            ("Does this apply to debt mutual funds too?", "No. Debt fund taxation rules differ; this calculator "
+             "is for listed equity shares and equity-oriented mutual funds only."),
+            ("What if I have a capital loss instead of a gain?", "This calculator shows zero tax on a loss. "
+             "Capital losses can typically be set off against capital gains and carried forward under income "
+             "tax rules; consult a tax professional for your specific situation."),
+            ("Can I offset STCG against LTCG losses or vice versa?", "Set-off rules between short-term and "
+             "long-term capital gains and losses have specific conditions under the Income Tax Act. This "
+             "calculator does not model set-off; it only computes a single sale's tax in isolation."),
+            ("Is the holding period counted from the purchase date or the settlement date?", "Generally from "
+             "the date of purchase, or allotment for an IPO or mutual fund unit, to the date of sale. Check the "
+             "exact rule for your instrument if you're near the 365-day boundary."),
+            ("Will these rates change in a future Budget?", "Possibly. Tax rates are set by the Union Budget "
+             "and can change. This calculator uses the rates confirmed current as of publish time and states "
+             "that date; always verify against the current Income Tax Act before filing."),
+            ("Does this apply to unlisted shares or property?", "No. Unlisted equity, property, gold and other "
+             "asset classes have entirely different capital gains tax rules and rates; this calculator is "
+             "specific to listed equity shares and equity mutual funds."),
+        ],
     },
 ]
 
@@ -1701,17 +1900,34 @@ def _write_calculator_pages():
     written = []
     for c in CALCULATORS:
         canonical = "%s/calculators/%s/" % (SITE_URL, c["slug"])
+        faqs = c.get("faqs") or []
         jsonld = {
-            "@context": "https://schema.org", "@type": "WebApplication", "name": c["h1"],
-            "url": canonical, "applicationCategory": "FinanceApplication",
-            "operatingSystem": "Any (runs in browser)",
-            "offers": {"@type": "Offer", "price": "0", "priceCurrency": "INR"},
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "WebApplication", "name": c["h1"], "url": canonical,
+                    "applicationCategory": "FinanceApplication", "operatingSystem": "Any (runs in browser)",
+                    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "INR"},
+                },
+                {
+                    "@type": "FAQPage",
+                    "mainEntity": [
+                        {"@type": "Question", "name": q,
+                         "acceptedAnswer": {"@type": "Answer", "text": a}}
+                        for q, a in faqs
+                    ],
+                },
+            ],
         }
         fields_html = "".join(
             '<div class="field"><label for="%s">%s</label>'
             '<input id="%s" type="number" min="0" step="%s" value="%s"></div>'
             % (fid, _esc(label), fid, step, default)
             for fid, label, default, step in c["fields"]
+        )
+        faq_html = "".join(
+            '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+            for q, a in faqs
         )
         body = _REGISTRY_PAGE_HEAD % {
             "title": _esc(c["title"]), "description": _esc(c["description"])[:300],
@@ -1726,6 +1942,16 @@ def _write_calculator_pages():
             + '<button type="button" id="calc-btn" class="btn" style="margin-top:8px">Calculate</button>'
             + '<div id="calc-result" class="grid g3" style="margin-top:16px" hidden></div>'
             + '</div>'
+
+            + '<h2 style="margin-top:32px;font-size:18px">How to use this calculator</h2>'
+            + '<p style="max-width:68ch">%s</p>' % c["how_to"]
+
+            + '<h2 style="margin-top:28px;font-size:18px">What this doesn\'t account for</h2>'
+            + '<p style="max-width:68ch">%s</p>' % c["limits"]
+
+            + ('<h2 style="margin-top:28px;font-size:18px">Frequently asked questions</h2>'
+               '<div style="max-width:68ch">%s</div>' % faq_html if faq_html else '')
+
             + '<p class="xs faint" style="margin-top:20px">This is a generic financial calculation, not investment, '
               'loan or tax advice specific to you. BrokerLens is not a SEBI-registered investment adviser.</p>'
         )
