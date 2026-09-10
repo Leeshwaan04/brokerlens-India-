@@ -568,6 +568,37 @@ def test_published():
         check("calculators.js defines all 6 calculator functions",
               all(k in calc_js for k in ["sip()", "lumpsum()", "emi()", "cagr()", "compound()", "'capital-gains'()"]))
 
+    # theme-init.js applies a visitor's stored dark/light choice on every
+    # static page. Found live (by actually toggling dark mode on the
+    # homepage in a real browser, then navigating to a static page and
+    # watching it silently revert to light): none of the ~8,000
+    # registry/stock/index/etf/fund/report/calculator pages read the stored
+    # preference at all, since only app.js did that and none of those pages
+    # load app.js. Checked here at the template level, and it must load
+    # before the stylesheet or the page flashes the wrong theme before
+    # switching.
+    theme_init_path = os.path.join(ROOT, "site", "assets", "js", "theme-init.js")
+    check("theme-init.js exists", os.path.exists(theme_init_path))
+    if os.path.exists(theme_init_path):
+        theme_js = open(theme_init_path, encoding="utf-8").read()
+        check("theme-init.js reads the same localStorage key app.js writes",
+              "bl-theme" in theme_js and "localStorage" in theme_js)
+        for label, path in [
+            ("stock", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
+            ("fund", hdfc_flexicap_path if os.path.isdir(fund_dir) and os.path.exists(hdfc_flexicap_path) else ""),
+            ("calculator", sip_path if os.path.isdir(calc_dir) and os.path.exists(sip_path) else ""),
+        ]:
+            if not path or not os.path.exists(path):
+                continue
+            html = open(path, encoding="utf-8").read()
+            theme_pos = html.find("theme-init.js")
+            css_pos = html.find('rel="stylesheet"')
+            check("%s page loads theme-init.js before its stylesheet" % label,
+                  theme_pos != -1 and css_pos != -1 and theme_pos < css_pos)
+        homepage_html = open(os.path.join(ROOT, "site", "index.html"), encoding="utf-8").read()
+        check("homepage/broker shell also loads theme-init.js (covers broker pages too)",
+              "theme-init.js" in homepage_html)
+
     # No page title anywhere on the site should carry an em dash - a standing
     # copy rule ("—" isn't in the "no em dashes" allowance) applied here as an
     # automated check since it has silently regressed before.
@@ -773,6 +804,8 @@ def test_server(base):
           code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
     code, body, _ = http(base + "/assets/js/calculators.js")
     check("GET /assets/js/calculators.js is served", code == 200 and len(body) > 0, "code=%s" % code)
+    code, body, _ = http(base + "/assets/js/theme-init.js")
+    check("GET /assets/js/theme-init.js is served", code == 200 and len(body) > 0, "code=%s" % code)
 
     for a in ["/assets/js/app.js", "/assets/js/pages.js", "/assets/css/app.css",
               "/data/overview.json", "/data/ticker.json", "/sitemap.xml", "/feed.xml"]:
