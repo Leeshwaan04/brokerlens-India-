@@ -2038,6 +2038,285 @@ CALCULATORS = [
              "specific to listed equity shares and equity mutual funds."),
         ],
     },
+    {
+        "slug": "simple-interest-calculator", "calc": "simple-interest", "h1": "Simple Interest Calculator",
+        "title": "Simple Interest Calculator | BrokerLens",
+        "description": "Work out simple interest and the total repayable amount on a principal, rate and time period.",
+        "intro": "Simple interest is charged only on the original principal for the whole period, unlike compound "
+                  "interest where earlier interest itself starts earning interest. It's the basis for some loans "
+                  "and short-term deposits.",
+        "formula": "SI = (P &times; R &times; T) / 100, where P is the principal, R is the annual rate (%), and T "
+                   "is the time in years.",
+        "fields": [
+            ("si-principal", "Principal (Rs)", "100000", "1000"),
+            ("si-rate", "Annual interest rate (%)", "8", "0.1"),
+            ("si-years", "Time period (years)", "5", "1"),
+        ],
+        "how_to": "Enter the principal, the annual simple interest rate, and the time period in years. The "
+                  "calculator shows the interest and the total amount repayable.",
+        "limits": "This assumes interest is charged only on the original principal for the entire period; if your "
+                   "product actually compounds (most bank deposits and loans do), use the compound interest "
+                   "calculator instead.",
+        "faqs": [
+            ("What's the difference between simple and compound interest?", "Simple interest is charged only on "
+             "the original principal for the whole period. Compound interest is charged on the principal plus "
+             "any interest already added, so it grows faster over time."),
+            ("Where is simple interest actually used?", "Some short-term loans, certain bonds, and specific "
+             "penalty or overdue-payment calculations use simple interest. Most savings products (FDs, RDs, "
+             "savings accounts) compound instead."),
+            ("Does a longer time period always mean more interest?", "Yes, simple interest grows linearly with "
+             "time: doubling the period exactly doubles the interest, unlike compound interest which accelerates."),
+            ("Can I use this for a loan?", "Only if your specific loan is genuinely a simple-interest loan. Most "
+             "consumer loans in India (home, personal, vehicle) use reducing-balance EMI instead; use the EMI "
+             "calculator for those."),
+        ],
+    },
+    {
+        "slug": "step-up-sip-calculator", "calc": "stepup-sip", "h1": "Step-up SIP Calculator",
+        "title": "Step-up SIP Calculator: Annual Increase SIP Returns | BrokerLens",
+        "description": "Work out what a SIP grows to when the monthly investment increases by a fixed percentage "
+                        "every year, instead of staying flat.",
+        "intro": "A step-up (or top-up) SIP increases your monthly investment by a fixed percentage every year, "
+                  "typically matching salary increments, so you invest more as your income grows rather than a "
+                  "flat amount for the whole period.",
+        "formula": "Simulated month by month: each month the balance grows at the monthly return rate and the "
+                   "current instalment is added; the instalment itself increases by the step-up percentage at "
+                   "the start of every new year.",
+        "fields": [
+            ("ssip-monthly", "Starting monthly investment (Rs)", "5000", "500"),
+            ("ssip-stepup", "Annual step-up (%)", "10", "1"),
+            ("ssip-rate", "Expected annual return (%)", "12", "0.5"),
+            ("ssip-years", "Investment period (years)", "10", "1"),
+        ],
+        "how_to": "Enter your starting monthly investment, the percentage you'll increase it by each year, an "
+                  "assumed annual return rate, and the investment period. The calculator simulates the SIP "
+                  "month by month with the increasing instalment.",
+        "limits": "This assumes the step-up happens exactly once a year, every year, without fail, and that the "
+                   "return rate is constant. It doesn't account for a fund's expense ratio or tax on withdrawal.",
+        "faqs": [
+            ("How is this different from the regular SIP calculator?", "The regular SIP calculator assumes a "
+             "fixed monthly amount for the whole period. This one increases the monthly amount by a set "
+             "percentage every year, which usually results in a larger corpus for the same starting amount."),
+            ("What step-up percentage should I use?", "A common approach is to match your expected annual salary "
+             "increment, but this calculator doesn't recommend a specific figure; use one you can realistically "
+             "sustain."),
+            ("Does the step-up compound on itself?", "Yes. Each year's instalment is the previous year's "
+             "instalment multiplied by (1 + step-up rate), so the step-up itself compounds over a long period."),
+            ("Can I model a step-up that happens less often than annually?", "Not with this calculator; it "
+             "assumes exactly one step-up per year. A less frequent step-up would produce a smaller corpus than "
+             "shown here."),
+            ("Is a step-up SIP always better than a flat SIP?", "It generally builds a larger corpus for the "
+             "same starting amount since later years contribute more, but it also requires committing to larger "
+             "outflows over time, which is a real affordability question, not just a math one."),
+        ],
+    },
+    {
+        "slug": "swp-calculator", "calc": "swp", "h1": "SWP Calculator",
+        "title": "SWP Calculator: Systematic Withdrawal Plan | BrokerLens",
+        "description": "Work out how long a corpus lasts under a fixed monthly withdrawal, or what remains after "
+                        "a given period, assuming a steady return rate.",
+        "intro": "A Systematic Withdrawal Plan withdraws a fixed amount every month from an existing corpus, "
+                  "which continues to earn returns on whatever remains. This is the mirror image of a SIP, "
+                  "usually used to draw a regular income from accumulated savings.",
+        "formula": "Simulated month by month: each month the remaining balance grows at the monthly return rate, "
+                   "then the withdrawal is subtracted.",
+        "fields": [
+            ("swp-corpus", "Starting corpus (Rs)", "1000000", "10000"),
+            ("swp-withdrawal", "Monthly withdrawal (Rs)", "8000", "500"),
+            ("swp-rate", "Expected annual return (%)", "8", "0.5"),
+            ("swp-years", "Period to check (years)", "15", "1"),
+        ],
+        "how_to": "Enter your starting corpus, how much you plan to withdraw every month, an assumed annual "
+                  "return rate, and how many years you want to check. The calculator shows whether the corpus "
+                  "outlasts that period, and if so, how much remains.",
+        "limits": "This assumes a constant monthly return and a fixed withdrawal amount with no adjustment for "
+                   "inflation over time; a withdrawal that doesn't rise with inflation buys less each year in "
+                   "real terms even if the corpus itself survives.",
+        "faqs": [
+            ("How is SWP different from a fixed monthly income product?", "SWP draws down an investment corpus "
+             "that keeps growing (or shrinking) with market returns; a fixed-income product like an annuity "
+             "typically guarantees the payout amount instead."),
+            ("What happens if my withdrawal exceeds the return the corpus earns?", "The corpus shrinks over "
+             "time and will eventually deplete; this calculator shows exactly when, to the month, if that "
+             "happens within the period you check."),
+            ("Does this account for tax on each withdrawal?", "No. Depending on the underlying investment, part "
+             "of each SWP withdrawal may be treated as capital gains for tax purposes; this calculator shows "
+             "gross cash flow only."),
+            ("Should my withdrawal amount increase with inflation?", "Many real SWP plans do increase the "
+             "withdrawal over time to maintain purchasing power; this calculator assumes a fixed withdrawal "
+             "amount for the whole period you check."),
+            ("Can I use this to plan retirement income?", "It can approximate one part of that question (will a "
+             "given corpus support a given withdrawal), but see the dedicated retirement corpus calculator for "
+             "working out how large a corpus you'd need in the first place."),
+        ],
+    },
+    {
+        "slug": "inflation-calculator", "calc": "inflation", "h1": "Inflation Calculator",
+        "title": "Inflation Calculator: Future Cost of Living | BrokerLens",
+        "description": "Work out what something costing a given amount today will cost in the future at an "
+                        "assumed inflation rate.",
+        "intro": "Inflation erodes purchasing power over time: the same rupee buys less in the future. This "
+                  "shows what a cost today grows to at an assumed annual inflation rate.",
+        "formula": "Future cost = Cost today &times; (1 + inflation rate)<sup>years</sup>.",
+        "fields": [
+            ("infl-cost", "Cost today (Rs)", "50000", "1000"),
+            ("infl-rate", "Assumed annual inflation (%)", "6", "0.5"),
+            ("infl-years", "Number of years", "10", "1"),
+        ],
+        "how_to": "Enter today's cost of whatever you're planning for, an assumed annual inflation rate, and the "
+                  "number of years ahead. The calculator shows the equivalent future cost.",
+        "limits": "This assumes a single constant inflation rate for the entire period; real inflation varies "
+                   "year to year and differs by category (education and healthcare inflation in India have "
+                   "historically run above the general Consumer Price Index rate).",
+        "faqs": [
+            ("What inflation rate should I use?", "This calculator doesn't recommend one. India's general CPI "
+             "inflation has historically varied significantly year to year; use a rate you can source rather "
+             "than a guess, and consider that specific categories (education, healthcare) often run higher."),
+            ("Is this the same as calculating investment returns?", "No, this only shows how much a cost grows "
+             "due to inflation. To check whether your savings will keep pace, compare the future cost shown "
+             "here against a separate SIP or lumpsum calculator's projected corpus."),
+            ("Does inflation affect all expenses equally?", "No. This calculator applies one flat rate to a "
+             "single cost; real household budgets have categories that inflate at different rates."),
+            ("Why does the extra cost from inflation grow faster in later years?", "Inflation compounds: each "
+             "year's price increase is applied on top of the already-inflated price from the year before, not "
+             "on the original amount."),
+        ],
+    },
+    {
+        "slug": "retirement-calculator", "calc": "retirement", "h1": "Retirement Corpus Calculator",
+        "title": "Retirement Calculator: How Much Corpus You Need | BrokerLens",
+        "description": "Work out the retirement corpus needed to sustain a given monthly expense, adjusted for "
+                        "inflation, over a given number of years in retirement.",
+        "intro": "This answers a specific question: given what you spend monthly today, how large does your "
+                  "retirement corpus need to be at the day you retire, so that inflation-adjusted withdrawals "
+                  "last through your expected years in retirement?",
+        "formula": "Future monthly expense = today's expense &times; (1 + inflation)<sup>years to retirement</sup>. "
+                   "Corpus = future monthly expense &times; the present value of an annuity, using a real "
+                   "(inflation-adjusted) monthly return rate over the retirement period.",
+        "fields": [
+            ("ret-expense", "Current monthly expense (Rs)", "50000", "1000"),
+            ("ret-years-to", "Years until retirement", "25", "1"),
+            ("ret-inflation", "Assumed inflation (%)", "6", "0.5"),
+            ("ret-years-in", "Years to plan for in retirement", "20", "1"),
+            ("ret-return", "Expected return during retirement (%)", "10", "0.5"),
+        ],
+        "how_to": "Enter your current monthly expense, years until you retire, an assumed inflation rate, how "
+                  "many years you're planning for after retirement, and an assumed return rate on your corpus "
+                  "during retirement. The calculator shows the inflated monthly expense at retirement and the "
+                  "corpus needed to sustain it.",
+        "limits": "This assumes constant inflation and constant returns for decades, which real markets never "
+                   "deliver, and doesn't account for other retirement income (pension, rental income, Social "
+                   "Security-equivalent schemes) that would reduce how much corpus you personally need.",
+        "faqs": [
+            ("Why does the calculator use a 'real' return rate instead of the return rate I entered?", "Because "
+             "your expenses are also rising with inflation every year in retirement, what matters for how long "
+             "the corpus lasts is the return rate after subtracting inflation, not the raw return rate."),
+            ("Does this include a pension, EPF or NPS payout?", "No. This calculates the total corpus needed "
+             "assuming it's the only source of retirement income; if you'll also receive a pension or annuity, "
+             "you need a smaller self-funded corpus than shown here."),
+            ("What return rate should I assume during retirement?", "This calculator doesn't recommend one; "
+             "typically retirement portfolios shift toward safer, lower-return assets than pre-retirement "
+             "investing, so consider using a lower rate than an equity-heavy accumulation-phase assumption."),
+            ("Why does a small change in the assumed inflation or return rate move the answer so much?", "Over "
+             "20-30 year horizons, small differences in rate compound into large differences in outcome; this "
+             "is a well-known sensitivity of all long-horizon retirement projections, not a quirk of this "
+             "calculator specifically."),
+            ("Should I recalculate this periodically?", "Yes. Your actual expenses, inflation, and returns will "
+             "differ from any assumption made years in advance; treat this as a periodically-revisited estimate, "
+             "not a one-time answer."),
+        ],
+    },
+    {
+        "slug": "ppf-calculator", "calc": "ppf", "h1": "PPF Calculator",
+        "title": "PPF Calculator: Public Provident Fund Maturity Value | BrokerLens",
+        "description": "Work out the maturity value of a Public Provident Fund account at the current "
+                        "government-set interest rate.",
+        "intro": "The Public Provident Fund is a government-backed long-term savings scheme with a 15-year "
+                  "lock-in, annual compounding, and an interest rate set (and revised quarterly) by the Ministry "
+                  "of Finance. This assumes the same deposit is made every year for the period you enter.",
+        "formula": "Balance compounds annually: each year, that year's deposit is added, then the full balance "
+                   "grows at the current PPF rate. Current rate: 7.1% per annum (Jul-Sep 2026 quarter).",
+        "fields": [
+            ("ppf-deposit", "Annual deposit (Rs, max 1,50,000)", "150000", "1000"),
+            ("ppf-years", "Number of years", "15", "1"),
+        ],
+        "how_to": "Enter your planned annual deposit (the government caps this at Rs 1,50,000 per financial "
+                  "year) and the number of years. The calculator compounds annually at the current PPF rate and "
+                  "shows the maturity value.",
+        "limits": "PPF's interest rate is revised every quarter by the Ministry of Finance; this calculator uses "
+                   "7.1%, the confirmed rate for Jul-Sep 2026, for every year of the period, which will not "
+                   "match reality if the rate changes in a future quarter. It also assumes the same deposit "
+                   "amount and timing every year, and does not model partial withdrawals or loans against the "
+                   "account, both of which real PPF accounts allow after certain years.",
+        "faqs": [
+            ("What is the current PPF interest rate?", "7.1% per annum for the Jul-Sep 2026 quarter, unchanged "
+             "for nine consecutive quarters as of this rate's confirmation. It is revised quarterly by the "
+             "Ministry of Finance, so check the current rate before relying on this for a plan spanning future "
+             "quarters."),
+            ("What is the maximum I can deposit into PPF each year?", "Rs 1,50,000 per financial year, across "
+             "all your PPF accounts combined."),
+            ("What is the PPF lock-in period?", "15 years from account opening, extendable in blocks of 5 years "
+             "after maturity. Partial withdrawals are permitted from the 7th year under specific rules."),
+            ("Is PPF interest taxable?", "No. PPF is an EEE (Exempt-Exempt-Exempt) instrument: the deposit, the "
+             "interest earned, and the maturity amount are all exempt from income tax under current rules."),
+            ("Does this calculator assume monthly or annual deposits?", "Annual, with interest compounding once "
+             "a year on the balance including that year's deposit. Real PPF interest is actually computed on "
+             "the lowest balance between the 5th and last day of each month, so a real account funded via "
+             "monthly deposits will differ slightly from this simplified annual model."),
+        ],
+    },
+    {
+        "slug": "gst-calculator", "calc": "gst", "h1": "GST Calculator",
+        "title": "GST Calculator: Add or Remove GST | BrokerLens",
+        "description": "Work out the GST amount and total price, either adding GST to a base price or extracting "
+                        "it from a GST-inclusive price, at current GST slab rates.",
+        "intro": "India's GST structure was rationalised in September 2025 (\"GST 2.0\") from four slabs down to "
+                  "essentially two main rates plus a de-merit rate: 5% (merit goods), 18% (standard), and 40% "
+                  "(select sin/luxury goods), alongside a 0% (nil) rate for specified essentials. This works "
+                  "either direction: adding GST to a base price, or extracting it from a price that already "
+                  "includes GST.",
+        "formula": "Exclusive (adding GST): GST = base &times; rate / 100, Total = base + GST. "
+                   "Inclusive (extracting GST): base = total / (1 + rate/100), GST = total - base.",
+        "fields": [
+            ("gst-amount", "Amount (Rs)", "1000", "10"),
+        ],
+        "extra_fields_html": (
+            '<div class="field"><label for="gst-rate">GST rate</label>'
+            '<select id="gst-rate"><option value="5">5%</option><option value="18" selected>18%</option>'
+            '<option value="40">40%</option><option value="0">0% (nil-rated)</option></select></div>'
+            '<div class="field"><label>Amount entered is</label>'
+            '<label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:4px">'
+            '<input type="radio" name="gst-mode" value="exclusive" checked style="width:auto"> Exclusive of GST (add GST)</label>'
+            '<label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:4px">'
+            '<input type="radio" name="gst-mode" value="inclusive" style="width:auto"> Inclusive of GST (extract GST)</label></div>'
+        ),
+        "how_to": "Enter an amount, choose the applicable GST rate, and choose whether that amount already "
+                  "includes GST or not. The calculator shows the base amount, the GST amount, and the total.",
+        "limits": "This applies one flat rate to one amount; it doesn't handle mixed-rate invoices (where "
+                   "different line items attract different GST rates), input tax credit, or the compensation "
+                   "cess that applies to specific goods like tobacco and vehicles on top of the 40% slab.",
+        "faqs": [
+            ("What are the current GST slabs?", "Since September 22, 2025, India's GST structure is 0% (nil, "
+             "for specified essentials like individual life/health insurance and select life-saving drugs), 5% "
+             "(merit goods), 18% (standard rate), and 40% (de-merit rate for select sin and luxury goods). The "
+             "earlier 12% and 28% slabs no longer exist for most items."),
+            ("What changed in the September 2025 GST reform?", "The GST Council collapsed the previous "
+             "four-slab structure (5/12/18/28%) into essentially two main slabs (5% and 18%) plus a 40% "
+             "de-merit rate, moving most 12%-slab items to 5% and most 28%-slab items to 18%."),
+            ("What's the difference between GST-inclusive and GST-exclusive amounts?", "An exclusive amount is "
+             "the base price before GST is added; GST is added on top to get the total. An inclusive amount "
+             "already has GST baked in; the base price and GST amount are extracted from it."),
+            ("Does this calculator account for input tax credit?", "No. Input tax credit is a business-level "
+             "adjustment against GST already paid on purchases; this calculator computes GST on a single "
+             "amount only."),
+            ("Does this include compensation cess?", "No. Certain goods (tobacco, pan masala, some vehicles) "
+             "attract an additional compensation cess on top of the 40% GST slab, which this calculator doesn't "
+             "model."),
+            ("Will these rates change again?", "Possibly; GST Council meetings can revise rates. This "
+             "calculator uses the slabs confirmed current as of publish time; verify against the current GST "
+             "Council notification before relying on this for a formal filing or invoice."),
+        ],
+    },
 ]
 
 
@@ -2069,7 +2348,7 @@ def _write_calculator_pages():
             '<input id="%s" type="number" min="0" step="%s" value="%s"></div>'
             % (fid, _esc(label), fid, step, default)
             for fid, label, default, step in c["fields"]
-        )
+        ) + c.get("extra_fields_html", "")
         faq_html = "".join(
             '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
             for q, a in faqs

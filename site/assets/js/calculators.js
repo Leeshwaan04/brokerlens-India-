@@ -116,6 +116,124 @@ const CALCULATORS = {
       <div class="mega-seg"><div class="mega-seg-label">Estimated tax</div><div style="margin-top:2px;font-weight:700">${inr(tax)}</div></div>
       <p class="xs faint" style="grid-column:1/-1;margin-top:4px">${note} Not tax advice - confirm current rates and your own situation before filing.</p>`);
   },
+
+  'simple-interest'() {
+    const principal = num('si-principal');
+    const rate = num('si-rate');
+    const years = num('si-years');
+    if (principal <= 0 || years <= 0) return;
+    const interest = (principal * rate * years) / 100;
+    showResult(`
+      <div class="mega-seg"><div class="mega-seg-label">Principal</div><div style="margin-top:2px">${inr(principal)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Simple interest</div><div style="margin-top:2px">${inr(interest)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Total amount</div><div style="margin-top:2px;font-weight:700">${inr(principal + interest)}</div></div>`);
+  },
+
+  'stepup-sip'() {
+    const monthly0 = num('ssip-monthly');
+    const stepUp = num('ssip-stepup') / 100;
+    const rate = num('ssip-rate') / 100 / 12;
+    const years = num('ssip-years');
+    if (monthly0 <= 0 || years <= 0) return;
+    let balance = 0, invested = 0, current = monthly0;
+    for (let m = 1; m <= years * 12; m++) {
+      balance = balance * (1 + rate) + current;
+      invested += current;
+      if (m % 12 === 0) current *= (1 + stepUp);
+    }
+    showResult(`
+      <div class="mega-seg"><div class="mega-seg-label">Total invested</div><div style="margin-top:2px">${inr(invested)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Est. returns</div><div style="margin-top:2px">${inr(balance - invested)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Total value</div><div style="margin-top:2px;font-weight:700">${inr(balance)}</div></div>`);
+  },
+
+  swp() {
+    const corpus = num('swp-corpus');
+    const withdrawal = num('swp-withdrawal');
+    const rate = num('swp-rate') / 100 / 12;
+    const years = num('swp-years');
+    if (corpus <= 0 || withdrawal <= 0 || years <= 0) return;
+    let balance = corpus, withdrawn = 0, monthsLasted = 0;
+    const totalMonths = years * 12;
+    for (let m = 0; m < totalMonths; m++) {
+      balance = balance * (1 + rate) - withdrawal;
+      withdrawn += withdrawal;
+      monthsLasted = m + 1;
+      if (balance <= 0) { balance = 0; break; }
+    }
+    const depleted = balance <= 0 && monthsLasted < totalMonths;
+    showResult(`
+      <div class="mega-seg"><div class="mega-seg-label">Total withdrawn</div><div style="margin-top:2px">${inr(withdrawn)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">${depleted ? 'Corpus lasted' : 'Remaining after ' + years + ' yr'}</div><div style="margin-top:2px">${depleted ? Math.floor(monthsLasted / 12) + 'y ' + (monthsLasted % 12) + 'm' : inr(balance)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Starting corpus</div><div style="margin-top:2px;font-weight:700">${inr(corpus)}</div></div>`);
+  },
+
+  inflation() {
+    const cost = num('infl-cost');
+    const rate = num('infl-rate') / 100;
+    const years = num('infl-years');
+    if (cost <= 0 || years <= 0) return;
+    const future = cost * Math.pow(1 + rate, years);
+    showResult(`
+      <div class="mega-seg"><div class="mega-seg-label">Cost today</div><div style="margin-top:2px">${inr(cost)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Extra cost from inflation</div><div style="margin-top:2px">${inr(future - cost)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Future cost</div><div style="margin-top:2px;font-weight:700">${inr(future)}</div></div>`);
+  },
+
+  retirement() {
+    const expense = num('ret-expense');
+    const yearsToRetire = num('ret-years-to');
+    const inflation = num('ret-inflation') / 100;
+    const yearsInRetirement = num('ret-years-in');
+    const postReturn = num('ret-return') / 100;
+    if (expense <= 0 || yearsInRetirement <= 0) return;
+    const futureExpense = expense * Math.pow(1 + inflation, yearsToRetire);
+    const realMonthlyRate = ((1 + postReturn) / (1 + inflation)) - 1;
+    const n = yearsInRetirement * 12;
+    const corpus = Math.abs(realMonthlyRate) < 1e-9
+      ? futureExpense * n
+      : futureExpense * (1 - Math.pow(1 + realMonthlyRate, -n)) / realMonthlyRate;
+    showResult(`
+      <div class="mega-seg"><div class="mega-seg-label">Monthly expense at retirement</div><div style="margin-top:2px">${inr(futureExpense)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Retirement duration</div><div style="margin-top:2px">${yearsInRetirement} years</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Corpus needed at retirement</div><div style="margin-top:2px;font-weight:700">${inr(corpus)}</div></div>`);
+  },
+
+  ppf() {
+    const deposit = num('ppf-deposit');
+    const years = num('ppf-years');
+    const rate = 7.1 / 100;
+    if (deposit <= 0 || years <= 0) return;
+    let balance = 0;
+    for (let y = 0; y < years; y++) balance = (balance + deposit) * (1 + rate);
+    const invested = deposit * years;
+    showResult(`
+      <div class="mega-seg"><div class="mega-seg-label">Total invested</div><div style="margin-top:2px">${inr(invested)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Interest earned</div><div style="margin-top:2px">${inr(balance - invested)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Maturity value</div><div style="margin-top:2px;font-weight:700">${inr(balance)}</div></div>
+      <p class="xs faint" style="grid-column:1/-1;margin-top:4px">At the PPF rate of 7.1% p.a. for Jul-Sep 2026, compounded annually. This rate is revised quarterly by the Ministry of Finance - verify the current rate before relying on this.</p>`);
+  },
+
+  gst() {
+    const amount = num('gst-amount');
+    const rate = num('gst-rate');
+    const mode = (document.querySelector('input[name="gst-mode"]:checked') || {}).value || 'exclusive';
+    if (amount <= 0) return;
+    let base, gst, total;
+    if (mode === 'inclusive') {
+      base = amount / (1 + rate / 100);
+      gst = amount - base;
+      total = amount;
+    } else {
+      base = amount;
+      gst = amount * rate / 100;
+      total = amount + gst;
+    }
+    showResult(`
+      <div class="mega-seg"><div class="mega-seg-label">Base amount</div><div style="margin-top:2px">${inr(base)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">GST (${rate}%)</div><div style="margin-top:2px">${inr(gst)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Total</div><div style="margin-top:2px;font-weight:700">${inr(total)}</div></div>`);
+  },
 };
 
 document.addEventListener('DOMContentLoaded', () => {
