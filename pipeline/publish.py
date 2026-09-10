@@ -644,7 +644,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
 <meta name="theme-color" content="#2f4a8f">
 <link rel="stylesheet" href="/assets/css/app.css">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="BrokerLens India">
+<meta property="og:site_name" content="BrokerLens">
 <meta property="og:locale" content="en_IN">
 <meta property="og:url" content="%(canonical)s">
 <meta property="og:title" content="%(title)s">
@@ -654,7 +654,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
 <body>
 <header class="site"><div class="wrap nav">
   <a class="brand" href="/">
-    <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" role="img" aria-label="BrokerLens India">
+    <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" role="img" aria-label="BrokerLens">
       <defs><clipPath id="bl-lens-reg"><circle cx="256" cy="256" r="143"/></clipPath></defs>
       <g fill="none" stroke="var(--accent)" stroke-width="30" stroke-linecap="round">
         <path d="M50 369 L84 359" opacity=".38"/><path d="M18 379 L30 375" opacity=".18"/>
@@ -664,7 +664,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
       <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="var(--up)"
             stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-reg)"/>
     </svg>
-    <span>BrokerLens<span class="muted" style="font-weight:400"> India</span></span>
+    <span>BrokerLens</span>
   </a>
   <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
           aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
@@ -693,7 +693,7 @@ _REGISTRY_PAGE_FOOT = """</main>
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">%(source_note)s</p>
   <p class="small"><a href="/registry">Search the full SEBI registry →</a> ·
-  <a href="/brokers">Brokers tracked in depth →</a> · <a href="/">BrokerLens India home →</a></p>
+  <a href="/brokers">Brokers tracked in depth →</a> · <a href="/">BrokerLens home →</a></p>
 </div></footer>
 <script type="module" src="/assets/js/nav-widgets.js"></script>
 </body>
@@ -737,7 +737,7 @@ def _write_registry_pages(reg_rows):
         cats = [CATEGORY_LABELS.get(c, c) for c in (r.get("categories") or [])]
         canonical = "%s/sebi-registry/%s/" % (SITE_URL, slug)
 
-        title = "%s: SEBI Registration | BrokerLens India" % name
+        title = "%s: SEBI Registration | BrokerLens" % name
         description = ("%s: SEBI registration number, category, exchange memberships and validity, "
                        "sourced from SEBI's recognised-intermediary register." % name)[:300]
 
@@ -922,7 +922,7 @@ def _write_broker_pages(built):
     for b in built:
         bid, brand = b["id"], b["profile"].get("brand") or b["id"]
         canonical = "%s/broker/%s/" % (SITE_URL, bid)
-        title = "%s: active clients, complaints and charges | BrokerLens India" % _esc(brand)
+        title = "%s: active clients, complaints and charges | BrokerLens" % _esc(brand)
         description = _esc(
             "%s: active client count, market share, SEBI complaint record, regulatory registrations "
             "and cost, from primary NSE, BSE and SEBI disclosures." % brand
@@ -938,7 +938,7 @@ def _write_broker_pages(built):
 
         page = shell
         page = page.replace(
-            "<title>BrokerLens India: Indian stock broker statistics from NSE, BSE and SEBI</title>",
+            "<title>BrokerLens: Indian stock broker statistics from NSE, BSE and SEBI</title>",
             "<title>%s</title>" % title, 1)
         page = page.replace(
             'content="Compare every SEBI-registered Indian stock broker on active clients, market share, '
@@ -947,7 +947,7 @@ def _write_broker_pages(built):
         page = page.replace('<link rel="canonical" href="/">', '<link rel="canonical" href="%s">' % canonical, 1)
         page = page.replace('<meta property="og:url" content="/">', '<meta property="og:url" content="%s">' % canonical, 1)
         page = page.replace(
-            '<meta property="og:title" content="BrokerLens India: broker statistics from primary sources">',
+            '<meta property="og:title" content="BrokerLens: broker statistics from primary sources">',
             '<meta property="og:title" content="%s">' % title, 1)
         page = page.replace(
             '<meta property="og:description" content="Active clients, market share, SEBI complaint records '
@@ -1022,7 +1022,7 @@ def _write_broker_hub_pages(built):
             continue
         canonical = "%s/brokers-by/%s/%s/" % (SITE_URL, dim, slug)
         noun = {"type": "Stock brokers", "segment": "Brokers registered for", "city": "Stock brokers headquartered in"}[dim]
-        title = ("%s %s | BrokerLens India" % (noun, label)) if dim != "type" else ("%s: %s | BrokerLens India" % (noun, label))
+        title = ("%s %s | BrokerLens" % (noun, label)) if dim != "type" else ("%s: %s | BrokerLens" % (noun, label))
         h1 = {
             "type": "%s stock brokers in India" % label,
             "segment": "Brokers registered for %s" % label,
@@ -1175,7 +1175,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
             continue
         name = c.get("name") or symbol
         canonical = "%s/stock/%s/" % (SITE_URL, slug)
-        title = "%s (%s): NSE Listing Details | BrokerLens India" % (_esc(name), _esc(symbol))
+        title = "%s (%s): NSE Listing Details | BrokerLens" % (_esc(name), _esc(symbol))
         description = _esc(
             "%s (NSE: %s): ISIN, listing date, face value and market lot, "
             "sourced directly from NSE's own listed-securities register." % (name, symbol)
@@ -1283,7 +1283,7 @@ def _write_index_pages(indices, companies):
         label = idx["label"]
         constituents = idx["constituents"]
         canonical = "%s/index/%s/" % (SITE_URL, slug)
-        title = "%s: Constituent Stocks List | BrokerLens India" % label
+        title = "%s: Constituent Stocks List | BrokerLens" % label
         description = _esc(
             "Every constituent of the %s index, sourced directly from NSE's own published index list, "
             "with each company's ISIN and a link to its NSE listing details." % label
@@ -1361,7 +1361,7 @@ def _write_etf_pages(etfs, indices):
             continue
         name = e.get("name") or symbol
         canonical = "%s/etf/%s/" % (SITE_URL, slug)
-        title = "%s (%s): ETF Listing Details | BrokerLens India" % (_esc(name), _esc(symbol))
+        title = "%s (%s): ETF Listing Details | BrokerLens" % (_esc(name), _esc(symbol))
         description = _esc(
             "%s (NSE: %s): the ETF's underlying benchmark, ISIN, listing date and market lot, "
             "sourced directly from NSE's own listed-ETF register." % (name, symbol)
@@ -1514,7 +1514,7 @@ def _write_mutual_fund_pages(schemes):
         used_slugs[slug] = (amc, name)
 
         canonical = "%s/fund/%s/" % (SITE_URL, slug)
-        title = "%s: Mutual Fund Scheme Details | BrokerLens India" % _esc(name)
+        title = "%s: Mutual Fund Scheme Details | BrokerLens" % _esc(name)
         description = _esc(
             "%s from %s: NAV, ISIN and plan/option details for every variant of this scheme, "
             "sourced directly from AMFI's own daily NAV master file." % (name, amc)
@@ -1650,7 +1650,7 @@ def _write_reports(built, reg_rows, companies, indices, etfs, funds, defaulter_c
     per_household_name = round(len(reg_rows) / len(built)) if built else 0
 
     canonical = "%s/reports/%s/" % (SITE_URL, _REPORT_SLUG)
-    title = "State of Indian Broking & Investing 2026 | BrokerLens India"
+    title = "State of Indian Broking & Investing 2026 | BrokerLens"
     description = _esc(
         "How many SEBI-registered brokers, NSE-listed companies, ETFs and mutual fund schemes actually "
         "exist in India, counted directly from primary regulator and exchange data."
@@ -1659,8 +1659,8 @@ def _write_reports(built, reg_rows, companies, indices, etfs, funds, defaulter_c
     jsonld = {
         "@context": "https://schema.org", "@type": "Article", "headline": "State of Indian Broking & Investing 2026",
         "url": canonical, "datePublished": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-        "author": {"@type": "Organization", "name": "BrokerLens India", "url": SITE_URL},
-        "publisher": {"@type": "Organization", "name": "BrokerLens India", "url": SITE_URL},
+        "author": {"@type": "Organization", "name": "BrokerLens", "url": SITE_URL},
+        "publisher": {"@type": "Organization", "name": "BrokerLens", "url": SITE_URL},
     }
 
     def stat(n, label):
@@ -1746,7 +1746,7 @@ def _write_reports(built, reg_rows, companies, indices, etfs, funds, defaulter_c
 CALCULATORS = [
     {
         "slug": "sip-calculator", "calc": "sip", "h1": "SIP Calculator",
-        "title": "SIP Calculator: Estimate Mutual Fund SIP Returns | BrokerLens India",
+        "title": "SIP Calculator: Estimate Mutual Fund SIP Returns | BrokerLens",
         "description": "Work out what a monthly SIP could grow to at a given return rate, using the standard "
                         "future-value-of-annuity formula every SIP calculator is built on.",
         "intro": "A Systematic Investment Plan (SIP) invests a fixed amount every month. This estimates the "
@@ -1800,7 +1800,7 @@ CALCULATORS = [
     },
     {
         "slug": "lumpsum-calculator", "calc": "lumpsum", "h1": "Lumpsum Investment Calculator",
-        "title": "Lumpsum Calculator: Estimate One-Time Investment Growth | BrokerLens India",
+        "title": "Lumpsum Calculator: Estimate One-Time Investment Growth | BrokerLens",
         "description": "Work out what a one-time lumpsum investment could grow to at a given annual return rate, "
                         "using standard compound growth.",
         "intro": "A lumpsum calculator answers a simpler question than a SIP calculator: what does one investment "
@@ -1847,7 +1847,7 @@ CALCULATORS = [
     },
     {
         "slug": "emi-calculator", "calc": "emi", "h1": "EMI Calculator",
-        "title": "EMI Calculator: Monthly Loan Instalment | BrokerLens India",
+        "title": "EMI Calculator: Monthly Loan Instalment | BrokerLens",
         "description": "Work out the monthly EMI, total interest and total payment for a loan, using the standard "
                         "reducing-balance EMI formula.",
         "intro": "Every standard reducing-balance loan (home, personal, vehicle) uses the same EMI formula, "
@@ -1897,7 +1897,7 @@ CALCULATORS = [
     },
     {
         "slug": "cagr-calculator", "calc": "cagr", "h1": "CAGR Calculator",
-        "title": "CAGR Calculator: Compound Annual Growth Rate | BrokerLens India",
+        "title": "CAGR Calculator: Compound Annual Growth Rate | BrokerLens",
         "description": "Work out the compound annual growth rate (CAGR) between a starting and ending value over "
                         "a given number of years.",
         "intro": "CAGR smooths an investment's actual (bumpy) year-to-year path into a single, comparable annual "
@@ -1942,7 +1942,7 @@ CALCULATORS = [
     },
     {
         "slug": "compound-interest-calculator", "calc": "compound", "h1": "Compound Interest Calculator",
-        "title": "Compound Interest Calculator | BrokerLens India",
+        "title": "Compound Interest Calculator | BrokerLens",
         "description": "Work out the maturity value of a principal amount compounding at a given rate and "
                         "frequency over a given period.",
         "intro": "Unlike the lumpsum investment calculator above, this lets the compounding frequency vary "
@@ -1986,7 +1986,7 @@ CALCULATORS = [
     },
     {
         "slug": "capital-gains-tax-calculator", "calc": "capital-gains", "h1": "Capital Gains Tax Calculator",
-        "title": "Capital Gains Tax Calculator: Equity LTCG & STCG | BrokerLens India",
+        "title": "Capital Gains Tax Calculator: Equity LTCG & STCG | BrokerLens",
         "description": "Estimate long-term or short-term capital gains tax on listed equity shares or equity "
                         "mutual funds at current FY 2025-26 rates.",
         "intro": "For listed equity shares and equity-oriented mutual funds, India taxes gains differently by how "
