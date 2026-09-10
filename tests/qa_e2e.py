@@ -442,6 +442,15 @@ def test_published():
             check("NSE-listed broker parent cross-links to its BrokerLens profile",
                   "/broker/angel-one/" in angel_html)
 
+        # Real, per-entity FAQs (not padded to a fixed count) across the
+        # three largest mechanical page families. Genuinely varies with the
+        # entity's own data (e.g. Angel One's FAQs mention its broker link
+        # and index membership; a stock with neither gets neither claim).
+        check("stock page has real per-entity FAQPage JSON-LD",
+              '"@type": "FAQPage"' in html or '"@type":"FAQPage"' in html)
+        check("angelone stock page FAQs mention its broker link, unlike a generic stock",
+              "listed parent of a BrokerLens-tracked broker" in angel_html)
+
     # Static /index/:slug pages - Phase 2 of the 60-70k-page plan. Sourced
     # from NSE's own published index-constituent files (Nifty 50, sectoral
     # indices), cross-linked both ways with the /stock/ pages above. No SPA
@@ -496,6 +505,8 @@ def test_published():
               "/assets/js/app.js" not in etf_html)
         check("niftybees ETF page cross-links to the Nifty 50 index page",
               "/index/nifty-50/" in etf_html)
+        check("etf page has real per-entity FAQPage JSON-LD",
+              '"@type": "FAQPage"' in etf_html or '"@type":"FAQPage"' in etf_html)
 
     # Static /fund/:slug pages - the biggest single lever in the 60k-page
     # plan, one page per real scheme (not per NAV row: AMFI's file carries
@@ -522,6 +533,10 @@ def test_published():
               and '"provider"' in fund_html)
         check("fund page loads no app bundle (must be readable with zero JS)",
               "/assets/js/app.js" not in fund_html)
+        check("fund page has real per-entity FAQPage JSON-LD", '"@type": "FAQPage"' in fund_html
+              or '"@type":"FAQPage"' in fund_html)
+        check("fund page FAQ states the real NAV, not a placeholder",
+              "2245.0720" in fund_html and "Growth Option variant" in fund_html)
         check("fund page shows real NAV figures, not placeholders",
               "2245.0720" in fund_html)
 

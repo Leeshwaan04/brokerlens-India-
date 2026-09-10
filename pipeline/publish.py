@@ -1127,6 +1127,44 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
             sym = (con.get("symbol") or "").upper()
             if sym:
                 membership.setdefault(sym, []).append((slug, idx["label"]))
+
+    def stock_faqs(name, symbol, c, member_of, match):
+        """Every question is answered from a fact already on this page -
+        varying genuinely with real data (an absent ISIN, index membership,
+        a broker link) rather than a fixed list reworded per symbol, which
+        is what a mechanically-padded FAQ count across 2,571 pages would
+        actually look like to a quality rater."""
+        faqs = [
+            ("What is the NSE symbol for %s?" % name, "%s trades on NSE under the symbol %s." % (name, symbol)),
+            ("What is the ISIN of %s?" % name,
+             ("%s's ISIN is %s." % (name, c["isin"])) if c.get("isin")
+             else "This company's ISIN is not disclosed in NSE's listed-securities master file."),
+            ("When was %s listed on NSE?" % name,
+             ("%s has been listed on NSE since %s." % (name, _long_date(c["listing_date"])))
+             if c.get("listing_date") else "The listing date is not disclosed in NSE's listed-securities master file."),
+            ("What is the face value of %s shares?" % name,
+             ("The face value of %s shares is Rs %s." % (name, c["face_value"])) if c.get("face_value")
+             else "Face value is not disclosed in NSE's listed-securities master file."),
+            ("What is the market lot for %s?" % name,
+             ("The market lot for %s is %s share(s) per lot." % (name, c["market_lot"])) if c.get("market_lot")
+             else "Market lot is not disclosed in NSE's listed-securities master file."),
+        ]
+        if member_of:
+            faqs.append(("Which NSE indices include %s?" % name,
+                         "%s is a constituent of: %s." % (name, ", ".join(l for _s, l in member_of))))
+        else:
+            faqs.append(("Is %s part of Nifty 50?" % name,
+                         "%s is not currently a constituent of Nifty 50 or any other NSE index BrokerLens "
+                         "tracks a published list for." % name))
+        if match and match.get("broker_id"):
+            faqs.append(("Is %s a listed stock broker?" % name,
+                         "Yes, %s is the listed parent of a BrokerLens-tracked broker; see its broker profile "
+                         "for regulatory and cost details." % name))
+        faqs.append(("Does this page show %s's live share price?" % name,
+                     "No. This page carries NSE's own listing facts only (symbol, ISIN, listing date, face "
+                     "value, market lot); live price and trading data are not carried here."))
+        return faqs
+
     written = 0
     for c in companies:
         symbol = (c.get("symbol") or "").strip()
@@ -1143,10 +1181,9 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
             "sourced directly from NSE's own listed-securities register." % (name, symbol)
         )[:300]
 
-        jsonld = {"@context": "https://schema.org", "@type": "Corporation", "name": name,
-                  "tickerSymbol": symbol, "url": canonical}
+        corp_jsonld = {"@type": "Corporation", "name": name, "tickerSymbol": symbol, "url": canonical}
         if c.get("isin"):
-            jsonld["identifier"] = c["isin"]
+            corp_jsonld["identifier"] = c["isin"]
 
         def fact(raw):
             return _esc(raw) if raw else "Not disclosed"
@@ -1183,6 +1220,22 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
                 + '</p>'
             )
 
+        faqs = stock_faqs(name, symbol, c, member_of, match)
+        faq_html = "".join(
+            '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+            for q, a in faqs
+        )
+        jsonld = {
+            "@context": "https://schema.org",
+            "@graph": [
+                corp_jsonld,
+                {"@type": "FAQPage", "mainEntity": [
+                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in faqs
+                ]},
+            ],
+        }
+
         body = _REGISTRY_PAGE_HEAD % {
             "title": _esc(title), "description": description,
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
@@ -1195,6 +1248,8 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L). '
               'Live price and trading data are not carried on this page.</p>'
             + index_html
+            + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
+            + '<div style="max-width:68ch">' + faq_html + '</div>'
         )
         body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
             "This page is generated directly from NSE's own listed-securities master file (EQUITY_L).")}
@@ -1312,11 +1367,11 @@ def _write_etf_pages(etfs, indices):
             "sourced directly from NSE's own listed-ETF register." % (name, symbol)
         )[:300]
 
-        jsonld = {"@context": "https://schema.org", "@type": "FinancialProduct", "name": name, "url": canonical}
+        etf_jsonld = {"@type": "FinancialProduct", "name": name, "url": canonical}
         if e.get("isin"):
-            jsonld["identifier"] = e["isin"]
+            etf_jsonld["identifier"] = e["isin"]
         if e.get("underlying_key"):
-            jsonld["category"] = e["underlying_key"]
+            etf_jsonld["category"] = e["underlying_key"]
 
         def fact(raw):
             return _esc(raw) if raw else "Not disclosed"
@@ -1342,6 +1397,43 @@ def _write_etf_pages(etfs, indices):
                 '<a href="/index/%s/">%s constituent list</a></p>' % (_esc(index_slug), _esc(INDEX_FILES[index_slug][1]))
             )
 
+        etf_faqs = [
+            ("What is the NSE symbol for %s?" % name, "%s trades on NSE under the symbol %s." % (name, symbol)),
+            ("What does %s track?" % name,
+             ("%s tracks %s." % (name, e.get("underlying_key") or e.get("underlying_asset")))
+             if (e.get("underlying_key") or e.get("underlying_asset"))
+             else "The underlying benchmark for this ETF is not disclosed in NSE's listed-ETF register."),
+            ("What is the ISIN of %s?" % name,
+             ("%s's ISIN is %s." % (name, e["isin"])) if e.get("isin")
+             else "This ETF's ISIN is not disclosed in NSE's listed-ETF register."),
+            ("When was %s listed on NSE?" % name,
+             ("%s has been listed on NSE since %s." % (name, _long_date(e["listing_date"])))
+             if e.get("listing_date") else "The listing date is not disclosed in NSE's listed-ETF register."),
+            ("What is the market lot for %s?" % name,
+             ("The market lot for %s is %s unit(s) per lot." % (name, e["market_lot"])) if e.get("market_lot")
+             else "Market lot is not disclosed in NSE's listed-ETF register."),
+            ("Is %s an equity, debt or gold ETF?" % name,
+             ("%s is categorised as %s." % (name, e["category"])) if e.get("category")
+             else "This ETF's category is not disclosed in NSE's listed-ETF register."),
+            ("Does this page show %s's live price or NAV?" % name,
+             "No. This page carries NSE's own listing facts only; live price and trading data are not "
+             "carried here."),
+        ]
+        etf_faq_html = "".join(
+            '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+            for q, a in etf_faqs
+        )
+        jsonld = {
+            "@context": "https://schema.org",
+            "@graph": [
+                etf_jsonld,
+                {"@type": "FAQPage", "mainEntity": [
+                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in etf_faqs
+                ]},
+            ],
+        }
+
         body = _REGISTRY_PAGE_HEAD % {
             "title": _esc(title), "description": description,
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
@@ -1353,6 +1445,8 @@ def _write_etf_pages(etfs, indices):
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-ETF register. '
               'Live price and trading data are not carried on this page.</p>'
             + index_html
+            + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
+            + '<div style="max-width:68ch">' + etf_faq_html + '</div>'
         )
         body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
             "This page is generated directly from NSE's own listed-ETF register.")}
@@ -1426,10 +1520,10 @@ def _write_mutual_fund_pages(schemes):
             "sourced directly from AMFI's own daily NAV master file." % (name, amc)
         )[:300]
 
-        jsonld = {"@context": "https://schema.org", "@type": "FinancialProduct", "name": name,
-                  "url": canonical, "provider": {"@type": "Organization", "name": amc}}
+        fund_jsonld = {"@type": "FinancialProduct", "name": name,
+                       "url": canonical, "provider": {"@type": "Organization", "name": amc}}
         if fund["categories"]:
-            jsonld["category"] = fund["categories"][0]
+            fund_jsonld["category"] = fund["categories"][0]
 
         variants_sorted = sorted(
             fund["variants"], key=lambda v: (v.get("plan") or "", v.get("option") or ""))
@@ -1444,6 +1538,55 @@ def _write_mutual_fund_pages(schemes):
             )
             for v in variants_sorted
         )
+
+        has_direct = any((v.get("plan") or "").lower().startswith("direct") for v in variants_sorted)
+        has_regular = any((v.get("plan") or "").lower().startswith("regular") for v in variants_sorted)
+        has_growth = any("growth" in (v.get("option") or "").lower() for v in variants_sorted)
+        has_idcw = any("idcw" in (v.get("option") or "").lower() for v in variants_sorted)
+        growth_variant = next((v for v in variants_sorted if "growth" in (v.get("option") or "").lower()
+                                and (v.get("plan") or "").lower().startswith("direct")), variants_sorted[0])
+
+        fund_faqs = [
+            ("Which AMC manages %s?" % name, "%s is managed by %s." % (name, amc)),
+            ("What is the latest NAV of %s?" % name,
+             ("As of %s, the %s / %s variant of %s had a NAV of Rs %.4f." % (
+                 growth_variant.get("nav_date") or "the last update", growth_variant.get("plan") or "",
+                 growth_variant.get("option") or "", name, growth_variant["nav"]))
+             if isinstance(growth_variant.get("nav"), (int, float))
+             else "NAV for this scheme's variants is shown in the table above."),
+            ("Does %s have both Direct and Regular plans?" % name,
+             "Yes, both Direct and Regular plans are available." if (has_direct and has_regular)
+             else ("Only a Direct plan is listed for this scheme." if has_direct
+                   else ("Only a Regular plan is listed for this scheme." if has_regular
+                         else "Plan availability is shown in the table above."))),
+            ("Does %s offer a Growth option, an IDCW option, or both?" % name,
+             "Both Growth and IDCW options are available." if (has_growth and has_idcw)
+             else ("Only a Growth option is listed for this scheme." if has_growth
+                   else ("Only an IDCW option is listed for this scheme." if has_idcw
+                         else "Option availability is shown in the table above."))),
+            ("What category is %s?" % name,
+             ("%s is categorised as %s." % (name, " / ".join(fund["categories"]))) if fund["categories"]
+             else "This scheme's category is not disclosed in AMFI's daily NAV master file."),
+            ("How many plan/option variants does %s have?" % name,
+             "%d variant(s) of %s currently publish a NAV, shown in the table above." % (len(variants_sorted), name)),
+            ("Does this page show historical returns or portfolio holdings for %s?" % name,
+             "No. This page carries AMFI's own current NAV, ISIN and plan/option data only; historical "
+             "returns and portfolio holdings are not carried here."),
+        ]
+        faq_html = "".join(
+            '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+            for q, a in fund_faqs
+        )
+        jsonld = {
+            "@context": "https://schema.org",
+            "@graph": [
+                fund_jsonld,
+                {"@type": "FAQPage", "mainEntity": [
+                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in fund_faqs
+                ]},
+            ],
+        }
 
         body = _REGISTRY_PAGE_HEAD % {
             "title": _esc(title), "description": description,
@@ -1461,6 +1604,8 @@ def _write_mutual_fund_pages(schemes):
               '</tr></thead><tbody>' + rows_html + '</tbody></table></div>'
             + '<p class="xs faint" style="margin-top:16px">Source: AMFI daily NAV master file. '
               'Historical NAV, returns and portfolio holdings are not carried on this page.</p>'
+            + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
+            + '<div style="max-width:68ch">' + faq_html + '</div>'
         )
         body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
             "This page is generated directly from AMFI's (Association of Mutual Funds in India) "
