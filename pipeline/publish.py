@@ -730,6 +730,35 @@ def _source_note(claim):
             "BrokerLens is not a SEBI-registered investment adviser or research analyst." % claim)
 
 
+def _breadcrumb(trail):
+    """One shared breadcrumb builder for both the visible trail and its
+    BreadcrumbList JSON-LD, so the two can never drift apart the way two
+    hand-written copies eventually would. `trail` is [(label, url|None), ...]
+    with the current page last (url=None, not a link to itself).
+
+    Also a real, previously-missing internal-link path: before this, a
+    visitor (or crawler) landing on a leaf page like a stock or fund had no
+    way back to its parent directory except the site-wide footer links.
+    """
+    parts = []
+    for label, url in trail:
+        if url:
+            parts.append('<a href="%s">%s</a>' % (_esc(url), _esc(label)))
+        else:
+            parts.append('<span aria-current="page">%s</span>' % _esc(label))
+    html = ('<nav class="breadcrumb" aria-label="Breadcrumb">'
+            + '<span class="sep"> &rsaquo; </span>'.join(parts) + '</nav>')
+    jsonld = {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            dict({"@type": "ListItem", "position": i + 1, "name": label},
+                 **({"item": SITE_URL + url} if url else {}))
+            for i, (label, url) in enumerate(trail)
+        ],
+    }
+    return html, jsonld
+
+
 def _write_registry_pages(reg_rows):
     """One static, server-rendered page per SEBI-registered entity.
 
@@ -760,18 +789,21 @@ def _write_registry_pages(reg_rows):
         description = ("%s: SEBI registration number, category, exchange memberships and validity, "
                        "sourced from SEBI's recognised-intermediary register." % name)[:300]
 
-        jsonld = {
-            "@context": "https://schema.org",
+        org_jsonld = {
             "@type": "Organization",
             "name": name,
             "url": canonical,
         }
         if r.get("trade_name"):
-            jsonld["alternateName"] = r["trade_name"]
+            org_jsonld["alternateName"] = r["trade_name"]
         if r.get("reg"):
-            jsonld["identifier"] = r["reg"]
+            org_jsonld["identifier"] = r["reg"]
         if r.get("city"):
-            jsonld["address"] = {"@type": "PostalAddress", "addressLocality": r["city"], "addressCountry": "IN"}
+            org_jsonld["address"] = {"@type": "PostalAddress", "addressLocality": r["city"], "addressCountry": "IN"}
+        crumb_html, crumb_jsonld = _breadcrumb([
+            ("BrokerLens", "/"), ("SEBI registry", "/registry"), (name, None),
+        ])
+        jsonld = {"@context": "https://schema.org", "@graph": [org_jsonld, crumb_jsonld]}
 
         def fact(raw):
             # _esc() stringifies before escaping, so _esc(None) == "None" (a
@@ -796,7 +828,8 @@ def _write_registry_pages(reg_rows):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         body += (
-            '<h1 style="margin-top:0">%s</h1>' % _esc(name)
+            crumb_html
+            + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
             + (('<p class="muted">Trading as %s</p>' % _esc(r["trade_name"])) if r.get("trade_name") else "")
             + '<p class="muted" style="max-width:70ch">This entity is registered with SEBI but is not one of the '
               'brokers BrokerLens tracks in depth, so no client, complaint or cost data is shown here - only what '
@@ -1244,6 +1277,12 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
             '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
             for q, a in faqs
         )
+        letter = name[0].upper() if name else ""
+        letter = letter if letter.isalpha() else "0-9"
+        crumb_html, crumb_jsonld = _breadcrumb([
+            ("BrokerLens", "/"), ("Browse stocks", "/stocks/"),
+            (letter, "/stocks/%s/" % slugify(letter)), (name, None),
+        ])
         jsonld = {
             "@context": "https://schema.org",
             "@graph": [
@@ -1252,6 +1291,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
                     {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
                     for q, a in faqs
                 ]},
+                crumb_jsonld,
             ],
         }
 
@@ -1260,7 +1300,8 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         body += (
-            '<h1 style="margin-top:0">%s</h1>' % _esc(name)
+            crumb_html
+            + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
             + '<p class="muted">NSE: %s</p>' % _esc(symbol)
             + broker_link
             + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
@@ -1442,6 +1483,9 @@ def _write_etf_pages(etfs, indices):
             '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
             for q, a in etf_faqs
         )
+        crumb_html, crumb_jsonld = _breadcrumb([
+            ("BrokerLens", "/"), ("Browse ETFs", "/etfs/"), (name, None),
+        ])
         jsonld = {
             "@context": "https://schema.org",
             "@graph": [
@@ -1450,6 +1494,7 @@ def _write_etf_pages(etfs, indices):
                     {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
                     for q, a in etf_faqs
                 ]},
+                crumb_jsonld,
             ],
         }
 
@@ -1458,7 +1503,8 @@ def _write_etf_pages(etfs, indices):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         body += (
-            '<h1 style="margin-top:0">%s</h1>' % _esc(name)
+            crumb_html
+            + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
             + '<p class="muted">NSE: %s</p>' % _esc(symbol)
             + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-ETF register. '
@@ -1596,6 +1642,10 @@ def _write_mutual_fund_pages(schemes):
             '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
             for q, a in fund_faqs
         )
+        crumb_html, crumb_jsonld = _breadcrumb([
+            ("BrokerLens", "/"), ("Mutual funds by AMC", "/funds-by/"),
+            (amc, "/funds-by/%s/" % slugify(amc)), (name, None),
+        ])
         jsonld = {
             "@context": "https://schema.org",
             "@graph": [
@@ -1604,6 +1654,7 @@ def _write_mutual_fund_pages(schemes):
                     {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
                     for q, a in fund_faqs
                 ]},
+                crumb_jsonld,
             ],
         }
 
@@ -1612,7 +1663,8 @@ def _write_mutual_fund_pages(schemes):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         body += (
-            '<h1 style="margin-top:0">%s</h1>' % _esc(name)
+            crumb_html
+            + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
             + '<p class="muted">%s</p>' % _esc(amc)
             + (('<p class="xs faint">%s</p>' % _esc(" / ".join(fund["categories"])))
                if fund["categories"] else "")
@@ -2344,6 +2396,9 @@ def _write_calculator_pages():
     for c in CALCULATORS:
         canonical = "%s/calculators/%s/" % (SITE_URL, c["slug"])
         faqs = c.get("faqs") or []
+        crumb_html, crumb_jsonld = _breadcrumb([
+            ("BrokerLens", "/"), ("Calculators", "/calculators/"), (c["h1"], None),
+        ])
         jsonld = {
             "@context": "https://schema.org",
             "@graph": [
@@ -2360,6 +2415,7 @@ def _write_calculator_pages():
                         for q, a in faqs
                     ],
                 },
+                crumb_jsonld,
             ],
         }
         fields_html = "".join(
@@ -2377,7 +2433,8 @@ def _write_calculator_pages():
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         body += (
-            '<h1 style="margin-top:0">%s</h1>' % _esc(c["h1"])
+            crumb_html
+            + '<h1 style="margin-top:0">%s</h1>' % _esc(c["h1"])
             + '<p class="muted" style="max-width:68ch">%s</p>' % c["intro"]
             + '<p class="xs faint" style="max-width:68ch;margin-top:8px">%s</p>' % c["formula"]
             + '<div data-calc="%s" class="card" style="margin-top:20px;padding:20px;max-width:480px">' % c["calc"]
@@ -2454,11 +2511,20 @@ def _write_stock_directory(companies):
             % (_esc(slug), _esc(name), _esc(symbol))
             for name, symbol, slug in rows
         )
+        crumb_html, crumb_jsonld = _breadcrumb([
+            ("BrokerLens", "/"), ("Browse stocks", "/stocks/"), (letter, None),
+        ])
         jsonld = {
-            "@context": "https://schema.org", "@type": "ItemList", "name": title, "url": canonical,
-            "itemListElement": [
-                {"@type": "ListItem", "position": i + 1, "url": "%s/stock/%s/" % (SITE_URL, slug), "name": name}
-                for i, (name, symbol, slug) in enumerate(rows)
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "ItemList", "name": title, "url": canonical,
+                    "itemListElement": [
+                        {"@type": "ListItem", "position": i + 1, "url": "%s/stock/%s/" % (SITE_URL, slug), "name": name}
+                        for i, (name, symbol, slug) in enumerate(rows)
+                    ],
+                },
+                crumb_jsonld,
             ],
         }
         body = _REGISTRY_PAGE_HEAD % {
@@ -2466,7 +2532,8 @@ def _write_stock_directory(companies):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         body += (
-            '<h1 style="margin-top:0">Stocks starting with %s</h1>' % _esc(letter)
+            crumb_html
+            + '<h1 style="margin-top:0">Stocks starting with %s</h1>' % _esc(letter)
             + '<p class="muted" style="max-width:70ch">%d NSE-listed compan%s. Each link goes to that '
               'company\'s own listing page.</p>' % (len(rows), "y" if len(rows) == 1 else "ies")
             + '<div class="row-wrap" style="margin:16px 0">' + nav_html + '</div>'
@@ -2490,14 +2557,16 @@ def _write_stock_directory(companies):
         % (_esc(slugify(l)), _esc(l), len(groups[l]))
         for l in letters
     )
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Browse stocks", None)])
     body = _REGISTRY_PAGE_HEAD % {
         "title": _esc(title), "description": _esc(description),
         "canonical": _esc(canonical),
-        "jsonld": json.dumps({"@context": "https://schema.org", "@type": "CollectionPage",
-                               "name": title, "url": canonical}, ensure_ascii=False),
+        "jsonld": json.dumps({"@context": "https://schema.org", "@graph": [
+            {"@type": "CollectionPage", "name": title, "url": canonical}, crumb_jsonld]}, ensure_ascii=False),
     }
     body += (
-        '<h1 style="margin-top:0">Browse NSE-listed stocks</h1>'
+        crumb_html
+        + '<h1 style="margin-top:0">Browse NSE-listed stocks</h1>'
         '<p class="muted" style="max-width:70ch">%d companies across %d letters, sourced from NSE\'s own '
         'listed-securities master file.</p>' % (total, len(letters))
         + '<div class="grid g4" style="margin-top:16px">' + counts_html + '</div>'
@@ -2552,11 +2621,20 @@ def _write_fund_amc_pages(fund_slugs):
         list_html = "".join(
             '<a href="/fund/%s/">%s</a>' % (_esc(slug), _esc(name)) for name, slug in rows_sorted
         )
+        crumb_html, crumb_jsonld = _breadcrumb([
+            ("BrokerLens", "/"), ("Mutual funds by AMC", "/funds-by/"), (amc, None),
+        ])
         jsonld = {
-            "@context": "https://schema.org", "@type": "ItemList", "name": title, "url": canonical,
-            "itemListElement": [
-                {"@type": "ListItem", "position": i + 1, "url": "%s/fund/%s/" % (SITE_URL, slug), "name": name}
-                for i, (name, slug) in enumerate(rows_sorted)
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "ItemList", "name": title, "url": canonical,
+                    "itemListElement": [
+                        {"@type": "ListItem", "position": i + 1, "url": "%s/fund/%s/" % (SITE_URL, slug), "name": name}
+                        for i, (name, slug) in enumerate(rows_sorted)
+                    ],
+                },
+                crumb_jsonld,
             ],
         }
         body = _REGISTRY_PAGE_HEAD % {
@@ -2564,7 +2642,8 @@ def _write_fund_amc_pages(fund_slugs):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         body += (
-            '<h1 style="margin-top:0">%s mutual fund schemes</h1>' % _esc(amc)
+            crumb_html
+            + '<h1 style="margin-top:0">%s mutual fund schemes</h1>' % _esc(amc)
             + '<p class="muted" style="max-width:70ch">%d scheme%s from %s, sourced from AMFI\'s own daily '
               'NAV master file.</p>' % (len(rows_sorted), "" if len(rows_sorted) == 1 else "s", _esc(amc))
             + '<div class="link-columns" style="margin-top:16px">' + list_html + '</div>'
@@ -2586,14 +2665,16 @@ def _write_fund_amc_pages(fund_slugs):
         % (_esc(amc_slugs[amc]), _esc(amc), len(rows))
         for amc, rows in sorted(by_amc.items()) if amc in amc_slugs
     )
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Mutual funds by AMC", None)])
     body = _REGISTRY_PAGE_HEAD % {
         "title": _esc(title), "description": _esc(description),
         "canonical": _esc(canonical),
-        "jsonld": json.dumps({"@context": "https://schema.org", "@type": "CollectionPage",
-                               "name": title, "url": canonical}, ensure_ascii=False),
+        "jsonld": json.dumps({"@context": "https://schema.org", "@graph": [
+            {"@type": "CollectionPage", "name": title, "url": canonical}, crumb_jsonld]}, ensure_ascii=False),
     }
     body += (
-        '<h1 style="margin-top:0">Browse mutual funds by AMC</h1>'
+        crumb_html
+        + '<h1 style="margin-top:0">Browse mutual funds by AMC</h1>'
         '<p class="muted" style="max-width:70ch">%d fund houses across %d schemes, sourced from AMFI\'s own '
         'daily NAV master file.</p>' % (len(amc_slugs), total)
         + '<div class="grid g3" style="margin-top:16px">' + amc_cards + '</div>'
@@ -2634,11 +2715,18 @@ def _write_etf_directory(etfs):
         '<a href="/etf/%s/">%s <span class="xs faint">(%s)</span></a>' % (_esc(slug), _esc(name), _esc(symbol))
         for name, symbol, slug in rows
     )
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Browse ETFs", None)])
     jsonld = {
-        "@context": "https://schema.org", "@type": "ItemList", "name": title, "url": canonical,
-        "itemListElement": [
-            {"@type": "ListItem", "position": i + 1, "url": "%s/etf/%s/" % (SITE_URL, slug), "name": name}
-            for i, (name, symbol, slug) in enumerate(rows)
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "ItemList", "name": title, "url": canonical,
+                "itemListElement": [
+                    {"@type": "ListItem", "position": i + 1, "url": "%s/etf/%s/" % (SITE_URL, slug), "name": name}
+                    for i, (name, symbol, slug) in enumerate(rows)
+                ],
+            },
+            crumb_jsonld,
         ],
     }
     body = _REGISTRY_PAGE_HEAD % {
@@ -2646,7 +2734,8 @@ def _write_etf_directory(etfs):
         "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
     }
     body += (
-        '<h1 style="margin-top:0">Browse NSE-listed ETFs</h1>'
+        crumb_html
+        + '<h1 style="margin-top:0">Browse NSE-listed ETFs</h1>'
         '<p class="muted" style="max-width:70ch">%d ETFs, sourced from NSE\'s own listed-ETF register.</p>'
         % len(rows)
         + '<div class="link-columns" style="margin-top:16px">' + list_html + '</div>'
@@ -2710,6 +2799,7 @@ def _write_calculator_hub():
         '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
         for q, a in _CALC_HUB_FAQS
     )
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Calculators", None)])
     jsonld = {
         "@context": "https://schema.org",
         "@graph": [
@@ -2727,6 +2817,7 @@ def _write_calculator_hub():
                     for q, a in _CALC_HUB_FAQS
                 ],
             },
+            crumb_jsonld,
         ],
     }
 
@@ -2735,7 +2826,8 @@ def _write_calculator_hub():
         "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
     }
     body += (
-        '<h1 style="margin-top:0">Financial calculators</h1>'
+        crumb_html
+        + '<h1 style="margin-top:0">Financial calculators</h1>'
         '<p class="muted" style="max-width:68ch">Thirteen calculators covering investing, saving, loans '
         'and tax, each built on the standard formula the calculation is actually based on, with the '
         'formula itself shown on the page.</p>'

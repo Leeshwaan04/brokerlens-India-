@@ -704,6 +704,40 @@ def test_published():
     check("homepage nav has a Reports link matching static pages",
           "Reports</a>" in home_nav_html and "/reports/state-of-indian-broking-2026/" in home_nav_html)
 
+    # Breadcrumbs: a shared helper builds both the visible trail and its
+    # BreadcrumbList JSON-LD from the same data, so a page can never show one
+    # without the other. Checked on the highest-volume families plus the new
+    # directory pages, since a leaf page with no breadcrumb back to its
+    # parent hub is exactly the kind of orphaned-page gap fixed above.
+    import json as _json2
+
+    def _has_breadcrumb(html):
+        if '<nav class="breadcrumb"' not in html:
+            return False
+        for m in re.finditer(r'<script type="application/ld\+json">(.*?)</script>', html, re.S):
+            data = _json2.loads(m.group(1))
+            items = data.get("@graph", [data]) if isinstance(data, dict) else []
+            if any(isinstance(it, dict) and it.get("@type") == "BreadcrumbList" for it in items):
+                return True
+        return False
+
+    breadcrumb_targets = []
+    if os.path.isdir(stock_dir) and slugs:
+        breadcrumb_targets.append(("stock", os.path.join(stock_dir, slugs[0], "index.html")))
+    if os.path.exists(hdfc_flexicap_path):
+        breadcrumb_targets.append(("fund", hdfc_flexicap_path))
+    if os.path.exists(sip_path):
+        breadcrumb_targets.append(("calculator", sip_path))
+    if os.path.exists(calc_hub_path):
+        breadcrumb_targets.append(("calculator hub", calc_hub_path))
+    if os.path.exists(os.path.join(stocks_dir_path, "index.html")):
+        breadcrumb_targets.append(("stock directory overview", os.path.join(stocks_dir_path, "index.html")))
+    if os.path.exists(os.path.join(funds_by_dir, "index.html")):
+        breadcrumb_targets.append(("fund AMC directory overview", os.path.join(funds_by_dir, "index.html")))
+    for label, path in breadcrumb_targets:
+        html = open(path, encoding="utf-8").read()
+        check("%s page has a breadcrumb trail with matching JSON-LD" % label, _has_breadcrumb(html))
+
     # theme-init.js applies a visitor's stored dark/light choice on every
     # static page. Found live (by actually toggling dark mode on the
     # homepage in a real browser, then navigating to a static page and
