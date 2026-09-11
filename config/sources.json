@@ -203,16 +203,16 @@
       "kind": "json_api",
       "cadence": "realtime",
       "verified": "2026-09-11",
-      "notes": "Public endpoint, no auth, one request for all 28 symbols via the `symbols` array param (must be JSON with no spaces after commas - Binance 400s otherwise, confirmed by hand). This is the live price leg, refreshed on the same cheap ticker cadence as NSE/BSE/MCX quotes."
+      "notes": "Public endpoint, no auth, one request for all 28 symbols via the `symbols` array param (must be JSON with no spaces after commas - Binance 400s otherwise, confirmed by hand). Tried first as the live price leg on the cheap ticker cadence, but Binance's global API returns HTTP 451 (blocked for legal reasons) to any US-hosted IP - confirmed live in a Vercel build log (iad1/Washington DC) and true of GitHub Actions runners too, so it 451s on every automated run this pipeline makes. coingecko_markets below is the price leg that actually works in production; this stays wired in and used opportunistically (e.g. a non-US machine) rather than removed."
     },
     "coingecko_markets": {
       "publisher": "CoinGecko",
-      "title": "Coin identity, market-cap rank, supply, ATH/ATL",
+      "title": "Coin identity, market-cap rank, supply, ATH/ATL, plus price/24h stats (real fallback for the Binance leg above)",
       "url": "https://api.coingecko.com/api/v3/coins/markets",
       "kind": "json_api",
       "cadence": "hourly",
       "verified": "2026-09-11",
-      "notes": "Public endpoint, no auth. Used to resolve which real coin a Binance ticker symbol identifies (CoinGecko's own coin list has multiple different coins sharing some tickers) and for the slower-moving facts a static page carries - supply, market-cap rank, all-time high/low. Only the 28 hand-verified coin ids in pipeline/sources/crypto.py are ever requested; this pipeline never guesses a match from a bare symbol."
+      "notes": "Public endpoint, no auth. Used to resolve which real coin a Binance ticker symbol identifies (CoinGecko's own coin list has multiple different coins sharing some tickers) and for the slower-moving facts a static page carries - supply, market-cap rank, all-time high/low. Also called on a short ttl (coingecko_prices()) as the price leg for the ticker/pulse cadence, since Binance 451s from every automated environment this pipeline runs in - see binance_prices' notes. Only the 28 hand-verified coin ids in pipeline/sources/crypto.py are ever requested; this pipeline never guesses a match from a bare symbol."
     }
   },
   "licensing": {

@@ -65,17 +65,26 @@ def binance_prices(f, ttl=None):
     return out
 
 
-def coingecko_meta(f, ttl=None):
-    """Identity + supply/ATH/ATL facts - what makes a page worth publishing
-    beyond a bare price, refreshed each full build (not every minute; these
-    move far slower than price)."""
+def _coingecko_markets_rows(f, ttl):
     ids = ",".join(UNIVERSE.values())
     url = "%s/coins/markets?vs_currency=usd&ids=%s&order=market_cap_desc&per_page=%d&page=1" % (
         COINGECKO, ids, len(UNIVERSE) + 5)
-    data = f.get_json(url, ttl=3600 if ttl is None else ttl)
-    if not data:
-        return {}
-    by_id = {row["id"]: row for row in data if row.get("id")}
+    data = f.get_json(url, ttl=ttl)
+    return {row["id"]: row for row in (data or []) if row.get("id")}
+
+
+def coingecko_meta(f, ttl=None):
+    """Identity + supply/ATH/ATL facts, plus the same price/24h fields
+    Binance provides - CoinGecko's markets endpoint already carries both in
+    one response, refreshed each full build (not every minute; these move
+    far slower than price).
+
+    This is also the *only* price leg that actually works from Vercel or
+    GitHub Actions: Binance's global API returns HTTP 451 (blocked for
+    legal reasons) to any US-hosted IP, and both of those build environments
+    are US-hosted - confirmed live in a Vercel build log, not a guess. See
+    collect() for how the two are merged."""
+    by_id = _coingecko_markets_rows(f, 3600 if ttl is None else ttl)
     out = {}
     for sym, cg_id in UNIVERSE.items():
         row = by_id.get(cg_id)
@@ -93,6 +102,32 @@ def coingecko_meta(f, ttl=None):
             "ath_date": row.get("ath_date"),
             "atl_usd": row.get("atl"),
             "atl_date": row.get("atl_date"),
+            "price_usd": to_num(row.get("current_price")),
+            "change_pct_24h": to_num(row.get("price_change_percentage_24h")),
+            "high_24h": to_num(row.get("high_24h")),
+            "low_24h": to_num(row.get("low_24h")),
+            "volume_24h_usd": to_num(row.get("total_volume")),
+        }
+    return out
+
+
+def coingecko_prices(f, ttl=None):
+    """Price-only leg for the cheap pulse/ticker refresh, mirroring
+    binance_prices()'s return shape. Same endpoint as coingecko_meta, on a
+    short ttl, so a Binance-blocked refresh still gets a real number instead
+    of going stale."""
+    by_id = _coingecko_markets_rows(f, 60 if ttl is None else ttl)
+    out = {}
+    for sym, cg_id in UNIVERSE.items():
+        row = by_id.get(cg_id)
+        if not row:
+            continue
+        out[sym] = {
+            "price_usd": to_num(row.get("current_price")),
+            "change_pct_24h": to_num(row.get("price_change_percentage_24h")),
+            "high_24h": to_num(row.get("high_24h")),
+            "low_24h": to_num(row.get("low_24h")),
+            "volume_24h_usd": to_num(row.get("total_volume")),
         }
     return out
 
@@ -105,13 +140,17 @@ def collect():
     for sym in UNIVERSE:
         row = {"symbol": sym}
         row.update(meta.get(sym) or {})
-        row.update(prices.get(sym) or {})
-        # A coin with neither identity facts nor a live price isn't worth a
-        # page - skip it this run rather than publish something near-empty.
-        if row.get("name") and "price_usd" in row:
+        if sym in prices:
+            row.update(prices[sym])
+            row["price_source"] = "binance"
+        elif row.get("price_usd") is not None:
+            row["price_source"] = "coingecko"
+        # A coin with neither identity facts nor a price isn't worth a page -
+        # skip it this run rather than publish something near-empty.
+        if row.get("name") and row.get("price_usd") is not None:
             coins.append(row)
         else:
             log("crypto: skipping %s - missing %s" % (
-                sym, "CoinGecko metadata" if not row.get("name") else "Binance price"), "warn")
+                sym, "CoinGecko metadata" if not row.get("name") else "any price"), "warn")
     coins.sort(key=lambda r: r.get("market_cap_rank") or 9999)
     return {"coins": coins}

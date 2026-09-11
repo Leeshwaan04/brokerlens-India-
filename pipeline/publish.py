@@ -570,10 +570,12 @@ def build_ticker():
 def build_crypto_ticker():
     """Emit site/data/crypto-ticker.json - same small/frequently-refreshed
     contract as build_ticker(), for the 28-coin Phase 1 crypto universe.
-    Binance prices move every second; this is refreshed on the same cheap
-    `pipeline.run ticker` cadence as the NSE/BSE/MCX legs, never baked into
-    the static crypto pages themselves - the exact pattern the rest of this
-    site already uses for anything that changes faster than a rebuild."""
+    Refreshed on the same cheap `pipeline.run ticker` cadence as the
+    NSE/BSE/MCX legs, never baked into the static crypto pages themselves -
+    the exact pattern the rest of this site already uses for anything that
+    changes faster than a rebuild. Sourced from Binance when reachable,
+    CoinGecko otherwise (Binance 451s every automated build/refresh
+    environment this runs in - see pipeline/sources/crypto.py)."""
     ingest = read_json(os.path.join(INGEST_PATH), {}) or {}
     coins = ingest.get("crypto", {}).get("coins") or []
     payload = {
@@ -2797,36 +2799,108 @@ def _fmt_supply(n):
     return "%s coins" % format(int(n), ",")
 
 
+_BINANCE_LOGO_DATA_URI = (
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdp"
+    "AAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAACZElEQVRYCcVXu04DMRBMqCiA"
+    "z6BMHaVAqSCBKoIyX4IUUCD8CSWIjldBgRCiTslnAEVKZpzdk8/23dk+CSw569sd74zXD0Sn06J9P/fm6JctUnS6uZNJjrlnMn+xvb+c5eTK"
+    "EuCQK2+WiGQBFeTZIpIENJBniYgWEEmeLCJKQCJ5kohGAQ3kj8I2UlbHNh7MWgER5BMhvIPNElEpAOSnSHrlrEg/ufIJ7v6KDmA3YepEzIBd"
+    "EOu2Dddhfb9g/GV967BETqcIYTV0SxRLyxzMFWyVFSAaK+vDPKHv8BvNI1+717+BSpB8DIHvNs4elyqABFNJYjCY+IHBAToTeeTADtD3DBg/"
+    "TiU8cuZGnyqetqgAAnN8820PEfXg/xQCDE11BjAP6FwEV/kGaxqJMNiFbykuPSe3+D5EL26HEWCRK94ToQFa4JVct+YH7pIIB09BSq4hI6Ib"
+    "IFdAUESAXPEUcYRVv6qDFvgQuUIWpTOg3r+0/74FpgIo2zlWfSEr90qPMvaklAYCPK/VGJ0n3dt/YjnHgPED/ArmGP1efOVDKE7uF6/IjUww"
+    "bvj6GPAtIGnx+jGIGA8jCYp7Dh/3nK8iY6U3QGInwF8jZlpxDdVhWyHgVdPT7lXHwSv5SPzeW2DjOa4UECDXuUER1sqVXPHeFmmAtu4WDBHX"
+    "lROrjQR3Qmh8NeSMb6EPOQi1ygoQjMRzGL6OoWYqIYG6v4TFgQslqRXACREiCHPLTh9bLTkBjQIIahBBSKg1knNSlAACE0VEkScJSBARTZ4s"
+    "IEJEEnmWgBoRyeTZAgIissiZp1XjwURv9e/5L2XwMrWwIqehAAAAAElFTkSuQmCC"
+)
+
+
 def _crypto_banner_html():
     """The Binance CTA - only ever rendered on /crypto/ pages, never beside
     Indian broker content (explicit standing rule; see the pages.js
-    affiliateBanner() comment for the equivalent Zerodha placement)."""
+    affiliateBanner() comment for the equivalent Zerodha placement).
+
+    Logo is Binance's own favicon mark, pulled directly from their static
+    CDN (public.bnbstatic.com) - not a hand-drawn approximation, not a
+    third-party logo mirror."""
     return (
-        '<div class="aff-banner">'
+        '<div class="aff-banner aff-banner-binance">'
         '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-binance">'
         '<div class="aff-logo">'
-        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">'
-        '<path d="M12 2L14.5 4.5L12 7L9.5 4.5L12 2Z" fill="#F0B90B"/>'
-        '<path d="M6 8L8.5 10.5L6 13L3.5 10.5L6 8Z" fill="#F0B90B"/>'
-        '<path d="M18 8L20.5 10.5L18 13L15.5 10.5L18 8Z" fill="#F0B90B"/>'
-        '<path d="M12 9L14.5 11.5L12 14L9.5 11.5L12 9Z" fill="#F0B90B"/>'
-        '<path d="M12 16L14.5 18.5L12 21L9.5 18.5L12 16Z" fill="#F0B90B"/>'
-        "</svg>Binance</div></div>"
-        '<div class="aff-body">'
+        '<img src="%s" width="20" height="20" alt="" aria-hidden="true">Binance</div></div>' % _BINANCE_LOGO_DATA_URI
+        + '<div class="aff-body">'
         "<h4>Trade crypto on the world's largest exchange</h4>"
-        '<p class="xs muted">Buy, sell and trade Bitcoin, Ethereum and hundreds of other cryptocurrencies.</p>'
+        '<p class="xs muted">Sign up on Binance to buy, sell and trade Bitcoin, Ethereum and hundreds of '
+        "other cryptocurrencies.</p>"
         '<ul class="aff-features">'
         "<li>Spot, futures and more in one account</li>"
         "<li>Deep liquidity, tight spreads</li>"
         "<li>Trusted by users worldwide</li>"
         "</ul>"
         '<a class="aff-cta" href="https://accounts.binance.com/en-IN/register?ref=191870492" '
-        'target="_blank" rel="noopener sponsored">Open account &rarr;</a>'
+        'target="_blank" rel="noopener sponsored">Know More &rarr;</a>'
         '<div class="aff-fine">Crypto assets are highly volatile and unregulated by SEBI. '
-        "Not investment advice. You may lose your entire investment. 18+. T&amp;C apply. "
-        "BrokerLens may earn a commission on signups through this link; it has no effect on any "
-        "ranking or fact shown on this site.</div>"
+        "Not investment advice. You may lose your entire investment. 18+. T&amp;C apply.</div>"
+        "</div></div>"
+    )
+
+
+_DELTA_LOGO_DATA_URI = (
+    "data:image/png;base64,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"
+)
+
+
+def _delta_banner_html():
+    """The Delta Exchange India CTA - stacked directly below the Binance
+    banner, same /crypto/ pages only, same sponsored-and-separated rule.
+    Copy (headline, feature list, discount code) is Delta Exchange's own
+    official promo asset text, not written by BrokerLens. Logo is pulled
+    directly from delta.exchange's own favicon, not a third-party mirror."""
+    return (
+        '<div class="aff-banner aff-banner-delta">'
+        '<span class="aff-tag">Sponsored</span>'
+        '<div class="aff-art aff-art-delta">'
+        '<div class="aff-logo">'
+        '<img src="%s" width="20" height="20" alt="" aria-hidden="true">Delta Exchange</div></div>' % _DELTA_LOGO_DATA_URI
+        + '<div class="aff-body">'
+        "<h4>Join India's largest crypto F&amp;O exchange</h4>"
+        '<ul class="aff-features">'
+        "<li>INR settlements</li>"
+        "<li>Instant INR deposits and withdrawals</li>"
+        "<li>FIU-IND registered</li>"
+        "<li>Lowest fees</li>"
+        "</ul>"
+        '<a class="aff-cta" href="https://www.delta.exchange/?code=UAIYQN" '
+        'target="_blank" rel="noopener sponsored">Get up to 10% fee discount &rarr;</a>'
+        '<div class="aff-fine">Use code UAIYQN at signup. Crypto derivatives are highly volatile and '
+        "unregulated by SEBI. Not investment advice. You may lose your entire investment. 18+. T&amp;C apply.</div>"
         "</div></div>"
     )
 
@@ -2838,7 +2912,10 @@ def _write_crypto_pages(coins):
     rebuilt on each publish, same cadence as a stock page's NSE facts. Price
     is never baked in here - it's fetched client-side from crypto-ticker.json
     (crypto-live.js), refreshed on the same cheap `pipeline.run ticker`
-    cadence as NSE/BSE/MCX, so the browser never calls Binance directly.
+    cadence as NSE/BSE/MCX, so the browser never calls a third-party API
+    directly. That refresh prefers Binance but falls back to CoinGecko,
+    which is what actually runs in production (Binance 451s every automated
+    environment this pipeline runs in).
 
     Universe is the 28 hand-verified coins in pipeline/sources/crypto.py -
     see that module's docstring for why this list only grows by hand.
@@ -2855,8 +2932,8 @@ def _write_crypto_pages(coins):
         canonical = "%s/crypto/%s/" % (SITE_URL, slug)
         title = "%s (%s) Price, Market Cap and Facts | BrokerLens" % (_esc(name), _esc(symbol))
         description = _esc(
-            "%s (%s): market-cap rank, circulating supply and all-time high/low, plus a live price "
-            "updated from Binance. Not investment advice." % (name, symbol)
+            "%s (%s): market-cap rank, circulating supply and all-time high/low, plus a live reference "
+            "price. Not investment advice." % (name, symbol)
         )[:300]
 
         rank = c.get("market_cap_rank")
@@ -2876,7 +2953,7 @@ def _write_crypto_pages(coins):
 
         faqs = [
             ("What is the current price of %s?" % name,
-             "See the live price above, updated from Binance. Prices move continuously; this page's other "
+             "See the live price above, a reference price refreshed every few minutes. This page's other "
              "facts (market cap rank, supply, all-time high/low) are refreshed on each site update, not live."),
             ("What is %s's market cap rank?" % name,
              ("%s is ranked #%d by market capitalisation." % (name, rank)) if rank
@@ -2924,14 +3001,15 @@ def _write_crypto_pages(coins):
             + '<div id="crypto-price" data-symbol="%s" class="card" style="margin-top:12px;max-width:360px">'
               '<div class="small faint">Loading live price...</div></div>' % _esc(symbol)
             + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
-            + '<p class="xs faint" style="margin-top:16px">Identity and supply facts: CoinGecko. Live price: '
-              'Binance. Cryptocurrency is not regulated by SEBI or any Indian financial regulator.</p>'
+            + '<p class="xs faint" style="margin-top:16px">Facts and reference price are aggregated from public '
+              'market data, refreshed periodically. Cryptocurrency is not regulated by SEBI or any Indian '
+              'financial regulator.</p>'
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
         )
         body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
-            "This page's identity and supply facts come from CoinGecko's public API; live price comes "
-            "directly from Binance's public API.")}
+            "This page's identity, supply and reference-price facts are aggregated from public "
+            "cryptocurrency market data.")}
 
         dest_dir = os.path.join(ROOT, "site", "crypto", slug)
         os.makedirs(dest_dir, exist_ok=True)
@@ -2947,11 +3025,11 @@ _CRYPTO_HUB_FAQS = [
     ("Is this a crypto exchange?", "No. BrokerLens does not let you buy, sell or hold crypto. This page "
      "lists public facts (market cap, supply, all-time high/low) and a live reference price for each coin; "
      "trading happens on an exchange."),
-    ("Where does the live price come from?", "Binance's public API. Prices refresh independently of this "
-     "page's other facts, which come from CoinGecko and update on each site rebuild, not continuously."),
-    ("Why only 28 coins?", "Each one is hand-verified against both CoinGecko's real market-cap ranking and "
-     "Binance's actual tradeable pairs, so there's no risk of a ticker symbol match being the wrong coin. "
-     "This list grows only after the same manual verification, never by scanning symbols automatically."),
+    ("Where does the live price come from?", "Aggregated public cryptocurrency market data, refreshed every "
+     "few minutes, independently of this page's other facts, which update on each site rebuild."),
+    ("Why only 28 coins?", "Each one is hand-verified against real market-cap ranking and actual tradeable "
+     "pairs, so there's no risk of a ticker symbol match being the wrong coin. This list grows only after "
+     "the same manual verification, never by scanning symbols automatically."),
     ("Is cryptocurrency regulated in India?", "Not by SEBI. Crypto falls under separate income-tax (virtual "
      "digital asset) rules, and exchanges operating in India must register with FIU-IND under anti-money-"
      "laundering law. Nothing on this page is investment advice."),
@@ -2965,8 +3043,8 @@ def _write_crypto_hub(coins):
                      key=lambda c: c.get("market_cap_rank") or 9999)
     canonical = "%s/crypto/" % SITE_URL
     title = "Crypto Prices and Market Data | BrokerLens"
-    description = ("Live-ish prices and market-cap facts for %d major cryptocurrencies, sourced from "
-                    "Binance and CoinGecko." % len(ranked))
+    description = ("Reference prices and market-cap facts for %d major cryptocurrencies, aggregated from "
+                    "public market data." % len(ranked))
 
     rows_html = "".join(
         '<tr data-crypto-row="%s"><td class="rank-cell">%s</td>'
@@ -3000,20 +3078,20 @@ def _write_crypto_hub(coins):
     body += (
         crumb_html
         + '<h1 style="margin-top:0">Crypto prices and market data</h1>'
-        + '<p class="muted" style="max-width:70ch">%d cryptocurrencies, ranked by market cap. Live price from '
-          "Binance; identity and supply facts from CoinGecko.</p>" % len(ranked)
+        + '<p class="muted" style="max-width:70ch">%d cryptocurrencies, ranked by market cap. Reference price '
+          "and identity/supply facts aggregated from public market data.</p>" % len(ranked)
         + '<div class="grid g-main" style="margin-top:16px">'
         + '<div class="table-scroll"><table class="data"><thead><tr>'
           "<th>Rank</th><th>Coin</th><th class=\"right\">Price</th><th class=\"right\">24h</th>"
           "</tr></thead><tbody>" + rows_html + "</tbody></table></div>"
-        + '<div class="stack">' + _crypto_banner_html() + "</div>"
+        + '<div class="stack">' + _crypto_banner_html() + _delta_banner_html() + "</div>"
         + "</div>"
         + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
         + '<div style="max-width:68ch">' + faq_html + '</div>'
     )
     body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
-        "This page's live prices come from Binance's public API; identity and supply facts come from "
-        "CoinGecko's public API.")}
+        "This page's reference prices, identity and supply facts are aggregated from public "
+        "cryptocurrency market data.")}
     dest_dir = os.path.join(ROOT, "site", "crypto")
     os.makedirs(dest_dir, exist_ok=True)
     _write_text(os.path.join(dest_dir, "index.html"), body)

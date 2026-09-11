@@ -541,6 +541,36 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
 .aff-banner .aff-fine { font-size: 10px; line-height: 1.5; color: var(--text-faint); margin-top: 10px; }
 .aff-banner .aff-fine a { color: inherit; text-decoration: underline; }
 
+/* Binance variant: a fully dark, gold-accented card (not the shared light
+   .aff-banner look Zerodha uses) - this is the exact design approved in the
+   monetization preview, not a generic reskin of the Zerodha component. */
+.aff-banner-binance { background: linear-gradient(160deg, #1a1d21 0%, #0b0e11 100%); border-color: #2a2e35; }
+.aff-banner-binance .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+.aff-banner-binance .aff-art { height: auto; padding: var(--space-4) var(--space-4) 0; background: none; }
+.aff-banner-binance .aff-body { padding: var(--space-3) var(--space-4) var(--space-4); }
+.aff-banner-binance h4 { color: #fff; font-size: 16px; }
+.aff-banner-binance .aff-body p.muted { color: #b8bcc4; }
+.aff-banner-binance .aff-features li { color: #cfd3da; }
+.aff-banner-binance .aff-features li::before { color: #F0B90B; }
+.aff-banner-binance .aff-cta { background: #F0B90B; color: #0b0e11; }
+.aff-banner-binance .aff-cta:hover { background: #f3c333; }
+.aff-banner-binance .aff-fine { color: #7a7f88; }
+
+/* Delta Exchange variant: same dark-card treatment as Binance, own accent
+   green so the two are visually distinct in the stacked sidebar. */
+.aff-banner-delta { background: linear-gradient(160deg, #10201a 0%, #081410 100%); border-color: #1f3a2e; }
+.aff-banner-delta .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+.aff-banner-delta .aff-art { height: auto; padding: var(--space-4) var(--space-4) 0; background: none; }
+.aff-art-delta .aff-logo { color: #00D68F; }
+.aff-banner-delta .aff-body { padding: var(--space-3) var(--space-4) var(--space-4); }
+.aff-banner-delta h4 { color: #fff; font-size: 16px; }
+.aff-banner-delta .aff-body p.muted { color: #b3c2bb; }
+.aff-banner-delta .aff-features li { color: #c7d3cd; }
+.aff-banner-delta .aff-features li::before { color: #00D68F; }
+.aff-banner-delta .aff-cta { background: #00D68F; color: #06150f; }
+.aff-banner-delta .aff-cta:hover { background: #1fe09d; }
+.aff-banner-delta .aff-fine { color: #7a8a83; }
+
 /* Pushed-price flash. Short and low-contrast on purpose: a ticker that strobes
    is unreadable, and this fires every couple of seconds per instrument. */
 @keyframes flash-up-kf {

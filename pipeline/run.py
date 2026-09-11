@@ -127,13 +127,27 @@ def _refresh_quotes(ingest):
         bse_src.bse(), wl.get("bse"), ttl=5)
     ingest.setdefault("mcx", {})["quotes"] = mcx_src.heatmap(
         symbols=wl.get("mcx"), ttl=5)
-    # Crypto price-only refresh: cheap (one Binance request), skips the
-    # slower-moving CoinGecko identity/supply facts a full fetch() call pulls.
-    prices = crypto_src.binance_prices(crypto_src.crypto(), ttl=5)
+    # Crypto price-only refresh: cheap (one request), skips the slower-moving
+    # CoinGecko identity/supply facts a full fetch() call pulls. Binance is
+    # tried first but is geo-blocked (HTTP 451) from every automated
+    # environment this runs in (Vercel and GitHub Actions are both
+    # US-hosted) - CoinGecko's markets endpoint is the real fallback, not a
+    # rare edge case, so it's only skipped when Binance actually answers.
+    fcx = crypto_src.crypto()
+    prices = crypto_src.binance_prices(fcx, ttl=5)
     coins = ingest.get("crypto", {}).get("coins") or []
+    if any(c["symbol"] not in prices for c in coins):
+        cg_prices = crypto_src.coingecko_prices(fcx, ttl=60)
+    else:
+        cg_prices = {}
     for c in coins:
-        if c["symbol"] in prices:
-            c.update(prices[c["symbol"]])
+        sym = c["symbol"]
+        if sym in prices:
+            c.update(prices[sym])
+            c["price_source"] = "binance"
+        elif sym in cg_prices:
+            c.update(cg_prices[sym])
+            c["price_source"] = "coingecko"
     ingest.setdefault("crypto", {})["coins"] = coins
     return ingest
 

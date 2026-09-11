@@ -859,10 +859,26 @@ def test_published():
     # the site's "static facts + client-refreshed live number" pattern.
     crypto_dir = os.path.join(ROOT, "site", "crypto")
     check("crypto hub page exists", os.path.exists(os.path.join(crypto_dir, "index.html")))
+    # Both Binance and CoinGecko can independently fail; if a future change
+    # ever makes both legs come back empty, _write_crypto_pages() silently
+    # writes zero pages and prunes any that existed (caught live once: a
+    # Binance-only price leg 451s from Vercel/GitHub Actions, every build,
+    # permanently, deleting all 28 committed pages with no test catching it -
+    # the site.vercel.json SPA rewrite then quietly served the homepage for
+    # every /crypto/* URL instead of a clear 404). This check exists so that
+    # regression is loud instead of silent.
+    if os.path.isdir(crypto_dir):
+        coin_dirs = [d for d in os.listdir(crypto_dir) if os.path.isdir(os.path.join(crypto_dir, d))]
+        check("a real number of crypto coin pages were written, not silently pruned to zero",
+              len(coin_dirs) >= 20, "found %d" % len(coin_dirs))
     if os.path.exists(os.path.join(crypto_dir, "index.html")):
         hub_html = open(os.path.join(crypto_dir, "index.html"), encoding="utf-8").read()
         check("crypto hub links individual coin pages", "/crypto/btc/" in hub_html or "/crypto/eth/" in hub_html)
         check("crypto hub carries the Binance sponsored banner", "Binance" in hub_html and "Sponsored" in hub_html)
+        check("crypto hub carries the Delta Exchange sponsored banner, stacked below Binance's",
+              "Delta Exchange" in hub_html
+              and hub_html.index("aff-banner-binance") < hub_html.index("aff-banner-delta")
+              and "delta.exchange/?code=UAIYQN" in hub_html)
         check("crypto hub loads crypto-live.js", "crypto-live.js" in hub_html)
     btc_path = os.path.join(crypto_dir, "btc", "index.html")
     check("a sample crypto coin page (BTC) exists", os.path.exists(btc_path))
