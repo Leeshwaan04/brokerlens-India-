@@ -222,6 +222,12 @@ th[data-tip]:not(.sortable) { cursor: help; }
 .mega-seg-head.live .t::before, .sess.live .t::before {
   content: "●"; font-size: 8px; margin-right: 5px; vertical-align: 2px;
 }
+.markets-list { padding: var(--space-4) 0; max-width: 320px; display: flex; flex-direction: column; gap: 2px; }
+.markets-list a {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); color: var(--text);
+}
+.markets-list a:hover { background: var(--bg-hover); text-decoration: none; }
 .mega-foot {
   grid-column: 1 / -1; border-top: 1px solid var(--border);
   padding-top: var(--space-3); font-size: var(--fs-xs); color: var(--text-faint);
@@ -505,6 +511,21 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
 
 .ad-slot { border: 1px dashed var(--border-strong); border-radius: var(--radius); padding: var(--space-4); background: var(--bg-sunken); }
 .ad-slot .ad-tag { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); }
+
+/* External-broker affiliate banner - a real referral link to a broker's own
+   signup page, distinct from .ad-slot above (which only ever links to a
+   BrokerLens-tracked profile). Solid border, not dashed, so it doesn't read
+   as a placeholder the way .ad-slot deliberately does. */
+.aff-banner { border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); background: var(--bg-raised); }
+.aff-banner .aff-tag {
+  display: inline-block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-faint); border: 1px solid var(--border); border-radius: var(--radius-full);
+  padding: 1px 7px; margin-bottom: var(--space-2);
+}
+.aff-banner .aff-brand { font-weight: 700; font-size: 13px; letter-spacing: 0.02em; color: var(--accent-text); }
+.aff-banner h4 { font-size: 14px; margin: 6px 0 4px; line-height: 1.35; }
+.aff-banner .aff-fine { font-size: 10px; line-height: 1.5; color: var(--text-faint); margin-top: 10px; }
+.aff-banner .aff-fine a { color: inherit; text-decoration: underline; }
 
 /* Pushed-price flash. Short and low-contrast on purpose: a ticker that strobes
    is unreadable, and this fires every couple of seconds per instrument. */

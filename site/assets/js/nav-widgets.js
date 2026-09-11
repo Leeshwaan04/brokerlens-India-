@@ -147,47 +147,69 @@ function renderMega(t) {
     </div>`;
 }
 
-function setMega(open) {
-  if (!megaPanel || !megaBtn) return;
-  megaPanel.hidden = !open;
-  megaBtn.setAttribute('aria-expanded', String(open));
-  if (open) {
-    loadTimings().then(renderMega).catch(() => {
-      megaBody.innerHTML = `<div class="small faint" style="padding:16px 0">
-        Timings unavailable - run <code>python3 -m pipeline.run build</code> first.</div>`;
-    });
-  }
-}
-
-/* On hover devices the pointer already opened the panel, so a click must not
- * toggle it straight back shut - it only ever opens. Touch keeps the toggle. */
+/* Generic open/close/hover/escape/outside-click wiring, shared by every
+ * button+panel dropdown in the nav (market timings, markets). Extracted
+ * after a second dropdown (markets) needed the exact same behaviour - one
+ * copy is a pattern, two hand-written copies are a maintenance bug waiting
+ * to happen when only one gets a future fix. */
 const HOVER_CAPABLE = window.matchMedia('(hover: hover)').matches;
 
-megaBtn?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  if (megaPanel.hidden) setMega(true);
-  else if (!HOVER_CAPABLE) setMega(false);
-});
+function wireDropdown(btn, panel, onOpen) {
+  if (!btn || !panel) return () => {};
+  const set = (open) => {
+    panel.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    if (open && onOpen) onOpen();
+  };
 
-/* Hover behaviour, only on devices that actually hover (desktop). The close is
- * delayed a beat so the pointer can travel from the button into the panel, and
- * cancelled the moment it arrives. Hovering a sibling nav link dismisses. */
-if (HOVER_CAPABLE && megaBtn && megaPanel) {
-  let megaCloseTimer = null;
-  const cancelClose = () => { clearTimeout(megaCloseTimer); megaCloseTimer = null; };
-  const scheduleClose = () => { cancelClose(); megaCloseTimer = setTimeout(() => setMega(false), 250); };
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (panel.hidden) set(true);
+    else if (!HOVER_CAPABLE) set(false);
+  });
 
-  megaBtn.addEventListener('mouseenter', () => { cancelClose(); if (megaPanel.hidden) setMega(true); });
-  megaPanel.addEventListener('mouseenter', cancelClose);
-  megaBtn.addEventListener('mouseleave', scheduleClose);
-  megaPanel.addEventListener('mouseleave', scheduleClose);
-  document.querySelectorAll('#navlinks a').forEach((a) =>
-    a.addEventListener('mouseenter', () => { if (!megaPanel.hidden) setMega(false); }));
+  /* Hover behaviour, only on devices that actually hover (desktop). The close
+   * is delayed a beat so the pointer can travel from the button into the
+   * panel, and cancelled the moment it arrives. Hovering a sibling nav link
+   * dismisses. */
+  if (HOVER_CAPABLE) {
+    let closeTimer = null;
+    const cancelClose = () => { clearTimeout(closeTimer); closeTimer = null; };
+    const scheduleClose = () => { cancelClose(); closeTimer = setTimeout(() => set(false), 250); };
+
+    btn.addEventListener('mouseenter', () => { cancelClose(); if (panel.hidden) set(true); });
+    panel.addEventListener('mouseenter', cancelClose);
+    btn.addEventListener('mouseleave', scheduleClose);
+    panel.addEventListener('mouseleave', scheduleClose);
+    document.querySelectorAll('#navlinks a, #navlinks button').forEach((a) => {
+      if (a !== btn) a.addEventListener('mouseenter', () => { if (!panel.hidden) set(false); });
+    });
+  }
+  document.addEventListener('click', (e) => {
+    if (panel.hidden) return;
+    if (!panel.contains(e.target) && e.target !== btn) { set(false); return; }
+    // A real navigating link inside the panel (e.g. the markets dropdown)
+    // must close it too, or it's left floating over the page it navigated
+    // to - found live via screenshot, not from the DOM state alone.
+    if (e.target.closest('a')) set(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !panel.hidden) set(false);
+  });
+  return set;
 }
-document.addEventListener('click', (e) => {
-  if (!megaPanel || megaPanel.hidden) return;
-  if (!megaPanel.contains(e.target) && e.target !== megaBtn) setMega(false);
+
+wireDropdown(megaBtn, megaPanel, () => {
+  loadTimings().then(renderMega).catch(() => {
+    megaBody.innerHTML = `<div class="small faint" style="padding:16px 0">
+      Timings unavailable - run <code>python3 -m pipeline.run build</code> first.</div>`;
+  });
 });
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && megaPanel && !megaPanel.hidden) setMega(false);
-});
+
+/* ------------------------------------------------------- markets dropdown
+ *
+ * "Brokers" in the nav is now a dropdown naming every market BrokerLens
+ * plans to cover, not just the one that's live. Static content (no fetch),
+ * so it needs no onOpen callback - unlike the timings panel above.
+ */
+wireDropdown(document.getElementById('markets-toggle'), document.getElementById('mega-markets'));

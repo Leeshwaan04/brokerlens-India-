@@ -673,7 +673,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
   <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
           aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
   <nav class="nav-links" id="navlinks">
-    <a href="/brokers">Brokers</a>
+    <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
     <a href="/compare">Compare</a>
     <a href="/leaderboards">Rankings</a>
     <a href="/calculators/">Calculators</a>
@@ -688,6 +688,16 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
 <div class="mega" id="mega-timings" hidden>
   <div class="wrap">
     <div id="mega-timings-body" class="mega-grid"><div class="small faint" style="padding:16px 0">Loading timings...</div></div>
+  </div>
+</div>
+<div class="mega" id="mega-markets" hidden>
+  <div class="wrap">
+    <div class="markets-list">
+      <a href="/brokers"><span>India</span><span class="badge badge-up">Live</span></a>
+      <a href="/coming-soon/crypto"><span>Crypto</span><span class="badge badge-warn">Coming soon</span></a>
+      <a href="/coming-soon/us"><span>US</span><span class="badge badge-warn">Coming soon</span></a>
+      <a href="/coming-soon/gcc"><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
+    </div>
   </div>
 </div>
 </header>

@@ -97,6 +97,33 @@ function adSlot(overview, placement) {
   </div>`;
 }
 
+/* ------------------------------------------------------ affiliate banner
+ *
+ * A referral link to an external broker's own signup page - distinct from
+ * adSlot() above, which only ever links to one of BrokerLens's own tracked
+ * broker profiles. This earns a commission on signup; it never appears
+ * inside the ranking table or comparison logic, and it is explicitly scoped
+ * to Indian-broker-context pages only. A crypto exchange counterpart exists
+ * but is deliberately never rendered on the same page as this one - see the
+ * standing rule against mixing the two verticals in one sidebar.
+ */
+function affiliateBanner() {
+  return `<div class="aff-banner">
+    <span class="aff-tag">Affiliate</span>
+    <div class="aff-brand">ZERODHA</div>
+    <h4>Brokerage-free equity &amp; mutual fund investments</h4>
+    <p class="xs muted">₹20 brokerage for all other trades.* Trade with Zerodha's Kite platform and tools.</p>
+    <a class="btn btn-primary btn-sm" style="width:100%;justify-content:center;margin-top:8px"
+       href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored">Open account →</a>
+    <div class="aff-fine">*T&amp;C apply. Investment in securities market are subject to market risks; read all
+      related documents carefully before investing. Full disclaimer at
+      <a href="https://zerodha.com/pricing" target="_blank" rel="noopener">zerodha.com/pricing</a>.
+      Member ID NSE (13906), BSE (6498), MCX (46025). Brokerage will not exceed the SEBI-prescribed limit.
+      BrokerLens may earn a commission on signups through this link; it has no effect on any ranking or
+      score shown on this site.</div>
+  </div>`;
+}
+
 /* =========================================================== HOME */
 
 export async function home() {
@@ -234,6 +261,7 @@ export async function home() {
 
     <div class="stack">
       ${adSlot(o, 'homepage rail')}
+      ${affiliateBanner()}
 
       <div class="card">
         <div class="card-title">Market snapshot</div>
@@ -345,49 +373,56 @@ export async function brokers(params) {
       `<a href="/brokers-by/segment/${k.replace(/_/g, '-')}/">${esc(v)}</a>`).join(' &middot; ')}
   </p>
 
-  <div class="card" style="margin-top:16px">
-    <div class="row-wrap">
-      <div class="grow" style="min-width:220px">
-        <input type="search" id="dir-q" placeholder="Search broker or legal entity…" value="${esc(dirState.q)}">
+  <div class="grid g-main" style="margin-top:16px">
+    <div>
+      <div class="card">
+        <div class="row-wrap">
+          <div class="grow" style="min-width:220px">
+            <input type="search" id="dir-q" placeholder="Search broker or legal entity…" value="${esc(dirState.q)}">
+          </div>
+          <div class="chips">
+            ${Object.entries(TYPE_LABEL).map(([k, v]) =>
+              `<button class="chip" data-filter="type:${k}" aria-pressed="${dirState.type === k}">${esc(v)}</button>`).join('')}
+            ${Object.entries(SEGMENT_LABEL).map(([k, v]) =>
+              `<button class="chip" data-filter="segment:${k}" aria-pressed="${dirState.segment === k}">${esc(v)}</button>`).join('')}
+          </div>
+          <span class="small faint" id="dir-count"></span>
+        </div>
       </div>
-      <div class="chips">
-        ${Object.entries(TYPE_LABEL).map(([k, v]) =>
-          `<button class="chip" data-filter="type:${k}" aria-pressed="${dirState.type === k}">${esc(v)}</button>`).join('')}
-        ${Object.entries(SEGMENT_LABEL).map(([k, v]) =>
-          `<button class="chip" data-filter="segment:${k}" aria-pressed="${dirState.segment === k}">${esc(v)}</button>`).join('')}
-      </div>
-      <span class="small faint" id="dir-count"></span>
-    </div>
-  </div>
 
-  <div class="table-scroll" style="margin-top:16px">
-    <table class="data">
-      <thead><tr>
-        <th data-tip="Rank by active clients. A dash means the client count is not available yet.">#</th>
-        <th class="sortable" data-sort="brand"
-          data-tip="Consumer brand. The SEBI badge means we matched the legal entity and registration number to SEBI's own register; a flag means the broker appears in an exchange circular or on the defaulter list.">Broker <span class="arrow">↕</span></th>
-        <th class="sortable right sorted" data-sort="clients"
-          data-tip="Unique clients who placed at least one trade in the last 12 months, as reported to the exchange (NSE UCC data). The standard measure of a broker's real, active user base; L is lakh (100,000).">Active clients <span class="arrow">↕</span></th>
-        <th class="sortable right" data-sort="clients_yoy"
-          data-tip="Change in active clients over the last 12 months, in percent. Positive means the broker is gaining active users; negative means clients are leaving or going inactive.">12-month <span class="arrow">↕</span></th>
-        <th data-tip="Active client count month by month over the last 12 months, so you can see whether growth is steady, recent or fading.">Trend</th>
-        <th class="sortable right" data-sort="complaints_per_10k"
-          data-tip="Investor complaints received in the last 12 months per 10,000 active clients, from SEBI-mandated disclosures. Dividing by size lets small and large brokers be compared fairly. Lower is better.">Complaints /10k <span class="arrow">↕</span></th>
-        <th class="sortable right tip-end" data-sort="reliability"
-          data-tip="BrokerLens composite score out of 100: complaint rate vs peers (40%), complaint resolution rate (20%), regulatory record (20%), complaint backlog (10%) and years in business (10%). Built only from regulator and exchange disclosures; full formula on the methodology page.">Reliability <span class="arrow">↕</span></th>
-        <th class="sortable right tip-end" data-sort="cost"
-          data-tip="Estimated brokerage for a fixed monthly basket (4 delivery trades, 10 intraday, 10 F&O orders) plus AMC, priced on each broker's published charges. Statutory taxes are excluded since they are identical across brokers. Shows 'unverified' until a broker publishes charges on its claimed profile.">Cost /month <span class="arrow">↕</span></th>
-        <th class="tip-end"
-          data-tip="Business model. Discount: flat per-order fee, app first. Full service: research, advisory and branch network. Bank backed: the broking arm of a bank, usually with a 3-in-1 account.">Type</th>
-      </tr></thead>
-      <tbody id="dir-body"></tbody>
-    </table>
-  </div>
-  <p class="xs faint" style="margin-top:10px">
-    ${provDot('nse')} exchange/regulator sourced · ${provDot('curated')} curated or broker-supplied ·
-    ${provDot('sample')} sample pending ingest. Cost is a fixed basket of trades — see
-    <a href="/methodology" data-link>methodology</a>.
-  </p>`;
+      <div class="table-scroll" style="margin-top:16px">
+        <table class="data">
+          <thead><tr>
+            <th data-tip="Rank by active clients. A dash means the client count is not available yet.">#</th>
+            <th class="sortable" data-sort="brand"
+              data-tip="Consumer brand. The SEBI badge means we matched the legal entity and registration number to SEBI's own register; a flag means the broker appears in an exchange circular or on the defaulter list.">Broker <span class="arrow">↕</span></th>
+            <th class="sortable right sorted" data-sort="clients"
+              data-tip="Unique clients who placed at least one trade in the last 12 months, as reported to the exchange (NSE UCC data). The standard measure of a broker's real, active user base; L is lakh (100,000).">Active clients <span class="arrow">↕</span></th>
+            <th class="sortable right" data-sort="clients_yoy"
+              data-tip="Change in active clients over the last 12 months, in percent. Positive means the broker is gaining active users; negative means clients are leaving or going inactive.">12-month <span class="arrow">↕</span></th>
+            <th data-tip="Active client count month by month over the last 12 months, so you can see whether growth is steady, recent or fading.">Trend</th>
+            <th class="sortable right" data-sort="complaints_per_10k"
+              data-tip="Investor complaints received in the last 12 months per 10,000 active clients, from SEBI-mandated disclosures. Dividing by size lets small and large brokers be compared fairly. Lower is better.">Complaints /10k <span class="arrow">↕</span></th>
+            <th class="sortable right tip-end" data-sort="reliability"
+              data-tip="BrokerLens composite score out of 100: complaint rate vs peers (40%), complaint resolution rate (20%), regulatory record (20%), complaint backlog (10%) and years in business (10%). Built only from regulator and exchange disclosures; full formula on the methodology page.">Reliability <span class="arrow">↕</span></th>
+            <th class="sortable right tip-end" data-sort="cost"
+              data-tip="Estimated brokerage for a fixed monthly basket (4 delivery trades, 10 intraday, 10 F&O orders) plus AMC, priced on each broker's published charges. Statutory taxes are excluded since they are identical across brokers. Shows 'unverified' until a broker publishes charges on its claimed profile.">Cost /month <span class="arrow">↕</span></th>
+            <th class="tip-end"
+              data-tip="Business model. Discount: flat per-order fee, app first. Full service: research, advisory and branch network. Bank backed: the broking arm of a bank, usually with a 3-in-1 account.">Type</th>
+          </tr></thead>
+          <tbody id="dir-body"></tbody>
+        </table>
+      </div>
+      <p class="xs faint" style="margin-top:10px">
+        ${provDot('nse')} exchange/regulator sourced · ${provDot('curated')} curated or broker-supplied ·
+        ${provDot('sample')} sample pending ingest. Cost is a fixed basket of trades — see
+        <a href="/methodology" data-link>methodology</a>.
+      </p>
+    </div>
+    <div class="stack">
+      ${affiliateBanner()}
+    </div>
+  </div>`;
 }
 
 function filterSort(list) {
@@ -1116,6 +1151,14 @@ export async function methodology() {
       <li>We do not let paid placement move a broker up a factual ranking.</li>
       <li>We do not invent a number to fill a gap. Missing data shows as "—" or "unverified".</li>
     </ul>
+  </div>
+
+  <div class="section-title"><h2>Advertising disclosure</h2></div>
+  <div class="card">
+    <p class="small muted">Some pages carry a clearly marked "Affiliate" banner linking to a broker's own signup
+    page; BrokerLens may earn a commission if you open an account through one of those links. This is separate
+    from every ranking, score and comparison on this site, which are built only from the regulator and exchange
+    data described above and are never affected by who does or doesn't have an affiliate relationship with us.</p>
   </div>`;
 }
 
@@ -1159,6 +1202,46 @@ function statusBadge(st) {
   if (st === 'ok') return '<span class="badge badge-up">ok</span>';
   if (st === 'empty') return '<span class="badge badge-warn">empty</span>';
   return `<span class="badge badge-down" title="${esc(st)}">error</span>`;
+}
+
+/* ===================================================== COMING SOON
+ *
+ * Real pages, not dead nav links: the "Brokers" menu now names every market
+ * BrokerLens plans to cover (India, Crypto, US, GCC), but only India has an
+ * actual data pipeline today. Rather than a disabled nav item or a link to
+ * nothing, each of the other three gets a genuine page stating plainly that
+ * it isn't live yet - the same "not published yet, never a guess" principle
+ * used everywhere else on this site, applied to entire sections instead of
+ * single fields.
+ */
+const COMING_SOON = {
+  crypto: {
+    h1: 'Crypto exchange comparison',
+    body: 'BrokerLens is building a crypto exchange comparison the same way as everything else here: '
+      + 'real prices and listings pulled directly from exchange APIs (starting with Binance), not aggregator '
+      + 'sites, with coin identity cross-checked against market-cap data before a page is published.',
+  },
+  us: {
+    h1: 'US stock broker comparison',
+    body: 'BrokerLens is researching primary-source data for US stock brokers (SEC/FINRA disclosures, '
+      + 'brokerage fee schedules) before building this the same way as the Indian broker comparison: '
+      + 'real regulator data, not marketing copy.',
+  },
+  gcc: {
+    h1: 'GCC stock broker comparison',
+    body: 'BrokerLens is researching primary-source data for stock brokers in the UAE, Saudi Arabia and the '
+      + 'wider Gulf before building this section.',
+  },
+};
+
+export async function comingSoon(market) {
+  const m = COMING_SOON[market] || COMING_SOON.crypto;
+  return `<div style="max-width:60ch;margin-top:16px">
+    <span class="badge badge-warn">Coming soon</span>
+    <h1 style="margin-top:12px">${esc(m.h1)}</h1>
+    <p class="muted">${esc(m.body)}</p>
+    <p class="small"><a href="/brokers" data-link>See the live India broker comparison instead →</a></p>
+  </div>`;
 }
 
 /* =========================================================== 404 */

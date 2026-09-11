@@ -822,6 +822,51 @@ def test_published():
           "./nav-widgets.js" in app_js_src
           and "megaBtn" not in app_js_src and "themeBtn" not in app_js_src)
 
+    # Markets dropdown ("Brokers" -> India/Crypto/US/GCC): must appear
+    # identically on the SPA shell and every static page, same as every
+    # other nav element on this site.
+    if os.path.exists(nav_widgets_path):
+        check("nav-widgets.js implements the shared dropdown wiring used by both mega menus",
+              "wireDropdown" in nav_widgets_js and "markets-toggle" in nav_widgets_js)
+    for label, path in [
+        ("homepage", os.path.join(ROOT, "site", "index.html")),
+        ("stock", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
+    ]:
+        if not path or not os.path.exists(path):
+            continue
+        html = open(path, encoding="utf-8").read()
+        check("%s page has the markets dropdown (Brokers menu)" % label,
+              'id="markets-toggle"' in html and 'id="mega-markets"' in html
+              and ">India<" in html and ">Crypto<" in html and ">US<" in html and ">GCC<" in html)
+
+    # Coming-soon routes for unbuilt markets: real pages, not dead nav links.
+    check("app.js registers routes for the three unbuilt markets",
+          all(r in app_js_src for r in ["/coming-soon/crypto", "/coming-soon/us", "/coming-soon/gcc"]))
+    pages_js_src = open(os.path.join(ROOT, "site", "assets", "js", "pages.js"), encoding="utf-8").read()
+    check("pages.js implements comingSoon() for all three unbuilt markets",
+          "export async function comingSoon" in pages_js_src
+          and all(k in pages_js_src for k in ["crypto:", "us:", "gcc:"]))
+
+    # Affiliate banner: a real referral link, kept out of the ranking table,
+    # and never mixed with crypto content per the standing placement rule.
+    check("pages.js defines a real Zerodha affiliate banner with the actual referral link",
+          "function affiliateBanner" in pages_js_src
+          and "zerodha.com/open-account?c=ZE5729" in pages_js_src
+          and 'rel="noopener sponsored"' in pages_js_src)
+    check("the affiliate banner is not embedded inside the broker ranking table markup",
+          # dirRow() renders each ranked table row; the banner must live outside it.
+          "affiliateBanner()" not in re.search(r"function dirRow\(.*?\n\}", pages_js_src, re.S).group(0)
+          if re.search(r"function dirRow\(.*?\n\}", pages_js_src, re.S) else True)
+    # "binance" is expected on the dedicated coming-soon/crypto page copy;
+    # it must not appear inside affiliateBanner() or the home()/brokers()
+    # functions that actually render it, which is the real separation rule.
+    for fn_name in ("affiliateBanner", "home", "brokers"):
+        m = re.search(r"function %s\(.*?\n\}" % fn_name, pages_js_src, re.S) \
+            or re.search(r"async function %s\(.*?\n\}" % fn_name, pages_js_src, re.S)
+        if m:
+            check("%s() carries no crypto exchange content alongside the Indian broker affiliate banner" % fn_name,
+                  "binance" not in m.group(0).lower())
+
     # No page title anywhere on the site should carry an em dash - a standing
     # copy rule ("—" isn't in the "no em dashes" allowance) applied here as an
     # automated check since it has silently regressed before.
