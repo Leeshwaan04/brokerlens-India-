@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/assets/js/theme-init.js"></script>
+<title>Crypto Prices and Market Data | BrokerLens</title>
+<meta name="description" content="Live-ish prices and market-cap facts for 28 major cryptocurrencies, sourced from Binance and CoinGecko.">
+<link rel="canonical" href="https://www.brokerlens.in/crypto/">
+<meta name="theme-color" content="#2f4a8f">
+<link rel="stylesheet" href="/assets/css/app.css">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrokerLens">
+<meta property="og:locale" content="en_IN">
+<meta property="og:url" content="https://www.brokerlens.in/crypto/">
+<meta property="og:title" content="Crypto Prices and Market Data | BrokerLens">
+<meta property="og:description" content="Live-ish prices and market-cap facts for 28 major cryptocurrencies, sourced from Binance and CoinGecko.">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is this a crypto exchange?", "acceptedAnswer": {"@type": "Answer", "text": "No. BrokerLens does not let you buy, sell or hold crypto. This page lists public facts (market cap, supply, all-time high/low) and a live reference price for each coin; trading happens on an exchange."}}, {"@type": "Question", "name": "Where does the live price come from?", "acceptedAnswer": {"@type": "Answer", "text": "Binance's public API. Prices refresh independently of this page's other facts, which come from CoinGecko and update on each site rebuild, not continuously."}}, {"@type": "Question", "name": "Why only 28 coins?", "acceptedAnswer": {"@type": "Answer", "text": "Each one is hand-verified against both CoinGecko's real market-cap ranking and Binance's actual tradeable pairs, so there's no risk of a ticker symbol match being the wrong coin. This list grows only after the same manual verification, never by scanning symbols automatically."}}, {"@type": "Question", "name": "Is cryptocurrency regulated in India?", "acceptedAnswer": {"@type": "Answer", "text": "Not by SEBI. Crypto falls under separate income-tax (virtual digital asset) rules, and exchanges operating in India must register with FIU-IND under anti-money-laundering law. Nothing on this page is investment advice."}}]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "BrokerLens", "item": "https://www.brokerlens.in/"}, {"@type": "ListItem", "position": 2, "name": "Crypto"}]}]}</script>
+<script type="module" src="/assets/js/crypto-live.js" defer></script></head>
+<body>
+<header class="site"><div class="wrap nav">
+  <a class="brand" href="/">
+    <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" role="img" aria-label="BrokerLens">
+      <defs><clipPath id="bl-lens-reg"><circle cx="256" cy="256" r="143"/></clipPath></defs>
+      <g fill="none" stroke="var(--accent)" stroke-width="30" stroke-linecap="round">
+        <path d="M50 369 L84 359" opacity=".38"/><path d="M18 379 L30 375" opacity=".18"/>
+        <path d="M438 161 L470 149" opacity=".38"/><path d="M486 143 L496 140" opacity=".18"/>
+      </g>
+      <circle cx="256" cy="256" r="166" fill="none" stroke="var(--accent)" stroke-width="46"/>
+      <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="var(--up)"
+            stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-reg)"/>
+    </svg>
+    <span>BrokerLens</span>
+  </a>
+  <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
+          aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
+  <nav class="nav-links" id="navlinks">
+    <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
+    <a href="/compare">Compare</a>
+    <a href="/leaderboards">Rankings</a>
+    <a href="/calculators/">Calculators</a>
+    <a href="/registry">SEBI registry</a>
+    <a href="/algo">Algo platforms</a>
+    <a href="/reports/state-of-indian-broking-2026/">Reports</a>
+    <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
+  </nav>
+  <button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+  <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
+</div>
+<div class="mega" id="mega-timings" hidden>
+  <div class="wrap">
+    <div id="mega-timings-body" class="mega-grid"><div class="small faint" style="padding:16px 0">Loading timings...</div></div>
+  </div>
+</div>
+<div class="mega" id="mega-markets" hidden>
+  <div class="wrap">
+    <div class="markets-list">
+      <a href="/brokers"><span>India</span><span class="badge badge-up">Live</span></a>
+      <a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>
+      <a href="/coming-soon/us"><span>US</span><span class="badge badge-warn">Coming soon</span></a>
+      <a href="/coming-soon/gcc"><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
+    </div>
+  </div>
+</div>
+</header>
+<div class="search-overlay" id="search-overlay" hidden>
+  <div class="search-modal" role="dialog" aria-modal="true" aria-label="Search BrokerLens">
+    <div class="search-input-row">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
+      <kbd class="search-esc">Esc</kbd>
+    </div>
+    <div id="search-results" class="search-results"></div>
+  </div>
+</div>
+<main class="wrap" style="padding-top:24px;padding-bottom:24px">
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">BrokerLens</a><span class="sep"> &rsaquo; </span><span aria-current="page">Crypto</span></nav><h1 style="margin-top:0">Crypto prices and market data</h1><p class="muted" style="max-width:70ch">28 cryptocurrencies, ranked by market cap. Live price from Binance; identity and supply facts from CoinGecko.</p><div class="grid g-main" style="margin-top:16px"><div class="table-scroll"><table class="data"><thead><tr><th>Rank</th><th>Coin</th><th class="right">Price</th><th class="right">24h</th></tr></thead><tbody><tr data-crypto-row="BTC"><td class="rank-cell">#1</td><td><a href="/crypto/btc/">Bitcoin</a> <span class="xs faint">BTC</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="ETH"><td class="rank-cell">#2</td><td><a href="/crypto/eth/">Ethereum</a> <span class="xs faint">ETH</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="BNB"><td class="rank-cell">#4</td><td><a href="/crypto/bnb/">BNB</a> <span class="xs faint">BNB</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="XRP"><td class="rank-cell">#5</td><td><a href="/crypto/xrp/">XRP</a> <span class="xs faint">XRP</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="SOL"><td class="rank-cell">#7</td><td><a href="/crypto/sol/">Solana</a> <span class="xs faint">SOL</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="TRX"><td class="rank-cell">#8</td><td><a href="/crypto/trx/">TRON</a> <span class="xs faint">TRX</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="ZEC"><td class="rank-cell">#10</td><td><a href="/crypto/zec/">Zcash</a> <span class="xs faint">ZEC</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="DOGE"><td class="rank-cell">#12</td><td><a href="/crypto/doge/">Dogecoin</a> <span class="xs faint">DOGE</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="LINK"><td class="rank-cell">#17</td><td><a href="/crypto/link/">Chainlink</a> <span class="xs faint">LINK</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="ADA"><td class="rank-cell">#19</td><td><a href="/crypto/ada/">Cardano</a> <span class="xs faint">ADA</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="XLM"><td class="rank-cell">#20</td><td><a href="/crypto/xlm/">Stellar</a> <span class="xs faint">XLM</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="BCH"><td class="rank-cell">#21</td><td><a href="/crypto/bch/">Bitcoin Cash</a> <span class="xs faint">BCH</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="LTC"><td class="rank-cell">#25</td><td><a href="/crypto/ltc/">Litecoin</a> <span class="xs faint">LTC</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="UNI"><td class="rank-cell">#27</td><td><a href="/crypto/uni/">Uniswap</a> <span class="xs faint">UNI</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="NEAR"><td class="rank-cell">#29</td><td><a href="/crypto/near/">NEAR Protocol</a> <span class="xs faint">NEAR</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="AVAX"><td class="rank-cell">#30</td><td><a href="/crypto/avax/">Avalanche</a> <span class="xs faint">AVAX</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="HBAR"><td class="rank-cell">#31</td><td><a href="/crypto/hbar/">Hedera</a> <span class="xs faint">HBAR</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="SHIB"><td class="rank-cell">#33</td><td><a href="/crypto/shib/">Shiba Inu</a> <span class="xs faint">SHIB</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="SUI"><td class="rank-cell">#34</td><td><a href="/crypto/sui/">Sui</a> <span class="xs faint">SUI</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="DOT"><td class="rank-cell">#49</td><td><a href="/crypto/dot/">Polkadot</a> <span class="xs faint">DOT</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="ICP"><td class="rank-cell">#53</td><td><a href="/crypto/icp/">Internet Computer</a> <span class="xs faint">ICP</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="ETC"><td class="rank-cell">#68</td><td><a href="/crypto/etc/">Ethereum Classic</a> <span class="xs faint">ETC</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="POL"><td class="rank-cell">#72</td><td><a href="/crypto/pol/">POL (ex-MATIC)</a> <span class="xs faint">POL</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="ARB"><td class="rank-cell">#77</td><td><a href="/crypto/arb/">Arbitrum</a> <span class="xs faint">ARB</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="ATOM"><td class="rank-cell">#79</td><td><a href="/crypto/atom/">Cosmos Hub</a> <span class="xs faint">ATOM</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="FIL"><td class="rank-cell">#94</td><td><a href="/crypto/fil/">Filecoin</a> <span class="xs faint">FIL</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="APT"><td class="rank-cell">#105</td><td><a href="/crypto/apt/">Aptos</a> <span class="xs faint">APT</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr><tr data-crypto-row="OP"><td class="rank-cell">#166</td><td><a href="/crypto/op/">Optimism</a> <span class="xs faint">OP</span></td><td class="right num" data-role="price">—</td><td class="right num" data-role="change">—</td></tr></tbody></table></div><div class="stack"><div class="aff-banner"><span class="aff-tag">Sponsored</span><div class="aff-art aff-art-binance"><div class="aff-logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2L14.5 4.5L12 7L9.5 4.5L12 2Z" fill="#F0B90B"/><path d="M6 8L8.5 10.5L6 13L3.5 10.5L6 8Z" fill="#F0B90B"/><path d="M18 8L20.5 10.5L18 13L15.5 10.5L18 8Z" fill="#F0B90B"/><path d="M12 9L14.5 11.5L12 14L9.5 11.5L12 9Z" fill="#F0B90B"/><path d="M12 16L14.5 18.5L12 21L9.5 18.5L12 16Z" fill="#F0B90B"/></svg>Binance</div></div><div class="aff-body"><h4>Trade crypto on the world's largest exchange</h4><p class="xs muted">Buy, sell and trade Bitcoin, Ethereum and hundreds of other cryptocurrencies.</p><ul class="aff-features"><li>Spot, futures and more in one account</li><li>Deep liquidity, tight spreads</li><li>Trusted by users worldwide</li></ul><a class="aff-cta" href="https://accounts.binance.com/en-IN/register?ref=191870492" target="_blank" rel="noopener sponsored">Open account &rarr;</a><div class="aff-fine">Crypto assets are highly volatile and unregulated by SEBI. Not investment advice. You may lose your entire investment. 18+. T&amp;C apply. BrokerLens may earn a commission on signups through this link; it has no effect on any ranking or fact shown on this site.</div></div></div></div></div><h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2><div style="max-width:68ch"><details class="faq-item"><summary>Is this a crypto exchange?</summary><p>No. BrokerLens does not let you buy, sell or hold crypto. This page lists public facts (market cap, supply, all-time high/low) and a live reference price for each coin; trading happens on an exchange.</p></details><details class="faq-item"><summary>Where does the live price come from?</summary><p>Binance's public API. Prices refresh independently of this page's other facts, which come from CoinGecko and update on each site rebuild, not continuously.</p></details><details class="faq-item"><summary>Why only 28 coins?</summary><p>Each one is hand-verified against both CoinGecko's real market-cap ranking and Binance's actual tradeable pairs, so there's no risk of a ticker symbol match being the wrong coin. This list grows only after the same manual verification, never by scanning symbols automatically.</p></details><details class="faq-item"><summary>Is cryptocurrency regulated in India?</summary><p>Not by SEBI. Crypto falls under separate income-tax (virtual digital asset) rules, and exchanges operating in India must register with FIU-IND under anti-money-laundering law. Nothing on this page is investment advice.</p></details></div></main>
+<footer class="site"><div class="wrap">
+  <p class="small muted" style="max-width:70ch">This page's live prices come from Binance's public API; identity and supply facts come from CoinGecko's public API. It is not curated, scored or ranked, and nothing on it is investment advice. BrokerLens is not a SEBI-registered investment adviser or research analyst.</p>
+  <p class="small"><a href="/registry">Search the full SEBI registry →</a> ·
+  <a href="/brokers">Brokers tracked in depth →</a> ·
+  <a href="/stocks/">Browse stocks A-Z →</a> ·
+  <a href="/funds-by/">Browse mutual funds by AMC →</a> ·
+  <a href="/etfs/">Browse ETFs →</a> · <a href="/">BrokerLens home →</a></p>
+</div></footer>
+<script type="module" src="/assets/js/nav-widgets.js"></script>
+<script type="module" src="/assets/js/search.js"></script>
+</body>
+</html>

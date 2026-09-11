@@ -169,15 +169,23 @@ def _rows(payload):
     return (rows if isinstance(rows, list) else []), _as_on(inner.get("Summary"))
 
 
-def heatmap(f: Fetcher = None, symbols=None, ttl=1):
+def heatmap(f: Fetcher = None, symbols=None, ttl=1, retries=2):
     """The fast MCX loop: 16 major futures in ~4.8KB.
 
     This is what makes MCX viable at a 1s cadence. Prefer it over live_quotes()
-    for anything on a hot path.
+    for anything on a hot path - pass retries=1 there.
+
+    Default is 2, not 1: the only current caller is the one-shot build/ticker
+    refresh (run.py), not a hot loop, and Akamai's bot-scoring on this endpoint
+    is probabilistic - a request that gets blocked once often succeeds on an
+    immediate retry (confirmed by hand: a failed run followed seconds later by
+    a clean 200). With retries=1 a single blocked request meant MCX showed zero
+    instruments for an entire Vercel deployment's lifetime, since a fresh build
+    has no prior cache to fall back on.
     """
     f = f or fetcher()
     out = {"exchange": "MCX", "quotes": [], "as_of": None, "note": None}
-    payload = f.get_json(HEATMAP, ttl=ttl, retries=1,
+    payload = f.get_json(HEATMAP, ttl=ttl, retries=retries,
                          headers=dict(_XHR, Referer=HEATMAP_PAGE))
     if not payload:
         out["note"] = "MCX heatmap did not respond."

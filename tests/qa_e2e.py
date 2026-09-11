@@ -535,10 +535,14 @@ def test_published():
               "/assets/js/app.js" not in fund_html)
         check("fund page has real per-entity FAQPage JSON-LD", '"@type": "FAQPage"' in fund_html
               or '"@type":"FAQPage"' in fund_html)
-        check("fund page FAQ states the real NAV, not a placeholder",
-              "2245.0720" in fund_html and "Growth Option variant" in fund_html)
+        # NAV is real AMFI data and genuinely changes every trading day - a
+        # hardcoded expected value goes stale by design (caught live: AMFI's
+        # real NAV moved from 2245.0670 to 2249.0670 between one run and the
+        # next). Check the real pattern instead of a frozen number.
+        check("fund page FAQ states a real-looking NAV, not a placeholder",
+              bool(re.search(r"had a NAV of Rs \d+\.\d{4}\.", fund_html)) and "Growth Option variant" in fund_html)
         check("fund page shows real NAV figures, not placeholders",
-              "2245.0720" in fund_html)
+              bool(re.search(r"Rs \d+\.\d{4}", fund_html)))
 
     # The single hand-written data report. Its defaulter-count claim was
     # caught overstating a relationship the raw data didn't support (only 2
@@ -839,13 +843,51 @@ def test_published():
               'id="markets-toggle"' in html and 'id="mega-markets"' in html
               and ">India<" in html and ">Crypto<" in html and ">US<" in html and ">GCC<" in html)
 
-    # Coming-soon routes for unbuilt markets: real pages, not dead nav links.
-    check("app.js registers routes for the three unbuilt markets",
-          all(r in app_js_src for r in ["/coming-soon/crypto", "/coming-soon/us", "/coming-soon/gcc"]))
+    # Coming-soon routes for the still-unbuilt markets (crypto graduated to a
+    # real pipeline - see the crypto page checks below): real pages, not dead
+    # nav links.
+    check("app.js registers routes for the two still-unbuilt markets",
+          all(r in app_js_src for r in ["/coming-soon/us", "/coming-soon/gcc"])
+          and "/coming-soon/crypto" not in app_js_src)
     pages_js_src = open(os.path.join(ROOT, "site", "assets", "js", "pages.js"), encoding="utf-8").read()
-    check("pages.js implements comingSoon() for all three unbuilt markets",
+    check("pages.js implements comingSoon() for the two still-unbuilt markets",
           "export async function comingSoon" in pages_js_src
-          and all(k in pages_js_src for k in ["crypto:", "us:", "gcc:"]))
+          and all(k in pages_js_src for k in ["us:", "gcc:"]))
+
+    # Crypto vertical (Phase 1, 28 hand-verified coins): real static pages
+    # with live price loaded client-side, same architecture as the rest of
+    # the site's "static facts + client-refreshed live number" pattern.
+    crypto_dir = os.path.join(ROOT, "site", "crypto")
+    check("crypto hub page exists", os.path.exists(os.path.join(crypto_dir, "index.html")))
+    if os.path.exists(os.path.join(crypto_dir, "index.html")):
+        hub_html = open(os.path.join(crypto_dir, "index.html"), encoding="utf-8").read()
+        check("crypto hub links individual coin pages", "/crypto/btc/" in hub_html or "/crypto/eth/" in hub_html)
+        check("crypto hub carries the Binance sponsored banner", "Binance" in hub_html and "Sponsored" in hub_html)
+        check("crypto hub loads crypto-live.js", "crypto-live.js" in hub_html)
+    btc_path = os.path.join(crypto_dir, "btc", "index.html")
+    check("a sample crypto coin page (BTC) exists", os.path.exists(btc_path))
+    if os.path.exists(btc_path):
+        btc_html = open(btc_path, encoding="utf-8").read()
+        check("BTC page has a live-price placeholder wired to its symbol",
+              'id="crypto-price"' in btc_html and 'data-symbol="BTC"' in btc_html)
+        check("BTC page has real FAQPage and BreadcrumbList JSON-LD",
+              '"@type": "FAQPage"' in btc_html and '"@type": "BreadcrumbList"' in btc_html)
+        check("BTC page states crypto is not SEBI-regulated", "not regulated by SEBI" in btc_html.lower()
+              or "not regulated by sebi" in btc_html.lower())
+        check("BTC page has no crypto exchange affiliate banner on the coin page itself",
+              "aff-banner" not in btc_html)  # the CTA lives on the hub, not every coin page
+    crypto_live_path = os.path.join(ROOT, "site", "assets", "js", "crypto-live.js")
+    check("crypto-live.js exists", os.path.exists(crypto_live_path))
+    if os.path.exists(crypto_live_path):
+        crypto_live_src = open(crypto_live_path, encoding="utf-8").read()
+        check("crypto-live.js fetches the precomputed snapshot, not a live third-party API",
+              "crypto-ticker.json" in crypto_live_src and "binance.com" not in crypto_live_src.lower())
+    check("sitemap includes /crypto/ pages", "/crypto/" in open(os.path.join(ROOT, "site", "sitemap.xml"), encoding="utf-8").read())
+    all_search_rows = json.loads(open(search_json_path, encoding="utf-8").read()) if os.path.exists(search_json_path) else []
+    search_rows_crypto = [r for r in all_search_rows if r[2] == "crypto"]
+    check("search index includes crypto coins", len(search_rows_crypto) >= 20, "found %d" % len(search_rows_crypto))
+    check("markets dropdown marks Crypto as Live, not Coming soon",
+          '<a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>' in home_html_for_dirs)
 
     # Affiliate banner: a real referral link, kept out of the ranking table,
     # and never mixed with crypto content per the standing placement rule.

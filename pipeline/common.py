@@ -308,6 +308,12 @@ def amfi():
     return Fetcher("amfi", referer="https://www.amfiindia.com/")
 
 
+def crypto():
+    # Binance and CoinGecko are plain public JSON APIs - no cookie handshake,
+    # no bot-wall, unlike every Indian exchange/regulator source above.
+    return Fetcher("crypto", timeout=20)
+
+
 # ------------------------------------------------------------------------- io
 
 

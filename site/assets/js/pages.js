@@ -109,18 +109,32 @@ function adSlot(overview, placement) {
  */
 function affiliateBanner() {
   return `<div class="aff-banner">
-    <span class="aff-tag">Affiliate</span>
-    <div class="aff-brand">ZERODHA</div>
-    <h4>Brokerage-free equity &amp; mutual fund investments</h4>
-    <p class="xs muted">₹20 brokerage for all other trades.* Trade with Zerodha's Kite platform and tools.</p>
-    <a class="btn btn-primary btn-sm" style="width:100%;justify-content:center;margin-top:8px"
-       href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored">Open account →</a>
-    <div class="aff-fine">*T&amp;C apply. Investment in securities market are subject to market risks; read all
-      related documents carefully before investing. Full disclaimer at
-      <a href="https://zerodha.com/pricing" target="_blank" rel="noopener">zerodha.com/pricing</a>.
-      Member ID NSE (13906), BSE (6498), MCX (46025). Brokerage will not exceed the SEBI-prescribed limit.
-      BrokerLens may earn a commission on signups through this link; it has no effect on any ranking or
-      score shown on this site.</div>
+    <span class="aff-tag">Sponsored</span>
+    <div class="aff-art aff-art-zerodha">
+      <div class="aff-logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 20L12 4L20 20" stroke="#387ED1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 13H16" stroke="#387ED1" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+        ZERODHA
+      </div>
+    </div>
+    <div class="aff-body">
+      <h4>Brokerage-free equity &amp; mutual fund investments</h4>
+      <p class="xs muted">Trade with Zerodha's Kite platform and tools.</p>
+      <ul class="aff-features">
+        <li>Zero brokerage on equity delivery</li>
+        <li>₹20 flat for intraday, F&amp;O, currency and commodity*</li>
+        <li>Free direct mutual fund investing</li>
+      </ul>
+      <a class="aff-cta" href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored">Open account →</a>
+      <div class="aff-fine">*T&amp;C apply. Investment in securities market are subject to market risks; read all
+        related documents carefully before investing. Full disclaimer at
+        <a href="https://zerodha.com/pricing" target="_blank" rel="noopener">zerodha.com/pricing</a>.
+        Member ID NSE (13906), BSE (6498), MCX (46025). Brokerage will not exceed the SEBI-prescribed limit.
+        BrokerLens may earn a commission on signups through this link; it has no effect on any ranking or
+        score shown on this site.</div>
+    </div>
   </div>`;
 }
 
@@ -1155,7 +1169,7 @@ export async function methodology() {
 
   <div class="section-title"><h2>Advertising disclosure</h2></div>
   <div class="card">
-    <p class="small muted">Some pages carry a clearly marked "Affiliate" banner linking to a broker's own signup
+    <p class="small muted">Some pages carry a clearly marked "Sponsored" banner linking to a broker's own signup
     page; BrokerLens may earn a commission if you open an account through one of those links. This is separate
     from every ranking, score and comparison on this site, which are built only from the regulator and exchange
     data described above and are never affected by who does or doesn't have an affiliate relationship with us.</p>
@@ -1206,21 +1220,14 @@ function statusBadge(st) {
 
 /* ===================================================== COMING SOON
  *
- * Real pages, not dead nav links: the "Brokers" menu now names every market
- * BrokerLens plans to cover (India, Crypto, US, GCC), but only India has an
- * actual data pipeline today. Rather than a disabled nav item or a link to
- * nothing, each of the other three gets a genuine page stating plainly that
- * it isn't live yet - the same "not published yet, never a guess" principle
- * used everywhere else on this site, applied to entire sections instead of
- * single fields.
+ * Real pages, not dead nav links: the "Brokers" menu names every market
+ * BrokerLens plans to cover (India, Crypto, US, GCC). India and Crypto now
+ * have real data pipelines (see /crypto/); US and GCC get a genuine page
+ * stating plainly that they aren't live yet, rather than a disabled nav item
+ * or a link to nothing - the same "not published yet, never a guess"
+ * principle used everywhere else on this site, applied to entire sections.
  */
 const COMING_SOON = {
-  crypto: {
-    h1: 'Crypto exchange comparison',
-    body: 'BrokerLens is building a crypto exchange comparison the same way as everything else here: '
-      + 'real prices and listings pulled directly from exchange APIs (starting with Binance), not aggregator '
-      + 'sites, with coin identity cross-checked against market-cap data before a page is published.',
-  },
   us: {
     h1: 'US stock broker comparison',
     body: 'BrokerLens is researching primary-source data for US stock brokers (SEC/FINRA disclosures, '
@@ -1235,7 +1242,7 @@ const COMING_SOON = {
 };
 
 export async function comingSoon(market) {
-  const m = COMING_SOON[market] || COMING_SOON.crypto;
+  const m = COMING_SOON[market] || COMING_SOON.us;
   return `<div style="max-width:60ch;margin-top:16px">
     <span class="badge badge-warn">Coming soon</span>
     <h1 style="margin-top:12px">${esc(m.h1)}</h1>

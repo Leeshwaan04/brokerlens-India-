@@ -17,7 +17,7 @@ const resultsEl = document.getElementById('search-results');
 const TYPE_LABEL = {
   broker: 'Broker', stock: 'Stock', etf: 'ETF', fund: 'Mutual fund',
   sebi: 'SEBI registry', index: 'Index', hub: 'Browse', report: 'Report',
-  calc: 'Calculator', page: 'Page',
+  calc: 'Calculator', page: 'Page', crypto: 'Crypto',
 };
 
 let index = null;

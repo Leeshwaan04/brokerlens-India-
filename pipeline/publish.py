@@ -222,6 +222,7 @@ def build():
     nse_d = ingest.get("nse") or {}
     bse_d = ingest.get("bse") or {}
     sebi_d = ingest.get("sebi") or {}
+    crypto_coins = (ingest.get("crypto") or {}).get("coins") or []
     amfi_d = ingest.get("amfi") or {}
 
     clients_raw = read_json(os.path.join(MANUAL, "active_clients.json"), {}) or {}
@@ -495,12 +496,15 @@ def build():
     stock_letters = _write_stock_directory(equity_companies)
     amc_slugs = _write_fund_amc_pages(fund_slugs)
     _write_etf_directory(etf_universe)
+    crypto_slugs = _write_crypto_pages(crypto_coins)
+    _write_crypto_hub(crypto_coins)
     _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
-                    fund_slugs, report_slugs, calc_slugs, stock_letters, amc_slugs)
+                    fund_slugs, report_slugs, calc_slugs, stock_letters, amc_slugs, crypto_slugs)
     _write_search_index(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
-                         fund_slugs, report_slugs, amc_slugs)
+                         fund_slugs, report_slugs, amc_slugs, crypto_coins)
     _write_feed(built, aggregates)
     build_ticker()
+    build_crypto_ticker()
     return overview
 
 
@@ -560,6 +564,29 @@ def build_ticker():
     size = write_json(os.path.join(SITE_DATA, "ticker.json"), payload, compact=True)
     counts = " ".join("%s=%d" % (k, len(v.get("instruments") or [])) for k, v in built.items())
     log("ticker.json %.1f KB (%s)" % (size / 1024, counts), "ok")
+    return payload
+
+
+def build_crypto_ticker():
+    """Emit site/data/crypto-ticker.json - same small/frequently-refreshed
+    contract as build_ticker(), for the 28-coin Phase 1 crypto universe.
+    Binance prices move every second; this is refreshed on the same cheap
+    `pipeline.run ticker` cadence as the NSE/BSE/MCX legs, never baked into
+    the static crypto pages themselves - the exact pattern the rest of this
+    site already uses for anything that changes faster than a rebuild."""
+    ingest = read_json(os.path.join(INGEST_PATH), {}) or {}
+    coins = ingest.get("crypto", {}).get("coins") or []
+    payload = {
+        "generated_at": now_iso(),
+        "coins": [
+            {"symbol": c["symbol"], "price_usd": c.get("price_usd"),
+             "change_pct_24h": c.get("change_pct_24h"), "high_24h": c.get("high_24h"),
+             "low_24h": c.get("low_24h"), "volume_24h_usd": c.get("volume_24h_usd")}
+            for c in coins if c.get("price_usd") is not None
+        ],
+    }
+    size = write_json(os.path.join(SITE_DATA, "crypto-ticker.json"), payload, compact=True)
+    log("crypto-ticker.json %.1f KB (%d coins)" % (size / 1024, len(payload["coins"])), "ok")
     return payload
 
 
@@ -694,7 +721,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
   <div class="wrap">
     <div class="markets-list">
       <a href="/brokers"><span>India</span><span class="badge badge-up">Live</span></a>
-      <a href="/coming-soon/crypto"><span>Crypto</span><span class="badge badge-warn">Coming soon</span></a>
+      <a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>
       <a href="/coming-soon/us"><span>US</span><span class="badge badge-warn">Coming soon</span></a>
       <a href="/coming-soon/gcc"><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
     </div>
@@ -2758,6 +2785,241 @@ def _write_etf_directory(etfs):
     log("ETF directory: 1 page written, %d ETFs linked" % len(rows), "ok")
 
 
+def _fmt_usd(n, decimals=2):
+    if n is None:
+        return "Not disclosed"
+    return "$%s" % format(round(n, decimals), ",")
+
+
+def _fmt_supply(n):
+    if n is None:
+        return "Not disclosed"
+    return "%s coins" % format(int(n), ",")
+
+
+def _crypto_banner_html():
+    """The Binance CTA - only ever rendered on /crypto/ pages, never beside
+    Indian broker content (explicit standing rule; see the pages.js
+    affiliateBanner() comment for the equivalent Zerodha placement)."""
+    return (
+        '<div class="aff-banner">'
+        '<span class="aff-tag">Sponsored</span>'
+        '<div class="aff-art aff-art-binance">'
+        '<div class="aff-logo">'
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">'
+        '<path d="M12 2L14.5 4.5L12 7L9.5 4.5L12 2Z" fill="#F0B90B"/>'
+        '<path d="M6 8L8.5 10.5L6 13L3.5 10.5L6 8Z" fill="#F0B90B"/>'
+        '<path d="M18 8L20.5 10.5L18 13L15.5 10.5L18 8Z" fill="#F0B90B"/>'
+        '<path d="M12 9L14.5 11.5L12 14L9.5 11.5L12 9Z" fill="#F0B90B"/>'
+        '<path d="M12 16L14.5 18.5L12 21L9.5 18.5L12 16Z" fill="#F0B90B"/>'
+        "</svg>Binance</div></div>"
+        '<div class="aff-body">'
+        "<h4>Trade crypto on the world's largest exchange</h4>"
+        '<p class="xs muted">Buy, sell and trade Bitcoin, Ethereum and hundreds of other cryptocurrencies.</p>'
+        '<ul class="aff-features">'
+        "<li>Spot, futures and more in one account</li>"
+        "<li>Deep liquidity, tight spreads</li>"
+        "<li>Trusted by users worldwide</li>"
+        "</ul>"
+        '<a class="aff-cta" href="https://accounts.binance.com/en-IN/register?ref=191870492" '
+        'target="_blank" rel="noopener sponsored">Open account &rarr;</a>'
+        '<div class="aff-fine">Crypto assets are highly volatile and unregulated by SEBI. '
+        "Not investment advice. You may lose your entire investment. 18+. T&amp;C apply. "
+        "BrokerLens may earn a commission on signups through this link; it has no effect on any "
+        "ranking or fact shown on this site.</div>"
+        "</div></div>"
+    )
+
+
+def _write_crypto_pages(coins):
+    """One static page per Phase 1 crypto coin (/crypto/:symbol/).
+
+    Facts (market-cap rank, supply, ATH/ATL) come from CoinGecko and are
+    rebuilt on each publish, same cadence as a stock page's NSE facts. Price
+    is never baked in here - it's fetched client-side from crypto-ticker.json
+    (crypto-live.js), refreshed on the same cheap `pipeline.run ticker`
+    cadence as NSE/BSE/MCX, so the browser never calls Binance directly.
+
+    Universe is the 28 hand-verified coins in pipeline/sources/crypto.py -
+    see that module's docstring for why this list only grows by hand.
+    """
+    written = 0
+    slugs = set()
+    for c in coins or []:
+        symbol = c.get("symbol")
+        name = c.get("name")
+        if not symbol or not name:
+            continue
+        slug = symbol.lower()
+        slugs.add(slug)
+        canonical = "%s/crypto/%s/" % (SITE_URL, slug)
+        title = "%s (%s) Price, Market Cap and Facts | BrokerLens" % (_esc(name), _esc(symbol))
+        description = _esc(
+            "%s (%s): market-cap rank, circulating supply and all-time high/low, plus a live price "
+            "updated from Binance. Not investment advice." % (name, symbol)
+        )[:300]
+
+        rank = c.get("market_cap_rank")
+        facts_html = "".join(
+            '<div class="mega-seg"><div class="mega-seg-label">%s</div><div style="margin-top:2px">%s</div></div>'
+            % (label, value) for label, value in [
+                ("Market cap rank", "#%d" % rank if rank else "Not disclosed"),
+                ("Market cap", _fmt_usd(c.get("market_cap_usd"), 0)),
+                ("Circulating supply", _fmt_supply(c.get("circulating_supply"))),
+                ("Max supply", _fmt_supply(c.get("max_supply")) if c.get("max_supply") else "No max supply"),
+                ("All-time high", "%s (%s)" % (_fmt_usd(c.get("ath_usd")), (c.get("ath_date") or "")[:10])
+                 if c.get("ath_usd") else "Not disclosed"),
+                ("All-time low", "%s (%s)" % (_fmt_usd(c.get("atl_usd")), (c.get("atl_date") or "")[:10])
+                 if c.get("atl_usd") else "Not disclosed"),
+            ]
+        )
+
+        faqs = [
+            ("What is the current price of %s?" % name,
+             "See the live price above, updated from Binance. Prices move continuously; this page's other "
+             "facts (market cap rank, supply, all-time high/low) are refreshed on each site update, not live."),
+            ("What is %s's market cap rank?" % name,
+             ("%s is ranked #%d by market capitalisation." % (name, rank)) if rank
+             else "Market cap rank is not currently available."),
+            ("What is the circulating supply of %s?" % name,
+             ("%s coins are currently in circulation." % format(int(c["circulating_supply"]), ",")
+              if c.get("circulating_supply") else "Circulating supply is not currently available.")),
+            ("What was %s's all-time high?" % name,
+             ("%s's all-time high was %s, reached on %s." % (name, _fmt_usd(c.get("ath_usd")), (c.get("ath_date") or "")[:10]))
+             if c.get("ath_usd") else "All-time high data is not currently available."),
+            ("Is %s regulated by SEBI?" % name,
+             "No. Cryptocurrency is not regulated by SEBI in India; it falls under separate income-tax "
+             "(virtual digital asset) rules and anti-money-laundering (FIU-IND) registration for exchanges. "
+             "This page is informational only, not investment advice."),
+            ("Can I buy %s through BrokerLens?" % name,
+             "No. This page shows public facts and a live reference price only. Buying or selling %s "
+             "requires an account on a crypto exchange." % name),
+        ]
+        faq_html = "".join(
+            '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+            for q, a in faqs
+        )
+        crumb_html, crumb_jsonld = _breadcrumb([
+            ("BrokerLens", "/"), ("Crypto", "/crypto/"), (name, None),
+        ])
+        jsonld = {
+            "@context": "https://schema.org",
+            "@graph": [
+                {"@type": "FAQPage", "mainEntity": [
+                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in faqs
+                ]},
+                crumb_jsonld,
+            ],
+        }
+
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body = body.replace("</head>", '<script type="module" src="/assets/js/crypto-live.js" defer></script></head>')
+        body += (
+            crumb_html
+            + '<h1 style="margin-top:0">%s <span class="muted">(%s)</span></h1>' % (_esc(name), _esc(symbol))
+            + '<div id="crypto-price" data-symbol="%s" class="card" style="margin-top:12px;max-width:360px">'
+              '<div class="small faint">Loading live price...</div></div>' % _esc(symbol)
+            + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
+            + '<p class="xs faint" style="margin-top:16px">Identity and supply facts: CoinGecko. Live price: '
+              'Binance. Cryptocurrency is not regulated by SEBI or any Indian financial regulator.</p>'
+            + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
+            + '<div style="max-width:68ch">' + faq_html + '</div>'
+        )
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page's identity and supply facts come from CoinGecko's public API; live price comes "
+            "directly from Binance's public API.")}
+
+        dest_dir = os.path.join(ROOT, "site", "crypto", slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "crypto"), slugs)
+    log("crypto pages: %d written%s" % (written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
+    return sorted(slugs)
+
+
+_CRYPTO_HUB_FAQS = [
+    ("Is this a crypto exchange?", "No. BrokerLens does not let you buy, sell or hold crypto. This page "
+     "lists public facts (market cap, supply, all-time high/low) and a live reference price for each coin; "
+     "trading happens on an exchange."),
+    ("Where does the live price come from?", "Binance's public API. Prices refresh independently of this "
+     "page's other facts, which come from CoinGecko and update on each site rebuild, not continuously."),
+    ("Why only 28 coins?", "Each one is hand-verified against both CoinGecko's real market-cap ranking and "
+     "Binance's actual tradeable pairs, so there's no risk of a ticker symbol match being the wrong coin. "
+     "This list grows only after the same manual verification, never by scanning symbols automatically."),
+    ("Is cryptocurrency regulated in India?", "Not by SEBI. Crypto falls under separate income-tax (virtual "
+     "digital asset) rules, and exchanges operating in India must register with FIU-IND under anti-money-"
+     "laundering law. Nothing on this page is investment advice."),
+]
+
+
+def _write_crypto_hub(coins):
+    """/crypto/ - the entry point named in the nav's markets dropdown, once
+    real content exists to put there instead of a coming-soon placeholder."""
+    ranked = sorted((c for c in coins or [] if c.get("name")),
+                     key=lambda c: c.get("market_cap_rank") or 9999)
+    canonical = "%s/crypto/" % SITE_URL
+    title = "Crypto Prices and Market Data | BrokerLens"
+    description = ("Live-ish prices and market-cap facts for %d major cryptocurrencies, sourced from "
+                    "Binance and CoinGecko." % len(ranked))
+
+    rows_html = "".join(
+        '<tr data-crypto-row="%s"><td class="rank-cell">%s</td>'
+        '<td><a href="/crypto/%s/">%s</a> <span class="xs faint">%s</span></td>'
+        '<td class="right num" data-role="price">—</td>'
+        '<td class="right num" data-role="change">—</td></tr>'
+        % (_esc(c["symbol"]), ("#%d" % c["market_cap_rank"]) if c.get("market_cap_rank") else "—",
+           _esc(c["symbol"].lower()), _esc(c["name"]), _esc(c["symbol"]))
+        for c in ranked
+    )
+    faq_html = "".join(
+        '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+        for q, a in _CRYPTO_HUB_FAQS
+    )
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Crypto", None)])
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {"@type": "FAQPage", "mainEntity": [
+                {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                for q, a in _CRYPTO_HUB_FAQS
+            ]},
+            crumb_jsonld,
+        ],
+    }
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body = body.replace("</head>", '<script type="module" src="/assets/js/crypto-live.js" defer></script></head>')
+    body += (
+        crumb_html
+        + '<h1 style="margin-top:0">Crypto prices and market data</h1>'
+        + '<p class="muted" style="max-width:70ch">%d cryptocurrencies, ranked by market cap. Live price from '
+          "Binance; identity and supply facts from CoinGecko.</p>" % len(ranked)
+        + '<div class="grid g-main" style="margin-top:16px">'
+        + '<div class="table-scroll"><table class="data"><thead><tr>'
+          "<th>Rank</th><th>Coin</th><th class=\"right\">Price</th><th class=\"right\">24h</th>"
+          "</tr></thead><tbody>" + rows_html + "</tbody></table></div>"
+        + '<div class="stack">' + _crypto_banner_html() + "</div>"
+        + "</div>"
+        + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
+        + '<div style="max-width:68ch">' + faq_html + '</div>'
+    )
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page's live prices come from Binance's public API; identity and supply facts come from "
+        "CoinGecko's public API.")}
+    dest_dir = os.path.join(ROOT, "site", "crypto")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("crypto hub: written, %d coins" % len(ranked), "ok")
+
+
 _CALC_HUB_FAQS = [
     ("Are these calculators free to use?",
      "Yes. Every calculator on this page runs entirely in your browser using a standard, published "
@@ -2865,10 +3127,11 @@ def _write_calculator_hub():
 
 
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
-                    fund_slugs=None, report_slugs=None, calc_slugs=None, stock_letters=None, amc_slugs=None):
+                    fund_slugs=None, report_slugs=None, calc_slugs=None, stock_letters=None, amc_slugs=None,
+                    crypto_slugs=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator", "/calculators",
-            "/registry", "/algo", "/methodology", "/sources", "/stocks", "/funds-by", "/etfs"]
+            "/registry", "/algo", "/methodology", "/sources", "/stocks", "/funds-by", "/etfs", "/crypto"]
     # Trailing slash: /broker/<id>/ is now a real static directory on disk (see
     # _write_broker_pages), and every static host 301s the no-slash form to add
     # it. The sitemap should point straight at the canonical form rather than
@@ -2910,6 +3173,12 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         if slug:
             body += ("<url><loc>%s/etf/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
                      % (SITE_URL, slug, today))
+    # A coin's market-cap rank and supply facts move slower than a stock's
+    # listing facts but faster than "almost never" - daily matches the price
+    # ticker's own refresh cadence without overclaiming the facts are live.
+    for slug in (crypto_slugs or []):
+        body += ("<url><loc>%s/crypto/%s/</loc><lastmod>%s</lastmod><changefreq>daily</changefreq></url>"
+                 % (SITE_URL, slug, today))
     # A fund's NAV moves daily, but its own scheme facts (plans, ISINs) are
     # stable - weekly matches the other data-heavy static families.
     for slug in (fund_slugs or {}):
@@ -2955,11 +3224,12 @@ _CORE_PAGES = [
     ("Browse stocks A-Z", "/stocks/", ""),
     ("Browse mutual funds by AMC", "/funds-by/", ""),
     ("Browse ETFs", "/etfs/", ""),
+    ("Crypto prices and market data", "/crypto/", ""),
 ]
 
 
 def _write_search_index(built, reg_rows, hub_groups, companies, indices, etfs, fund_slugs, report_slugs,
-                         amc_slugs=None):
+                         amc_slugs=None, crypto_coins=None):
     """One flat, client-side search index covering every page family this
     pipeline writes, not just the 48 tracked brokers the original search.json
     carried (which had no reader anywhere in the codebase - confirmed by
@@ -3012,6 +3282,10 @@ def _write_search_index(built, reg_rows, hub_groups, companies, indices, etfs, f
 
     for amc, amc_slug in (amc_slugs or {}).items():
         rows.append([amc, "/funds-by/%s/" % amc_slug, "hub", "Fund house"])
+
+    for c in (crypto_coins or []):
+        if c.get("name") and c.get("symbol"):
+            rows.append([c["name"], "/crypto/%s/" % c["symbol"].lower(), "crypto", c["symbol"]])
 
     for c in CALCULATORS:
         rows.append([c["h1"], "/calculators/%s/" % c["slug"], "calc", ""])

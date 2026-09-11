@@ -21,6 +21,7 @@ from .common import CONFIG, DATA, MANUAL, log, now_iso, read_json, write_json
 from .identity import Resolver
 from .sources import amfi as amfi_src
 from .sources import bse as bse_src
+from .sources import crypto as crypto_src
 from .sources import mcx as mcx_src
 from .sources import nse as nse_src
 from .sources import sebi as sebi_src
@@ -46,6 +47,7 @@ EXPECTED_ROWS = {
     "mcx": ["quotes.quotes"],
     "sebi": ["registry.commodity_broker", "defaulters"],
     "amfi": ["schemes"],
+    "crypto": ["coins"],
 }
 
 
@@ -102,6 +104,7 @@ def fetch(sebi_pages=None):
     run("sebi", lambda: sebi_src.collect(max_pages=sebi_pages),
         ["sebi_stock_brokers", "sebi_commodity_brokers", "sebi_defaulter_brokers"])
     run("amfi", lambda: amfi_src.collect(), ["amfi_nav_master"])
+    run("crypto", lambda: crypto_src.collect(), ["binance_prices", "coingecko_markets"])
 
     write_json(os.path.join(DATA, "_ingest.json"), out, compact=True)
     if problems:
@@ -124,6 +127,14 @@ def _refresh_quotes(ingest):
         bse_src.bse(), wl.get("bse"), ttl=5)
     ingest.setdefault("mcx", {})["quotes"] = mcx_src.heatmap(
         symbols=wl.get("mcx"), ttl=5)
+    # Crypto price-only refresh: cheap (one Binance request), skips the
+    # slower-moving CoinGecko identity/supply facts a full fetch() call pulls.
+    prices = crypto_src.binance_prices(crypto_src.crypto(), ttl=5)
+    coins = ingest.get("crypto", {}).get("coins") or []
+    for c in coins:
+        if c["symbol"] in prices:
+            c.update(prices[c["symbol"]])
+    ingest.setdefault("crypto", {})["coins"] = coins
     return ingest
 
 

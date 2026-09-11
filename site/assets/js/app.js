@@ -26,7 +26,6 @@ const ROUTES = [
   [/^\/algo-platforms\/?$/, (_m, q) => pages.algo(q)],
   [/^\/methodology\/?$/, () => pages.methodology()],
   [/^\/sources\/?$/, () => pages.sources()],
-  [/^\/coming-soon\/crypto\/?$/, () => pages.comingSoon('crypto')],
   [/^\/coming-soon\/us\/?$/, () => pages.comingSoon('us')],
   [/^\/coming-soon\/gcc\/?$/, () => pages.comingSoon('gcc')],
 ];
@@ -41,7 +40,6 @@ const TITLES = {
   '/algo': 'Algo trading platforms in India (APIs, no-code builders and vendors) | BrokerLens',
   '/methodology': 'Methodology: BrokerLens',
   '/sources': 'Data sources and lineage: BrokerLens',
-  '/coming-soon/crypto': 'Crypto exchange comparison, coming soon: BrokerLens',
   '/coming-soon/us': 'US stock broker comparison, coming soon: BrokerLens',
   '/coming-soon/gcc': 'GCC stock broker comparison, coming soon: BrokerLens',
 };
@@ -58,7 +56,6 @@ const DESCRIPTIONS = {
   '/algo': 'Algo trading platforms in India: official broker APIs, no-code strategy builders, backtesting tools and institutional vendors, with SEBI framework context.',
   '/methodology': 'How every figure on BrokerLens is calculated: the cost basket, the reliability weights, and what each provenance marker means.',
   '/sources': 'Every data source behind BrokerLens, when it last ran, and exactly which fields it feeds.',
-  '/coming-soon/crypto': 'BrokerLens is building a crypto exchange comparison from primary exchange data. Not live yet.',
   '/coming-soon/us': 'BrokerLens is researching US stock broker data for a future comparison. Not live yet.',
   '/coming-soon/gcc': 'BrokerLens is researching GCC (UAE, Saudi and Gulf) stock broker data for a future comparison. Not live yet.',
 };
