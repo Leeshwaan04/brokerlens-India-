@@ -9,6 +9,7 @@ import { cls, esc, loadOverview, loadTicker, pct } from './store.js';
 import * as pages from './pages.js';
 import { clearRedraws } from './chart.js';
 import './nav-widgets.js';
+import './search.js';
 
 const app = document.getElementById('app');
 

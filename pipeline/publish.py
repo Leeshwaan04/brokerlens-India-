@@ -4,7 +4,9 @@ Output contract (site/data/):
   overview.json        market pulse, aggregates, leaderboards, compact broker index
   brokers/<id>.json    full profile, lazily fetched on route change
   sources.json         data lineage - every source, when it last ran, what it fed
-  search.json          tiny index for instant client-side search
+  search.json          full-site index (every broker, stock, ETF, fund, SEBI
+                       entity, index, calculator, report and core page) for
+                       instant client-side search - no server, no live API
   sitemap.xml, feed.xml
 
 Design constraint carried over from mtf.trading: the browser must never call a
@@ -471,10 +473,6 @@ def build():
     log("registry.json %.1f KB, %d untracked registered entities"
         % (reg_size / 1024, len(reg_rows)), "ok")
 
-    write_json(os.path.join(SITE_DATA, "search.json"),
-               [{"i": b["id"], "n": b["profile"]["brand"], "l": b["profile"]["legal_name"],
-                 "h": b["profile"]["hq"]} for b in built], compact=True)
-
     _write_sources(sources_cfg, ingest, sample_flags)
     _write_algo(brokers_cfg)
     _write_timings()
@@ -493,8 +491,14 @@ def build():
     report_slugs = _write_reports(built, reg_rows, equity_companies, index_universe, etf_universe,
                                    _funds, len(sebi_d.get("defaulters") or []))
     calc_slugs = _write_calculator_pages()
+    _write_calculator_hub()
+    stock_letters = _write_stock_directory(equity_companies)
+    amc_slugs = _write_fund_amc_pages(fund_slugs)
+    _write_etf_directory(etf_universe)
     _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
-                    fund_slugs, report_slugs, calc_slugs)
+                    fund_slugs, report_slugs, calc_slugs, stock_letters, amc_slugs)
+    _write_search_index(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
+                         fund_slugs, report_slugs, amc_slugs)
     _write_feed(built, aggregates)
     build_ticker()
     return overview
@@ -672,12 +676,13 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
     <a href="/brokers">Brokers</a>
     <a href="/compare">Compare</a>
     <a href="/leaderboards">Rankings</a>
-    <a href="/calculators/sip-calculator/">Calculators</a>
+    <a href="/calculators/">Calculators</a>
     <a href="/registry">SEBI registry</a>
     <a href="/algo">Algo platforms</a>
     <a href="/reports/state-of-indian-broking-2026/">Reports</a>
     <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
   </nav>
+  <button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
   <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
 </div>
 <div class="mega" id="mega-timings" hidden>
@@ -686,6 +691,16 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
   </div>
 </div>
 </header>
+<div class="search-overlay" id="search-overlay" hidden>
+  <div class="search-modal" role="dialog" aria-modal="true" aria-label="Search BrokerLens">
+    <div class="search-input-row">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
+      <kbd class="search-esc">Esc</kbd>
+    </div>
+    <div id="search-results" class="search-results"></div>
+  </div>
+</div>
 <main class="wrap" style="padding-top:24px;padding-bottom:24px">
 """
 
@@ -693,9 +708,13 @@ _REGISTRY_PAGE_FOOT = """</main>
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">%(source_note)s</p>
   <p class="small"><a href="/registry">Search the full SEBI registry →</a> ·
-  <a href="/brokers">Brokers tracked in depth →</a> · <a href="/">BrokerLens home →</a></p>
+  <a href="/brokers">Brokers tracked in depth →</a> ·
+  <a href="/stocks/">Browse stocks A-Z →</a> ·
+  <a href="/funds-by/">Browse mutual funds by AMC →</a> ·
+  <a href="/etfs/">Browse ETFs →</a> · <a href="/">BrokerLens home →</a></p>
 </div></footer>
 <script type="module" src="/assets/js/nav-widgets.js"></script>
+<script type="module" src="/assets/js/search.js"></script>
 </body>
 </html>
 """
@@ -2393,11 +2412,361 @@ def _write_calculator_pages():
     return written
 
 
+def _write_stock_directory(companies):
+    """A-Z browse pages for every NSE-listed equity.
+
+    Index-membership links already reach a stock page for anything in a
+    tracked index, but that is a few hundred of ~2,568 listed names - most
+    NSE-listed companies are not in Nifty 50 or any other index this site
+    tracks, and had NO inbound link anywhere on the site before this, only
+    a sitemap.xml entry. A sitemap is a hint, not a crawl-priority signal on
+    its own; Google prioritises pages it can actually reach by following a
+    link, especially on a low-authority new domain. This closes that gap.
+    """
+    groups = {}
+    for c in companies or []:
+        name = (c.get("name") or c.get("symbol") or "").strip()
+        symbol = (c.get("symbol") or "").strip()
+        slug = _stock_slug(symbol)
+        if not name or not slug:
+            continue
+        letter = name[0].upper()
+        letter = letter if letter.isalpha() else "0-9"
+        groups.setdefault(letter, []).append((name, symbol, slug))
+
+    letters = sorted(groups.keys(), key=lambda l: (l == "0-9", l))
+    nav_html = "".join(
+        '<a class="chip" href="/stocks/%s/">%s</a>' % (_esc(slugify(l)), _esc(l)) for l in letters
+    )
+
+    written = 0
+    for letter in letters:
+        rows = sorted(groups[letter], key=lambda r: r[0])
+        letter_slug = slugify(letter)
+        canonical = "%s/stocks/%s/" % (SITE_URL, letter_slug)
+        title = "NSE-Listed Stocks Starting With %s | BrokerLens" % letter
+        description = _esc(
+            "%d NSE-listed companies whose name starts with %s, each linking to its own listing page "
+            "(ISIN, listing date, face value, market lot)." % (len(rows), letter)
+        )[:300]
+        list_html = "".join(
+            '<a href="/stock/%s/">%s <span class="xs faint">(%s)</span></a>'
+            % (_esc(slug), _esc(name), _esc(symbol))
+            for name, symbol, slug in rows
+        )
+        jsonld = {
+            "@context": "https://schema.org", "@type": "ItemList", "name": title, "url": canonical,
+            "itemListElement": [
+                {"@type": "ListItem", "position": i + 1, "url": "%s/stock/%s/" % (SITE_URL, slug), "name": name}
+                for i, (name, symbol, slug) in enumerate(rows)
+            ],
+        }
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            '<h1 style="margin-top:0">Stocks starting with %s</h1>' % _esc(letter)
+            + '<p class="muted" style="max-width:70ch">%d NSE-listed compan%s. Each link goes to that '
+              'company\'s own listing page.</p>' % (len(rows), "y" if len(rows) == 1 else "ies")
+            + '<div class="row-wrap" style="margin:16px 0">' + nav_html + '</div>'
+            + '<div class="link-columns">' + list_html + '</div>'
+        )
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page lists NSE's own listed-securities master file, grouped alphabetically by company name.")}
+        dest_dir = os.path.join(ROOT, "site", "stocks", letter_slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+
+    total = sum(len(v) for v in groups.values())
+    canonical = "%s/stocks/" % SITE_URL
+    title = "Browse NSE-Listed Stocks A-Z | BrokerLens"
+    description = ("Every NSE-listed equity BrokerLens has a listing page for (%d companies), "
+                    "browsable alphabetically." % total)
+    counts_html = "".join(
+        '<a class="card" href="/stocks/%s/" style="display:block;text-align:center"><h3>%s</h3>'
+        '<p class="xs faint" style="margin-top:4px">%d stocks</p></a>'
+        % (_esc(slugify(l)), _esc(l), len(groups[l]))
+        for l in letters
+    )
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical),
+        "jsonld": json.dumps({"@context": "https://schema.org", "@type": "CollectionPage",
+                               "name": title, "url": canonical}, ensure_ascii=False),
+    }
+    body += (
+        '<h1 style="margin-top:0">Browse NSE-listed stocks</h1>'
+        '<p class="muted" style="max-width:70ch">%d companies across %d letters, sourced from NSE\'s own '
+        'listed-securities master file.</p>' % (total, len(letters))
+        + '<div class="grid g4" style="margin-top:16px">' + counts_html + '</div>'
+    )
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page indexes NSE's own listed-securities master file alphabetically by company name.")}
+    dest_dir = os.path.join(ROOT, "site", "stocks")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "stocks"), {slugify(l) for l in letters})
+    log("stock directory: %d letter pages written, %d stocks linked%s" % (
+        written, total, (", %d stale pruned" % pruned) if pruned else ""), "ok")
+    return letters
+
+
+def _write_fund_amc_pages(fund_slugs):
+    """One hub page per AMC (/funds-by/<amc-slug>/), linking every scheme
+    that AMC publishes on AMFI's daily NAV master file. Before this, none of
+    the 3,365 fund pages had an inbound link anywhere on the site except a
+    sitemap.xml entry - the same orphaned-page problem the stock directory
+    above fixes for equities, for the single largest page family this
+    pipeline writes.
+    """
+    by_amc = {}
+    for slug, (amc, name) in (fund_slugs or {}).items():
+        by_amc.setdefault(amc, []).append((name, slug))
+
+    amc_slugs = {}
+    for amc in sorted(by_amc):
+        base = slugify(amc)
+        if not base:
+            continue
+        slug, n = base, 2
+        while slug in amc_slugs.values():
+            slug = "%s-%d" % (base, n)
+            n += 1
+        amc_slugs[amc] = slug
+
+    written = 0
+    for amc, rows in by_amc.items():
+        amc_slug = amc_slugs.get(amc)
+        if not amc_slug:
+            continue
+        rows_sorted = sorted(rows, key=lambda r: r[0])
+        canonical = "%s/funds-by/%s/" % (SITE_URL, amc_slug)
+        title = "%s Mutual Fund Schemes | BrokerLens" % amc
+        description = _esc(
+            "Every %s mutual fund scheme on AMFI's daily NAV master file (%d schemes), with NAV, ISIN and "
+            "plan/option details on each scheme's own page." % (amc, len(rows_sorted))
+        )[:300]
+        list_html = "".join(
+            '<a href="/fund/%s/">%s</a>' % (_esc(slug), _esc(name)) for name, slug in rows_sorted
+        )
+        jsonld = {
+            "@context": "https://schema.org", "@type": "ItemList", "name": title, "url": canonical,
+            "itemListElement": [
+                {"@type": "ListItem", "position": i + 1, "url": "%s/fund/%s/" % (SITE_URL, slug), "name": name}
+                for i, (name, slug) in enumerate(rows_sorted)
+            ],
+        }
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            '<h1 style="margin-top:0">%s mutual fund schemes</h1>' % _esc(amc)
+            + '<p class="muted" style="max-width:70ch">%d scheme%s from %s, sourced from AMFI\'s own daily '
+              'NAV master file.</p>' % (len(rows_sorted), "" if len(rows_sorted) == 1 else "s", _esc(amc))
+            + '<div class="link-columns" style="margin-top:16px">' + list_html + '</div>'
+        )
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page groups AMFI's own daily NAV master file by fund house (AMC).")}
+        dest_dir = os.path.join(ROOT, "site", "funds-by", amc_slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+
+    total = sum(len(v) for v in by_amc.values())
+    canonical = "%s/funds-by/" % SITE_URL
+    title = "Browse Mutual Funds by AMC | BrokerLens"
+    description = "Every AMC (fund house) on AMFI's daily NAV master file, each linking to its own scheme list."
+    amc_cards = "".join(
+        '<a class="card" href="/funds-by/%s/" style="display:block"><h3 style="font-size:15px">%s</h3>'
+        '<p class="xs faint" style="margin-top:4px">%d schemes</p></a>'
+        % (_esc(amc_slugs[amc]), _esc(amc), len(rows))
+        for amc, rows in sorted(by_amc.items()) if amc in amc_slugs
+    )
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical),
+        "jsonld": json.dumps({"@context": "https://schema.org", "@type": "CollectionPage",
+                               "name": title, "url": canonical}, ensure_ascii=False),
+    }
+    body += (
+        '<h1 style="margin-top:0">Browse mutual funds by AMC</h1>'
+        '<p class="muted" style="max-width:70ch">%d fund houses across %d schemes, sourced from AMFI\'s own '
+        'daily NAV master file.</p>' % (len(amc_slugs), total)
+        + '<div class="grid g3" style="margin-top:16px">' + amc_cards + '</div>'
+    )
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page indexes AMFI's own daily NAV master file by fund house (AMC).")}
+    dest_dir = os.path.join(ROOT, "site", "funds-by")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "funds-by"), set(amc_slugs.values()))
+    log("fund AMC directory: %d AMC pages written, %d schemes linked%s" % (
+        written, total, (", %d stale pruned" % pruned) if pruned else ""), "ok")
+    return amc_slugs
+
+
+def _write_etf_directory(etfs):
+    """A single browse page listing every NSE-listed ETF. Unlike stocks
+    (~2.5k) or funds (~3.4k), 350 items fits comfortably on one page without
+    needing letter buckets, and gives every ETF page an on-site inbound link
+    beyond the handful that also appear on an /index/ constituent page."""
+    rows = []
+    for e in etfs or []:
+        symbol = (e.get("symbol") or "").strip()
+        slug = _stock_slug(symbol)
+        name = e.get("name") or symbol
+        if slug:
+            rows.append((name, symbol, slug))
+    rows.sort(key=lambda r: r[0])
+
+    canonical = "%s/etfs/" % SITE_URL
+    title = "Browse NSE-Listed ETFs | BrokerLens"
+    description = _esc(
+        "Every NSE-listed ETF BrokerLens has a listing page for (%d funds), each linking to its underlying "
+        "benchmark, ISIN, listing date and market lot." % len(rows)
+    )[:300]
+    list_html = "".join(
+        '<a href="/etf/%s/">%s <span class="xs faint">(%s)</span></a>' % (_esc(slug), _esc(name), _esc(symbol))
+        for name, symbol, slug in rows
+    )
+    jsonld = {
+        "@context": "https://schema.org", "@type": "ItemList", "name": title, "url": canonical,
+        "itemListElement": [
+            {"@type": "ListItem", "position": i + 1, "url": "%s/etf/%s/" % (SITE_URL, slug), "name": name}
+            for i, (name, symbol, slug) in enumerate(rows)
+        ],
+    }
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": description,
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += (
+        '<h1 style="margin-top:0">Browse NSE-listed ETFs</h1>'
+        '<p class="muted" style="max-width:70ch">%d ETFs, sourced from NSE\'s own listed-ETF register.</p>'
+        % len(rows)
+        + '<div class="link-columns" style="margin-top:16px">' + list_html + '</div>'
+    )
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page lists NSE's own listed-ETF register in full.")}
+    dest_dir = os.path.join(ROOT, "site", "etfs")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("ETF directory: 1 page written, %d ETFs linked" % len(rows), "ok")
+
+
+_CALC_HUB_FAQS = [
+    ("Are these calculators free to use?",
+     "Yes. Every calculator on this page runs entirely in your browser using a standard, published "
+     "financial formula. Nothing is submitted to BrokerLens or anyone else."),
+    ("Which calculator should I use for SIP planning?",
+     "The SIP Calculator projects a regular monthly investment. If your monthly amount will increase "
+     "each year, use the Step-up SIP Calculator instead - a flat SIP calculator understates the result."),
+    ("What is the difference between the SIP and lumpsum calculators?",
+     "The SIP Calculator assumes a fixed amount invested every month; the Lumpsum Calculator assumes "
+     "the entire amount is invested once, upfront. Use whichever matches how you actually plan to invest."),
+    ("Do these calculators account for tax?",
+     "Only the Capital Gains Tax Calculator and GST Calculator compute tax directly. The others (SIP, "
+     "lumpsum, SWP, PPF, retirement) show pre-tax growth; any tax due on withdrawal is not deducted."),
+    ("Where can I compare actual broker charges instead of financial formulas?",
+     "Use the brokerage cost calculator, which compares real published charges across every broker "
+     "BrokerLens tracks, rather than a generic formula."),
+]
+
+
+def _write_calculator_hub():
+    """A hub page at /calculators/ listing every calculator plus the SPA's own
+    brokerage cost calculator, so "Calculators" in the nav lands on a real
+    index instead of jumping straight into one arbitrarily-chosen tool - the
+    same gap a "Compare" nav item pointing at one specific broker pair would
+    be. Also the natural place to put the brokerage cost calculator (a
+    different, SPA-only tool at the sibling /calculator route) side by side
+    with the 13 static financial calculators, since neither page previously
+    linked to the other.
+
+    Path is /calculators/ (bare index, sibling to the per-calculator
+    directories already written by _write_calculator_pages) - checked against
+    the live SPA route list before use (nothing named "calculators" exists
+    there; only the singular "/calculator" does).
+    """
+    canonical = "%s/calculators/" % SITE_URL
+    title = "Financial Calculators: SIP, PPF, GST, EMI, Retirement | BrokerLens"
+    description = ("Free financial calculators for SIP, lumpsum, step-up SIP, SWP, PPF, retirement, "
+                    "inflation, EMI, CAGR, compound interest, simple interest, capital gains tax and GST, "
+                    "each using the standard published formula.")[:300]
+
+    cards_html = "".join(
+        '<a class="card" href="/calculators/%s/" style="display:block">'
+        '<h3 style="font-size:15px">%s</h3>'
+        '<p class="small muted" style="margin-top:6px">%s</p></a>'
+        % (_esc(c["slug"]), _esc(c["h1"]), _esc(c["description"]))
+        for c in CALCULATORS
+    )
+    faq_html = "".join(
+        '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+        for q, a in _CALC_HUB_FAQS
+    )
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "CollectionPage", "name": title, "url": canonical,
+                "hasPart": [
+                    {"@type": "WebApplication", "name": c["h1"], "url": "%s/calculators/%s/" % (SITE_URL, c["slug"])}
+                    for c in CALCULATORS
+                ],
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in _CALC_HUB_FAQS
+                ],
+            },
+        ],
+    }
+
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += (
+        '<h1 style="margin-top:0">Financial calculators</h1>'
+        '<p class="muted" style="max-width:68ch">Thirteen calculators covering investing, saving, loans '
+        'and tax, each built on the standard formula the calculation is actually based on, with the '
+        'formula itself shown on the page.</p>'
+
+        '<h2 style="margin-top:28px;font-size:18px">Compare broker charges instead</h2>'
+        '<a class="card" href="/calculator" style="display:block;max-width:520px">'
+        '<h3 style="font-size:15px">Brokerage cost calculator</h3>'
+        '<p class="small muted" style="margin-top:6px">Work out what a month of your actual trading '
+        'costs at each Indian broker, using their published charges.</p></a>'
+
+        '<h2 style="margin-top:28px;font-size:18px">Investing and savings</h2>'
+        '<div class="grid g3">' + cards_html + '</div>'
+
+        + ('<h2 style="margin-top:32px;font-size:18px">Frequently asked questions</h2>'
+           '<div style="max-width:68ch">%s</div>' % faq_html)
+    )
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page links to calculators that each run a standard, published financial formula entirely "
+        "in your browser; it is not generated from any BrokerLens-ingested regulator or exchange dataset.")}
+
+    dest_dir = os.path.join(ROOT, "site", "calculators")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("calculator hub: written", "ok")
+
+
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
-                    fund_slugs=None, report_slugs=None, calc_slugs=None):
+                    fund_slugs=None, report_slugs=None, calc_slugs=None, stock_letters=None, amc_slugs=None):
     _require_site_url()
-    urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator",
-            "/registry", "/algo", "/methodology", "/sources"]
+    urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator", "/calculators",
+            "/registry", "/algo", "/methodology", "/sources", "/stocks", "/funds-by", "/etfs"]
     # Trailing slash: /broker/<id>/ is now a real static directory on disk (see
     # _write_broker_pages), and every static host 301s the no-slash form to add
     # it. The sitemap should point straight at the canonical form rather than
@@ -2452,9 +2821,104 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     for slug in (calc_slugs or []):
         body += ("<url><loc>%s/calculators/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
                  % (SITE_URL, slug, today))
+    # Directory/browse pages exist purely to give crawlers a link path into
+    # the page families above; they change whenever their underlying universe
+    # does, so weekly matches the hub pages they mirror.
+    for letter in (stock_letters or []):
+        body += ("<url><loc>%s/stocks/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
+                 % (SITE_URL, slugify(letter), today))
+    for amc_slug in (amc_slugs or {}).values():
+        body += ("<url><loc>%s/funds-by/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
+                 % (SITE_URL, amc_slug, today))
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)
     _write_text(os.path.join(SITE_DATA, "..", "sitemap.xml"), xml)
+
+
+_REPORT_TITLES = {
+    "state-of-indian-broking-2026": "State of Indian Broking, 2026",
+}
+
+_CORE_PAGES = [
+    ("BrokerLens home", "/", ""),
+    ("Brokers", "/brokers", ""),
+    ("Compare brokers", "/compare", ""),
+    ("Rankings", "/leaderboards", ""),
+    ("Brokerage cost calculator", "/calculator", ""),
+    ("Financial calculators", "/calculators/", ""),
+    ("SEBI registry", "/registry", ""),
+    ("Algo trading platforms", "/algo", ""),
+    ("Methodology", "/methodology", ""),
+    ("Sources", "/sources", ""),
+    ("Browse stocks A-Z", "/stocks/", ""),
+    ("Browse mutual funds by AMC", "/funds-by/", ""),
+    ("Browse ETFs", "/etfs/", ""),
+]
+
+
+def _write_search_index(built, reg_rows, hub_groups, companies, indices, etfs, fund_slugs, report_slugs,
+                         amc_slugs=None):
+    """One flat, client-side search index covering every page family this
+    pipeline writes, not just the 48 tracked brokers the original search.json
+    carried (which had no reader anywhere in the codebase - confirmed by
+    grepping every JS file for it). Shipped as compact 4-element arrays
+    (name, url, type, subtitle) rather than keyed objects: at ~8,000 rows the
+    repeated key names alone would roughly double the payload, and this is
+    fetched lazily by search.js - only when a visitor actually opens search,
+    never on first paint.
+
+    No live API, no server: this is a precomputed snapshot rebuilt on every
+    publish, matching the rest of the site's read-only-static-JSON contract
+    stated at the top of this file.
+    """
+    rows = []
+
+    for b in built:
+        rows.append([b["profile"]["brand"], "/broker/%s/" % b["id"], "broker", b["profile"].get("legal_name") or ""])
+
+    for r in reg_rows:
+        slug = r.get("slug")
+        if not slug:
+            continue
+        rows.append([r.get("name") or "Unnamed entity", "/sebi-registry/%s/" % slug, "sebi", r.get("city") or ""])
+
+    for dim, key, label, _grp_rows in (hub_groups or []):
+        slug = slugify(key.replace("_", "-"))
+        if slug:
+            rows.append([label, "/brokers-by/%s/%s/" % (dim, slug), "hub", ""])
+
+    for c in (companies or []):
+        symbol = (c.get("symbol") or "").strip()
+        slug = _stock_slug(symbol)
+        if slug:
+            rows.append([c.get("name") or symbol, "/stock/%s/" % slug, "stock", symbol])
+
+    for slug, idx in (indices or {}).items():
+        rows.append([idx.get("label") or slug, "/index/%s/" % slug, "index", ""])
+
+    for e in (etfs or []):
+        symbol = (e.get("symbol") or "").strip()
+        slug = _stock_slug(symbol)
+        if slug:
+            rows.append([e.get("name") or symbol, "/etf/%s/" % slug, "etf", symbol])
+
+    for slug, (amc, name) in (fund_slugs or {}).items():
+        rows.append([name, "/fund/%s/" % slug, "fund", amc])
+
+    for slug in (report_slugs or []):
+        rows.append([_REPORT_TITLES.get(slug, slug.replace("-", " ").title()), "/reports/%s/" % slug, "report", ""])
+
+    for amc, amc_slug in (amc_slugs or {}).items():
+        rows.append([amc, "/funds-by/%s/" % amc_slug, "hub", "Fund house"])
+
+    for c in CALCULATORS:
+        rows.append([c["h1"], "/calculators/%s/" % c["slug"], "calc", ""])
+
+    for name, url, sub in _CORE_PAGES:
+        rows.append([name, url, "page", sub])
+
+    write_json(os.path.join(SITE_DATA, "search.json"), rows, compact=True)
+    log("search.json: %d entries indexed" % len(rows), "ok")
 
 
 def _write_feed(built, aggregates):

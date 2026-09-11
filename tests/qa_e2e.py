@@ -605,6 +605,105 @@ def test_published():
             check("%s FAQPage JSON-LD entity count matches the visible FAQ count" % cslug,
                   ('"@type": "FAQPage"' in chtml or '"@type":"FAQPage"' in chtml))
 
+    # /calculators/ hub: the nav's "Calculators" link used to jump straight
+    # into one arbitrarily-chosen calculator (sip-calculator) instead of a
+    # real index - found while auditing nav consistency for the search
+    # feature. This also gives the brokerage cost calculator (a separate
+    # SPA-only route) its first cross-link from the static calculator suite.
+    calc_hub_path = os.path.join(calc_dir, "index.html")
+    check("calculators hub page exists (not just per-calculator pages)", os.path.exists(calc_hub_path))
+    if os.path.exists(calc_hub_path):
+        hub_html = open(calc_hub_path, encoding="utf-8").read()
+        check("calculators hub links every calculator", all(
+            '/calculators/%s/' % c["slug"] in hub_html for c in [
+                {"slug": s} for s in calc_slugs
+            ]))
+        check("calculators hub links the brokerage cost calculator too", 'href="/calculator"' in hub_html)
+
+    # Directory/browse pages: before these existed, ~2,568 stock pages and
+    # all 3,364 fund pages had no inbound link anywhere on the site except a
+    # sitemap.xml entry - a sitemap is a weak crawl signal on its own, and
+    # Google's own Page Indexing report showed the gap directly (thousands
+    # of sitemap URLs, only a handful actually indexed on a new domain).
+    stocks_dir_path = os.path.join(ROOT, "site", "stocks")
+    check("stock A-Z directory exists", os.path.isdir(stocks_dir_path))
+    if os.path.isdir(stocks_dir_path):
+        letter_dirs = [d for d in os.listdir(stocks_dir_path) if os.path.isdir(os.path.join(stocks_dir_path, d))]
+        check("stock directory has more than one letter page", len(letter_dirs) > 1, "found %d" % len(letter_dirs))
+        overview_html = open(os.path.join(stocks_dir_path, "index.html"), encoding="utf-8").read()
+        check("stock directory overview links every letter page",
+              all('/stocks/%s/' % d in overview_html for d in letter_dirs))
+        if letter_dirs:
+            sample_html = open(os.path.join(stocks_dir_path, letter_dirs[0], "index.html"), encoding="utf-8").read()
+            check("a stock letter page actually links /stock/ pages", '/stock/' in sample_html)
+
+    funds_by_dir = os.path.join(ROOT, "site", "funds-by")
+    check("fund AMC directory exists", os.path.isdir(funds_by_dir))
+    if os.path.isdir(funds_by_dir):
+        amc_dirs = [d for d in os.listdir(funds_by_dir) if os.path.isdir(os.path.join(funds_by_dir, d))]
+        check("fund AMC directory has more than one AMC page", len(amc_dirs) > 1, "found %d" % len(amc_dirs))
+        overview_html = open(os.path.join(funds_by_dir, "index.html"), encoding="utf-8").read()
+        check("fund AMC overview links every AMC page",
+              all('/funds-by/%s/' % d in overview_html for d in amc_dirs))
+        if amc_dirs:
+            sample_html = open(os.path.join(funds_by_dir, amc_dirs[0], "index.html"), encoding="utf-8").read()
+            check("an AMC page actually links /fund/ pages", '/fund/' in sample_html)
+
+    etfs_dir_path = os.path.join(ROOT, "site", "etfs")
+    check("ETF directory exists", os.path.exists(os.path.join(etfs_dir_path, "index.html")))
+    if os.path.exists(os.path.join(etfs_dir_path, "index.html")):
+        etf_dir_html = open(os.path.join(etfs_dir_path, "index.html"), encoding="utf-8").read()
+        check("ETF directory links /etf/ pages", '/etf/' in etf_dir_html)
+
+    # Site-wide footer must link the three directory pages above, or they are
+    # just as orphaned as the pages they exist to fix - a directory page
+    # with no inbound link of its own defeats the point.
+    footer_targets = ["/stocks/", "/funds-by/", "/etfs/"]
+    if os.path.isdir(stock_dir) and slugs:
+        stock_html = open(os.path.join(stock_dir, slugs[0], "index.html"), encoding="utf-8").read()
+        check("a static page footer links the browse directories",
+              all(t in stock_html for t in footer_targets), "missing: %s" % [t for t in footer_targets if t not in stock_html])
+    home_html_for_dirs = open(os.path.join(ROOT, "site", "index.html"), encoding="utf-8").read()
+    check("homepage footer links the browse directories too",
+          all(t in home_html_for_dirs for t in footer_targets),
+          "missing: %s" % [t for t in footer_targets if t not in home_html_for_dirs])
+
+    # Global search: a precomputed search.json plus a search.js widget wired
+    # into every page's header, following the same "no live API" contract as
+    # the rest of the site (see store.js's own header comment).
+    search_json_path = os.path.join(ROOT, "site", "data", "search.json")
+    check("search.json exists", os.path.exists(search_json_path))
+    if os.path.exists(search_json_path):
+        import json as _json
+        search_rows = _json.loads(open(search_json_path, encoding="utf-8").read())
+        check("search.json has thousands of entries, not just the 47 brokers", len(search_rows) > 5000,
+              "found %d" % len(search_rows))
+        check("search.json rows are compact 4-element arrays", all(len(r) == 4 for r in search_rows[:20]))
+    search_js_path = os.path.join(ROOT, "site", "assets", "js", "search.js")
+    check("search.js exists", os.path.exists(search_js_path))
+    if os.path.exists(search_js_path):
+        search_js = open(search_js_path, encoding="utf-8").read()
+        check("search.js fetches the precomputed index, no live API call",
+              "loadSearchIndex" in search_js and "fetch(" not in search_js)
+    check("homepage has the search trigger and overlay markup",
+          'id="search-toggle"' in home_html_for_dirs and 'id="search-overlay"' in home_html_for_dirs
+          and 'id="search-input"' in home_html_for_dirs)
+    if os.path.isdir(stock_dir) and slugs:
+        stock_html = open(os.path.join(stock_dir, slugs[0], "index.html"), encoding="utf-8").read()
+        check("a static page has the search trigger and overlay markup too",
+              'id="search-toggle"' in stock_html and 'id="search-overlay"' in stock_html)
+        check("a static page loads search.js", "search.js" in stock_html)
+
+    # Homepage nav must carry the exact same link set as every static page -
+    # found missing "Reports" and pointing "Calculators" at the SPA's
+    # different brokerage-cost-calculator route while static pages already
+    # had a real Calculators link, while auditing nav consistency.
+    home_nav_html = home_html_for_dirs[:home_html_for_dirs.find('id="app"')]
+    check("homepage nav has a Calculators link matching static pages",
+          'href="/calculators/">Calculators' in home_nav_html)
+    check("homepage nav has a Reports link matching static pages",
+          "Reports</a>" in home_nav_html and "/reports/state-of-indian-broking-2026/" in home_nav_html)
+
     # theme-init.js applies a visitor's stored dark/light choice on every
     # static page. Found live (by actually toggling dark mode on the
     # homepage in a real browser, then navigating to a static page and

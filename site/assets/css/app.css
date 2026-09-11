@@ -234,6 +234,66 @@ th[data-tip]:not(.sortable) { cursor: help; }
 }
 .icon-btn:hover { color: var(--text); border-color: var(--border-strong); }
 
+/* Global search: a centered modal overlay, not a mega-menu-style dropdown -
+   this is the one nav widget that needs the visitor's full attention rather
+   than a glance, so it gets a backdrop and its own focus target. */
+.search-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 12vh 16px 16px;
+}
+/* The unconditional display:flex above is an author rule, which overrides
+   the browser's default [hidden]{display:none} UA rule even while hidden is
+   set - found live (closing search left the overlay visually open). Without
+   this, the JS's overlay.hidden = true has no visual effect at all. */
+.search-overlay[hidden] { display: none; }
+.search-modal {
+  width: 100%; max-width: 560px; max-height: 70vh;
+  background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden;
+}
+.search-input-row {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-4); border-bottom: 1px solid var(--border); color: var(--text-faint); flex: none;
+}
+.search-input-row input {
+  flex: 1; border: none; background: none; outline: none;
+  font-size: var(--fs-md); color: var(--text); font-family: inherit; min-width: 0;
+}
+.search-input-row input::placeholder { color: var(--text-faint); }
+.search-esc {
+  font-size: var(--fs-xs); color: var(--text-faint); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 1px 6px; font-family: var(--font-mono); flex: none;
+}
+.search-results { overflow-y: auto; padding: var(--space-2); }
+.search-group-label {
+  font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-faint); padding: var(--space-3) var(--space-3) 4px;
+}
+.search-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+  color: var(--text); cursor: pointer;
+}
+.search-row:hover, .search-row.active { background: var(--bg-hover); text-decoration: none; }
+.search-row .n { font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-row .s { color: var(--text-faint); font-size: var(--fs-xs); flex: none; }
+.search-empty, .search-hint {
+  padding: var(--space-6) var(--space-4); color: var(--text-faint); font-size: var(--fs-sm); text-align: center;
+}
+.search-footer {
+  border-top: 1px solid var(--border); padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-xs); color: var(--text-faint); display: flex; gap: var(--space-4); flex: none;
+}
+.search-footer kbd {
+  font-family: var(--font-mono); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px;
+}
+@media (max-width: 600px) {
+  .search-overlay { padding: 0; }
+  .search-modal { max-width: 100%; max-height: 100%; height: 100%; border-radius: 0; border: none; }
+}
+
 /* ---------------------------------------------------------------- buttons */
 
 .btn {
@@ -258,6 +318,13 @@ th[data-tip]:not(.sortable) { cursor: help; }
   border-radius: var(--radius); padding: var(--space-4);
 }
 .card-pad-lg { padding: var(--space-5); }
+/* Dense A-Z/AMC browse lists (stocks, funds, ETFs) - a newspaper-style
+   multi-column link list rather than a grid of cards, since these pages
+   exist purely to give crawlers (and visitors) a real link into hundreds of
+   otherwise sitemap-only pages, not to showcase each one individually. */
+.link-columns { columns: 3 220px; column-gap: var(--space-5); margin-top: var(--space-2); }
+.link-columns a { display: block; padding: 3px 0; font-size: var(--fs-sm); break-inside: avoid; }
+
 /* Native <details>/<summary> for calculator FAQs - no JS needed to read or
    expand, matching the rest of the site's zero-dependency-for-content rule. */
 .faq-item { border-bottom: 1px solid var(--border); padding: var(--space-3) 0; }

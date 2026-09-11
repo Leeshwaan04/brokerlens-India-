@@ -70,11 +70,13 @@
       <a href="/brokers" data-link>Brokers</a>
       <a href="/compare" data-link>Compare</a>
       <a href="/leaderboards" data-link>Rankings</a>
-      <a href="/calculator" data-link>Cost calculator</a>
+      <a href="/calculators/">Calculators</a>
       <a href="/registry" data-link>SEBI registry</a>
       <a href="/algo" data-link>Algo platforms</a>
+      <a href="/reports/state-of-indian-broking-2026/">Reports</a>
       <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">▾</span></button>
     </nav>
+    <button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
     <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">◐</button>
   </div>
   <div class="mega" id="mega-timings" hidden>
@@ -83,6 +85,16 @@
     </div>
   </div>
 </header>
+<div class="search-overlay" id="search-overlay" hidden>
+  <div class="search-modal" role="dialog" aria-modal="true" aria-label="Search BrokerLens">
+    <div class="search-input-row">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
+      <kbd class="search-esc">Esc</kbd>
+    </div>
+    <div id="search-results" class="search-results"></div>
+  </div>
+</div>
 
 <main id="app" class="wrap" style="padding-top:24px;padding-bottom:24px">
   <div class="grid g3">
@@ -131,10 +143,12 @@
         </ul>
       </div>
       <div>
-        <h5>Explore</h5>
+        <h5>Markets</h5>
         <ul>
-          <li><a href="/compare" data-link>Compare brokers</a></li>
-          <li><a href="/algo" data-link>Algo platforms</a></li>
+          <li><a href="/stocks/">Browse stocks A-Z</a></li>
+          <li><a href="/funds-by/">Browse mutual funds by AMC</a></li>
+          <li><a href="/etfs/">Browse ETFs</a></li>
+          <li><a href="/calculators/">Financial calculators</a></li>
         </ul>
       </div>
     </div>

@@ -42,6 +42,7 @@ export const loadRegistry = () => get('/data/registry.json');
 export const loadAlgo = () => get('/data/algo.json');
 export const loadTimings = () => get('/data/timings.json');
 export const loadSources = () => get('/data/sources.json');
+export const loadSearchIndex = () => get('/data/search.json');
 
 /* --------------------------------------------------------------- formatting */
 
