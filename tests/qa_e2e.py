@@ -672,6 +672,20 @@ def test_published():
           all(t in home_html_for_dirs for t in footer_targets),
           "missing: %s" % [t for t in footer_targets if t not in home_html_for_dirs])
 
+    # /assets/* is served with a one-year immutable Cache-Control (vercel.json),
+    # so a CSS/JS reference that never changes URL is invisible to a returning
+    # visitor's browser on every future deploy, forever, until a hard refresh -
+    # caught live: a banner redesign shipped to the server but rendered
+    # unstyled for anyone who'd already loaded the old app.css. Every asset
+    # reference must carry a content-hash query string so a changed file gets
+    # a new URL.
+    check("homepage's CSS/JS asset references are cache-busted with a content-hash query string",
+          bool(re.search(r'/assets/css/app\.css\?v=[0-9a-f]{6,}', home_html_for_dirs))
+          and bool(re.search(r'/assets/js/app\.js\?v=[0-9a-f]{6,}', home_html_for_dirs)))
+    if os.path.isdir(stock_dir) and slugs:
+        check("a static page's CSS asset reference is cache-busted too",
+              bool(re.search(r'/assets/css/app\.css\?v=[0-9a-f]{6,}', stock_html)))
+
     # Global search: a precomputed search.json plus a search.js widget wired
     # into every page's header, following the same "no live API" contract as
     # the rest of the site (see store.js's own header comment).
