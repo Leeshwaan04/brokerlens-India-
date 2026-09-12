@@ -1,0 +1,98 @@
+{
+  "date": "2026-09-12",
+  "sitemaps": [
+    {
+      "path": "https://www.brokerlens.in/sitemap.xml",
+      "lastDownloaded": "2026-09-12T06:02:57.766Z",
+      "warnings": "0",
+      "errors": "0",
+      "submitted": "8206",
+      "indexed": "0"
+    }
+  ],
+  "performance_28d": {
+    "range": {
+      "start": "2026-08-12",
+      "end": "2026-09-09"
+    },
+    "totals": {
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 2
+    },
+    "top_queries": []
+  },
+  "spot_checks": {
+    "https://www.brokerlens.in/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-09-04T16:32:02Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/brokers": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-09-12T05:19:54Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/sources": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/methodology": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/broker/zerodha/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/stock/20microns/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/etf/niftybees/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/calculators/sip-calculator/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/brokers-by/type/": {
+      "coverageState": "URL is unknown to Google",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/crypto/btc/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+name: Search Console daily snapshot
+
+on:
+  schedule:
+    # 03:00 UTC = 08:30 IST - after GSC's own overnight data processing,
+    # well before the working day starts in India.
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run GSC snapshot
+        env:
+          GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+        run: python3 scripts/gsc_report.py
+
+      - name: Commit snapshot
+        run: |
+          git config user.name "brokerlens-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add reports/gsc/
+          git diff --staged --quiet || git commit -m "Search Console snapshot: $(date -u +%Y-%m-%d)"
+          git push
