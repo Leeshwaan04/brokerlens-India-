@@ -579,20 +579,27 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
    high-contrast motion reads as spammy and would undercut the site's
    credibility-first design elsewhere. Disabled entirely under
    prefers-reduced-motion. */
-.aff-banner-binance, .aff-banner-delta { max-width: 280px; margin-inline: auto; }
+.aff-banner-binance, .aff-banner-delta {
+  max-width: 280px; margin-inline: auto; box-shadow: var(--shadow-lg);
+}
 @media (prefers-reduced-motion: no-preference) {
   .aff-banner-binance { animation: aff-glow-binance 3.6s ease-in-out infinite; }
   .aff-banner-delta { animation: aff-glow-delta 3.6s ease-in-out infinite; }
   .aff-banner-binance .aff-cta { animation: aff-pulse 2.4s ease-in-out infinite; }
   .aff-banner-delta .aff-cta { animation: aff-pulse 2.4s ease-in-out infinite; }
 }
+/* var(--shadow-lg) stays in every keyframe stop so the card keeps a real,
+   theme-aware drop shadow lifting it off the page at all times - without
+   it, the glow's own 0%/100% "no shadow" stop briefly zeroed out the only
+   shadow the card had, so on a light background it went flat and looked
+   like an unstyled box between pulses. */
 @keyframes aff-glow-binance {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(240, 185, 11, 0); }
-  50% { box-shadow: 0 0 20px 1px rgba(240, 185, 11, 0.35); }
+  0%, 100% { box-shadow: var(--shadow-lg), 0 0 0 0 rgba(240, 185, 11, 0); }
+  50% { box-shadow: var(--shadow-lg), 0 0 24px 3px rgba(240, 185, 11, 0.45); }
 }
 @keyframes aff-glow-delta {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 214, 143, 0); }
-  50% { box-shadow: 0 0 20px 1px rgba(0, 214, 143, 0.35); }
+  0%, 100% { box-shadow: var(--shadow-lg), 0 0 0 0 rgba(0, 214, 143, 0); }
+  50% { box-shadow: var(--shadow-lg), 0 0 24px 3px rgba(0, 214, 143, 0.45); }
 }
 @keyframes aff-pulse {
   0%, 100% { transform: scale(1); }
