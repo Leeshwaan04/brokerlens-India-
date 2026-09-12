@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-12",
+  "manual_data_gaps": [
+    {
+      "dataset": "active_clients",
+      "status": "sample/placeholder",
+      "note": "SAMPLE DATA - replace with NSE member-wise UCC ingest."
+    },
+    {
+      "dataset": "complaints",
+      "status": "sample/placeholder",
+      "note": "SAMPLE DATA - replace with per-broker SEBI Annexure-B disclosures."
+    },
+    {
+      "dataset": "charges",
+      "status": "sample/placeholder",
+      "note": "SAMPLE pricing for a handful of demo brokers. Others stay null by design."
+    }
+  ],
+  "coverage": [
+    {
+      "check": "SEBI registry size",
+      "live_site": 1692,
+      "live_generated_at": "2026-09-12T09:35:32+00:00"
+    }
+  ],
+  "gsc_opportunities": {
+    "ready": false,
+    "days_tracked": 2,
+    "total_impressions_seen": 2,
+    "note": "Not enough Search Console data yet to mine striking-distance keywords without just reporting noise (need real query volume, not 2 impressions over 2 tracked day(s)). This section activates automatically once it does."
+  }
+}

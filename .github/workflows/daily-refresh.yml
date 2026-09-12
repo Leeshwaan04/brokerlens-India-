@@ -1,0 +1,25 @@
+name: Daily content refresh
+
+# Vercel only rebuilds on a git push - a new SEBI registration, a newly
+# listed stock, or a new AMFI fund never reaches the live site until someone
+# happens to commit something unrelated. This triggers a real rebuild every
+# day via a Vercel Deploy Hook, so the site's primary-source data (registry,
+# equity/ETF/fund universes, market data) stays current on its own. No new
+# content is invented anywhere in this - scripts/vercel-build.sh runs the
+# exact same fetch+build pipeline as every other deploy.
+
+on:
+  schedule:
+    - cron: "0 21 * * *"  # 21:00 UTC = 02:30 IST - well outside market hours
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel rebuild
+        run: |
+          curl -fsS -X POST "$DEPLOY_HOOK_URL" -o /dev/null
+          echo "Deploy triggered."
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK }}

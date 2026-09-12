@@ -936,6 +936,25 @@ def test_published():
           "function affiliateBanner" in pages_js_src
           and "zerodha.com/open-account?c=ZE5729" in pages_js_src
           and 'rel="noopener sponsored"' in pages_js_src)
+    # This exact sentence went missing from both pages.js and publish.py's
+    # affiliateBanner_html() once already (silently, mid-session, cause never
+    # identified) - it's the one substantiating the "Advertising disclosure"
+    # section's claim on /methodology, so its absence from the banner itself
+    # is a real compliance gap, not a cosmetic one. Checked in both renderers.
+    disclosure = "it has no effect on any ranking or score shown on this site"
+    # Normalize whitespace first: the sentence legitimately wraps across
+    # source lines in pages.js (readable source, not a rendering issue),
+    # which would otherwise defeat a plain substring check.
+    check("pages.js's affiliate banner carries the full commission disclosure sentence",
+          disclosure in " ".join(pages_js_src.split()))
+    # publish.py builds the same sentence from adjacent Python string
+    # literals - checking the ACTUAL rendered output (not the source text,
+    # where the literals' quote marks would defeat a naive substring check
+    # the same way pages.js's line-wrap does) is also the more direct test.
+    sys.path.insert(0, ROOT)
+    from pipeline import publish as _publish
+    check("publish.py's affiliateBanner_html() carries the full commission disclosure sentence",
+          disclosure in _publish.affiliateBanner_html())
     check("the affiliate banner is not embedded inside the broker ranking table markup",
           # dirRow() renders each ranked table row; the banner must live outside it.
           "affiliateBanner()" not in re.search(r"function dirRow\(.*?\n\}", pages_js_src, re.S).group(0)

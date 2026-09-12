@@ -47,3 +47,5 @@ venv/
 .claude/
 dist/
 *.zip
+.vercel
+.env*
