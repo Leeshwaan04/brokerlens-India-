@@ -18,6 +18,18 @@ always-on host, and if it lives on another origin, widen the CSP in
 site/_headers from connect-src 'self' to include that origin. The front end
 degrades to polling /data/ticker.json automatically when the stream is absent,
 so a static-only deploy still works.
+
+CLOUD RUN NOTE: this same file is the production stream server, deployed as a
+container to Cloud Run (see server/Dockerfile) rather than reimplemented for
+a serverless platform - Vercel Functions cannot hold this process's in-memory
+HUB/subscriber state across invocations (no instance affinity), whereas a
+single always-warm Cloud Run instance (min-instances=1, max-instances=1)
+behaves exactly like this "small always-on host" this file already assumes.
+Only the API surface matters there, not the static file serving (Vercel's own
+CDN already serves site/), so the Cloud Run image does not include site/ at
+all - non-/api/ routes there just 404, which is correct and harmless.
+ALLOWED_ORIGIN and PORT are read from the environment; everything else about
+this file is identical between local dev and the deployed service.
 """
 from __future__ import annotations
 
@@ -63,6 +75,11 @@ FORBIDDEN_PREFIXES = ("/data/_ingest", "/.git", "/.env", "/config", "/pipeline",
 # Simple in-memory rate limiting. Enough for a single-process dev/edge server;
 # put a real limiter in front of a production deployment.
 RATE_LIMITS = {"/api/stream": (30, 300)}   # (requests, window_s)
+
+# Empty locally (same-origin, no CORS needed). On Cloud Run this is set to the
+# Vercel site's own origin, since /api/* is then served cross-origin from the
+# static site's point of view - see the CLOUD RUN NOTE above.
+ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "")
 
 
 class RateLimiter:
@@ -116,6 +133,19 @@ class Handler(SimpleHTTPRequestHandler):
         self.connection.settimeout(REQUEST_TIMEOUT_S)
 
     def _client_ip(self):
+        # Cloud Run terminates every connection at Google's proxy layer, so
+        # client_address is always the proxy's internal address there - every
+        # visitor would collapse onto one "IP" for rate limiting and the
+        # per-IP subscriber cap, which defeats both. Cloud Run's proxy always
+        # sets X-Forwarded-For with the real client first; trusted here only
+        # because ALLOWED_ORIGIN (set only in the Cloud Run deployment) is the
+        # signal that this header is coming from that trusted proxy, not a
+        # spoofable client - locally (no ALLOWED_ORIGIN) the header is ignored
+        # and the raw socket peer is used, as before.
+        if ALLOWED_ORIGIN:
+            fwd = self.headers.get("X-Forwarded-For")
+            if fwd:
+                return fwd.split(",")[0].strip()
         return self.client_address[0] if self.client_address else "-"
 
     def _blocked(self, route):
@@ -129,6 +159,9 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_response(204)
         self.send_header("Allow", ", ".join(sorted(ALLOWED_METHODS)))
         self.send_header("Content-Length", "0")
+        if ALLOWED_ORIGIN and self.path.split("?")[0].startswith("/api/"):
+            self.send_header("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            self.send_header("Access-Control-Max-Age", "86400")
         self.end_headers()
 
     def do_GET(self):
@@ -238,7 +271,9 @@ class Handler(SimpleHTTPRequestHandler):
     def end_headers(self):
         p = self.path.split("?")[0]
         if p.startswith("/api/"):
-            pass                       # streaming/JSON routes set their own caching
+            if ALLOWED_ORIGIN:
+                self.send_header("Access-Control-Allow-Origin", ALLOWED_ORIGIN)
+                self.send_header("Vary", "Origin")
         elif p.startswith("/data/"):
             # Match the production posture: short shared cache, revalidate.
             self.send_header("Cache-Control", "public, max-age=60, s-maxage=3600, must-revalidate")
@@ -271,14 +306,20 @@ class Handler(SimpleHTTPRequestHandler):
 
 def main():
     global HUB
+    # Cloud Run sets PORT and expects a bind on all interfaces; local dev sets
+    # neither, so the safer 127.0.0.1-only default is unaffected there.
+    on_cloud_run = "PORT" in os.environ
     ap = argparse.ArgumentParser()
-    ap.add_argument("--port", type=int, default=8000)
-    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("--port", type=int, default=int(os.environ.get("PORT", 8000)))
+    ap.add_argument("--host", default="0.0.0.0" if on_cloud_run else "127.0.0.1")
     ap.add_argument("--no-stream", action="store_true",
                     help="serve static only; the front end falls back to polling")
     args = ap.parse_args()
 
-    if not os.path.exists(os.path.join(SITE, "data", "overview.json")):
+    # site/ isn't in the Cloud Run image at all (Vercel's own CDN serves it;
+    # this deployment is API-only - see the CLOUD RUN NOTE above), so this
+    # check would always fire there and is irrelevant noise.
+    if not on_cloud_run and not os.path.exists(os.path.join(SITE, "data", "overview.json")):
         sys.stderr.write(
             "!! site/data/overview.json is missing. Run:\n"
             "     python3 -m pipeline.run seed && python3 -m pipeline.run all\n\n"

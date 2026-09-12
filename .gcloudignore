@@ -1,0 +1,23 @@
+# Cloud Build source upload for the stream-service Dockerfile only needs
+# pipeline/, server/, config/, and Dockerfile itself (see Dockerfile's own
+# comment for why it lives at the repo root). Everything else here is either
+# huge and irrelevant (site/, data/) or must never leave this machine
+# (secrets/) - excluded explicitly rather than trusting .gitignore alone,
+# since a credential accidentally reaching a Cloud Build upload is a
+# meaningfully worse exposure than one reaching a private git remote.
+.git/
+.gcloudignore
+secrets/
+.env*
+.vercel/
+site/
+data/
+reports/
+tests/
+scripts/
+docs/
+node_modules/
+__pycache__/
+*.pyc
+*.log
+.DS_Store

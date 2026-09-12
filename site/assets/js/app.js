@@ -6,7 +6,7 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=557d965307';
-import * as pages from './pages.js?v=28a55ffa57';
+import * as pages from './pages.js?v=2f482f0b40';
 import { clearRedraws } from './chart.js?v=f69d0c170f';
 import './nav-widgets.js?v=652718f215';
 import './search.js?v=8f5c9e48ac';
@@ -185,6 +185,13 @@ window.addEventListener('popstate', render);
 
 const EXCH_KEY = 'bl-exchange';
 const POLL_MS = 45000;
+// The stream server needs a persistent process (in-memory subscriber state,
+// no instance affinity on serverless platforms - see server/devserver.py's
+// CLOUD RUN NOTE), so it runs on Cloud Run, cross-origin from the static
+// site Vercel serves. /data/ticker.json (same-origin, built at deploy time)
+// is still the first paint and the fallback if this is ever unreachable -
+// nothing here is a hard dependency.
+const STREAM_ORIGIN = 'https://brokerlens-stream-649203501892.asia-south1.run.app';
 
 const track = document.getElementById('ticker-track');
 const dot = document.getElementById('exch-dot');
@@ -338,7 +345,7 @@ function openStream() {
   if (!('EventSource' in window)) return null;
   let es;
   try {
-    es = new EventSource('/api/stream');
+    es = new EventSource(STREAM_ORIGIN + '/api/stream');
   } catch {
     return null;
   }
