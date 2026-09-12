@@ -541,35 +541,77 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
 .aff-banner .aff-fine { font-size: 10px; line-height: 1.5; color: var(--text-faint); margin-top: 10px; }
 .aff-banner .aff-fine a { color: inherit; text-decoration: underline; }
 
-/* Binance variant: a fully dark, gold-accented card (not the shared light
-   .aff-banner look Zerodha uses) - this is the exact design approved in the
-   monetization preview, not a generic reskin of the Zerodha component. */
-.aff-banner-binance { background: linear-gradient(160deg, #1a1d21 0%, #0b0e11 100%); border-color: #2a2e35; }
-.aff-banner-binance .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+/* Binance variant: a white card in light theme, the fully dark gold-accented
+   card (the exact design approved in the monetization preview) in dark
+   theme - not the shared light .aff-banner look Zerodha uses, and not one
+   fixed look regardless of site theme. Dark-mode rules are duplicated under
+   both the system media query (guarded so an explicit light override wins)
+   and the explicit [data-theme="dark"] toggle, matching tokens.css's own
+   three-state pattern. */
+.aff-banner-binance { background: var(--bg-raised); border-color: var(--border); }
+.aff-banner-binance .aff-tag { background: rgba(0, 0, 0, 0.06); color: var(--text-muted); }
 .aff-banner-binance .aff-art { height: auto; padding: var(--space-4) var(--space-4) 0; background: none; }
+.aff-art-binance .aff-logo { color: #a67c00; }
 .aff-banner-binance .aff-body { padding: var(--space-3) var(--space-4) var(--space-4); }
-.aff-banner-binance h4 { color: #fff; font-size: 16px; }
-.aff-banner-binance .aff-body p.muted { color: #b8bcc4; }
-.aff-banner-binance .aff-features li { color: #cfd3da; }
-.aff-banner-binance .aff-features li::before { color: #F0B90B; }
+.aff-banner-binance h4 { color: var(--text); font-size: 16px; }
+.aff-banner-binance .aff-body p.muted { color: var(--text-muted); }
+.aff-banner-binance .aff-features li { color: var(--text-muted); }
+.aff-banner-binance .aff-features li::before { color: #a67c00; }
 .aff-banner-binance .aff-cta { background: #F0B90B; color: #0b0e11; }
 .aff-banner-binance .aff-cta:hover { background: #f3c333; }
-.aff-banner-binance .aff-fine { color: #7a7f88; }
+.aff-banner-binance .aff-fine { color: var(--text-faint); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .aff-banner-binance { background: linear-gradient(160deg, #1a1d21 0%, #0b0e11 100%); border-color: #2a2e35; }
+  :root:not([data-theme="light"]) .aff-banner-binance .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+  :root:not([data-theme="light"]) .aff-art-binance .aff-logo { color: #F0B90B; }
+  :root:not([data-theme="light"]) .aff-banner-binance h4 { color: #fff; }
+  :root:not([data-theme="light"]) .aff-banner-binance .aff-body p.muted { color: #b8bcc4; }
+  :root:not([data-theme="light"]) .aff-banner-binance .aff-features li { color: #cfd3da; }
+  :root:not([data-theme="light"]) .aff-banner-binance .aff-features li::before { color: #F0B90B; }
+  :root:not([data-theme="light"]) .aff-banner-binance .aff-fine { color: #7a7f88; }
+}
+:root[data-theme="dark"] .aff-banner-binance { background: linear-gradient(160deg, #1a1d21 0%, #0b0e11 100%); border-color: #2a2e35; }
+:root[data-theme="dark"] .aff-banner-binance .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+:root[data-theme="dark"] .aff-art-binance .aff-logo { color: #F0B90B; }
+:root[data-theme="dark"] .aff-banner-binance h4 { color: #fff; }
+:root[data-theme="dark"] .aff-banner-binance .aff-body p.muted { color: #b8bcc4; }
+:root[data-theme="dark"] .aff-banner-binance .aff-features li { color: #cfd3da; }
+:root[data-theme="dark"] .aff-banner-binance .aff-features li::before { color: #F0B90B; }
+:root[data-theme="dark"] .aff-banner-binance .aff-fine { color: #7a7f88; }
 
-/* Delta Exchange variant: same dark-card treatment as Binance, own accent
-   green so the two are visually distinct in the stacked sidebar. */
-.aff-banner-delta { background: linear-gradient(160deg, #10201a 0%, #081410 100%); border-color: #1f3a2e; }
-.aff-banner-delta .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+/* Delta Exchange variant: same white-in-light/dark-in-dark treatment as
+   Binance, own accent green so the two are visually distinct in the
+   stacked sidebar. */
+.aff-banner-delta { background: var(--bg-raised); border-color: var(--border); }
+.aff-banner-delta .aff-tag { background: rgba(0, 0, 0, 0.06); color: var(--text-muted); }
 .aff-banner-delta .aff-art { height: auto; padding: var(--space-4) var(--space-4) 0; background: none; }
-.aff-art-delta .aff-logo { color: #00D68F; }
+.aff-art-delta .aff-logo { color: #00a271; }
 .aff-banner-delta .aff-body { padding: var(--space-3) var(--space-4) var(--space-4); }
-.aff-banner-delta h4 { color: #fff; font-size: 16px; }
-.aff-banner-delta .aff-body p.muted { color: #b3c2bb; }
-.aff-banner-delta .aff-features li { color: #c7d3cd; }
-.aff-banner-delta .aff-features li::before { color: #00D68F; }
+.aff-banner-delta h4 { color: var(--text); font-size: 16px; }
+.aff-banner-delta .aff-body p.muted { color: var(--text-muted); }
+.aff-banner-delta .aff-features li { color: var(--text-muted); }
+.aff-banner-delta .aff-features li::before { color: #00a271; }
 .aff-banner-delta .aff-cta { background: #00D68F; color: #06150f; }
 .aff-banner-delta .aff-cta:hover { background: #1fe09d; }
-.aff-banner-delta .aff-fine { color: #7a8a83; }
+.aff-banner-delta .aff-fine { color: var(--text-faint); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .aff-banner-delta { background: linear-gradient(160deg, #10201a 0%, #081410 100%); border-color: #1f3a2e; }
+  :root:not([data-theme="light"]) .aff-banner-delta .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+  :root:not([data-theme="light"]) .aff-art-delta .aff-logo { color: #00D68F; }
+  :root:not([data-theme="light"]) .aff-banner-delta h4 { color: #fff; }
+  :root:not([data-theme="light"]) .aff-banner-delta .aff-body p.muted { color: #b3c2bb; }
+  :root:not([data-theme="light"]) .aff-banner-delta .aff-features li { color: #c7d3cd; }
+  :root:not([data-theme="light"]) .aff-banner-delta .aff-features li::before { color: #00D68F; }
+  :root:not([data-theme="light"]) .aff-banner-delta .aff-fine { color: #7a8a83; }
+}
+:root[data-theme="dark"] .aff-banner-delta { background: linear-gradient(160deg, #10201a 0%, #081410 100%); border-color: #1f3a2e; }
+:root[data-theme="dark"] .aff-banner-delta .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+:root[data-theme="dark"] .aff-art-delta .aff-logo { color: #00D68F; }
+:root[data-theme="dark"] .aff-banner-delta h4 { color: #fff; }
+:root[data-theme="dark"] .aff-banner-delta .aff-body p.muted { color: #b3c2bb; }
+:root[data-theme="dark"] .aff-banner-delta .aff-features li { color: #c7d3cd; }
+:root[data-theme="dark"] .aff-banner-delta .aff-features li::before { color: #00D68F; }
+:root[data-theme="dark"] .aff-banner-delta .aff-fine { color: #7a8a83; }
 
 /* Narrower than the shared .aff-banner and animated on a slow loop so these
    two read as attention-seeking ad banners, not just another sidebar card.
