@@ -3418,9 +3418,7 @@ def affiliateBanner_html():
         '<div class="aff-fine">*T&amp;C apply. Investment in securities market are subject to market risks; '
         'read all related documents carefully before investing. Full disclaimer at '
         '<a href="https://zerodha.com/pricing" target="_blank" rel="noopener">zerodha.com/pricing</a>. '
-        'Member ID NSE (13906), BSE (6498), MCX (46025). Brokerage will not exceed the SEBI-prescribed limit. '
-        'BrokerLens may earn a commission on signups through this link; it has no effect on any ranking or '
-        'score shown on this site.</div></div></div>'
+        'Member ID NSE (13906), BSE (6498), MCX (46025).</div></div></div>'
     ) % _ZERODHA_LOGO_DATA_URI
 
 
