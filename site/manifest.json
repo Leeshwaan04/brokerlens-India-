@@ -1,0 +1,13 @@
+{
+  "name": "BrokerLens",
+  "short_name": "BrokerLens",
+  "description": "Indian stock broker statistics from NSE, BSE and SEBI primary disclosures.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f8fa",
+  "theme_color": "#2f4a8f",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

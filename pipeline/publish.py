@@ -530,6 +530,7 @@ def build():
     _write_feed(built, aggregates)
     build_ticker()
     build_crypto_ticker()
+    _restamp_js_imports()
     _restamp_index_html_assets()
     return overview
 
@@ -546,6 +547,74 @@ def _restamp_index_html_assets():
     stamped = _stamp_asset_versions(html)
     if stamped != html:
         _write_text(path, stamped)
+
+
+def _restamp_js_imports():
+    """_stamp_asset_versions() only rewrites href/src attributes in HTML - it
+    never touches a JS file's own `import ... from './other.js'` specifiers.
+    Combined with the immutable, one-year Cache-Control on /assets/* (see
+    vercel.json), that left every cross-module import invisible to cache
+    busting: app.js's own <script src> got a fresh ?v= each deploy, forcing a
+    refetch of app.js, but its `import * as pages from './pages.js'` line
+    pointed at the same URL forever, so a browser that had already cached the
+    old pages.js kept running it - caught live as a wording fix (Affiliate ->
+    Sponsored) that shipped to the server but kept rendering the old text for
+    anyone who had visited before. Every module reachable this way (store.js
+    behind nav-widgets.js/search.js/crypto-live.js/app.js/pages.js) had the
+    same exposure.
+
+    Processed leaves-first (files with no local imports get hashed first) so
+    a file's own hash reflects its already-rewritten import lines, mirroring
+    _stamp_asset_versions()'s content-hash approach but for import specifiers
+    instead of HTML attributes. A stale query value on the very first run
+    after this lands is harmless - Vercel serves static files by path, not by
+    query string, and the next build's hash matches exactly since it reads
+    back what this pass just wrote.
+    """
+    js_dir = os.path.join(ROOT, "site", "assets", "js")
+    try:
+        names = sorted(f for f in os.listdir(js_dir) if f.endswith(".js"))
+    except OSError:
+        return
+    # Matches both `... from './x.js'` and the bare side-effect form
+    # `import './x.js';` (app.js pulls in nav-widgets.js/search.js this way,
+    # with no separate <script src> anywhere for the SPA shell to have
+    # already cache-busted) - either keyword directly followed by the quote.
+    import_re = re.compile(r"""((?:from|import)\s+['"]\./)([\w.-]+\.js)(?:\?v=[0-9a-f]+)?(['"])""")
+    raw = {name: open(os.path.join(js_dir, name), encoding="utf-8").read() for name in names}
+    deps = {
+        name: {m.group(2) for m in import_re.finditer(content) if m.group(2) in raw}
+        for name, content in raw.items()
+    }
+
+    order, done = [], set()
+
+    def visit(name, stack):
+        if name in done or name in stack:
+            return
+        stack.add(name)
+        for dep in deps.get(name, ()):
+            visit(dep, stack)
+        stack.discard(name)
+        done.add(name)
+        order.append(name)
+
+    for name in names:
+        visit(name, set())
+
+    hashes = {}
+    for name in order:
+        content = raw[name]
+
+        def repl(m):
+            target = m.group(2)
+            h = hashes.get(target)
+            return "%s%s?v=%s%s" % (m.group(1), target, h, m.group(3)) if h else m.group(0)
+
+        new_content = import_re.sub(repl, content)
+        if new_content != content:
+            _write_text(os.path.join(js_dir, name), new_content)
+        hashes[name] = hashlib.sha256(new_content.encode("utf-8")).hexdigest()[:10]
 
 
 def _peers(b, built):
@@ -715,6 +784,9 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
 <meta name="description" content="%(description)s">
 <link rel="canonical" href="%(canonical)s">
 <meta name="theme-color" content="#2f4a8f">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
 <link rel="stylesheet" href="/assets/css/app.css">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BrokerLens">
