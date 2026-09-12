@@ -60,7 +60,7 @@
       "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
     },
     "https://www.brokerlens.in/stock/20microns/": {
-      "coverageState": "Discovered - currently not indexed",
+      "coverageState": "URL is unknown to Google",
       "verdict": "NEUTRAL",
       "lastCrawlTime": null,
       "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
@@ -74,7 +74,7 @@
       "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
     },
     "https://www.brokerlens.in/calculators/sip-calculator/": {
-      "coverageState": "Discovered - currently not indexed",
+      "coverageState": "URL is unknown to Google",
       "verdict": "NEUTRAL",
       "lastCrawlTime": null,
       "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
