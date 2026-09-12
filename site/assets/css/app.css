@@ -522,10 +522,8 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
   color: #fff; background: rgba(0, 0, 0, 0.35); border-radius: var(--radius-full); padding: 2px 8px;
 }
 .aff-art { position: relative; height: 64px; display: flex; align-items: center; padding: 0 var(--space-4); }
-.aff-art-zerodha { background: linear-gradient(135deg, #eef3fb 0%, #dbe6f7 100%); }
 .aff-art-binance { background: linear-gradient(135deg, #16181c 0%, #0b0e11 70%); }
 .aff-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; letter-spacing: 0.02em; }
-.aff-art-zerodha .aff-logo { color: #387ED1; }
 .aff-art-binance .aff-logo { color: #F0B90B; }
 .aff-body { padding: var(--space-4); }
 .aff-banner .aff-brand { font-weight: 700; font-size: 13px; letter-spacing: 0.02em; color: var(--accent-text); }
@@ -579,6 +577,44 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
 :root[data-theme="dark"] .aff-banner-binance .aff-features li::before { color: #F0B90B; }
 :root[data-theme="dark"] .aff-banner-binance .aff-fine { color: #7a7f88; }
 
+/* Zerodha variant: same white-in-light/dark-in-dark card treatment as
+   Binance and Delta, own accent blue (Zerodha's own brand colour, #387ED1)
+   so all three sponsored banners read as one consistent ad system rather
+   than three different designs - Zerodha's used to be the odd one out
+   (a plain, unanimated card with a hand-drawn mark on a blue gradient
+   strip) before this. */
+.aff-banner-zerodha { background: var(--bg-raised); border-color: var(--border); }
+.aff-banner-zerodha .aff-tag { background: rgba(0, 0, 0, 0.06); color: var(--text-muted); }
+.aff-banner-zerodha .aff-art { height: auto; padding: var(--space-4) var(--space-4) 0; background: none; }
+.aff-banner-zerodha .aff-body { padding: var(--space-3) var(--space-4) var(--space-4); }
+.aff-banner-zerodha h4 { color: var(--text); font-size: 16px; }
+.aff-banner-zerodha .aff-body p.muted { color: var(--text-muted); }
+.aff-banner-zerodha .aff-features li { color: var(--text-muted); }
+.aff-banner-zerodha .aff-features li::before { color: #387ED1; }
+.aff-banner-zerodha .aff-cta { background: #387ED1; color: #fff; }
+.aff-banner-zerodha .aff-cta:hover { background: #2f6bb3; }
+.aff-banner-zerodha .aff-fine { color: var(--text-faint); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .aff-banner-zerodha { background: linear-gradient(160deg, #131b28 0%, #0a0f18 100%); border-color: #223148; }
+  :root:not([data-theme="light"]) .aff-banner-zerodha .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+  :root:not([data-theme="light"]) .aff-banner-zerodha h4 { color: #fff; }
+  :root:not([data-theme="light"]) .aff-banner-zerodha .aff-body p.muted { color: #b8c0cc; }
+  :root:not([data-theme="light"]) .aff-banner-zerodha .aff-features li { color: #cfd6e0; }
+  :root:not([data-theme="light"]) .aff-banner-zerodha .aff-features li::before { color: #6ba3e8; }
+  :root:not([data-theme="light"]) .aff-banner-zerodha .aff-cta { background: #4a8fe0; color: #0a0f18; }
+  :root:not([data-theme="light"]) .aff-banner-zerodha .aff-cta:hover { background: #6ba3e8; }
+  :root:not([data-theme="light"]) .aff-banner-zerodha .aff-fine { color: #7a8492; }
+}
+:root[data-theme="dark"] .aff-banner-zerodha { background: linear-gradient(160deg, #131b28 0%, #0a0f18 100%); border-color: #223148; }
+:root[data-theme="dark"] .aff-banner-zerodha .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+:root[data-theme="dark"] .aff-banner-zerodha h4 { color: #fff; }
+:root[data-theme="dark"] .aff-banner-zerodha .aff-body p.muted { color: #b8c0cc; }
+:root[data-theme="dark"] .aff-banner-zerodha .aff-features li { color: #cfd6e0; }
+:root[data-theme="dark"] .aff-banner-zerodha .aff-features li::before { color: #6ba3e8; }
+:root[data-theme="dark"] .aff-banner-zerodha .aff-cta { background: #4a8fe0; color: #0a0f18; }
+:root[data-theme="dark"] .aff-banner-zerodha .aff-cta:hover { background: #6ba3e8; }
+:root[data-theme="dark"] .aff-banner-zerodha .aff-fine { color: #7a8492; }
+
 /* Delta Exchange variant: same white-in-light/dark-in-dark treatment as
    Binance, own accent green so the two are visually distinct in the
    stacked sidebar. */
@@ -621,14 +657,16 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
    high-contrast motion reads as spammy and would undercut the site's
    credibility-first design elsewhere. Disabled entirely under
    prefers-reduced-motion. */
-.aff-banner-binance, .aff-banner-delta {
+.aff-banner-binance, .aff-banner-delta, .aff-banner-zerodha {
   max-width: 280px; margin-inline: auto; box-shadow: var(--shadow-lg);
 }
 @media (prefers-reduced-motion: no-preference) {
   .aff-banner-binance { animation: aff-glow-binance 3.6s ease-in-out infinite; }
   .aff-banner-delta { animation: aff-glow-delta 3.6s ease-in-out infinite; }
+  .aff-banner-zerodha { animation: aff-glow-zerodha 3.6s ease-in-out infinite; }
   .aff-banner-binance .aff-cta { animation: aff-pulse 2.4s ease-in-out infinite; }
   .aff-banner-delta .aff-cta { animation: aff-pulse 2.4s ease-in-out infinite; }
+  .aff-banner-zerodha .aff-cta { animation: aff-pulse 2.4s ease-in-out infinite; }
 }
 /* var(--shadow-lg) stays in every keyframe stop so the card keeps a real,
    theme-aware drop shadow lifting it off the page at all times - without
@@ -642,6 +680,10 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
 @keyframes aff-glow-delta {
   0%, 100% { box-shadow: var(--shadow-lg), 0 0 0 0 rgba(0, 214, 143, 0); }
   50% { box-shadow: var(--shadow-lg), 0 0 24px 3px rgba(0, 214, 143, 0.45); }
+}
+@keyframes aff-glow-zerodha {
+  0%, 100% { box-shadow: var(--shadow-lg), 0 0 0 0 rgba(56, 126, 209, 0); }
+  50% { box-shadow: var(--shadow-lg), 0 0 24px 3px rgba(56, 126, 209, 0.45); }
 }
 @keyframes aff-pulse {
   0%, 100% { transform: scale(1); }

@@ -106,18 +106,22 @@ function adSlot(overview, placement) {
  * to Indian-broker-context pages only. A crypto exchange counterpart exists
  * but is deliberately never rendered on the same page as this one - see the
  * standing rule against mixing the two verticals in one sidebar.
+ *
+ * Logo is Zerodha's own logo.svg, pulled directly from zerodha.com/static/
+ * images/logo.svg - not a hand-drawn approximation, matching how the
+ * Binance and Delta Exchange banners already use each exchange's own logo
+ * asset rather than a redrawn mark. Same narrow-card, glow-and-pulse
+ * treatment as those two (see .aff-banner-zerodha in app.css), so all three
+ * sponsored banners read as one consistent ad system, not three different
+ * designs.
  */
+const ZERODHA_LOGO_DATA_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGJhc2VQcm9maWxlPSJ0aW55IiB3aWR0aD0iNjA5IiBoZWlnaHQ9IjgwIiB4bWxuczp2PSJodHRwczovL3ZlY3RhLmlvL25hbm8iPjxwYXRoIGQ9Ik02Ni4yNTIgMjEuNDY5YzQuNDA0IDUuNzEgOC4wNTYgMTIuMTI0IDEwLjg4NiAxOS4wNFYzLjkzMUg0Ni4wNzdjNy40NzIgNC4wMzcgMTQuMzE3IDkuOTQzIDIwLjE3NSAxNy41Mzh6TTIxLjQ3MyA3LjgyOGMtNS43NTQgMC0xMS4yODkgMS4yMy0xNi40NzMgMy41MDZ2NjQuNzM1aDY4Ljk2M2MtLjUzNC0zNy43NTQtMjMuODc1LTY4LjI0MS01Mi40OS02OC4yNDEiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzM4N2VkMSIvPjxwYXRoIGZpbGw9IiMzODdlZDEiIGQ9Ik0xMTguMzQ5IDY0LjkxOGwzOC41MzMtNDYuNjVIMTE5LjU2VjguMDk4aDUyLjI1djguNDlsLTM4LjUzMyA0Ni42NTFoMzguNTMzdjEwLjE2OWgtNTMuNDYxdi04LjQ5em02Ny44MjgtNTYuODJoNDguMzMxdjEwLjM1NkgxOTcuNTZ2MTYuNzk0aDMyLjc1MXYxMC4zNTdIMTk3LjU2djE3LjQ0NmgzNy40MTN2MTAuMzU2aC00OC43OTZWOC4wOTh6bTYyLjUxMiAwaDI5LjExYzQuMTA1IDAgNy43NDQuNTc2IDEwLjkxNyAxLjcyNnM1LjgxNCAyLjc1MiA3LjkzIDQuODA1YzEuNzQxIDEuODA1IDMuMDggMy44ODggNC4wMTMgNi4yNTFzMS4zOTggNC45NzcgMS4zOTggNy44Mzd2LjE4N2MwIDIuNjc1LS4zODggNS4wODUtMS4xNjUgNy4yMzFzLTEuODUzIDQuMDQ0LTMuMjIgNS42OTEtMy4wMDEgMy4wNDktNC44OTggNC4xOTgtMy45OTcgMi4wMzgtNi4yOTcgMi42NTlsMTcuNjMzIDI0LjcyNWgtMTMuNTI5bC0xNi4wOTctMjIuNzY1aC0uMTg2LTE0LjIyN3YyMi43NjVoLTExLjM4M1Y4LjA5OHptMjguMjMxIDMyLjM3NWM0LjExNSAwIDcuMzkzLS45ODIgOS44MjQtMi45NTFzMy42NTItNC42MzkgMy42NTItOC4wMTJ2LS4xODdjMC0zLjU2LTEuMTg4LTYuMjYzLTMuNTU5LTguMTA2cy01LjcwOS0yLjc2NC0xMC4wMTQtMi43NjRoLTE2Ljc1MnYyMi4wMTloMTYuODQ5em03MC4zODkgMzQuMDU1Yy01LjAzOSAwLTkuNjQxLS44ODYtMTMuODA3LTIuNjU4cy03Ljc0NC00LjE4Mi0xMC43My03LjIzMi01LjMxOC02LjYwNy02Ljk5Ni0xMC42ODItMi41MjEtOC40MTMtMi41MjEtMTMuMDE2di0uMTg3YzAtNC42MDMuODQtOC45NDEgMi41MjEtMTMuMDE2czQuMDQxLTcuNjUxIDcuMDktMTAuNzMgNi42NTQtNS41MiAxMC44MjQtNy4zMjQgOC43NjgtMi43MDYgMTMuODA3LTIuNzA2IDkuNjQxLjg4NiAxMy44MDkgMi42NTkgNy43NDQgNC4xODQgMTAuNzMgNy4yMzEgNS4zMTYgNi42MDkgNi45OTYgMTAuNjgzIDIuNTIxIDguNDEzIDIuNTIxIDEzLjAxNXYuMTg3YzAgNC42MDQtLjg0IDguOTQzLTIuNTIxIDEzLjAxNXMtNC4wNDMgNy42NTEtNy4wOSAxMC43My02LjY1NiA1LjUyMS0xMC44MjQgNy4zMjQtOC43NyAyLjcwNy0xMy44MDkgMi43MDd6bS4xODctMTAuNTQzYzMuMjIxIDAgNi4xNzgtLjYwNiA4Ljg3MS0xLjgxOXM1LjAwMi0yLjg2IDYuOTIyLTQuOTQ0IDMuNDIyLTQuNTI2IDQuNTA2LTcuMzI1IDEuNjI1LTUuNzg1IDEuNjI1LTguOTU2di0uMTg3YzAtMy4xNzItLjU0MS02LjE3My0xLjYyNS05LjAwNHMtMi42MDQtNS4yODYtNC41NTMtNy4zNy00LjI4OS0zLjc0Ny03LjAxNi00Ljk5Mi01LjY5Ny0xLjg2Ni04LjkxOC0xLjg2Ni02LjE3OC42MDYtOC44NzEgMS44MTktNS4wMDIgMi44NjItNi45MjIgNC45NDUtMy40MjIgNC41MjUtNC41MDggNy4zMjQtMS42MjUgNS43ODUtMS42MjUgOC45NTd2LjE4N2MwIDMuMTcyLjU0MSA2LjE3MyAxLjYyNSA5LjAwMnMyLjYwNCA1LjI4OSA0LjU1NSA3LjM3MiA0LjI4OSAzLjc0OCA3LjAxNCA0Ljk5MSA1LjY5OSAxLjg2NiA4LjkyIDEuODY2em00Ny45NTUtNTUuODg3aDI0LjM1NGM1LjEgMCA5Ljc3OS44MjUgMTQuMDQzIDIuNDczczcuOTI4IDMuOTM0IDExLjAwOCA2Ljg1NyA1LjQ1NyA2LjM2MSA3LjEzOSAxMC4zMTEgMi41MiA4LjIyNyAyLjUyIDEyLjgyOXYuMTg3YzAgNC42MDQtLjg0IDguODk2LTIuNTIgMTIuODc1cy00LjA1OSA3LjQzNS03LjEzOSAxMC4zNTYtNi43NDggNS4yMjYtMTEuMDA4IDYuOTA0LTguOTQzIDIuNTE5LTE0LjA0MyAyLjUxOWgtMjQuMzU0VjguMDk4em0yNC4yNiA1NC45NTRjMy40MiAwIDYuNTMxLS41NDUgOS4zMy0xLjYzOXM1LjE4LTIuNjIyIDcuMTM3LTQuNTg5IDMuNDgyLTQuMzEyIDQuNTcyLTcuMDMgMS42MzUtNS42NjcgMS42MzUtOC44NTR2LS4xODdjMC0zLjE4Ni0uNTQ3LTYuMTUyLTEuNjM1LTguOXMtMi42MTMtNS4xMDYtNC41NzItNy4wNzQtNC4zMzgtMy41MTQtNy4xMzctNC42MzktNS45MS0xLjY4Ny05LjMzLTEuNjg3aC0xMi44Nzd2NDQuNTk4aDEyLjg3N3ptNDguNzAzLTU0Ljk1NGgxMS4zODN2MjcuMTUxaDMxLjM1MlY4LjA5OGgxMS4zODN2NjUuMzExaC0xMS4zODNWNDUuODg1aC0zMS4zNTJ2MjcuNTIzaC0xMS4zODNWOC4wOTh6bTk0LjA0OS0uNDY3SDU3My4xbDI4LjczNiA2NS43NzdoLTEyLjEyOWwtNi42MjUtMTUuNzY4aC0zMC44ODNsLTYuNzE5IDE1Ljc2OGgtMTEuNzU2bDI4LjczOS02NS43Nzd6bTE2LjQyMiAzOS44NDFsLTExLjI5MS0yNi4xMjUtMTEuMTk3IDI2LjEyNWgyMi40ODh6Ii8+PC9zdmc+';
+
 function affiliateBanner() {
-  return `<div class="aff-banner">
+  return `<div class="aff-banner aff-banner-zerodha">
     <span class="aff-tag">Sponsored</span>
     <div class="aff-art aff-art-zerodha">
-      <div class="aff-logo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 20L12 4L20 20" stroke="#387ED1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M8 13H16" stroke="#387ED1" stroke-width="2.4" stroke-linecap="round"/>
-        </svg>
-        ZERODHA
-      </div>
+      <img src="${ZERODHA_LOGO_DATA_URI}" width="152" height="20" alt="Zerodha" style="display:block">
     </div>
     <div class="aff-body">
       <h4>Brokerage-free equity &amp; mutual fund investments</h4>
