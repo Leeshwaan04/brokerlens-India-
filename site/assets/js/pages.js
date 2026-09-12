@@ -336,12 +336,19 @@ export async function brokers(params) {
   const o = await loadOverview();
   if (params?.get('q')) dirState.q = params.get('q');
 
+  // A column of nothing but dashes for all 48 rows reads as broken, not
+  // "not published yet" - matching home()'s existing hasClients branch
+  // rather than always rendering columns this dataset has no data for yet.
+  const hasClients = HAS(o, 'active_clients');
+  if (!hasClients && dirState.sort === 'clients') { dirState.sort = 'brand'; dirState.dir = 1; }
+
   onMount(() => {
     const render = () => {
       const rows = filterSort(o.brokers || []);
+      const renderRow = hasClients ? dirRow : dirRowSimple;
       document.getElementById('dir-body').innerHTML = rows.length
-        ? rows.map(dirRow).join('')
-        : `<tr><td colspan="9" class="empty">No broker matches those filters.</td></tr>`;
+        ? rows.map(renderRow).join('')
+        : `<tr><td colspan="${hasClients ? 9 : 5}" class="empty">No broker matches those filters.</td></tr>`;
       document.getElementById('dir-count').textContent = `${rows.length} of ${o.brokers.length}`;
       runAfter();
     };
@@ -399,6 +406,7 @@ export async function brokers(params) {
       <div class="table-scroll" style="margin-top:16px">
         <table class="data">
           <thead><tr>
+            ${hasClients ? `
             <th data-tip="Rank by active clients. A dash means the client count is not available yet.">#</th>
             <th class="sortable" data-sort="brand"
               data-tip="Consumer brand. The SEBI badge means we matched the legal entity and registration number to SEBI's own register; a flag means the broker appears in an exchange circular or on the defaulter list.">Broker <span class="arrow">↕</span></th>
@@ -414,15 +422,26 @@ export async function brokers(params) {
             <th class="sortable right tip-end" data-sort="cost"
               data-tip="Estimated brokerage for a fixed monthly basket (4 delivery trades, 10 intraday, 10 F&O orders) plus AMC, priced on each broker's published charges. Statutory taxes are excluded since they are identical across brokers. Shows 'unverified' until a broker publishes charges on its claimed profile.">Cost /month <span class="arrow">↕</span></th>
             <th class="tip-end"
-              data-tip="Business model. Discount: flat per-order fee, app first. Full service: research, advisory and branch network. Bank backed: the broking arm of a bank, usually with a 3-in-1 account.">Type</th>
+              data-tip="Business model. Discount: flat per-order fee, app first. Full service: research, advisory and branch network. Bank backed: the broking arm of a bank, usually with a 3-in-1 account.">Type</th>` : `
+            <th class="sortable sorted" data-sort="brand"
+              data-tip="Consumer brand. The SEBI badge means we matched the legal entity and registration number to SEBI's own register.">Broker <span class="arrow">↕</span></th>
+            <th data-tip="SEBI registration number for this broker's stock-broking licence.">Registration</th>
+            <th class="tip-end" data-tip="Business model. Discount: flat per-order fee, app first. Full service: research, advisory and branch network. Bank backed: the broking arm of a bank, usually with a 3-in-1 account.">Type</th>
+            <th data-tip="Exchange segments this broker is registered for.">Segments</th>
+            <th data-tip="City of the broker's registered head office.">Head office</th>`}
           </tr></thead>
           <tbody id="dir-body"></tbody>
         </table>
       </div>
       <p class="xs faint" style="margin-top:10px">
-        ${provDot('nse')} exchange/regulator sourced · ${provDot('curated')} curated or broker-supplied ·
-        ${provDot('sample')} sample pending ingest. Cost is a fixed basket of trades — see
-        <a href="/methodology" data-link>methodology</a>.
+        ${hasClients
+          ? `${provDot('nse')} exchange/regulator sourced · ${provDot('curated')} curated or broker-supplied ·
+             ${provDot('sample')} sample pending ingest. Cost is a fixed basket of trades — see
+             <a href="/methodology" data-link>methodology</a>.`
+          : `${provDot('sebi_registry')} Legal name, registration and segments come straight from SEBI's own register.
+             Active-client counts, complaint records and cost are not yet available for these brokers — shown only
+             once traced to NSE and SEBI's own disclosures, never estimated. See
+             <a href="/methodology" data-link>methodology</a>.`}
       </p>
       <p class="xs faint" style="margin-top:6px">Dedicated category pages:
         ${Object.entries(TYPE_LABEL).map(([k, v]) =>
@@ -479,6 +498,20 @@ function dirRow(b) {
     <td class="right num">${faintDash(b.reliability?.toFixed(1) ?? '—')}</td>
     <td class="right num">${b.cost != null ? inr(b.cost, { decimals: 0 }) : '<span class="faint">unverified</span>'}</td>
     <td class="small">${esc(TYPE_LABEL[b.type] || b.type || '')}</td>
+  </tr>`;
+}
+
+// No active-client/complaint/cost data exists for any broker yet (see hasClients
+// above) - this mirrors home()'s own no-client-data table shape rather than
+// showing the data-heavy dirRow() columns with every cell reading "—".
+function dirRowSimple(b) {
+  return `<tr class="${b.tier === 'featured' ? 'promoted' : ''}">
+    <td><div class="bname">${mark(b.id, b.brand)}<span>${brokerLink(b)}</span> ${badge(b)}</div>
+      <div class="xs faint">${esc(b.hq || '')}${b.founded ? ` · est. ${b.founded}` : ''}</div></td>
+    <td class="small num">${esc(b.sebi_reg_no || '—')}</td>
+    <td class="small">${esc(TYPE_LABEL[b.type] || b.type || '—')}</td>
+    <td class="xs muted">${(b.segments || []).map((x) => esc(SEGMENT_LABEL[x] || x)).join(' · ') || '—'}</td>
+    <td class="small">${esc(b.hq || '—')}</td>
   </tr>`;
 }
 
@@ -739,26 +772,33 @@ export async function compare(params) {
       </div>`;
   }
 
-  const rows = [
-    ['Active clients', (b) => count(b.clients.active_clients), 'num'],
-    ['Market share', (b) => pct(b.clients.market_share_pct, { sign: false }), 'num'],
-    ['12-month growth', (b) => `<span class="${cls(b.clients.yoy_pct)}">${pct(b.clients.yoy_pct)}</span>`, 'num'],
-    ['Clients added 12m', (b) => count(b.clients.net_adds_12m), 'num'],
-    ['Complaints /10k clients', (b) => b.complaints.per_10k_clients_12m?.toFixed(2) ?? '—', 'num'],
-    ['Complaint resolution', (b) => b.complaints.resolution_rate_pct != null ? b.complaints.resolution_rate_pct.toFixed(1) + '%' : '—', 'num'],
-    ['Reliability score', (b) => b.reliability.score?.toFixed(1) ?? '—', 'num'],
-    ['Cost / month (basket)', (b) => b.cost?.monthly_total != null ? inr(b.cost.monthly_total, { decimals: 0 }) : '<span class="faint">unverified</span>', 'num'],
-    ['Delivery brokerage', (b) => b.charges?.delivery ? fmtPlan(b.charges.delivery) : '<span class="faint">—</span>', ''],
-    ['Intraday brokerage', (b) => b.charges?.intraday ? fmtPlan(b.charges.intraday) : '<span class="faint">—</span>', ''],
-    ['F&O brokerage', (b) => b.charges?.fno ? fmtPlan(b.charges.fno) : '<span class="faint">—</span>', ''],
-    ['Demat AMC / year', (b) => b.charges?.demat_amc_annual != null ? inr(b.charges.demat_amc_annual, { decimals: 0 }) : '<span class="faint">—</span>', 'num'],
-    ['Type', (b) => esc(TYPE_LABEL[b.profile.type] || b.profile.type || '—'), ''],
-    ['Head office', (b) => esc(b.profile.sebi_city || b.profile.hq || '—'), ''],
-    ['Founded', (b) => b.profile.founded ?? '—', 'num'],
-    ['SEBI registration', (b) => b.profile.sebi_reg_no ? `<span class="num">${esc(b.profile.sebi_reg_no)}</span>` : '<span class="badge badge-warn">unmatched</span>', ''],
-    ['Segments', (b) => (b.profile.segments || []).length, 'num'],
-    ['On SEBI defaulter list', (b) => b.regulatory_flags?.defaulter ? '<span class="down">Yes</span>' : 'No', ''],
+  // Each fn returns null for "no data on this broker" rather than a "—"
+  // string, so a row can be dropped entirely below when NONE of the
+  // compared brokers have it - a metric nobody has data for yet is noise,
+  // not a comparison.
+  const rowDefs = [
+    ['Active clients', (b) => b.clients.active_clients != null ? count(b.clients.active_clients) : null, 'num'],
+    ['Market share', (b) => b.clients.market_share_pct != null ? pct(b.clients.market_share_pct, { sign: false }) : null, 'num'],
+    ['12-month growth', (b) => b.clients.yoy_pct != null ? `<span class="${cls(b.clients.yoy_pct)}">${pct(b.clients.yoy_pct)}</span>` : null, 'num'],
+    ['Clients added 12m', (b) => b.clients.net_adds_12m != null ? count(b.clients.net_adds_12m) : null, 'num'],
+    ['Complaints /10k clients', (b) => b.complaints.per_10k_clients_12m?.toFixed(2) ?? null, 'num'],
+    ['Complaint resolution', (b) => b.complaints.resolution_rate_pct != null ? b.complaints.resolution_rate_pct.toFixed(1) + '%' : null, 'num'],
+    ['Reliability score', (b) => b.reliability.score?.toFixed(1) ?? null, 'num'],
+    ['Cost / month (basket)', (b) => b.cost?.monthly_total != null ? inr(b.cost.monthly_total, { decimals: 0 }) : null, 'num'],
+    ['Delivery brokerage', (b) => b.charges?.delivery ? fmtPlan(b.charges.delivery) : null, ''],
+    ['Intraday brokerage', (b) => b.charges?.intraday ? fmtPlan(b.charges.intraday) : null, ''],
+    ['F&O brokerage', (b) => b.charges?.fno ? fmtPlan(b.charges.fno) : null, ''],
+    ['Demat AMC / year', (b) => b.charges?.demat_amc_annual != null ? inr(b.charges.demat_amc_annual, { decimals: 0 }) : null, 'num'],
+    ['Type', (b) => esc(TYPE_LABEL[b.profile.type] || b.profile.type || '') || null, ''],
+    ['Head office', (b) => esc(b.profile.sebi_city || b.profile.hq || '') || null, ''],
+    ['Founded', (b) => b.profile.founded ?? null, 'num'],
+    ['SEBI registration', (b) => b.profile.sebi_reg_no ? `<span class="num">${esc(b.profile.sebi_reg_no)}</span>` : null, ''],
+    ['Segments', (b) => (b.profile.segments || []).length || null, 'num'],
+    ['On SEBI defaulter list', (b) => b.regulatory_flags?.defaulter != null ? (b.regulatory_flags.defaulter ? '<span class="down">Yes</span>' : 'No') : null, ''],
   ];
+  const rows = rowDefs
+    .map(([label, fn, klass]) => [label, list.map(fn), klass])
+    .filter(([, cells]) => cells.some((c) => c != null));
 
   return `
   ${sampleBanner(o.metadata)}
@@ -777,9 +817,9 @@ export async function compare(params) {
         </div></th>`).join('')}
       </tr></thead>
       <tbody>
-        ${rows.map(([label, fn, klass]) => `<tr>
+        ${rows.map(([label, cells, klass]) => `<tr>
           <td class="muted small">${esc(label)}</td>
-          ${list.map((b) => `<td class="right ${klass}">${fn(b)}</td>`).join('')}
+          ${cells.map((c) => `<td class="right ${klass}">${c ?? '<span class="faint">—</span>'}</td>`).join('')}
         </tr>`).join('')}
       </tbody>
     </table>
