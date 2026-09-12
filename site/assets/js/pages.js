@@ -379,14 +379,6 @@ export async function brokers(params) {
     <a class="btn" href="/compare" data-link>Compare selected →</a>
   </div>
 
-  <p class="xs faint" style="margin-top:8px">Browse by category:
-    ${Object.entries(TYPE_LABEL).map(([k, v]) =>
-      `<a href="/brokers-by/type/${k.replace(/_/g, '-')}/">${esc(v)}</a>`).join(' &middot; ')}
-    &nbsp;|&nbsp;
-    ${Object.entries(SEGMENT_LABEL).map(([k, v]) =>
-      `<a href="/brokers-by/segment/${k.replace(/_/g, '-')}/">${esc(v)}</a>`).join(' &middot; ')}
-  </p>
-
   <div class="grid g-main" style="margin-top:16px">
     <div>
       <div class="card">
@@ -432,6 +424,13 @@ export async function brokers(params) {
         ${provDot('sample')} sample pending ingest. Cost is a fixed basket of trades — see
         <a href="/methodology" data-link>methodology</a>.
       </p>
+      <p class="xs faint" style="margin-top:6px">Dedicated category pages:
+        ${Object.entries(TYPE_LABEL).map(([k, v]) =>
+          `<a href="/brokers-by/type/${k.replace(/_/g, '-')}/">${esc(v)}</a>`).join(' &middot; ')}
+        &nbsp;|&nbsp;
+        ${Object.entries(SEGMENT_LABEL).map(([k, v]) =>
+          `<a href="/brokers-by/segment/${k.replace(/_/g, '-')}/">${esc(v)}</a>`).join(' &middot; ')}
+      </p>
     </div>
     <div class="stack">
       ${affiliateBanner()}
@@ -460,16 +459,24 @@ function filterSort(list) {
   return rows;
 }
 
+// A dash reading at full text weight, repeated down a whole column, looks
+// like broken data rather than the "not published yet" it actually means
+// (the column header tooltip already explains this, but a hover-only
+// explanation doesn't help the at-a-glance impression of the table). Muting
+// it to match the existing "unverified" cost treatment fixes that without
+// changing what's actually shown.
+const faintDash = (s) => (s === '—' ? '<span class="faint">—</span>' : s);
+
 function dirRow(b) {
   return `<tr class="${b.tier === 'featured' ? 'promoted' : ''}">
-    <td class="rank-cell">${b.rank ?? '—'}</td>
+    <td class="rank-cell">${faintDash(b.rank ?? '—')}</td>
     <td><div class="bname">${mark(b.id, b.brand)}<span>${brokerLink(b)}</span> ${badge(b)}</div>
       <div class="xs faint">${esc(b.hq || '')}${b.founded ? ` · est. ${b.founded}` : ''}</div></td>
-    <td class="right num">${count(b.clients)}</td>
-    <td class="right num ${cls(b.clients_yoy)}">${pct(b.clients_yoy)}</td>
+    <td class="right num">${faintDash(count(b.clients))}</td>
+    <td class="right num ${cls(b.clients_yoy)}">${faintDash(pct(b.clients_yoy))}</td>
     <td>${sparkCell(b)}</td>
-    <td class="right num">${b.complaints_per_10k?.toFixed(2) ?? '—'}</td>
-    <td class="right num">${b.reliability?.toFixed(1) ?? '—'}</td>
+    <td class="right num">${faintDash(b.complaints_per_10k?.toFixed(2) ?? '—')}</td>
+    <td class="right num">${faintDash(b.reliability?.toFixed(1) ?? '—')}</td>
     <td class="right num">${b.cost != null ? inr(b.cost, { decimals: 0 }) : '<span class="faint">unverified</span>'}</td>
     <td class="small">${esc(TYPE_LABEL[b.type] || b.type || '')}</td>
   </tr>`;
