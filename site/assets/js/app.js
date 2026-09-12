@@ -6,12 +6,13 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=557d965307';
-import * as pages from './pages.js?v=e419fecab0';
+import * as pages from './pages.js?v=28a55ffa57';
 import { clearRedraws } from './chart.js?v=f69d0c170f';
 import './nav-widgets.js?v=652718f215';
 import './search.js?v=8f5c9e48ac';
 
 const app = document.getElementById('app');
+let isFirstRender = true;
 
 const ROUTES = [
   [/^\/$/, () => pages.home()],
@@ -72,8 +73,19 @@ async function render() {
   clearRedraws();
 
   const hit = ROUTES.find(([re]) => re.test(path));
-  app.innerHTML = `<div class="grid g3"><div class="card skeleton" style="height:96px"></div>
-    <div class="card skeleton" style="height:96px"></div><div class="card skeleton" style="height:96px"></div></div>`;
+  // The very first render of a page load must NOT blank #app first: several
+  // routes (this list matches _APP_SHELL_HEAD's write calls in publish.py)
+  // now ship real server-rendered content in #app for exactly this moment,
+  // so a fresh visit or a crawler has something real before this file has
+  // even finished loading. Wiping it to a skeleton here would flash
+  // real -> blank -> real on every single load, which is worse than doing
+  // nothing. Every render after the first (an in-app navigation) still
+  // shows the skeleton for transition feedback, same as always.
+  if (!isFirstRender) {
+    app.innerHTML = `<div class="grid g3"><div class="card skeleton" style="height:96px"></div>
+      <div class="card skeleton" style="height:96px"></div><div class="card skeleton" style="height:96px"></div></div>`;
+  }
+  isFirstRender = false;
 
   try {
     const html = hit ? await hit[1](path.match(hit[0]), query) : pages.notFound();

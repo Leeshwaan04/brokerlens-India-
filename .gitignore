@@ -23,9 +23,20 @@ site/calculators/
 site/stocks/
 site/funds-by/
 site/etfs/
+site/methodology/
+site/sources/
+site/brokers/
+site/compare/
+site/leaderboards/
+site/registry/
+site/algo/
+site/calculator/
 
 # Personal data. Leads are DPDP-regulated and must never reach a repo.
 data/leads/
+
+# Service-account keys and other credentials. Never commit, never a build input path.
+secrets/
 
 __pycache__/
 *.pyc

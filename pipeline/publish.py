@@ -499,8 +499,8 @@ def build():
     log("registry.json %.1f KB, %d untracked registered entities"
         % (reg_size / 1024, len(reg_rows)), "ok")
 
-    _write_sources(sources_cfg, ingest, sample_flags)
-    _write_algo(brokers_cfg)
+    sources_data = _write_sources(sources_cfg, ingest, sample_flags)
+    algo_data = _write_algo(brokers_cfg)
     _write_timings()
     _write_registry_pages(reg_rows)
     _write_broker_pages(built)
@@ -518,6 +518,15 @@ def build():
                                    _funds, len(sebi_d.get("defaulters") or []))
     calc_slugs = _write_calculator_pages()
     _write_calculator_hub()
+    _write_methodology_page()
+    _write_sources_page(sources_data)
+    _write_algo_page(algo_data)
+    _write_leaderboards_page(overview)
+    _write_registry_landing_page(reg_rows, overview)
+    _write_compare_page(overview)
+    _write_brokers_page(overview)
+    _write_calculator_tool_page(built)
+    _prerender_home(overview)
     stock_letters = _write_stock_directory(equity_companies)
     amc_slugs = _write_fund_amc_pages(fund_slugs)
     _write_etf_directory(etf_universe)
@@ -712,9 +721,10 @@ def _write_sources(cfg, ingest, sample_flags):
             "last_run": status.get(sid, {}).get("last_run"),
             "last_status": status.get(sid, {}).get("status"),
         })
-    write_json(os.path.join(SITE_DATA, "sources.json"),
-               {"generated_at": now_iso(), "sources": rows,
-                "licensing": cfg.get("licensing"), "sample_data": sample_flags})
+    payload = {"generated_at": now_iso(), "sources": rows,
+               "licensing": cfg.get("licensing"), "sample_data": sample_flags}
+    write_json(os.path.join(SITE_DATA, "sources.json"), payload)
+    return payload
 
 
 def _write_algo(brokers_cfg):
@@ -749,6 +759,7 @@ def _write_algo(brokers_cfg):
     }
     size = write_json(os.path.join(SITE_DATA, "algo.json"), payload, compact=True)
     log("algo.json %.1f KB, %d platforms" % (size / 1024, len(platforms)), "ok")
+    return payload
 
 
 def _write_timings():
@@ -875,6 +886,184 @@ _REGISTRY_PAGE_FOOT = """</main>
 _REGISTRY_PAGE_HEAD = _stamp_asset_versions(_REGISTRY_PAGE_HEAD)
 _REGISTRY_PAGE_FOOT = _stamp_asset_versions(_REGISTRY_PAGE_FOOT)
 
+# Six routes (brokers, compare, leaderboards, registry, algo, calculator) are
+# genuinely interactive tools, not just content - unlike every other static
+# family in this file, they need to stay fully interactive (sort, filter,
+# live search) for a visitor who lands on them directly, not just one who
+# clicked in from an already-loaded SPA page. So this is a hybrid shell, not
+# a plain static page: same real content-first approach as _REGISTRY_PAGE_HEAD
+# for a crawler or first paint, but it also boots the full app.js/pages.js SPA
+# (mirroring site/index.html's own shell exactly), which re-renders the same
+# route with live data moments later. A direct hit gets real content
+# immediately with no skeleton flash; an in-app navigation is untouched.
+_APP_SHELL_HEAD = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/assets/js/theme-init.js"></script>
+<title>%(title)s</title>
+<meta name="description" content="%(description)s">
+<link rel="canonical" href="%(canonical)s">
+<meta name="theme-color" content="#2f4a8f">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/assets/css/app.css">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrokerLens">
+<meta property="og:locale" content="en_IN">
+<meta property="og:url" content="%(canonical)s">
+<meta property="og:title" content="%(title)s">
+<meta property="og:description" content="%(description)s">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">%(jsonld)s</script>
+</head>
+<body>
+<div class="ticker" aria-label="Live market prices">
+  <div class="ticker-bar">
+    <div class="exch-picker">
+      <span class="mkt-dot" id="exch-dot" aria-hidden="true"></span>
+      <select id="exch-select" aria-label="Choose ticker feed">
+        <option value="NSE">NSE</option>
+      </select>
+      <span class="exch-status xs" id="exch-status"></span>
+    </div>
+    <div class="ticker-rail" id="ticker-rail"><div class="ticker-track" id="ticker-track"></div></div>
+  </div>
+</div>
+
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="/" data-link>
+      <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" role="img" aria-label="BrokerLens">
+        <defs><clipPath id="bl-lens-nav"><circle cx="256" cy="256" r="143"/></clipPath></defs>
+        <g fill="none" stroke="var(--accent)" stroke-width="30" stroke-linecap="round">
+          <path d="M50 369 L84 359" opacity=".38"/><path d="M18 379 L30 375" opacity=".18"/>
+          <path d="M438 161 L470 149" opacity=".38"/><path d="M486 143 L496 140" opacity=".18"/>
+        </g>
+        <circle cx="256" cy="256" r="166" fill="none" stroke="var(--accent)" stroke-width="46"/>
+        <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="var(--up)"
+              stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-nav)"/>
+      </svg>
+      <span>BrokerLens</span>
+    </a>
+    <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
+            aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
+    <nav class="nav-links" id="navlinks">
+      <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
+      <a href="/compare" data-link>Compare</a>
+      <a href="/leaderboards" data-link>Rankings</a>
+      <a href="/calculators/">Calculators</a>
+      <a href="/registry" data-link>SEBI registry</a>
+      <a href="/algo" data-link>Algo platforms</a>
+      <a href="/reports/state-of-indian-broking-2026/">Reports</a>
+      <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
+    </nav>
+    <button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+    <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
+  </div>
+  <div class="mega" id="mega-timings" hidden>
+    <div class="wrap">
+      <div id="mega-timings-body" class="mega-grid"><div class="small faint" style="padding:16px 0">Loading timings&hellip;</div></div>
+    </div>
+  </div>
+  <div class="mega" id="mega-markets" hidden>
+    <div class="wrap">
+      <div class="markets-list">
+        <a href="/brokers" data-link><span>India</span><span class="badge badge-up">Live</span></a>
+        <a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>
+        <a href="/coming-soon/us" data-link><span>US</span><span class="badge badge-warn">Coming soon</span></a>
+        <a href="/coming-soon/gcc" data-link><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="search-overlay" id="search-overlay" hidden>
+  <div class="search-modal" role="dialog" aria-modal="true" aria-label="Search BrokerLens">
+    <div class="search-input-row">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
+      <kbd class="search-esc">Esc</kbd>
+    </div>
+    <div id="search-results" class="search-results"></div>
+  </div>
+</div>
+
+<main id="app" class="wrap" style="padding-top:24px;padding-bottom:24px">
+"""
+
+_APP_SHELL_FOOT = """</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <div class="brand" style="margin-bottom:8px">
+          <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" aria-hidden="true">
+            <defs><clipPath id="bl-lens-foot2"><circle cx="256" cy="256" r="143"/></clipPath></defs>
+            <g fill="none" stroke="var(--accent)" stroke-width="30" stroke-linecap="round">
+              <path d="M50 369 L84 359" opacity=".38"/><path d="M18 379 L30 375" opacity=".18"/>
+              <path d="M438 161 L470 149" opacity=".38"/><path d="M486 143 L496 140" opacity=".18"/>
+            </g>
+            <circle cx="256" cy="256" r="166" fill="none" stroke="var(--accent)" stroke-width="46"/>
+            <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="var(--up)"
+                  stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-foot2)"/>
+          </svg> BrokerLens</div>
+        <p class="small">Broker statistics assembled from primary NSE, BSE and SEBI disclosures. We publish facts and
+        normalised ratios so you can compare brokers yourself.</p>
+      </div>
+      <div>
+        <h5>Compare</h5>
+        <ul>
+          <li><a href="/brokers" data-link>All brokers</a></li>
+          <li><a href="/brokers-by/type/">Brokers by type</a></li>
+          <li><a href="/brokers-by/segment/">Brokers by segment</a></li>
+          <li><a href="/brokers-by/city/">Brokers by city</a></li>
+          <li><a href="/leaderboards" data-link>Rankings</a></li>
+          <li><a href="/calculator" data-link>Cost calculator</a></li>
+          <li><a href="/registry" data-link>SEBI registry</a></li>
+          <li><a href="/algo" data-link>Algo platforms</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Data</h5>
+        <ul>
+          <li><a href="/methodology" data-link>Methodology</a></li>
+          <li><a href="/sources" data-link>Sources &amp; lineage</a></li>
+          <li><a href="/reports/state-of-indian-broking-2026/">State of Indian Broking, 2026</a></li>
+          <li><a href="/feed.xml">RSS feed</a></li>
+          <li><a href="/sitemap.xml">Sitemap</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Markets</h5>
+        <ul>
+          <li><a href="/stocks/">Browse stocks A-Z</a></li>
+          <li><a href="/funds-by/">Browse mutual funds by AMC</a></li>
+          <li><a href="/etfs/">Browse ETFs</a></li>
+          <li><a href="/calculators/">Financial calculators</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="disclaimer">
+      <strong>Not investment advice.</strong> BrokerLens is an information service. We are not a SEBI-registered
+      investment adviser or research analyst and we do not recommend any broker, security or strategy. Figures are
+      reproduced from exchange and regulator disclosures and may lag their source. Verify anything material with the
+      broker and with SEBI before acting on it. Brokerage figures exclude statutory charges (STT, stamp duty, exchange
+      transaction charges, SEBI turnover fees and GST), which are identical across brokers for the same trade.
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="/assets/js/app.js"></script>
+</body>
+</html>
+"""
+_APP_SHELL_HEAD = _stamp_asset_versions(_APP_SHELL_HEAD)
+
+_APP_SHELL_FOOT = _stamp_asset_versions(_APP_SHELL_FOOT)
+
 
 def _source_note(claim):
     """Every static page's footer states, in plain language, exactly what it
@@ -884,6 +1073,162 @@ def _source_note(claim):
     stylistic one - so this is never reused verbatim across page types."""
     return ("%s It is not curated, scored or ranked, and nothing on it is investment advice. "
             "BrokerLens is not a SEBI-registered investment adviser or research analyst." % claim)
+
+
+_PROV_DOT_TITLE = {
+    "primary": "Sourced from a primary exchange or regulator feed",
+    "sample": "SAMPLE data — not a real figure, pending first ingest",
+    "curated": "Hand-curated or broker-supplied, not regulator-verified",
+    "none": "Not available",
+}
+
+
+def _mark_color(id_):
+    """Python port of store.js's markColor() - identical hash so a broker's
+    initials-avatar colour matches exactly whether the page was server- or
+    client-rendered."""
+    h = 0
+    for ch in str(id_):
+        h = (h * 31 + ord(ch)) % 360
+    return "hsl(%d 42%% 42%%)" % h
+
+
+def _initials(name):
+    """Python port of store.js's initials()."""
+    words = [w for w in re.split(r"[\s.]+", str(name or "?")) if w]
+    return "".join(w[0].upper() for w in words[:2])
+
+
+def _mark_html(id_, name, size=26):
+    """Python port of pages.js's mark() - the colored initials-avatar square
+    shown next to a broker/platform name."""
+    return (
+        '<span style="width:%dpx;height:%dpx;border-radius:6px;flex:none;display:grid;place-items:center;'
+        'background:%s;color:#fff;font-size:%dpx;font-weight:700">%s</span>'
+    ) % (size, size, _mark_color(id_), round(size * 0.42), _esc(_initials(name)))
+
+
+def _indian_grouping(n):
+    """en-IN digit grouping (lakh/crore: 2s after the first 3), matching
+    what n.toLocaleString('en-IN') produces in every JS number formatter
+    this file's Python renderers need to match exactly."""
+    s = str(int(round(abs(n))))
+    if len(s) <= 3:
+        return s
+    last3, rest = s[-3:], s[:-3]
+    parts = []
+    while len(rest) > 2:
+        parts.insert(0, rest[-2:])
+        rest = rest[:-2]
+    if rest:
+        parts.insert(0, rest)
+    return ",".join(parts) + "," + last3
+
+
+def _count_html(n):
+    """Python port of store.js's count()."""
+    if n is None:
+        return "&mdash;"
+    a = abs(n)
+    if a >= 1e7:
+        return "%.2f Cr" % (n / 1e7)
+    if a >= 1e5:
+        return "%.2f L" % (n / 1e5)
+    sign = "-" if n < 0 else ""
+    return sign + _indian_grouping(n)
+
+
+def _full_html(n):
+    """Python port of store.js's full()."""
+    return "&mdash;" if n is None else _indian_grouping(n) if n >= 0 else "-" + _indian_grouping(n)
+
+
+def _pct_html(n, sign=True, decimals=2):
+    """Python port of store.js's pct()."""
+    if n is None:
+        return "&mdash;"
+    s = "+" if n > 0 and sign else ""
+    return "%s%.*f%%" % (s, decimals, n)
+
+
+def _inr_html(n, decimals=None):
+    """Python port of store.js's inr()."""
+    if n is None:
+        return "&mdash;"
+    a, sign = abs(n), ("-" if n < 0 else "")
+    if a >= 1e7:
+        return "%s&#8377;%.*f Cr" % (sign, decimals if decimals is not None else 2, a / 1e7)
+    if a >= 1e5:
+        return "%s&#8377;%.*f L" % (sign, decimals if decimals is not None else 2, a / 1e5)
+    if a >= 1e3:
+        return "%s&#8377;%s" % (sign, _indian_grouping(a))
+    return "%s&#8377;%.*f" % (sign, decimals if decimals is not None else 0, a)
+
+
+def _cls_class(n):
+    """Python port of store.js's cls() - the up/down CSS class."""
+    return "" if n is None else "up" if n > 0 else "down" if n < 0 else ""
+
+
+def _fmt_board_html(bd, v):
+    """Python port of pages.js's fmtBoard()."""
+    if v is None:
+        return "&mdash;"
+    unit = bd.get("unit")
+    if unit == "clients":
+        return _count_html(v)
+    if unit == "%":
+        return _pct_html(v)
+    if unit == "bps":
+        return "%s%.0f" % ("+" if v > 0 else "", v)
+    if unit == "INR/month":
+        return _inr_html(v, decimals=0)
+    if unit == "/100":
+        return "%.1f" % v
+    return "%.2f" % v
+
+
+def _safe_url(url):
+    """Python port of store.js's safeUrl() (the allowlist check only - the
+    escaping itself still goes through _esc() at the call site, matching
+    every other href in this file). Only http(s) survives; javascript:,
+    data:, protocol-relative and anything else is refused."""
+    raw = str(url or "").strip()
+    if not raw:
+        return ""
+    cleaned = re.sub(r"[\x00-\x1f\x7f]", "", raw)
+    if cleaned.startswith("//") or not re.match(r"^https?://", cleaned, re.I):
+        return ""
+    return cleaned
+
+
+def _broker_badge_html(b):
+    """Python port of pages.js's badge() - `b` is one row from overview.json's
+    `brokers` list (the same shape passed to dirRow()/dirRowSimple())."""
+    out = []
+    if b.get("tier") == "featured":
+        out.append('<span class="badge badge-featured">Featured</span>')
+    elif b.get("claimed"):
+        out.append('<span class="badge badge-verified">Claimed</span>')
+    if b.get("verified"):
+        out.append('<span class="badge badge-verified" title="Legal entity and SEBI registration matched to '
+                    'the SEBI register">SEBI &#10003;</span>')
+    if b.get("flagged"):
+        out.append('<span class="badge badge-warn" title="Named in an exchange circular or on the SEBI '
+                    'defaulter list">&#9873; Flagged</span>')
+    return " ".join(out)
+
+
+def _prov_dot_html(kind):
+    """Python port of store.js's provDot() - same three-tier trust indicator
+    (primary/curated/sample/none) rendered identically on both the SPA and
+    these static pages, so a visitor sees one consistent visual language
+    regardless of which rendering path served the page."""
+    k = ("primary" if kind in ("nse", "sebi_registry", "sebi_annexure_b", "primary")
+         else "sample" if kind == "sample"
+         else "none" if kind is None
+         else "curated")
+    return '<span class="dot-src %s" title="%s"></span>' % (k, _PROV_DOT_TITLE[k])
 
 
 def _breadcrumb(trail):
@@ -3001,6 +3346,42 @@ def _fmt_supply(n):
     return "%s coins" % format(int(n), ",")
 
 
+_ZERODHA_LOGO_DATA_URI = (
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGJhc2VQcm9maWxlPSJ0aW55IiB3aWR0aD"
+    "0iNjA5IiBoZWlnaHQ9IjgwIiB4bWxuczp2PSJodHRwczovL3ZlY3RhLmlvL25hbm8iPjxwYXRoIGQ9Ik02Ni4yNTIgMjEuNDY5YzQuNDA0IDUuNz"
+    "EgOC4wNTYgMTIuMTI0IDEwLjg4NiAxOS4wNFYzLjkzMUg0Ni4wNzdjNy40NzIgNC4wMzcgMTQuMzE3IDkuOTQzIDIwLjE3NSAxNy41Mzh6TTIxLj"
+    "Q3MyA3LjgyOGMtNS43NTQgMC0xMS4yODkgMS4yMy0xNi40NzMgMy41MDZ2NjQuNzM1aDY4Ljk2M2MtLjUzNC0zNy43NTQtMjMuODc1LTY4LjI0MS"
+    "01Mi40OS02OC4yNDEiIGZpbGwtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzM4N2VkMSIvPjxwYXRoIGZpbGw9IiMzODdlZDEiIGQ9Ik0xMTguMzQ5ID"
+    "Y0LjkxOGwzOC41MzMtNDYuNjVIMTE5LjU2VjguMDk4aDUyLjI1djguNDlsLTM4LjUzMyA0Ni42NTFoMzguNTMzdjEwLjE2OWgtNTMuNDYxdi04Lj"
+    "Q5em02Ny44MjgtNTYuODJoNDguMzMxdjEwLjM1NkgxOTcuNTZ2MTYuNzk0aDMyLjc1MXYxMC4zNTdIMTk3LjU2djE3LjQ0NmgzNy40MTN2MTAuMz"
+    "U2aC00OC43OTZWOC4wOTh6bTYyLjUxMiAwaDI5LjExYzQuMTA1IDAgNy43NDQuNTc2IDEwLjkxNyAxLjcyNnM1LjgxNCAyLjc1MiA3LjkzIDQuOD"
+    "A1YzEuNzQxIDEuODA1IDMuMDggMy44ODggNC4wMTMgNi4yNTFzMS4zOTggNC45NzcgMS4zOTggNy44Mzd2LjE4N2MwIDIuNjc1LS4zODggNS4wOD"
+    "UtMS4xNjUgNy4yMzFzLTEuODUzIDQuMDQ0LTMuMjIgNS42OTEtMy4wMDEgMy4wNDktNC44OTggNC4xOTgtMy45OTcgMi4wMzgtNi4yOTcgMi42NT"
+    "lsMTcuNjMzIDI0LjcyNWgtMTMuNTI5bC0xNi4wOTctMjIuNzY1aC0uMTg2LTE0LjIyN3YyMi43NjVoLTExLjM4M1Y4LjA5OHptMjguMjMxIDMyLj"
+    "M3NWM0LjExNSAwIDcuMzkzLS45ODIgOS44MjQtMi45NTFzMy42NTItNC42MzkgMy42NTItOC4wMTJ2LS4xODdjMC0zLjU2LTEuMTg4LTYuMjYzLT"
+    "MuNTU5LTguMTA2cy01LjcwOS0yLjc2NC0xMC4wMTQtMi43NjRoLTE2Ljc1MnYyMi4wMTloMTYuODQ5em03MC4zODkgMzQuMDU1Yy01LjAzOSAwLT"
+    "kuNjQxLS44ODYtMTMuODA3LTIuNjU4cy03Ljc0NC00LjE4Mi0xMC43My03LjIzMi01LjMxOC02LjYwNy02Ljk5Ni0xMC42ODItMi41MjEtOC40MT"
+    "MtMi41MjEtMTMuMDE2di0uMTg3YzAtNC42MDMuODQtOC45NDEgMi41MjEtMTMuMDE2czQuMDQxLTcuNjUxIDcuMDktMTAuNzMgNi42NTQtNS41Mi"
+    "AxMC44MjQtNy4zMjQgOC43NjgtMi43MDYgMTMuODA3LTIuNzA2IDkuNjQxLjg4NiAxMy44MDkgMi42NTkgNy43NDQgNC4xODQgMTAuNzMgNy4yMz"
+    "EgNS4zMTYgNi42MDkgNi45OTYgMTAuNjgzIDIuNTIxIDguNDEzIDIuNTIxIDEzLjAxNXYuMTg3YzAgNC42MDQtLjg0IDguOTQzLTIuNTIxIDEzLj"
+    "AxNXMtNC4wNDMgNy42NTEtNy4wOSAxMC43My02LjY1NiA1LjUyMS0xMC44MjQgNy4zMjQtOC43NyAyLjcwNy0xMy44MDkgMi43MDd6bS4xODctMT"
+    "AuNTQzYzMuMjIxIDAgNi4xNzgtLjYwNiA4Ljg3MS0xLjgxOXM1LjAwMi0yLjg2IDYuOTIyLTQuOTQ0IDMuNDIyLTQuNTI2IDQuNTA2LTcuMzI1ID"
+    "EuNjI1LTUuNzg1IDEuNjI1LTguOTU2di0uMTg3YzAtMy4xNzItLjU0MS02LjE3My0xLjYyNS05LjAwNHMtMi42MDQtNS4yODYtNC41NTMtNy4zNy"
+    "00LjI4OS0zLjc0Ny03LjAxNi00Ljk5Mi01LjY5Ny0xLjg2Ni04LjkxOC0xLjg2Ni02LjE3OC42MDYtOC44NzEgMS44MTktNS4wMDIgMi44NjItNi"
+    "45MjIgNC45NDUtMy40MjIgNC41MjUtNC41MDggNy4zMjQtMS42MjUgNS43ODUtMS42MjUgOC45NTd2LjE4N2MwIDMuMTcyLjU0MSA2LjE3MyAxLj"
+    "YyNSA5LjAwMnMyLjYwNCA1LjI4OSA0LjU1NSA3LjM3MiA0LjI4OSAzLjc0OCA3LjAxNCA0Ljk5MSA1LjY5OSAxLjg2NiA4LjkyIDEuODY2em00Ny"
+    "45NTUtNTUuODg3aDI0LjM1NGM1LjEgMCA5Ljc3OS44MjUgMTQuMDQzIDIuNDczczcuOTI4IDMuOTM0IDExLjAwOCA2Ljg1NyA1LjQ1NyA2LjM2MS"
+    "A3LjEzOSAxMC4zMTEgMi41MiA4LjIyNyAyLjUyIDEyLjgyOXYuMTg3YzAgNC42MDQtLjg0IDguODk2LTIuNTIgMTIuODc1cy00LjA1OSA3LjQzNS"
+    "03LjEzOSAxMC4zNTYtNi43NDggNS4yMjYtMTEuMDA4IDYuOTA0LTguOTQzIDIuNTE5LTE0LjA0MyAyLjUxOWgtMjQuMzU0VjguMDk4em0yNC4yNi"
+    "A1NC45NTRjMy40MiAwIDYuNTMxLS41NDUgOS4zMy0xLjYzOXM1LjE4LTIuNjIyIDcuMTM3LTQuNTg5IDMuNDgyLTQuMzEyIDQuNTcyLTcuMDMgMS"
+    "42MzUtNS42NjcgMS42MzUtOC44NTR2LS4xODdjMC0zLjE4Ni0uNTQ3LTYuMTUyLTEuNjM1LTguOXMtMi42MTMtNS4xMDYtNC41NzItNy4wNzQtNC"
+    "4zMzgtMy41MTQtNy4xMzctNC42MzktNS45MS0xLjY4Ny05LjMzLTEuNjg3aC0xMi44Nzd2NDQuNTk4aDEyLjg3N3ptNDguNzAzLTU0Ljk1NGgxMS"
+    "4zODN2MjcuMTUxaDMxLjM1MlY4LjA5OGgxMS4zODN2NjUuMzExaC0xMS4zODNWNDUuODg1aC0zMS4zNTJ2MjcuNTIzaC0xMS4zODNWOC4wOTh6bT"
+    "k0LjA0OS0uNDY3SDU3My4xbDI4LjczNiA2NS43NzdoLTEyLjEyOWwtNi42MjUtMTUuNzY4aC0zMC44ODNsLTYuNzE5IDE1Ljc2OGgtMTEuNzU2bD"
+    "I4LjczOS02NS43Nzd6bTE2LjQyMiAzOS44NDFsLTExLjI5MS0yNi4xMjUtMTEuMTk3IDI2LjEyNWgyMi40ODh6Ii8+PC9zdmc+"
+)
+
+
 _BINANCE_LOGO_DATA_URI = (
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdp"
     "AAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAACZElEQVRYCcVXu04DMRBMqCiA"
@@ -3013,6 +3394,34 @@ _BINANCE_LOGO_DATA_URI = (
     "lROrjQR3Qmh8NeSMb6EPOQi1ygoQjMRzGL6OoWYqIYG6v4TFgQslqRXACREiCHPLTh9bLTkBjQIIahBBSKg1knNSlAACE0VEkScJSBARTZ4s"
     "IEJEEnmWgBoRyeTZAgIissiZp1XjwURv9e/5L2XwMrWwIqehAAAAAElFTkSuQmCC"
 )
+
+
+def affiliateBanner_html():
+    """Python port of pages.js's affiliateBanner() - the Zerodha sponsored
+    banner, kept byte-for-byte in sync with the JS version (same logo, same
+    copy, same .aff-banner-zerodha styling) so the SPA's own render of
+    /brokers and / shows the identical banner a fresh visit already saw."""
+    return (
+        '<div class="aff-banner aff-banner-zerodha"><span class="aff-tag">Sponsored</span>'
+        '<div class="aff-art aff-art-zerodha">'
+        '<img src="%s" width="152" height="20" alt="Zerodha" style="display:block"></div>'
+        '<div class="aff-body">'
+        '<h4>Brokerage-free equity &amp; mutual fund investments</h4>'
+        '<p class="xs muted">Trade with Zerodha\'s Kite platform and tools.</p>'
+        '<ul class="aff-features">'
+        '<li>Zero brokerage on equity delivery</li>'
+        '<li>&#8377;20 flat for intraday, F&amp;O, currency and commodity*</li>'
+        '<li>Free direct mutual fund investing</li>'
+        '</ul>'
+        '<a class="aff-cta" href="https://zerodha.com/open-account?c=ZE5729" target="_blank" '
+        'rel="noopener sponsored">Open account &rarr;</a>'
+        '<div class="aff-fine">*T&amp;C apply. Investment in securities market are subject to market risks; '
+        'read all related documents carefully before investing. Full disclaimer at '
+        '<a href="https://zerodha.com/pricing" target="_blank" rel="noopener">zerodha.com/pricing</a>. '
+        'Member ID NSE (13906), BSE (6498), MCX (46025). Brokerage will not exceed the SEBI-prescribed limit. '
+        'BrokerLens may earn a commission on signups through this link; it has no effect on any ranking or '
+        'score shown on this site.</div></div></div>'
+    ) % _ZERODHA_LOGO_DATA_URI
 
 
 def _crypto_banner_html():
@@ -3319,6 +3728,1017 @@ _CALC_HUB_FAQS = [
      "Use the brokerage cost calculator, which compares real published charges across every broker "
      "BrokerLens tracks, rather than a generic formula."),
 ]
+
+
+def _write_methodology_page():
+    """/methodology was, until now, reachable only by executing pages.js's
+    methodology() client-side - a direct hit or a crawler that doesn't render
+    JS got the SPA shell's empty skeleton, not this content. The page has no
+    data dependency and no interactivity at all (no onMount in the JS
+    version), so - unlike brokers/compare/leaderboards/registry/algo/
+    calculator below - it needs no SPA shell or hydration: a plain static
+    page, exactly like a stock or fund page, is a strictly complete port of
+    what pages.js already renders."""
+    canonical = "%s/methodology" % SITE_URL
+    title = "Methodology | BrokerLens"
+    description = ("How BrokerLens sources and calculates every broker metric: market share, complaints per "
+                    "10k clients, the reliability score and cost of a standard month, plus what we deliberately "
+                    "do not do.")[:300]
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Methodology", None)])
+    jsonld = {"@context": "https://schema.org", "@graph": [
+        {"@type": "WebPage", "name": title, "url": canonical, "description": description},
+        crumb_jsonld,
+    ]}
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += crumb_html + (
+        '<h1 style="margin-top:16px">Methodology</h1>'
+        '<p class="muted" style="max-width:70ch">Every number here should be checkable. This page states where '
+        'each figure comes from, how derived metrics are calculated, and what we deliberately do not do.</p>'
+
+        '<div class="section-title"><h2>Where the data comes from</h2></div>'
+        '<div class="grid g2">'
+        '<div class="card"><div class="card-title">Regulator-sourced %s</div>'
+        '<ul class="small" style="padding-left:18px;margin-top:8px">'
+        '<li>Legal entity names and SEBI registration numbers &mdash; SEBI recognised-intermediary register</li>'
+        '<li>Exchange memberships and registration validity &mdash; same register</li>'
+        '<li>Depository-participant licences &mdash; SEBI CDSL and NSDL registers</li>'
+        '<li>Defaulter / expelled status &mdash; SEBI defaulter list</li>'
+        '<li>Circulars naming a member &mdash; NSE circular feed</li>'
+        '</ul></div>'
+        '<div class="card"><div class="card-title">Market context %s</div>'
+        '<ul class="small" style="padding-left:18px;margin-top:8px">'
+        '<li>Index levels and market breadth &mdash; NSE</li>'
+        '<li>Institutional flows &mdash; NSE FII/DII report</li>'
+        '<li>Cash-market turnover &mdash; NSE bhavcopy</li>'
+        '<li>Delivery percentage &mdash; BSE scrip-wise gross delivery archive</li>'
+        '<li>Corporate actions &mdash; BSE</li>'
+        '</ul></div></div>'
+
+        '<div class="section-title"><h2>Derived metrics</h2></div>'
+        '<div class="stack">'
+        '<div class="card"><h4>Market share</h4>'
+        '<p class="small muted">A broker\'s active clients divided by the total across all tracked brokers, for '
+        'the same month. It is share of the tracked set, not of every broker in India &mdash; smaller firms '
+        'outside the tracked set are not in the denominator.</p></div>'
+        '<div class="card"><h4>Complaints per 10,000 clients</h4>'
+        '<p class="small muted">Complaints received over 12 months &divide; active clients &times; 10,000. '
+        'Normalising matters: a large broker will always show more raw complaints than a small one, which tells '
+        'you nothing on its own.</p></div>'
+        '<div class="card"><h4>Reliability score (0&ndash;100)</h4>'
+        '<p class="small muted">A weighted composite, disclosed in full: complaint rate percentile against peers '
+        '(40%%), resolution rate (20%%), regulatory flags (20%%), complaint backlog in months of current inflow '
+        '(10%%), and years since founding (10%%). Missing components are dropped and remaining weights '
+        'renormalised, so a broker is not penalised for a dataset we have not ingested &mdash; instead the '
+        'profile shows lower confidence. It is arithmetic over public disclosures, not an opinion, and it is '
+        'not a recommendation.</p></div>'
+        '<div class="card"><h4>Cost of a standard month</h4>'
+        '<p class="small muted">Brokerage on a fixed basket &mdash; &#8377;50,000 of delivery across 4 orders, '
+        '&#8377;1,00,000 of intraday turnover across 10 orders, &#8377;2,00,000 of F&amp;O premium turnover '
+        'across 10 orders &mdash; plus demat AMC divided by twelve. Statutory charges (STT, stamp duty, exchange '
+        'transaction charges, SEBI turnover fees, GST) are excluded because they are identical at every broker '
+        'for an identical trade; including them would compress the differences that actually depend on your '
+        'choice of broker. Use the <a href="/calculator" data-link>calculator</a> to price your own pattern '
+        'instead.</p></div>'
+        '</div>'
+
+        '<div class="section-title"><h2>What we do not do</h2></div>'
+        '<div class="card"><ul class="small" style="padding-left:18px">'
+        '<li>We do not name a single &quot;best broker&quot;. It depends entirely on what and how much you '
+        'trade.</li>'
+        '<li>We do not give investment advice, and we are not a SEBI-registered adviser or research analyst.</li>'
+        '<li>We do not scrape competitor comparison sites. Every figure traces to a primary exchange or '
+        'regulator source.</li>'
+        '<li>We do not let paid placement move a broker up a factual ranking.</li>'
+        '<li>We do not invent a number to fill a gap. Missing data shows as &quot;&mdash;&quot; or '
+        '&quot;unverified&quot;.</li>'
+        '</ul></div>'
+
+        '<div class="section-title"><h2>Advertising disclosure</h2></div>'
+        '<div class="card"><p class="small muted">Some pages carry a clearly marked &quot;Sponsored&quot; banner '
+        'linking to a broker\'s own signup page; BrokerLens may earn a commission if you open an account through '
+        'one of those links. This is separate from every ranking, score and comparison on this site, which are '
+        'built only from the regulator and exchange data described above and are never affected by who does or '
+        'doesn\'t have an affiliate relationship with us.</p></div>'
+    ) % (_prov_dot_html("sebi_registry"), _prov_dot_html("nse"))
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page documents BrokerLens's own methodology: where every figure comes from and how derived "
+        "metrics are calculated.")}
+    dest_dir = os.path.join(ROOT, "site", "methodology")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("methodology page: written", "ok")
+
+
+def _status_badge_html(st):
+    """Python port of pages.js's statusBadge() - same three-state pipeline
+    health indicator (ok/empty/error) on the static /sources page as on the
+    SPA's own copy of it."""
+    if not st:
+        return '<span class="badge">not run</span>'
+    if st == "ok":
+        return '<span class="badge badge-up">ok</span>'
+    if st == "empty":
+        return '<span class="badge badge-warn">empty</span>'
+    return '<span class="badge badge-down" title="%s">error</span>' % _esc(st)
+
+
+def _write_sources_page(sources_data):
+    """/sources, like /methodology, has no interactivity in the JS version
+    (no onMount) - a plain static page is a complete, faithful port, not a
+    simplified stand-in."""
+    rows = sources_data.get("sources") or []
+    groups = {}
+    for r in rows:
+        groups.setdefault(r.get("publisher"), []).append(r)
+
+    canonical = "%s/sources" % SITE_URL
+    title = "Sources & Data Lineage | BrokerLens"
+    description = ("Every data source the BrokerLens pipeline touches, when it last ran and what came back - "
+                    "published so any figure can be audited back to its origin.")[:300]
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Sources & lineage", None)])
+    jsonld = {"@context": "https://schema.org", "@graph": [
+        {"@type": "WebPage", "name": title, "url": canonical, "description": description},
+        crumb_jsonld,
+    ]}
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += crumb_html + (
+        '<h1 style="margin-top:16px">Sources &amp; data lineage</h1>'
+        '<p class="muted" style="max-width:70ch">Every source the pipeline touches, when it last ran and what '
+        'came back. Published so that anyone can audit a figure back to its origin.</p>'
+    )
+    for pub, pub_rows in groups.items():
+        body += '<div class="section-title"><h2>%s</h2></div>' % _esc(pub or "Other")
+        body += ('<div class="table-scroll"><table class="data">'
+                  '<thead><tr><th>Dataset</th><th>Cadence</th><th>Last run</th><th>Status</th><th>Notes</th></tr></thead>'
+                  '<tbody>')
+        for r in pub_rows:
+            last_run = (r.get("last_run") or "—")[:16].replace("T", " ")
+            body += (
+                '<tr><td><div style="font-weight:560">%s</div>'
+                '<div class="xs faint" style="word-break:break-all">%s</div></td>'
+                '<td class="small">%s</td>'
+                '<td class="small nowrap">%s</td>'
+                '<td>%s</td>'
+                '<td class="xs muted">%s</td></tr>'
+            ) % (
+                _esc(r.get("title") or ""), _esc(r.get("url") or ""),
+                _esc(r.get("cadence") or "—"), _esc(last_run),
+                _status_badge_html(r.get("last_status")), _esc(r.get("notes") or ""),
+            )
+        body += "</tbody></table></div>"
+
+    licensing = sources_data.get("licensing") or {}
+    if licensing:
+        body += '<div class="section-title"><h2>Licensing position</h2></div><div class="card"><dl class="kv">'
+        for k, v in licensing.items():
+            body += "<dt>%s</dt><dd class=\"small muted\">%s</dd>" % (_esc(str(k).upper()), _esc(str(v)))
+        body += "</dl></div>"
+
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page lists every primary data source the BrokerLens pipeline reads from and when it last ran.")}
+    dest_dir = os.path.join(ROOT, "site", "sources")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("sources page: written, %d sources" % len(rows), "ok")
+
+
+_PRICING_LABEL = {
+    "free": "Free", "freemium": "Freemium", "subscription": "Subscription",
+    "per-seat licence": "Per-seat licence", "enterprise licence": "Enterprise licence",
+}
+
+
+def _algo_card_html(p):
+    """Python port of pages.js's algoCard()."""
+    site = _safe_url(p.get("website"))
+    works = " ".join(
+        '<a class="badge" href="/broker/%s/" data-link title="Executes through %s &mdash; view broker profile">%s</a>'
+        % (_esc(b["id"]), _esc(b["brand"]), _esc(b["brand"]))
+        for b in (p.get("works_with") or [])
+    )
+    name_html = ('<a href="%s" target="_blank" rel="noopener nofollow">%s</a>' % (_esc(site), _esc(p.get("name") or ""))
+                 if site else _esc(p.get("name") or ""))
+    pricing = p.get("pricing")
+    return (
+        '<div class="card" style="display:flex;flex-direction:column;gap:8px">'
+        '<div class="row">%s'
+        '<div class="grow"><div style="font-weight:600">%s</div>'
+        '<div class="xs muted">%s%s</div></div>'
+        '%s</div>'
+        '<p class="small" style="margin:0">%s</p>'
+        '%s</div>'
+    ) % (
+        _mark_html(p.get("id"), p.get("name") or "", 30), name_html,
+        _esc(p.get("operator") or ""), (" &middot; %s" % _esc(p["hq"])) if p.get("hq") else "",
+        ('<span class="badge">%s</span>' % _esc(_PRICING_LABEL.get(pricing, pricing))) if pricing else "",
+        _esc(p.get("summary") or ""),
+        ('<div class="row-wrap xs"><span class="faint">Executes via:</span> %s</div>' % works) if works else "",
+    )
+
+
+def _write_algo_page(algo_data):
+    """/algo is a genuine interactive tool (search + category filter over 28
+    curated platforms), so - unlike /methodology and /sources above - this
+    uses the hybrid _APP_SHELL_HEAD/_FOOT: real content in the default
+    "all categories, no search" state for first paint and crawlers, then
+    app.js hydrates the same route for the live search/filter behaviour.
+    """
+    cats = algo_data.get("categories") or {}
+    platforms = algo_data.get("platforms") or []
+    count = algo_data.get("count", len(platforms))
+
+    canonical = "%s/algo" % SITE_URL
+    title = "Algo Trading Platforms in India | BrokerLens"
+    description = ("Official broker APIs, no-code strategy builders, backtesting tools and institutional "
+                    "vendors behind broker dealing desks in India, with SEBI's retail algo framework context.")[:300]
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Algo platforms", None)])
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "ItemList", "name": title, "url": canonical,
+                "itemListElement": [
+                    {"@type": "ListItem", "position": i + 1, "name": p.get("name")}
+                    for i, p in enumerate(platforms)
+                ],
+            },
+            crumb_jsonld,
+        ],
+    }
+    body = _APP_SHELL_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += crumb_html
+    body += (
+        '<h1 style="margin-top:16px">Algo trading platforms in India</h1>'
+        '<p class="muted" style="max-width:75ch">The execution and automation layer around the brokers we '
+        'track: official broker APIs, no-code strategy builders, backtesting tools and the institutional '
+        'vendors behind broker dealing desks. Platform details are curated and verified against each '
+        'platform\'s own material &mdash; not regulator filings &mdash; so treat them as a directory, not an '
+        'endorsement.</p>'
+
+        '<div class="banner" style="margin-top:14px"><span>&sect;</span>'
+        '<div><strong>SEBI\'s retail algo framework (February 2025).</strong> '
+        'SEBI has brought retail algo trading inside a formal perimeter: brokers remain responsible for every '
+        'algo order, API access requires authentication with static-IP whitelisting, orders above an '
+        'exchange-set rate threshold need an exchange-issued algo ID, and algo providers must be empanelled '
+        'with the exchanges. Strategies split into <em>white-box</em> (logic disclosed) and <em>black-box</em> '
+        '(undisclosed &mdash; the provider needs a Research Analyst registration and audit trail). '
+        'Implementation timelines have moved; check the latest SEBI and exchange circulars before relying on '
+        'any platform\'s compliance claims.</div></div>'
+
+        '<div class="card" style="margin-top:14px"><div class="row-wrap">'
+        '<div class="grow" style="min-width:220px">'
+        '<input type="search" id="algo-q" placeholder="Search platforms, operators or connected brokers&hellip;">'
+        '</div>'
+        '<button class="btn btn-sm btn-primary" data-algo-cat="all">All</button>'
+        + "".join('<button class="btn btn-sm" data-algo-cat="%s">%s</button>' % (_esc(k), _esc(v.get("label") or k))
+                   for k, v in cats.items())
+        + '<span class="small faint" id="algo-meta">%d of %d platforms</span></div></div>' % (len(platforms), count)
+    )
+    body += '<div id="algo-list">'
+    for k, v in cats.items():
+        cat_rows = [p for p in platforms if p.get("category") == k]
+        if not cat_rows:
+            continue
+        body += (
+            '<section style="margin-top:20px"><h2 style="margin-bottom:2px">%s</h2>'
+            '<p class="small muted" style="max-width:75ch;margin-top:2px">%s</p>'
+            '<div class="grid g3" style="margin-top:10px">%s</div></section>'
+        ) % (_esc(v.get("label") or k), _esc(v.get("blurb") or ""),
+             "".join(_algo_card_html(p) for p in cat_rows))
+    body += "</div>"
+    body += (
+        '<p class="xs faint" style="margin-top:10px">%s Curated directory, last reviewed %s. Pricing models are '
+        'indicative; integrations change frequently. Nothing here is investment advice or a recommendation of '
+        'any platform.</p>'
+    ) % (_prov_dot_html("curated"), _esc((algo_data.get("last_reviewed") or algo_data.get("generated_at") or "")[:10]))
+    body += _APP_SHELL_FOOT
+    dest_dir = os.path.join(ROOT, "site", "algo")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("algo page: written, %d platforms" % len(platforms), "ok")
+
+
+def _sample_banner_html(meta):
+    """Python port of pages.js's sampleBanner() - correctly renders nothing
+    in production today (data_status/sample_data are all false), but stays
+    a faithful port rather than a permanently-empty stub in case that ever
+    changes."""
+    which = [k.replace("_", " ") for k, v in (meta.get("sample_data") or {}).items() if v]
+    if not which:
+        return ""
+    return (
+        '<div class="banner"><span>&#9888;</span><div><strong>Sample data in use for: %s.</strong> '
+        'These are placeholder figures generated to exercise the interface &mdash; not facts about any broker. '
+        'Regulator-sourced fields (legal entity, SEBI registration, exchange memberships, defaulter status) are '
+        'real. See <a href="/sources" data-link>sources</a> for what is live.</div></div>'
+    ) % _esc(", ".join(which))
+
+
+def _pending_html(what, detail):
+    """Python port of pages.js's pending() - the standing "not published yet"
+    notice used whenever a section has no real, source-traced data."""
+    return (
+        '<div class="pending"><strong>%s not published yet</strong> %s We publish a figure only once it comes '
+        'from the primary source, so this section is empty rather than estimated. '
+        '<a href="/sources" data-link>What is live today</a>.</div>'
+    ) % (_esc(what), _esc(detail))
+
+
+def _write_leaderboards_page(overview):
+    """/leaderboards has no user input at all in the JS version (no onMount
+    listeners, just chart draws over server data) - the hybrid shell exists
+    here only so the bar charts (drawn client-side onto <canvas>) render in
+    once app.js loads; the table/ranking content itself needs no
+    hydration to become correct."""
+    boards = [bd for bd in (overview.get("leaderboards") or []) if bd.get("rows")]
+    canonical = "%s/leaderboards" % SITE_URL
+    title = "Broker Rankings: Active Clients, Growth, Complaints, Cost | BrokerLens"
+    description = ("Indian stock broker rankings by active clients, growth, complaint rate, resolution rate "
+                    "and cost. Every board states the metric it sorts on and where that metric comes from.")[:300]
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Rankings", None)])
+    jsonld = {"@context": "https://schema.org", "@graph": [
+        {"@type": "WebPage", "name": title, "url": canonical, "description": description},
+        crumb_jsonld,
+    ]}
+    body = _APP_SHELL_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += crumb_html
+    body += (
+        '<h1 style="margin-top:16px">Rankings</h1>'
+        '<p class="muted" style="max-width:64ch">Every ranking states the metric it sorts on and where that '
+        'metric comes from. We do not publish an overall &quot;best broker&quot; &mdash; that depends on what '
+        'you trade.</p>'
+    )
+    if not boards:
+        body += '<div style="margin-top:16px">%s</div>' % _pending_html(
+            "Rankings",
+            "Every ranking here sorts on active clients, complaint records or published charges. Those come "
+            "from NSE and SEBI monthly disclosures, which are being brought in from the primary sources now.")
+    for i, bd in enumerate(boards):
+        rows = bd.get("rows", [])[:10]
+        body += (
+            '<div class="card" style="margin-top:16px"><div class="card-head">'
+            '<div><h3>%s</h3>%s</div><span class="badge">%s</span></div>'
+            '<div class="grid g-main"><div class="chart-box"><canvas id="lb-%d"></canvas></div>'
+            '<table class="data"><tbody>%s</tbody></table></div></div>'
+        ) % (
+            _esc(bd.get("title") or ""),
+            ('<p class="xs faint" style="margin-top:4px;max-width:70ch">%s</p>' % _esc(bd["note"])) if bd.get("note") else "",
+            _esc(bd.get("unit") or ""), i,
+            "".join(
+                '<tr><td class="rank-cell">%s</td><td><a href="/broker/%s/" data-link>%s</a></td>'
+                '<td class="right num">%s</td></tr>'
+                % (r.get("rank"), _esc(r["id"]), _esc(r["brand"]), _fmt_board_html(bd, r.get("value")))
+                for r in rows
+            ),
+        )
+    body += _APP_SHELL_FOOT
+    dest_dir = os.path.join(ROOT, "site", "leaderboards")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("leaderboards page: written, %d boards" % len(boards), "ok")
+
+
+def _write_registry_landing_page(reg_rows, overview):
+    """/registry is a client-side paginated search over up to ~1,700 entities
+    (regState = {q:'', page:0, per:60} by default) - pre-rendering page one
+    of that default, unfiltered view is a faithful, complete match for what
+    a fresh visitor or a crawler would see before typing anything, without
+    needing to fake pagination server-side for every possible query."""
+    per = 60
+    page_rows = reg_rows[:per]
+    total = len(reg_rows)
+    canonical = "%s/registry" % SITE_URL
+    title = "SEBI-Registered Brokers and Intermediaries | BrokerLens"
+    description = ("Search every SEBI-registered broking and depository-participant entity: legal name, "
+                    "registration number, city, exchange memberships and validity.")[:300]
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("SEBI registry", None)])
+    jsonld = {"@context": "https://schema.org", "@graph": [
+        {"@type": "WebPage", "name": title, "url": canonical, "description": description},
+        crumb_jsonld,
+    ]}
+    body = _APP_SHELL_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += crumb_html
+    body += (
+        '<h1 style="margin-top:16px">SEBI-registered intermediaries</h1>'
+        '<p class="muted" style="max-width:70ch">Every registered entity we hold that is not one of the %d '
+        'brokers tracked in depth &mdash; %s of them. Straight from SEBI\'s register: legal name, registration '
+        'number, city, exchange memberships and validity. Nothing here is curated or scored.</p>'
+
+        '<div class="card" style="margin-top:16px"><div class="row-wrap">'
+        '<div class="grow" style="min-width:240px">'
+        '<input type="search" id="reg-q" placeholder="Search by name, registration number or city&hellip;">'
+        '</div>'
+        '<span class="small faint" id="reg-meta">%s entities &middot; showing 1&ndash;%d</span>'
+        '<button class="btn btn-sm" id="reg-prev" disabled>&larr; Prev</button>'
+        '<button class="btn btn-sm" id="reg-next"%s>Next &rarr;</button>'
+        '</div></div>'
+
+        '<div class="table-scroll" style="margin-top:16px"><table class="data">'
+        '<thead><tr><th>Legal entity</th><th>Registration</th><th>City</th><th>Exchanges / registers</th>'
+        '<th>Validity</th></tr></thead><tbody id="reg-body">%s</tbody></table></div>'
+        '<p class="xs faint" style="margin-top:10px">%s Source: SEBI recognised-intermediary register. '
+        '<a href="/sources" data-link>Lineage &rarr;</a></p>'
+    ) % (
+        overview.get("metadata", {}).get("broker_count", 0), _full_html(total),
+        _full_html(total), min(per, total), "" if total > per else " disabled",
+        "".join(
+            '<tr><td>%s%s</td><td class="num small">%s</td><td class="small">%s</td>'
+            '<td class="xs muted">%s%s</td><td class="small">%s</td></tr>'
+            % (
+                ('<a href="/sebi-registry/%s/">%s</a>' % (_esc(e["slug"]), _esc(e["name"]))) if e.get("slug") else _esc(e.get("name") or ""),
+                ('<div class="xs faint">trading as %s</div>' % _esc(e["trade_name"])) if e.get("trade_name") else "",
+                _esc(e.get("reg") or "&mdash;"), _esc(e.get("city") or "&mdash;"),
+                " &middot; ".join(_esc(x) for x in (e.get("exchanges") or [])[:3]),
+                (" +%d" % (len(e["exchanges"]) - 3)) if len(e.get("exchanges") or []) > 3 else "",
+                _esc(e.get("validity") or "&mdash;"),
+            )
+            for e in page_rows
+        ),
+        _prov_dot_html("sebi_registry"),
+    )
+    body += _APP_SHELL_FOOT
+    dest_dir = os.path.join(ROOT, "site", "registry")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("registry landing page: written, %d of %d entities shown" % (len(page_rows), total), "ok")
+
+
+def _write_compare_page(overview):
+    """/compare?b=id1,id2 is genuinely arbitrary (any 2-4 of 48 brokers), so
+    there is no single "default comparison" worth pre-rendering - but the
+    bare /compare (no query string) has one real, complete default state in
+    the JS version: the broker picker with nothing selected yet. That's what
+    gets prerendered; app.js reads any ?b= query client-side same as today."""
+    brokers = sorted(overview.get("brokers") or [], key=lambda b: -(b.get("clients") or 0))
+    canonical = "%s/compare" % SITE_URL
+    title = "Compare Indian Stock Brokers Side by Side | BrokerLens"
+    description = ("Put Indian stock brokers head to head on clients, complaints, regulatory standing and "
+                    "real cost, using regulator-sourced figures.")[:300]
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Compare", None)])
+    jsonld = {"@context": "https://schema.org", "@graph": [
+        {"@type": "WebPage", "name": title, "url": canonical, "description": description},
+        crumb_jsonld,
+    ]}
+    body = _APP_SHELL_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += crumb_html
+    body += (
+        '<h1 style="margin-top:16px">Compare brokers</h1>'
+        '<p class="muted">Pick two to four brokers to see them side by side on clients, growth, complaints, '
+        'reliability and cost.</p>'
+        '<div class="card" style="max-width:420px;margin-top:16px">'
+        '<label for="cmp-add">Add a broker</label>'
+        '<select id="cmp-add"><option value="">Select&hellip;</option>%s</select></div>'
+    ) % "".join('<option value="%s">%s</option>' % (_esc(b["id"]), _esc(b["brand"])) for b in brokers)
+    body += _APP_SHELL_FOOT
+    dest_dir = os.path.join(ROOT, "site", "compare")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("compare page: written", "ok")
+
+
+def _dir_row_html(b):
+    """Python port of pages.js's dirRow() - the hasClients=true table row.
+    faintDash matches its JS namesake: a dash reading at full text weight
+    down a whole column looks broken, not "not published yet"."""
+    def faint_dash(s):
+        return '<span class="faint">&mdash;</span>' if s == "&mdash;" else s
+    return (
+        '<tr class="%s"><td class="rank-cell">%s</td>'
+        '<td><div class="bname">%s<span>%s</span> %s</div>'
+        '<div class="xs faint">%s%s</div></td>'
+        '<td class="right num">%s</td>'
+        '<td class="right num %s">%s</td>'
+        '<td><canvas class="spark" aria-hidden="true"></canvas></td>'
+        '<td class="right num">%s</td>'
+        '<td class="right num">%s</td>'
+        '<td class="right num">%s</td>'
+        '<td class="small">%s</td></tr>'
+    ) % (
+        "promoted" if b.get("tier") == "featured" else "",
+        faint_dash(_full_html(b.get("rank"))) if b.get("rank") is not None else '<span class="faint">&mdash;</span>',
+        _mark_html(b["id"], b["brand"]), '<a href="/broker/%s/" data-link>%s</a>' % (_esc(b["id"]), _esc(b["brand"])),
+        _broker_badge_html(b),
+        _esc(b.get("hq") or ""), (" &middot; est. %s" % b["founded"]) if b.get("founded") else "",
+        faint_dash(_count_html(b.get("clients"))),
+        _cls_class(b.get("clients_yoy")), faint_dash(_pct_html(b.get("clients_yoy"))),
+        faint_dash("%.2f" % b["complaints_per_10k"] if b.get("complaints_per_10k") is not None else "&mdash;"),
+        faint_dash("%.1f" % b["reliability"] if b.get("reliability") is not None else "&mdash;"),
+        _inr_html(b["cost"], decimals=0) if b.get("cost") is not None else '<span class="faint">unverified</span>',
+        _esc(TYPE_LABEL.get(b.get("type"), b.get("type") or "")),
+    )
+
+
+def _dir_row_simple_html(b):
+    """Python port of pages.js's dirRowSimple() - the hasClients=false row
+    shape (see the /brokers hasClients fix in pages.js for why this exists:
+    a wall of dashes reads as broken data, not "not published yet")."""
+    return (
+        '<tr class="%s"><td><div class="bname">%s<span>%s</span> %s</div>'
+        '<div class="xs faint">%s%s</div></td>'
+        '<td class="small num">%s</td><td class="small">%s</td>'
+        '<td class="xs muted">%s</td><td class="small">%s</td></tr>'
+    ) % (
+        "promoted" if b.get("tier") == "featured" else "",
+        _mark_html(b["id"], b["brand"]), '<a href="/broker/%s/" data-link>%s</a>' % (_esc(b["id"]), _esc(b["brand"])),
+        _broker_badge_html(b),
+        _esc(b.get("hq") or ""), (" &middot; est. %s" % b["founded"]) if b.get("founded") else "",
+        _esc(b.get("sebi_reg_no") or "&mdash;"),
+        _esc(TYPE_LABEL.get(b.get("type"), b.get("type") or "&mdash;")),
+        " &middot; ".join(_esc(SEGMENT_LABEL.get(s, s)) for s in (b.get("segments") or [])) or "&mdash;",
+        _esc(b.get("hq") or "&mdash;"),
+    )
+
+
+def _write_brokers_page(overview):
+    """The dedicated /brokers directory: full 48-row table, hasClients-aware
+    (matching the fix in pages.js's brokers()/dirRow()/dirRowSimple() - see
+    that change for why a data-heavy table isn't safe to always render).
+    Real content on first paint; app.js re-renders the same live, sortable,
+    filterable table moments later, unaffected by any of this."""
+    meta = overview.get("metadata") or {}
+    has_clients = bool(meta.get("data_status", {}).get("active_clients"))
+    brokers = overview.get("brokers") or []
+    rows_sorted = sorted(brokers, key=lambda b: -(b.get("clients") or 0)) if has_clients else \
+        sorted(brokers, key=lambda b: b.get("brand") or "")
+
+    canonical = "%s/brokers" % SITE_URL
+    title = "All Indian Stock Brokers, Compared | BrokerLens"
+    description = ("Every Indian stock broker we track, side by side: active clients, growth, complaint rate, "
+                    "reliability and monthly cost, from primary regulator and exchange sources.")[:300]
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Brokers", None)])
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "ItemList", "name": title, "url": canonical,
+                "itemListElement": [
+                    {"@type": "ListItem", "position": i + 1, "url": "%s/broker/%s/" % (SITE_URL, b["id"]), "name": b["brand"]}
+                    for i, b in enumerate(rows_sorted)
+                ],
+            },
+            crumb_jsonld,
+        ],
+    }
+    body = _APP_SHELL_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += crumb_html
+    body += _sample_banner_html(meta)
+    body += (
+        '<div class="spread" style="margin-top:16px"><div><h1>Brokers</h1>'
+        '<p class="muted small">%d brokers tracked in depth. Looking for a smaller firm? '
+        '<a href="/registry" data-link>Search all %s SEBI-registered entities</a>.</p></div>'
+        '<a class="btn" href="/compare" data-link>Compare selected &rarr;</a></div>'
+
+        '<div class="grid g-main" style="margin-top:16px"><div>'
+        '<div class="card"><div class="row-wrap">'
+        '<div class="grow" style="min-width:220px"><input type="search" id="dir-q" '
+        'placeholder="Search broker or legal entity&hellip;"></div>'
+        '<div class="chips">%s%s</div>'
+        '<span class="small faint" id="dir-count">%d of %d</span></div></div>'
+
+        '<div class="table-scroll" style="margin-top:16px"><table class="data">'
+        '<thead><tr>%s</tr></thead><tbody id="dir-body">%s</tbody></table></div>'
+        '<p class="xs faint" style="margin-top:10px">%s</p>'
+        '<p class="xs faint" style="margin-top:6px">Dedicated category pages: %s &nbsp;|&nbsp; %s</p>'
+        '</div><div class="stack">%s</div></div>'
+    ) % (
+        meta.get("broker_count", 0), _full_html(overview.get("registry_count")),
+        "".join('<button class="chip" data-filter="type:%s">%s</button>' % (_esc(k), _esc(v)) for k, v in TYPE_LABEL.items()),
+        "".join('<button class="chip" data-filter="segment:%s">%s</button>' % (_esc(k), _esc(v)) for k, v in SEGMENT_LABEL.items()),
+        len(rows_sorted), len(brokers),
+        (
+            '<th data-tip="Rank by active clients. A dash means the client count is not available yet.">#</th>'
+            '<th class="sortable sorted" data-sort="brand" data-tip="Consumer brand.">Broker <span class="arrow">&#8597;</span></th>'
+            '<th class="sortable right sorted" data-sort="clients" data-tip="Unique clients who placed at least one trade in the last 12 months.">Active clients <span class="arrow">&#8597;</span></th>'
+            '<th class="sortable right" data-sort="clients_yoy" data-tip="Change in active clients over the last 12 months.">12-month <span class="arrow">&#8597;</span></th>'
+            '<th data-tip="Active client count month by month.">Trend</th>'
+            '<th class="sortable right" data-sort="complaints_per_10k" data-tip="Investor complaints per 10,000 active clients.">Complaints /10k <span class="arrow">&#8597;</span></th>'
+            '<th class="sortable right tip-end" data-sort="reliability" data-tip="BrokerLens composite score out of 100.">Reliability <span class="arrow">&#8597;</span></th>'
+            '<th class="sortable right tip-end" data-sort="cost" data-tip="Estimated brokerage for a fixed monthly basket.">Cost /month <span class="arrow">&#8597;</span></th>'
+            '<th class="tip-end" data-tip="Business model.">Type</th>'
+            if has_clients else
+            '<th class="sortable sorted" data-sort="brand" data-tip="Consumer brand.">Broker <span class="arrow">&#8597;</span></th>'
+            '<th data-tip="SEBI registration number for this broker\'s stock-broking licence.">Registration</th>'
+            '<th class="tip-end" data-tip="Business model.">Type</th>'
+            '<th data-tip="Exchange segments this broker is registered for.">Segments</th>'
+            '<th data-tip="City of the broker\'s registered head office.">Head office</th>'
+        ),
+        "".join((_dir_row_html if has_clients else _dir_row_simple_html)(b) for b in rows_sorted),
+        (
+            '%s exchange/regulator sourced &middot; %s curated or broker-supplied &middot; %s sample pending '
+            'ingest. Cost is a fixed basket of trades &mdash; see <a href="/methodology" data-link>methodology</a>.'
+            % (_prov_dot_html("nse"), _prov_dot_html("curated"), _prov_dot_html("sample"))
+            if has_clients else
+            '%s Legal name, registration and segments come straight from SEBI\'s own register. Active-client '
+            'counts, complaint records and cost are not yet available for these brokers &mdash; shown only once '
+            'traced to NSE and SEBI\'s own disclosures, never estimated. See '
+            '<a href="/methodology" data-link>methodology</a>.' % _prov_dot_html("sebi_registry")
+        ),
+        " &middot; ".join('<a href="/brokers-by/type/%s/">%s</a>' % (k.replace("_", "-"), _esc(v)) for k, v in TYPE_LABEL.items()),
+        " &middot; ".join('<a href="/brokers-by/segment/%s/">%s</a>' % (k.replace("_", "-"), _esc(v)) for k, v in SEGMENT_LABEL.items()),
+        affiliateBanner_html(),
+    )
+    body += _APP_SHELL_FOOT
+    dest_dir = os.path.join(ROOT, "site", "brokers")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("brokers page: written, %d brokers, hasClients=%s" % (len(rows_sorted), has_clients), "ok")
+
+
+def _calc_leg_cost(plan, turnover, trades):
+    """Python port of the leg() closure inside pages.js's calculator() -
+    per-leg brokerage for one basket component (delivery/intraday/F&O)."""
+    if not plan or not trades:
+        return 0.0
+    per_order = (turnover / trades) * plan["pct_of_turnover"] / 100 if plan.get("pct_of_turnover") is not None else 0.0
+    flat = plan.get("flat_per_order")
+    v = max(per_order, flat) if (flat is not None and plan.get("pct_of_turnover") is not None) else \
+        (flat if flat is not None else per_order)
+    if plan.get("cap_per_order") is not None:
+        v = min(v, plan["cap_per_order"])
+    return v * trades
+
+
+def _fmt_plan_html(plan):
+    """Python port of pages.js's fmtPlan()."""
+    if not plan:
+        return "&mdash;"
+    bits = []
+    if plan.get("flat_per_order") is not None:
+        bits.append("Free" if plan["flat_per_order"] == 0 else "&#8377;%s/order" % plan["flat_per_order"])
+    if plan.get("pct_of_turnover") is not None:
+        bits.append("%s%%" % plan["pct_of_turnover"])
+    if plan.get("cap_per_order") is not None:
+        bits.append("max &#8377;%s" % plan["cap_per_order"])
+    return _esc(", ".join(bits)) if bits else "&mdash;"
+
+
+# Default example basket, identical to the pre-filled <input value> attributes
+# in pages.js's calculator() form - this IS the state a fresh visitor sees, so
+# it is what gets pre-computed for first paint too.
+_CALC_DEFAULT_BASKET = {
+    "delivery_buy_value": 50000, "delivery_trades": 4,
+    "intraday_turnover": 100000, "intraday_trades": 10,
+    "fno_premium_turnover": 200000, "fno_trades": 10,
+}
+
+
+def _write_calculator_tool_page(built):
+    """/calculator (the interactive brokerage-cost tool, distinct from the
+    informational /calculators/<slug>/ pages) - pre-renders the same default
+    basket the JS form is pre-filled with, so first paint already shows a
+    real, correct result table instead of an empty form. Matches
+    calculator()'s own "nothing to price yet" gate exactly: production has
+    zero brokers with verified charges today, so this renders the pending
+    notice, not a table of computed zeros."""
+    priced = [b for b in built if (b.get("cost") or {}).get("monthly_total") is not None]
+    canonical = "%s/calculator" % SITE_URL
+    title = "Brokerage Cost Calculator | BrokerLens"
+    description = ("Work out what a month of your actual trading costs at each Indian broker, using their "
+                    "published charges.")[:300]
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Calculator", None)])
+    jsonld = {"@context": "https://schema.org", "@graph": [
+        {"@type": "WebPage", "name": title, "url": canonical, "description": description},
+        crumb_jsonld,
+    ]}
+    body = _APP_SHELL_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += crumb_html
+
+    if not priced:
+        body += (
+            '<h1 style="margin-top:16px">Brokerage cost calculator</h1>'
+            '<p class="muted" style="max-width:70ch">Work out what a month of your actual trading costs at '
+            'each broker.</p>'
+            '<div style="margin-top:16px">%s</div>'
+            '<p class="small muted" style="margin-top:16px">In the meantime, the '
+            '<a href="/brokers" data-link>broker directory</a> and the '
+            '<a href="/registry" data-link>SEBI register</a> carry regulator-sourced facts on every firm.</p>'
+        ) % _pending_html(
+            "Broker charges",
+            "Charges are published only where they can be traced to the broker's own disclosed rate card. "
+            "Until those are verified, we show nothing rather than an estimate you might act on.")
+    else:
+        basket = _CALC_DEFAULT_BASKET
+        rows = []
+        for b in priced:
+            c = b.get("charges") or {}
+            total = (
+                _calc_leg_cost(c.get("delivery"), basket["delivery_buy_value"], basket["delivery_trades"])
+                + _calc_leg_cost(c.get("intraday"), basket["intraday_turnover"], basket["intraday_trades"])
+                + _calc_leg_cost(c.get("fno"), basket["fno_premium_turnover"], basket["fno_trades"])
+                + (c.get("demat_amc_annual") or 0) / 12
+            )
+            rows.append((b["id"], b["profile"]["brand"], total))
+        rows.sort(key=lambda r: r[2])
+        max_total = rows[-1][2] if rows else 0
+        body += (
+            '<h1 style="margin-top:16px">What will a broker actually cost you?</h1>'
+            '<p class="muted" style="max-width:64ch">Enter a typical month of your own trading. We price it '
+            'against every broker that has published verified charges, cheapest first.</p>'
+            '<div class="grid g-main" style="margin-top:16px">'
+            '<form class="card" id="calc-form"><div class="card-title">Your typical month</div>'
+            '<div class="grid g2" style="margin-top:12px">'
+            '<div class="field"><label for="dv">Delivery buy value (&#8377;)</label>'
+            '<input id="dv" name="delivery_value" type="number" min="0" step="1000" value="%d"></div>'
+            '<div class="field"><label for="dt">Delivery orders</label>'
+            '<input id="dt" name="delivery_trades" type="number" min="0" value="%d"></div>'
+            '<div class="field"><label for="it">Intraday turnover (&#8377;)</label>'
+            '<input id="it" name="intraday_turnover" type="number" min="0" step="10000" value="%d"></div>'
+            '<div class="field"><label for="itr">Intraday orders</label>'
+            '<input id="itr" name="intraday_trades" type="number" min="0" value="%d"></div>'
+            '<div class="field"><label for="ft">F&amp;O premium turnover (&#8377;)</label>'
+            '<input id="ft" name="fno_turnover" type="number" min="0" step="10000" value="%d"></div>'
+            '<div class="field"><label for="ftr">F&amp;O orders</label>'
+            '<input id="ftr" name="fno_trades" type="number" min="0" value="%d"></div></div>'
+            '<button class="btn btn-primary" type="submit" style="margin-top:12px">Recalculate</button></form>'
+            '<div id="calc-out"><div class="table-scroll"><table class="data">'
+            '<thead><tr><th>#</th><th>Broker</th><th class="right">Your monthly cost</th>'
+            '<th class="right">Per year</th><th></th></tr></thead><tbody>%s</tbody></table></div>'
+            '<p class="xs faint" style="margin-top:10px">Brokerage plus amortised AMC only. Statutory charges '
+            'are excluded because they are identical at every broker for the same trade. Only brokers with '
+            'verified published pricing appear &mdash; %d of %d today.</p></div></div>'
+        ) % (
+            basket["delivery_buy_value"], basket["delivery_trades"], basket["intraday_turnover"],
+            basket["intraday_trades"], basket["fno_premium_turnover"], basket["fno_trades"],
+            "".join(
+                '<tr><td class="rank-cell">%d</td><td><div class="bname">%s%s</div></td>'
+                '<td class="right num">%s</td><td class="right num">%s</td>'
+                '<td class="right"><div class="minibar"><i style="width:%d%%"></i></div></td></tr>'
+                % (i + 1, _mark_html(bid, brand, 22), '<a href="/broker/%s/" data-link>%s</a>' % (_esc(bid), _esc(brand)),
+                   _inr_html(total, decimals=0), _inr_html(total * 12, decimals=0),
+                   round(total / max_total * 100) if max_total else 0)
+                for i, (bid, brand, total) in enumerate(rows)
+            ),
+            len(priced), len(built),
+        )
+    body += _APP_SHELL_FOOT
+    dest_dir = os.path.join(ROOT, "site", "calculator")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("calculator page: written, %d priced brokers" % len(priced), "ok")
+
+
+_MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def _month_html(m):
+    """Python port of store.js's month()."""
+    if not m:
+        return "&mdash;"
+    y, mm = str(m).split("-")
+    try:
+        name = _MONTH_NAMES[int(mm) - 1]
+    except (ValueError, IndexError):
+        name = mm
+    return "%s %s" % (name, y)
+
+
+def _stat_tile_html(label, value, sub, extra=""):
+    """Python port of pages.js's statTile()."""
+    return (
+        '<div class="card stat"><div class="stat-label">%s %s</div><div class="stat-value">%s</div>%s</div>'
+    ) % (_esc(label), extra, value, ('<div class="stat-sub">%s</div>' % sub) if sub else "")
+
+
+def _ad_slot_html(overview, placement):
+    """Python port of pages.js's adSlot(). JS picks a random featured broker
+    per render; deterministically picking the first here (matching
+    dirRow()'s use of "featured" ordering elsewhere) avoids a content swap
+    the instant app.js re-renders with its own random pick - featured is
+    currently always empty in production anyway (no paid placements exist
+    yet), so this renders '' either way today."""
+    featured = [b for b in (overview.get("brokers") or []) if b.get("tier") == "featured"]
+    if not featured:
+        return ""
+    b = featured[0]
+    return (
+        '<div class="ad-slot"><div class="ad-tag">Sponsored &mdash; %s</div>'
+        '<div class="row" style="margin-top:8px">%s<div class="grow">'
+        '<div style="font-weight:600">%s</div><div class="xs muted">%s active clients &middot; %s</div></div>'
+        '<a class="btn btn-sm btn-primary" href="/broker/%s/" data-link>View</a></div></div>'
+    ) % (
+        _esc(placement), _mark_html(b["id"], b["brand"], 34), _esc(b["brand"]),
+        _count_html(b.get("clients")), _esc(TYPE_LABEL.get(b.get("type"), b.get("type") or "")), _esc(b["id"]),
+    )
+
+
+def _leader_card_html(bd):
+    """Python port of pages.js's leaderCard()."""
+    return (
+        '<div class="card"><div class="card-title">%s</div>'
+        '<table class="data" style="margin-top:8px"><tbody>%s</tbody></table></div>'
+    ) % (
+        _esc(bd.get("title") or ""),
+        "".join(
+            '<tr><td class="rank-cell">%s</td><td><a href="/broker/%s/" data-link>%s</a></td>'
+            '<td class="right num">%s</td></tr>'
+            % (r.get("rank"), _esc(r["id"]), _esc(r["brand"]), _fmt_board_html(bd, r.get("value")))
+            for r in (bd.get("rows") or [])[:6]
+        ),
+    )
+
+
+def _prerender_home(overview):
+    """Ports pages.js's home() to Python and injects the result into
+    site/index.html's <main id="app">, replacing the empty loading-skeleton
+    placeholder that was there before.
+
+    This is the single highest-impact fix in this whole batch: a real-browser
+    trace showed the skeleton-to-real-content swap alone caused a Cumulative
+    Layout Shift of 0.54-0.58 (Google's "poor" threshold starts at 0.25) on
+    the single highest-traffic page on the site, because the footer jumped
+    ~1,437px the instant the real content replaced 3 tiny skeleton cards.
+    Real content on first paint eliminates that swap almost entirely - app.js
+    still re-renders home() moments later (same content, live ticker/chart
+    data), but onto a page that's already the right shape, not a blank one.
+
+    <canvas> chart elements are left empty (charts need JS to draw) but are
+    otherwise positioned exactly where the live version puts them, so the
+    residual shift is bounded to a canvas's own height, not the whole page.
+    """
+    meta = overview.get("metadata") or {}
+    agg = overview.get("aggregates") or {}
+    m = overview.get("market") or {}
+    conc = agg.get("concentration") or {}
+    has_clients = bool(meta.get("data_status", {}).get("active_clients"))
+    brokers = overview.get("brokers") or []
+    top = (sorted(brokers, key=lambda b: -(b.get("clients") or 0))[:12] if has_clients
+           else sorted(brokers, key=lambda b: b.get("brand") or "")[:12])
+    nifty = ((m.get("nse") or {}).get("indices") or [{}])[0]
+    breadth = (m.get("nse") or {}).get("breadth")
+    bse_delivery = m.get("bse_delivery") or []
+    delivery = bse_delivery[-1] if bse_delivery else None
+
+    html = _sample_banner_html(meta)
+    html += (
+        '<section class="pitch" style="margin-top:16px">'
+        '<h1 style="max-width:22ch">Every Indian stock broker, measured the same way.</h1>'
+        '<p class="muted" style="max-width:62ch;margin-top:12px">%d brokers tracked in depth and %s '
+        'SEBI-registered entities on file. %s</p>'
+        '<div class="row-wrap" style="margin-top:18px">'
+        '<a class="btn btn-primary" href="/brokers" data-link>Browse brokers</a>'
+        '<a class="btn" href="/compare" data-link>Compare side by side</a>%s</div></section>'
+    ) % (
+        meta.get("broker_count", 0), _full_html(overview.get("registry_count")),
+        ("Active clients, market share, investor-complaint records, regulatory registrations and real cost, "
+         "assembled from NSE, BSE and SEBI primary disclosures, not from marketing pages." if has_clients else
+         "Legal entities, SEBI registration numbers, exchange memberships and regulatory standing, taken "
+         "straight from the regulator's own register rather than from marketing pages."),
+        ('<a class="btn" href="/calculator" data-link>What will it cost me?</a>' if has_clients else
+         '<a class="btn" href="/registry" data-link>Search the SEBI register</a>'),
+    )
+
+    if has_clients:
+        tiles = (
+            _stat_tile_html(
+                "Total active clients", _count_html(agg.get("total_active_clients")),
+                '<span class="%s">%s</span> year on year' % (_cls_class(agg.get("total_yoy_pct")), _pct_html(agg.get("total_yoy_pct"))),
+                _prov_dot_html("sample" if (meta.get("sample_data") or {}).get("active_clients") else "nse"))
+            + _stat_tile_html(
+                "Top 5 brokers hold", _pct_html(conc.get("top5_pct"), sign=False),
+                "top 1 is %s &middot; top 10 is %s" % (_pct_html(conc.get("top1_pct"), sign=False), _pct_html(conc.get("top10_pct"), sign=False)))
+            + _stat_tile_html("Market concentration", "%.0f" % (agg.get("hhi") or 0),
+                               "HHI, above 1,500 is moderately concentrated")
+        )
+    else:
+        tiles = (
+            _stat_tile_html("Brokers profiled", str(meta.get("broker_count", 0)),
+                             "matched to the SEBI register", _prov_dot_html("sebi_registry"))
+            + _stat_tile_html("Entity records verified", str(meta.get("verified_count", 0)),
+                               "legal name and registration confirmed", _prov_dot_html("sebi_registry"))
+            + _stat_tile_html("Defaulter records on file", _count_html(overview.get("defaulter_count") or 0),
+                               "firms declared defaulter or expelled", _prov_dot_html("sebi_registry"))
+        )
+    tiles += _stat_tile_html("SEBI-registered on file", _count_html(overview.get("registry_count")),
+                              "%s tracked brokers matched to the register" % meta.get("verified_count", 0),
+                              _prov_dot_html("sebi_registry"))
+    html += '<div class="grid g4" style="margin-top:24px">%s</div>' % tiles
+
+    if has_clients:
+        total_series = agg.get("total_series") or []
+        html += (
+            '<div class="grid g-main" style="margin-top:16px">'
+            '<div class="card"><div class="card-head"><div>'
+            '<div class="card-title">Total active clients across tracked brokers</div>'
+            '<div class="xs faint">Monthly, %d months to %s</div></div></div>'
+            '<div class="chart-box"><canvas id="mkt-total" height="200"></canvas></div></div>'
+            '<div class="card"><div class="card-title">Share of active clients</div>'
+            '<div class="row" style="margin-top:12px;align-items:center;gap:16px">'
+            '<canvas id="mkt-share" width="168" height="168"></canvas></div>'
+            '<div class="legend" id="share-legend" style="margin-top:12px"></div></div></div>'
+        ) % (len(total_series), _month_html(total_series[-1][0] if total_series else None))
+    else:
+        html += '<div style="margin-top:16px">%s</div>' % _pending_html(
+            "Client and complaint statistics",
+            "NSE publishes member-wise active-client counts monthly, and every broker must publish its "
+            "complaint record in SEBI's Annexure-B format. Both are being brought in from those primary sources.")
+
+    table_head = (
+        '<th>#</th><th>Broker</th><th class="right">Active clients</th><th class="right">Share</th>'
+        '<th class="right">12-month</th><th>Trend</th><th class="right">Complaints /10k</th>'
+        '<th class="right">Reliability</th>'
+        if has_clients else
+        '<th>Broker</th><th>Registration</th><th>Type</th><th>Segments</th><th>Head office</th>'
+    )
+
+    def home_row(b):
+        if has_clients:
+            return (
+                '<tr><td class="rank-cell">%s</td><td><div class="bname">%s<span>%s</span> %s</div></td>'
+                '<td class="right num">%s</td><td class="right num">%s</td>'
+                '<td class="right num %s">%s</td><td><canvas class="spark" aria-hidden="true"></canvas></td>'
+                '<td class="right num">%s</td><td class="right num">%s</td></tr>'
+            ) % (
+                _full_html(b.get("rank")), _mark_html(b["id"], b["brand"]),
+                '<a href="/broker/%s/" data-link>%s</a>' % (_esc(b["id"]), _esc(b["brand"])), _broker_badge_html(b),
+                _count_html(b.get("clients")), _pct_html(b.get("share"), sign=False),
+                _cls_class(b.get("clients_yoy")), _pct_html(b.get("clients_yoy")),
+                "%.2f" % b["complaints_per_10k"] if b.get("complaints_per_10k") is not None else "&mdash;",
+                "%.1f" % b["reliability"] if b.get("reliability") is not None else "&mdash;",
+            )
+        return (
+            '<tr><td><div class="bname">%s<span>%s</span> %s</div></td>'
+            '<td class="small num">%s</td><td class="small">%s</td>'
+            '<td class="xs muted">%s</td><td class="small">%s</td></tr>'
+        ) % (
+            _mark_html(b["id"], b["brand"]), '<a href="/broker/%s/" data-link>%s</a>' % (_esc(b["id"]), _esc(b["brand"])),
+            _broker_badge_html(b), _esc(b.get("sebi_reg_no") or "&mdash;"),
+            _esc(TYPE_LABEL.get(b.get("type"), b.get("type") or "&mdash;")),
+            " &middot; ".join(_esc(SEGMENT_LABEL.get(s, s)) for s in (b.get("segments") or [])) or "&mdash;",
+            _esc(b.get("hq") or "&mdash;"),
+        )
+
+    html += (
+        '<div class="grid g-main" style="margin-top:16px"><div>'
+        '<div class="section-title"><h2>%s</h2><a class="small" href="/brokers" data-link>All %d &rarr;</a></div>'
+        '<div class="table-scroll"><table class="data"><thead><tr>%s</tr></thead>'
+        '<tbody>%s</tbody></table></div></div>'
+        '<div class="stack">%s%s<div class="card"><div class="card-title">Market snapshot</div>'
+        '<dl class="kv" style="margin-top:10px">%s%s%s%s%s</dl>'
+        '<div class="xs faint" style="margin-top:10px">%s Live from NSE and BSE at last build.</div></div>%s</div></div>'
+    ) % (
+        "Largest brokers by active clients" if has_clients else "Brokers on the SEBI register",
+        meta.get("broker_count", 0), table_head, "".join(home_row(b) for b in top),
+        _ad_slot_html(overview, "homepage rail"), affiliateBanner_html(),
+        ('<dt>NIFTY 50</dt><dd class="num">%s <span class="%s">%s</span></dd>' % (
+            _full_html(nifty.get("last")), _cls_class(nifty.get("change_pct")), _pct_html(nifty.get("change_pct")))
+         if nifty.get("last") is not None else ""),
+        ('<dt>NSE breadth</dt><dd class="num"><span class="up">%s &#9650;</span> / <span class="down">%s &#9660;</span></dd>' % (
+            _full_html(breadth.get("advances")), _full_html(breadth.get("declines")))
+         if breadth else ""),
+        ('<dt>BSE delivery</dt><dd class="num">%.2f%%</dd>' % delivery["delivery_pct"] if delivery else ""),
+        ('<dt>NSE symbols</dt><dd class="num">%s</dd>' % _full_html((m.get("universe") or {}).get("nse_symbols"))
+         if (m.get("universe") or {}).get("nse_symbols") else ""),
+        ('<dt>NSE CM turnover</dt><dd class="num">%s</dd>' % _inr_html(m["turnover"][-1]["turnover_inr"])
+         if m.get("turnover") else ""),
+        _prov_dot_html("nse"),
+        ('<div class="card"><div class="card-title">BSE delivery % &mdash; investors vs churn</div>'
+         '<div class="chart-box"><canvas id="bse-delivery" height="160"></canvas></div></div>'
+         if bse_delivery else ""),
+    )
+
+    boards = (overview.get("leaderboards") or [])[:3]
+    html += (
+        '<div class="section-title"><h2>Rankings</h2><a class="small" href="/leaderboards" data-link>All rankings &rarr;</a></div>'
+        '<div class="grid g3">%s</div>'
+    ) % "".join(_leader_card_html(bd) for bd in boards)
+
+    index_path = os.path.join(ROOT, "site", "index.html")
+    try:
+        current = open(index_path, encoding="utf-8").read()
+    except OSError:
+        return
+    new_html = re.sub(
+        r'(<main id="app" class="wrap" style="padding-top:24px;padding-bottom:24px">).*?(</main>)',
+        lambda m2: m2.group(1) + html + m2.group(2),
+        current, count=1, flags=re.S,
+    )
+    if new_html != current:
+        _write_text(index_path, new_html)
+    log("home page: prerendered into index.html, hasClients=%s" % has_clients, "ok")
 
 
 def _write_calculator_hub():

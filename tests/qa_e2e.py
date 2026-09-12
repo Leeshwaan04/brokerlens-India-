@@ -365,13 +365,17 @@ def test_published():
         check("registry entities carry a name",
               all(e.get("name") for e in reg["entities"][:200]))
 
-        # A directory literally named site/registry/ makes os.path.exists("/registry")
-        # true on the file system, which silences the SPA-fallback rewrite for
-        # the bare /registry route (the interactive search page) and turns it
-        # into a broken directory listing. This shipped once; the static entity
-        # pages must live under a sibling path (site/sebi-registry/) instead.
-        check("no site/registry/ directory shadowing the SPA /registry route",
-              not os.path.isdir(os.path.join(ROOT, "site", "registry")))
+        # site/registry/ is now a deliberate, real hybrid page (server-rendered
+        # page-one content + the same app.js/pages.js bootstrap as index.html),
+        # not the old accidental kind of shadowing this comment used to warn
+        # against: that failure mode was a static file that permanently froze
+        # the route with no hand-off to the SPA at all. The real invariant is
+        # "hands off to app.js for hydration", not "does not exist".
+        reg_page_path = os.path.join(ROOT, "site", "registry", "index.html")
+        reg_page_html = open(reg_page_path, encoding="utf-8").read() if os.path.exists(reg_page_path) else ""
+        check("site/registry/ is a real hybrid page that boots the SPA, not a dead-end static file",
+              os.path.isdir(os.path.join(ROOT, "site", "registry"))
+              and "/assets/js/app.js" in reg_page_html and "<h1" in reg_page_html)
 
         slugs = [e["slug"] for e in reg["entities"] if e.get("slug")]
         check("every registry entity has a slug", len(slugs) == len(reg["entities"]))
@@ -393,11 +397,15 @@ def test_published():
             check("static entity page loads no app bundle (must be readable with zero JS)",
                   "/assets/js/app.js" not in html)
 
-    # Category hub pages (type/segment/city). Same collision class as the
-    # registry pages: site/brokers/ would shadow the SPA's own /brokers
-    # directory route, so these must live under a sibling prefix instead.
-    check("no site/brokers/ directory shadowing the SPA /brokers route",
-          not os.path.isdir(os.path.join(ROOT, "site", "brokers")))
+    # site/brokers/ is now a deliberate real hybrid page for the same reason
+    # site/registry/ is above - checked the same way, not for absence.
+    brokers_page_path = os.path.join(ROOT, "site", "brokers", "index.html")
+    brokers_page_html = open(brokers_page_path, encoding="utf-8").read() if os.path.exists(brokers_page_path) else ""
+    check("site/brokers/ is a real hybrid page that boots the SPA, not a dead-end static file",
+          os.path.isdir(os.path.join(ROOT, "site", "brokers"))
+          and "/assets/js/app.js" in brokers_page_html and "<h1" in brokers_page_html)
+    # Category hub pages (type/segment/city) live under a sibling prefix,
+    # brokers-by/, distinct from the /brokers hybrid page above.
     hub_dir = os.path.join(ROOT, "site", "brokers-by")
     check("brokers-by/ hub pages exist on disk", os.path.isdir(hub_dir))
     if os.path.isdir(hub_dir):
@@ -562,13 +570,16 @@ def test_published():
         check("report loads no app bundle (must be readable with zero JS)",
               "/assets/js/app.js" not in report_html)
 
-    # Static /calculators/:slug pages. /calculator (singular) is a real SPA
-    # route already, so these must never collide with it on disk - checked
-    # explicitly since that exact collision class (site/registry/ shadowing
-    # the SPA's own /registry route) has shipped once before.
+    # site/calculator/ (singular - the interactive brokerage-cost tool) is now
+    # a deliberate real hybrid page too, same invariant as site/registry/ and
+    # site/brokers/ above. site/calculators/ (plural, checked below) is the
+    # unrelated set of static informational calculator pages.
+    calc_tool_path = os.path.join(ROOT, "site", "calculator", "index.html")
+    calc_tool_html = open(calc_tool_path, encoding="utf-8").read() if os.path.exists(calc_tool_path) else ""
+    check("site/calculator/ is a real hybrid page that boots the SPA, not a dead-end static file",
+          os.path.isdir(os.path.join(ROOT, "site", "calculator"))
+          and "/assets/js/app.js" in calc_tool_html and "<h1" in calc_tool_html)
     calc_dir = os.path.join(ROOT, "site", "calculators")
-    check("no site/calculator/ directory shadowing the SPA /calculator route",
-          not os.path.isdir(os.path.join(ROOT, "site", "calculator")))
     check("site/calculators/ static pages exist on disk", os.path.isdir(calc_dir))
     if os.path.isdir(calc_dir):
         calc_slugs = sorted(d for d in os.listdir(calc_dir) if os.path.isdir(os.path.join(calc_dir, d)))
@@ -959,6 +970,40 @@ def test_published():
     src = load("site/data/sources.json")
     check("sources.json lists every configured source",
           len(src["sources"]) == len((load("config/sources.json") or {}).get("sources", {})))
+
+    # /methodology and /sources have no interactivity in the JS version at
+    # all (no onMount) - unlike the hybrid pages above, these are plain
+    # static pages, same contract as a stock/fund/broker page: readable with
+    # zero JS, no app.js hydration target.
+    for route, must_contain in (("methodology", "Methodology"), ("sources", "Sources")):
+        p = os.path.join(ROOT, "site", route, "index.html")
+        html = open(p, encoding="utf-8").read() if os.path.exists(p) else ""
+        check("site/%s/ exists and is readable with zero JS" % route,
+              os.path.exists(p) and "/assets/js/app.js" not in html and must_contain in html)
+        check("site/%s/ has no leaked 'None'" % route, ">None<" not in html and "None</p>" not in html)
+
+    # /compare, /leaderboards, /algo: hybrid pages like /brokers, /registry,
+    # /calculator above - real content for first paint, app.js for hydration.
+    for route, must_contain in (
+        ("compare", "Compare brokers"), ("leaderboards", "Rankings"), ("algo", "Algo trading platforms"),
+    ):
+        p = os.path.join(ROOT, "site", route, "index.html")
+        html = open(p, encoding="utf-8").read() if os.path.exists(p) else ""
+        check("site/%s/ is a real hybrid page that boots the SPA" % route,
+              os.path.exists(p) and "/assets/js/app.js" in html and must_contain in html)
+        check("site/%s/ has no leaked 'None'" % route, ">None<" not in html and "None</p>" not in html)
+
+    # The homepage's own CLS fix: <main id="app"> must carry real prerendered
+    # content, not the empty 3-card loading skeleton that caused a measured
+    # 0.54-0.58 Cumulative Layout Shift (the footer jumping ~1,437px the
+    # instant real content replaced it) - see _prerender_home()'s docstring.
+    home_html = open(os.path.join(ROOT, "site", "index.html"), encoding="utf-8").read()
+    app_main = re.search(r'<main id="app"[^>]*>(.*?)</main>', home_html, re.S)
+    check("homepage <main id=\"app\"> carries real prerendered content, not the loading skeleton",
+          bool(app_main) and "Every Indian stock broker" in app_main.group(1)
+          and "card skeleton" not in app_main.group(1))
+    check("homepage prerendered content has no leaked 'None'",
+          ">None<" not in (app_main.group(1) if app_main else "") and "None</p>" not in (app_main.group(1) if app_main else ""))
 
 
 def test_ticker():
