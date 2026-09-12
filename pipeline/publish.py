@@ -788,6 +788,9 @@ _REGISTRY_PAGE_FOOT = """</main>
   <p class="small muted" style="max-width:70ch">%(source_note)s</p>
   <p class="small"><a href="/registry">Search the full SEBI registry →</a> ·
   <a href="/brokers">Brokers tracked in depth →</a> ·
+  <a href="/brokers-by/type/">Brokers by type →</a> ·
+  <a href="/brokers-by/segment/">Brokers by segment →</a> ·
+  <a href="/brokers-by/city/">Brokers by city →</a> ·
   <a href="/stocks/">Browse stocks A-Z →</a> ·
   <a href="/funds-by/">Browse mutual funds by AMC →</a> ·
   <a href="/etfs/">Browse ETFs →</a> · <a href="/">BrokerLens home →</a></p>
@@ -934,6 +937,16 @@ TYPE_LABEL = {"discount": "Discount", "full_service": "Full service", "bank_back
 SEGMENT_LABEL = {
     "equity_cash": "Equity delivery", "equity_fno": "Equity F&O",
     "currency": "Currency", "commodity": "Commodity",
+}
+BROKER_HUB_DIM_NOUN = {
+    "type": "Stock brokers by type",
+    "segment": "Brokers by registered segment",
+    "city": "Stock brokers by head-office city",
+}
+BROKER_HUB_DIM_INTRO = {
+    "type": "Every broker type BrokerLens tracks: bank-backed, discount and full-service.",
+    "segment": "Every trading segment BrokerLens tracks broker registrations for: equity cash, equity F&O, currency and commodity.",
+    "city": "Every head-office city with a BrokerLens-tracked broker.",
 }
 
 
@@ -1178,12 +1191,21 @@ def _write_broker_hub_pages(built):
             for b in rows_sorted
         )
 
+        crumb_html, crumb_jsonld = _breadcrumb([
+            ("BrokerLens", "/"), (BROKER_HUB_DIM_NOUN[dim], "/brokers-by/%s/" % dim), (label, None),
+        ])
         jsonld = {
-            "@context": "https://schema.org", "@type": "ItemList", "name": h1, "url": canonical,
-            "itemListElement": [
-                {"@type": "ListItem", "position": i + 1, "url": "%s/broker/%s/" % (SITE_URL, b["id"]),
-                 "name": b["profile"].get("brand") or b["id"]}
-                for i, b in enumerate(rows_sorted)
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "ItemList", "name": h1, "url": canonical,
+                    "itemListElement": [
+                        {"@type": "ListItem", "position": i + 1, "url": "%s/broker/%s/" % (SITE_URL, b["id"]),
+                         "name": b["profile"].get("brand") or b["id"]}
+                        for i, b in enumerate(rows_sorted)
+                    ],
+                },
+                crumb_jsonld,
             ],
         }
 
@@ -1192,7 +1214,8 @@ def _write_broker_hub_pages(built):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         body += (
-            '<h1 style="margin-top:0">%s</h1>' % _esc(h1)
+            crumb_html
+            + '<h1 style="margin-top:0">%s</h1>' % _esc(h1)
             + '<p class="muted" style="max-width:70ch">%d broker%s tracked in depth on BrokerLens match this. '
               'Client, complaint and cost figures on each profile follow the same production-mode rules as the '
               'rest of the site: shown only once traced to a primary source.</p>'
@@ -1209,13 +1232,77 @@ def _write_broker_hub_pages(built):
         _write_text(os.path.join(dest_dir, "index.html"), body)
         written += 1
 
+    # Every leaf page above lives under /brokers-by/<dim>/<slug>/, but nothing
+    # ever wrote /brokers-by/<dim>/ itself - that bare path has no static file
+    # on disk, so the SPA catch-all rewrite quietly serves the homepage there
+    # instead, which Search Console flags as a soft 404 (real symptom: GSC
+    # inspection of /brokers-by/type came back "URL is not available to
+    # Google - Soft 404"). Writing a real index page per dimension gives that
+    # URL genuine, distinct content and a place for the leaf pages to link
+    # back to.
+    index_written = 0
+    for dim in ("type", "segment", "city"):
+        items = sorted(
+            (
+                (slugify(key.replace("_", "-")), label, len(rows))
+                for d, key, label, rows in groups
+                if d == dim and slugify(key.replace("_", "-"))
+            ),
+            key=lambda t: (-t[2], t[1]),
+        )
+        if not items:
+            continue
+        canonical = "%s/brokers-by/%s/" % (SITE_URL, dim)
+        title = "%s | BrokerLens" % BROKER_HUB_DIM_NOUN[dim]
+        description = _esc("%s %d group%s tracked on BrokerLens." % (
+            BROKER_HUB_DIM_INTRO[dim], len(items), "" if len(items) == 1 else "s"))[:300]
+        crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), (BROKER_HUB_DIM_NOUN[dim], None)])
+        jsonld = {
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "ItemList", "name": BROKER_HUB_DIM_NOUN[dim], "url": canonical,
+                    "itemListElement": [
+                        {"@type": "ListItem", "position": i + 1,
+                         "url": "%s/brokers-by/%s/%s/" % (SITE_URL, dim, slug), "name": label}
+                        for i, (slug, label, _count) in enumerate(items)
+                    ],
+                },
+                crumb_jsonld,
+            ],
+        }
+        list_html = "".join(
+            '<div class="mega-seg"><div class="mega-seg-head"><a href="/brokers-by/%s/%s/">%s</a></div>'
+            '<div class="xs faint" style="margin-top:2px">%d broker%s</div></div>'
+            % (dim, slug, _esc(label), count, "" if count == 1 else "s")
+            for slug, label, count in items
+        )
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            crumb_html
+            + '<h1 style="margin-top:0">%s</h1>' % _esc(BROKER_HUB_DIM_NOUN[dim])
+            + '<p class="muted" style="max-width:70ch">%s</p>' % _esc(BROKER_HUB_DIM_INTRO[dim])
+            + '<div class="grid g3" style="margin-top:16px">' + list_html + '</div>'
+            + '<p class="xs faint" style="margin-top:16px">'
+              '<a href="/brokers">Full broker directory (search and filter) &rarr;</a></p>'
+        )
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page groups the brokers BrokerLens tracks in depth by type, segment or head-office city.")}
+        dest_dir = os.path.join(ROOT, "site", "brokers-by", dim)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        index_written += 1
+
     pruned = 0
     hub_base = os.path.join(ROOT, "site", "brokers-by")
     for dim in ("type", "segment", "city"):
         keep = {slugify(key.replace("_", "-")) for d, key, _, _ in groups if d == dim}
         pruned += _prune_stale_dirs(os.path.join(hub_base, dim), keep)
-    log("broker hub pages: %d written (type/segment/city)%s" % (
-        written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
+    log("broker hub pages: %d written (type/segment/city), %d dimension index pages%s" % (
+        written, index_written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
     return groups
 
 
@@ -3277,6 +3364,14 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         if slug:
             body += ("<url><loc>%s/brokers-by/%s/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
                      % (SITE_URL, dim, slug, today))
+    # The dimension index itself (e.g. /brokers-by/type/) is a real static
+    # page too (see _write_broker_hub_pages) - only emitted when that
+    # dimension actually has at least one group, matching what gets written.
+    hub_dims_present = {d for d, _, _, _ in (hub_groups or [])}
+    for dim in ("type", "segment", "city"):
+        if dim in hub_dims_present:
+            body += ("<url><loc>%s/brokers-by/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
+                     % (SITE_URL, dim, today))
     # A company's own listing facts (ISIN, listing date, face value) almost
     # never change, so these get the lowest changefreq of anything published.
     for c in (companies or []):
@@ -3381,6 +3476,9 @@ def _write_search_index(built, reg_rows, hub_groups, companies, indices, etfs, f
         slug = slugify(key.replace("_", "-"))
         if slug:
             rows.append([label, "/brokers-by/%s/%s/" % (dim, slug), "hub", ""])
+
+    for dim in {d for d, _, _, _ in (hub_groups or [])}:
+        rows.append([BROKER_HUB_DIM_NOUN[dim], "/brokers-by/%s/" % dim, "hub", ""])
 
     for c in (companies or []):
         symbol = (c.get("symbol") or "").strip()
