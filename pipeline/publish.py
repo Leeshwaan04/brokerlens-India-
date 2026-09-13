@@ -249,6 +249,7 @@ def build():
     bse_d = ingest.get("bse") or {}
     sebi_d = ingest.get("sebi") or {}
     crypto_coins = (ingest.get("crypto") or {}).get("coins") or []
+    ipo_records = _ipo_merge(nse_d.get("ipo") or {})
     amfi_d = ingest.get("amfi") or {}
 
     clients_raw = read_json(os.path.join(MANUAL, "active_clients.json"), {}) or {}
@@ -534,10 +535,13 @@ def build():
     _write_etf_directory(etf_universe)
     crypto_slugs = _write_crypto_pages(crypto_coins)
     _write_crypto_hub(crypto_coins)
+    _write_ipo_pages(ipo_records)
+    _write_ipo_hub(ipo_records)
+    _write_ipo_archive(ipo_records)
     _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
-                    fund_slugs, report_slugs, calc_slugs, stock_letters, amc_slugs, crypto_slugs)
+                    fund_slugs, report_slugs, calc_slugs, stock_letters, amc_slugs, crypto_slugs, ipo_records)
     _write_search_index(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
-                         fund_slugs, report_slugs, amc_slugs, crypto_coins)
+                         fund_slugs, report_slugs, amc_slugs, crypto_coins, ipo_records)
     _write_feed(built, aggregates)
     build_ticker()
     build_crypto_ticker()
@@ -895,6 +899,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
     <a href="/calculators/">Calculators</a>
     <a href="/registry">SEBI registry</a>
     <a href="/algo">Algo platforms</a>
+    <a href="/ipo/">IPO</a>
     <a href="/reports/state-of-indian-broking-2026/">Reports</a>
     <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
   </nav>
@@ -940,7 +945,7 @@ _REGISTRY_PAGE_FOOT = """</main>
   <a href="/brokers-by/city/">Brokers by city →</a> ·
   <a href="/stocks/">Browse stocks A-Z →</a> ·
   <a href="/funds-by/">Browse mutual funds by AMC →</a> ·
-  <a href="/etfs/">Browse ETFs →</a> · <a href="/">BrokerLens home →</a></p>
+  <a href="/etfs/">Browse ETFs →</a> · <a href="/ipo/">IPO tracker →</a> · <a href="/">BrokerLens home →</a></p>
 </div></footer>
 <script type="module" src="/assets/js/nav-widgets.js"></script>
 <script type="module" src="/assets/js/search.js"></script>
@@ -1021,6 +1026,7 @@ _APP_SHELL_HEAD = """<!doctype html>
       <a href="/calculators/">Calculators</a>
       <a href="/registry" data-link>SEBI registry</a>
       <a href="/algo" data-link>Algo platforms</a>
+      <a href="/ipo/">IPO</a>
       <a href="/reports/state-of-indian-broking-2026/">Reports</a>
       <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
     </nav>
@@ -1088,6 +1094,7 @@ _APP_SHELL_FOOT = """</main>
           <li><a href="/calculator" data-link>Cost calculator</a></li>
           <li><a href="/registry" data-link>SEBI registry</a></li>
           <li><a href="/algo" data-link>Algo platforms</a></li>
+          <li><a href="/ipo/">IPO tracker</a></li>
         </ul>
       </div>
       <div>
@@ -3700,6 +3707,345 @@ _CRYPTO_HUB_FAQS = [
 ]
 
 
+_IPO_SEC_TYPES = {"EQ", "SME"}  # mainboard + SME - real stock IPOs, not the
+# debt/rights/other public-issue codes that flow through the same NSE
+# tracking system (see pipeline/sources/nse.py's ipo_past() docstring).
+
+
+def _ipo_long_date(iso_date):
+    """'2026-09-11' -> '11 September 2026'. pipeline/sources/nse.py's
+    _ipo_date() normalises every IPO date to ISO (needed so _ipo_merge()'s
+    sort-by-date below is a correct lexicographic sort), which is a
+    different input shape than _long_date() above expects (NSE's own raw
+    'DD-MON-YYYY') - a separate formatter rather than reusing that one."""
+    if not iso_date:
+        return None
+    try:
+        return datetime.strptime(iso_date, "%Y-%m-%d").strftime("%-d %B %Y")
+    except ValueError:
+        return iso_date
+
+
+def _ipo_merge(ipo_data):
+    """Merge NSE's three separately-shaped IPO feeds into one record per
+    symbol, scoped to genuine equity IPOs.
+
+    current/upcoming are already IPO-scoped by NSE itself (fetched via its
+    own category=ipo / ipo-current-issue endpoints) and carry no
+    security_type field at all, so they're trusted as-is; past is a broader
+    "all public issues" historical log that does carry security_type, so
+    that's where non-IPO types (debt, rights, ...) get filtered out.
+
+    Priority when a symbol appears in more than one feed: past (real
+    listing/closing facts) overrides current (real subscription data,
+    bidding open now) overrides upcoming (forthcoming - price band and
+    dates only, no bidding activity yet to have any subscription figures).
+    """
+    by_symbol = {}
+
+    for r in ipo_data.get("upcoming") or []:
+        by_symbol[r["symbol"]] = {
+            "symbol": r["symbol"], "company": r.get("company"),
+            "price_band": r.get("price_band"), "issue_size_shares": r.get("issue_size_shares"),
+            "bidding_start": r.get("bidding_start"), "bidding_end": r.get("bidding_end"),
+            "status": "Forthcoming" if r.get("status") == "Forthcoming" else "Active",
+            "security_type": None,
+        }
+
+    for r in ipo_data.get("current") or []:
+        row = by_symbol.setdefault(r["symbol"], {"symbol": r["symbol"], "security_type": None})
+        row.update({
+            "company": r.get("company") or row.get("company"),
+            "price_band": r.get("price_band") or row.get("price_band"),
+            "issue_size_shares": r.get("issue_size_shares") or row.get("issue_size_shares"),
+            "bidding_start": r.get("bidding_start") or row.get("bidding_start"),
+            "bidding_end": r.get("bidding_end") or row.get("bidding_end"),
+            "shares_offered": r.get("shares_offered"),
+            "shares_bid": r.get("shares_bid"),
+            "times_subscribed": r.get("times_subscribed"),
+            "status": "Active",
+        })
+
+    for r in ipo_data.get("past") or []:
+        sec_type = r.get("security_type")
+        if sec_type not in _IPO_SEC_TYPES:
+            continue
+        row = by_symbol.setdefault(r["symbol"], {"symbol": r["symbol"]})
+        row.update({
+            "company": r.get("company") or row.get("company"),
+            "price_band": r.get("price_band") or row.get("price_band"),
+            "issue_price": r.get("issue_price"),
+            "security_type": sec_type,
+            "bidding_start": r.get("bidding_start") or row.get("bidding_start"),
+            "bidding_end": r.get("bidding_end") or row.get("bidding_end"),
+            "listing_date": r.get("listing_date"),
+            "status": "Listed" if r.get("listing_date") else "Closed",
+        })
+
+    # A symbol seen only via current/upcoming (never in past) has no
+    # security_type at all - those two feeds are already IPO-scoped by NSE,
+    # so that's fine; a symbol seen only via past that isn't EQ/SME was
+    # already skipped above and never created a row.
+    return sorted(
+        by_symbol.values(),
+        key=lambda r: r.get("listing_date") or r.get("bidding_start") or "",
+        reverse=True,
+    )
+
+
+def _ipo_status_badge(status):
+    cls = {"Active": "badge-up", "Forthcoming": "badge-warn", "Listed": "badge-verified"}.get(status, "")
+    return '<span class="badge %s">%s</span>' % (cls, _esc(status)) if cls else _esc(status or "")
+
+
+def _write_ipo_pages(records):
+    """One static page per IPO (/ipo/:symbol/) - same "readable with zero
+    JS, refreshed each publish" contract as a stock/fund/crypto page. No
+    live-during-the-bidding-window ticker: subscription figures are as of
+    the last site update, stated as such, same as every other periodically-
+    refreshed fact on this site."""
+    written = 0
+    for r in records:
+        symbol, company = r["symbol"], r.get("company") or r["symbol"]
+        slug = symbol.lower()
+        canonical = "%s/ipo/%s/" % (SITE_URL, slug)
+        title = "%s IPO: Price Band, Dates and Subscription | BrokerLens" % _esc(company)
+        description = _esc(
+            "%s IPO: price band, issue size, bidding dates%s, from NSE's own public-issue disclosures." % (
+                company, ", subscription and listing status" if r.get("status") != "Forthcoming" else "")
+        )[:300]
+
+        facts = [
+            ("Status", _ipo_status_badge(r.get("status"))),
+            ("Security type", {"EQ": "Mainboard", "SME": "SME"}.get(r.get("security_type"), "Not yet disclosed")),
+            ("Price band", _esc(r.get("price_band")) if r.get("price_band") else "Not yet disclosed"),
+            ("Final issue price", ("Rs %s" % r["issue_price"]) if r.get("issue_price") else "Not yet disclosed"),
+            ("Issue size", ("%s shares" % format(int(r["issue_size_shares"]), ","))
+             if r.get("issue_size_shares") else "Not disclosed"),
+            ("Bidding opens", _ipo_long_date(r["bidding_start"]) if r.get("bidding_start") else "Not yet announced"),
+            ("Bidding closes", _ipo_long_date(r["bidding_end"]) if r.get("bidding_end") else "Not yet announced"),
+            ("Listing date", _ipo_long_date(r["listing_date"]) if r.get("listing_date") else "Not yet listed"),
+        ]
+        if r.get("times_subscribed") is not None:
+            facts.append(("Subscribed", "%.2fx (%s of %s shares bid)" % (
+                r["times_subscribed"], _full_html(r.get("shares_bid")), _full_html(r.get("shares_offered")))))
+        facts_html = "".join(
+            '<div class="mega-seg"><div class="mega-seg-label">%s</div><div style="margin-top:2px">%s</div></div>'
+            % (label, value) for label, value in facts
+        )
+
+        faqs = [
+            ("What is the price band for the %s IPO?" % company,
+             ("The %s IPO price band is %s per share." % (company, r["price_band"])) if r.get("price_band")
+             else "The price band has not been announced yet."),
+            ("When does the %s IPO open and close?" % company,
+             ("Bidding opens %s and closes %s." % (_ipo_long_date(r["bidding_start"]), _ipo_long_date(r["bidding_end"])))
+             if r.get("bidding_start") and r.get("bidding_end") else "Bidding dates have not been announced yet."),
+            ("Is the %s IPO a mainboard or SME issue?" % company,
+             {"EQ": "%s is a mainboard IPO, listing on NSE's main board." % company,
+              "SME": "%s is an SME IPO, listing on NSE Emerge." % company}.get(
+                 r.get("security_type"), "The listing platform has not been confirmed yet.")),
+            ("When did the %s IPO list?" % company,
+             ("%s listed on %s." % (company, _ipo_long_date(r["listing_date"]))) if r.get("listing_date")
+             else "This IPO has not listed yet."),
+            ("Does this page show the grey market premium (GMP) for %s?" % company,
+             "No. GMP is an unregulated, off-exchange estimate BrokerLens does not publish - see "
+             "methodology. This page shows only NSE's own disclosed facts and, once bidding opens, "
+             "NSE's own published subscription figures."),
+            ("Is investing in the %s IPO recommended by BrokerLens?" % company,
+             "No. BrokerLens does not recommend any IPO, stock or broker. This page states public facts "
+             "only; it is not investment advice."),
+        ]
+        faq_html = "".join(
+            '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+            for q, a in faqs
+        )
+        crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("IPO", "/ipo/"), (company, None)])
+        jsonld = {
+            "@context": "https://schema.org",
+            "@graph": [
+                {"@type": "FAQPage", "mainEntity": [
+                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in faqs
+                ]},
+                crumb_jsonld,
+            ],
+        }
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            crumb_html
+            + '<h1 style="margin-top:0">%s IPO <span class="muted">(%s)</span></h1>' % (_esc(company), _esc(symbol))
+            + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
+            + '<p class="xs faint" style="margin-top:16px">Facts are NSE\'s own public-issue disclosures, '
+              'refreshed periodically. Not investment advice; BrokerLens does not publish grey market premium '
+              '(GMP) or recommend any IPO.</p>'
+            + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
+            + '<div style="max-width:68ch">' + faq_html + '</div>'
+        )
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page's facts are NSE's own public-issue disclosures (price band, dates, subscription "
+            "and listing status).")}
+
+        dest_dir = os.path.join(ROOT, "site", "ipo", slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "ipo"), {r["symbol"].lower() for r in records})
+    log("IPO pages: %d written%s" % (written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
+
+
+def _ipo_row_html(r):
+    company = r.get("company") or r["symbol"]
+    detail = (r.get("price_band") or "") if r.get("status") != "Listed" else (
+        ("Rs %s" % r["issue_price"]) if r.get("issue_price") else (r.get("price_band") or ""))
+    date_label = {"Listed": "Listed", "Active": "Closes", "Forthcoming": "Opens", "Closed": "Closed"}.get(
+        r.get("status"), "")
+    date_val = {"Listed": r.get("listing_date"), "Active": r.get("bidding_end"),
+                "Forthcoming": r.get("bidding_start"), "Closed": r.get("bidding_end")}.get(r.get("status"))
+    sub = ("%.2fx" % r["times_subscribed"]) if r.get("times_subscribed") is not None else "—"
+    return (
+        '<tr><td><a href="/ipo/%s/">%s</a> <span class="xs faint">%s</span></td>'
+        '<td>%s</td><td class="right num">%s</td>'
+        '<td class="right">%s %s</td><td class="right num">%s</td></tr>'
+    ) % (
+        _esc(r["symbol"].lower()), _esc(company), _esc(r["symbol"]),
+        _ipo_status_badge(r.get("status")), _esc(detail),
+        date_label, _ipo_long_date(date_val) if date_val else "—", sub,
+    )
+
+
+def _write_ipo_hub(records):
+    """/ipo/ - currently open (with real subscription data), forthcoming,
+    and recently listed, each linking through to the full per-IPO page.
+    Deliberately not a GMP tracker - see the FAQ and per-page disclosure."""
+    active = [r for r in records if r.get("status") == "Active"]
+    forthcoming = [r for r in records if r.get("status") == "Forthcoming"]
+    recent = [r for r in records if r.get("status") in ("Listed", "Closed")][:30]
+
+    canonical = "%s/ipo/" % SITE_URL
+    title = "IPO Tracker: Live Subscription, Price Band and Listing Dates | BrokerLens"
+    description = ("%d IPOs currently open, %d opening soon, tracked from NSE's own public-issue "
+                    "disclosures - price band, dates, real subscription figures. No grey market "
+                    "premium." % (len(active), len(forthcoming)))[:300]
+
+    def table(rows, empty_msg):
+        if not rows:
+            return '<p class="small faint">%s</p>' % empty_msg
+        return ('<div class="table-scroll"><table class="data"><thead><tr>'
+                '<th>Company</th><th>Status</th><th class="right">Price</th>'
+                '<th class="right">Date</th><th class="right">Subscribed</th></tr></thead><tbody>'
+                + "".join(_ipo_row_html(r) for r in rows) + "</tbody></table></div>")
+
+    _ipo_faqs = [
+        ("Does BrokerLens show IPO grey market premium (GMP)?",
+         "No. GMP is an unregulated, off-exchange estimate with no exchange oversight - BrokerLens "
+         "publishes only NSE's own disclosed facts: price band, dates, and, once bidding opens, NSE's "
+         "own published subscription figures."),
+        ("What counts as an IPO on this page?",
+         "NSE mainboard and SME equity IPOs only. Debt issues, rights issues and other public-issue "
+         "types that NSE tracks separately are not included here."),
+        ("How often is subscription data updated?",
+         "On each site update, from NSE's own ipo-current-issue disclosure - not a live, "
+         "second-by-second feed."),
+        ("Does BrokerLens recommend applying to any IPO?",
+         "No. This page states public facts only; it is not investment advice, and BrokerLens is not "
+         "a SEBI-registered investment adviser or research analyst."),
+    ]
+    faq_html = "".join(
+        '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+        for q, a in _ipo_faqs
+    )
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("IPO", None)])
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {"@type": "FAQPage", "mainEntity": [
+                {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                for q, a in _ipo_faqs
+            ]},
+            crumb_jsonld,
+        ],
+    }
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += (
+        crumb_html
+        + '<h1 style="margin-top:0">IPO tracker</h1>'
+        + '<p class="muted" style="max-width:70ch">Mainboard and SME IPOs, from NSE\'s own public-issue '
+          'disclosures: price band, dates and real subscription figures. No grey market premium, no '
+          'recommendations - <a href="/methodology" data-link>see why</a>.</p>'
+        + '<div class="section-title" style="margin-top:20px"><h2>Currently open</h2></div>' + table(
+            active, "No IPOs are currently open for bidding.")
+        + '<div class="section-title" style="margin-top:20px"><h2>Opening soon</h2></div>' + table(
+            forthcoming, "No forthcoming IPOs are announced right now.")
+        + '<div class="section-title" style="margin-top:20px"><h2>Recently listed</h2></div>' + table(
+            recent, "No recent listings.")
+        + '<p class="xs faint" style="margin-top:10px"><a href="/ipo/archive/">Browse the full archive '
+          '(%d IPOs since 2003) &rarr;</a></p>' % len(records)
+        + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
+        + '<div style="max-width:68ch">' + faq_html + '</div>'
+    )
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page's price bands, dates, subscription and listing facts are NSE's own public-issue "
+        "disclosures.")}
+    dest_dir = os.path.join(ROOT, "site", "ipo")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("IPO hub: written, %d active, %d forthcoming, %d recent" % (
+        len(active), len(forthcoming), len(recent)), "ok")
+
+
+def _write_ipo_archive(records):
+    """/ipo/archive/ - every IPO BrokerLens has a record of, oldest to
+    newest bidding activity descending, same "full list, not paginated
+    into obscurity" choice as /brokers (48 rows) and /registry's search
+    (1,691 entities) - at ~1,200-1,400 rows this is comparable to the
+    stock-directory letter pages, not an outlier."""
+    canonical = "%s/ipo/archive/" % SITE_URL
+    title = "Full IPO Archive Since 2003 | BrokerLens"
+    description = ("Every NSE mainboard and SME IPO BrokerLens has a record of, from NSE's own "
+                    "public-issue disclosures.")[:300]
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("IPO", "/ipo/"), ("Archive", None)])
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {"@type": "ItemList", "name": title, "url": canonical,
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i + 1, "url": "%s/ipo/%s/" % (SITE_URL, r["symbol"].lower()),
+                  "name": r.get("company") or r["symbol"]}
+                 for i, r in enumerate(records)
+             ]},
+            crumb_jsonld,
+        ],
+    }
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+    body += (
+        crumb_html
+        + '<h1 style="margin-top:0">Full IPO archive</h1>'
+        + '<p class="muted" style="max-width:70ch">%d mainboard and SME IPOs, from NSE\'s own '
+          'public-issue disclosures. <a href="/ipo/" data-link>Back to currently-open IPOs &rarr;</a></p>'
+          % len(records)
+        + '<div class="table-scroll" style="margin-top:16px"><table class="data"><thead><tr>'
+          '<th>Company</th><th>Status</th><th class="right">Price</th>'
+          '<th class="right">Date</th><th class="right">Subscribed</th></tr></thead><tbody>'
+        + "".join(_ipo_row_html(r) for r in records) + "</tbody></table></div>"
+    )
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page's facts are NSE's own public-issue disclosures.")}
+    dest_dir = os.path.join(ROOT, "site", "ipo", "archive")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("IPO archive: written, %d rows" % len(records), "ok")
+
+
 def _write_crypto_hub(coins):
     """/crypto/ - the entry point named in the nav's markets dropdown, once
     real content exists to put there instead of a coming-soon placeholder."""
@@ -4946,10 +5292,11 @@ def _write_calculator_hub():
 
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
                     fund_slugs=None, report_slugs=None, calc_slugs=None, stock_letters=None, amc_slugs=None,
-                    crypto_slugs=None):
+                    crypto_slugs=None, ipo_records=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator", "/calculators",
-            "/registry", "/algo", "/methodology", "/sources", "/stocks", "/funds-by", "/etfs", "/crypto"]
+            "/registry", "/algo", "/methodology", "/sources", "/stocks", "/funds-by", "/etfs", "/crypto",
+            "/ipo", "/ipo/archive"]
     # Trailing slash: /broker/<id>/ is now a real static directory on disk (see
     # _write_broker_pages), and every static host 301s the no-slash form to add
     # it. The sitemap should point straight at the canonical form rather than
@@ -5005,6 +5352,12 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     for slug in (crypto_slugs or []):
         body += ("<url><loc>%s/crypto/%s/</loc><lastmod>%s</lastmod><changefreq>daily</changefreq></url>"
                  % (SITE_URL, slug, today))
+    # An open/forthcoming IPO's facts (subscription, dates) move daily; once
+    # listed, its facts are as settled as a stock's own listing facts.
+    for r in (ipo_records or []):
+        freq = "daily" if r.get("status") in ("Active", "Forthcoming") else "monthly"
+        body += ("<url><loc>%s/ipo/%s/</loc><lastmod>%s</lastmod><changefreq>%s</changefreq></url>"
+                 % (SITE_URL, r["symbol"].lower(), today, freq))
     # A fund's NAV moves daily, but its own scheme facts (plans, ISINs) are
     # stable - weekly matches the other data-heavy static families.
     for slug in (fund_slugs or {}):
@@ -5051,11 +5404,13 @@ _CORE_PAGES = [
     ("Browse mutual funds by AMC", "/funds-by/", ""),
     ("Browse ETFs", "/etfs/", ""),
     ("Crypto prices and market data", "/crypto/", ""),
+    ("IPO tracker", "/ipo/", ""),
+    ("Full IPO archive", "/ipo/archive/", ""),
 ]
 
 
 def _write_search_index(built, reg_rows, hub_groups, companies, indices, etfs, fund_slugs, report_slugs,
-                         amc_slugs=None, crypto_coins=None):
+                         amc_slugs=None, crypto_coins=None, ipo_records=None):
     """One flat, client-side search index covering every page family this
     pipeline writes, not just the 48 tracked brokers the original search.json
     carried (which had no reader anywhere in the codebase - confirmed by
@@ -5115,6 +5470,10 @@ def _write_search_index(built, reg_rows, hub_groups, companies, indices, etfs, f
     for c in (crypto_coins or []):
         if c.get("name") and c.get("symbol"):
             rows.append([c["name"], "/crypto/%s/" % c["symbol"].lower(), "crypto", c["symbol"]])
+
+    for r in (ipo_records or []):
+        company = r.get("company") or r["symbol"]
+        rows.append([company + " IPO", "/ipo/%s/" % r["symbol"].lower(), "ipo", r.get("status") or ""])
 
     for c in CALCULATORS:
         rows.append([c["h1"], "/calculators/%s/" % c["slug"], "calc", ""])

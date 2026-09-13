@@ -32,6 +32,7 @@ site/registry/
 site/algo/
 site/calculator/
 site/coming-soon/
+site/ipo/
 
 # Personal data. Leads are DPDP-regulated and must never reach a repo.
 data/leads/

@@ -181,6 +181,115 @@ def fii_dii(f: Fetcher):
     return rows
 
 
+def _ipo_date(raw):
+    """NSE spells IPO dates as '11-Sep-2026' on one endpoint and
+    '08-SEP-2026' on another - never intraday, so a bare ISO date is enough."""
+    if not raw or raw == "-":
+        return None
+    try:
+        return datetime.strptime(raw.strip().title(), "%d-%b-%Y").strftime("%Y-%m-%d")
+    except ValueError:
+        return None
+
+
+def _ipo_sci_num(raw):
+    """noOfSharesOffered/noOfsharesBid come as scientific-notation strings
+    ('2.1386919E7') - to_num()'s regex strips non-digit characters including
+    the 'E', which silently corrupts 21,386,919 down to 2.1386919. A plain
+    float() parse handles exponent notation correctly; to_num() is shared
+    across the whole pipeline and every other caller's inputs are plain
+    decimal strings, so fixing this here rather than there."""
+    if raw in (None, ""):
+        return None
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def ipo_current(f: Fetcher, ttl=None):
+    """Currently-open mainboard/SME IPOs, with real, exchange-published
+    subscription data (times subscribed by category) - the factual
+    alternative to grey-market-premium speculation, which BrokerLens does
+    not publish (see docs/ROADMAP.md: no tips, no advice)."""
+    data = f.get_json("%s/ipo-current-issue" % API, ttl=300 if ttl is None else ttl)
+    rows = []
+    for r in data if isinstance(data, list) else []:
+        symbol = (r.get("symbol") or "").strip().upper()
+        if not symbol:
+            continue
+        rows.append({
+            "symbol": symbol,
+            "company": r.get("companyName"),
+            "price_band": r.get("issuePrice"),
+            "issue_size_shares": to_num(r.get("issueSize")),
+            "bidding_start": _ipo_date(r.get("issueStartDate")),
+            "bidding_end": _ipo_date(r.get("issueEndDate")),
+            "category": r.get("category"),
+            "shares_offered": _ipo_sci_num(r.get("noOfSharesOffered")),
+            "shares_bid": _ipo_sci_num(r.get("noOfsharesBid")),
+            "times_subscribed": to_num(r.get("noOfTime")),
+        })
+    return rows
+
+
+def ipo_upcoming(f: Fetcher, ttl=None):
+    """Active + forthcoming IPOs (NSE's own 'status' field distinguishes
+    them) - forthcoming ones have a price band and dates but no bidding
+    activity yet, so no subscription figures exist for them at all."""
+    data = f.get_json("%s/all-upcoming-issues?category=ipo" % API, ttl=1800 if ttl is None else ttl)
+    rows = []
+    for r in data if isinstance(data, list) else []:
+        symbol = (r.get("symbol") or "").strip().upper()
+        if not symbol:
+            continue
+        rows.append({
+            "symbol": symbol,
+            "company": r.get("companyName"),
+            "price_band": r.get("issuePrice"),
+            "issue_size_shares": to_num(r.get("issueSize")),
+            "bidding_start": _ipo_date(r.get("issueStartDate")),
+            "bidding_end": _ipo_date(r.get("issueEndDate")),
+            "status": r.get("status"),
+        })
+    return rows
+
+
+def ipo_past(f: Fetcher, ttl=None):
+    """Recently closed / already-listed IPOs - final issue price and
+    listing date, once NSE has them. A blank issuePrice/listingDate ('-')
+    means NSE hasn't published that fact yet, not that it's zero."""
+    data = f.get_json("%s/public-past-issues" % API, ttl=3600 if ttl is None else ttl)
+    rows = []
+    for r in data if isinstance(data, list) else []:
+        symbol = (r.get("symbol") or "").strip().upper()
+        if not symbol:
+            continue
+        # NSE's own securityType:"SME" here covers both genuine SME equity
+        # IPOs and SME-platform debt/NCD instruments, with no field that
+        # tells them apart - confirmed live: exactly the digit-leading
+        # symbols (a real NSE convention - no genuine equity ticker starts
+        # with a digit; debt/NCD symbols encode coupon rate there, e.g.
+        # "10MWL29") have an issuePrice many times the top of their own
+        # priceRange, which cannot happen for genuine equity (the final
+        # price must fall within the disclosed band). 5 of 767 "SME" rows
+        # on the day this was checked, all matching this pattern.
+        if symbol[0].isdigit():
+            continue
+        issue_price = to_num(r.get("issuePrice")) if r.get("issuePrice") not in (None, "-") else None
+        rows.append({
+            "symbol": symbol,
+            "company": r.get("company") or r.get("companyName"),
+            "price_band": r.get("priceRange"),
+            "issue_price": issue_price,
+            "security_type": r.get("securityType"),
+            "bidding_start": _ipo_date(r.get("ipoStartDate")),
+            "bidding_end": _ipo_date(r.get("ipoEndDate")),
+            "listing_date": _ipo_date(r.get("listingDate")),
+        })
+    return rows
+
+
 def equity_universe(fa: Fetcher):
     """The full NSE-listed equity master list, not just a count.
 
@@ -471,5 +580,10 @@ def collect(broker_aliases):
         "etfs": etf_universe(fa),
         "circulars": member_circulars(f, broker_aliases),
         "turnover": cm_turnover(fa),
+        "ipo": {
+            "current": ipo_current(f),
+            "upcoming": ipo_upcoming(f),
+            "past": ipo_past(f),
+        },
     }
     return out

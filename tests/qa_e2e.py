@@ -991,6 +991,48 @@ def test_published():
     check("markets dropdown marks Crypto as Live, not Coming soon",
           '<a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>' in home_html_for_dirs)
 
+    # IPO tracker: /ipo/ hub, /ipo/archive/, and one static page per IPO,
+    # sourced from NSE's own public-issue disclosures (see
+    # pipeline/sources/nse.py's ipo_current/ipo_upcoming/ipo_past()).
+    ipo_dir = os.path.join(ROOT, "site", "ipo")
+    check("site/ipo/ directory exists", os.path.isdir(ipo_dir))
+    if os.path.isdir(ipo_dir):
+        ipo_symbol_dirs = [d for d in os.listdir(ipo_dir)
+                            if d != "archive" and os.path.isdir(os.path.join(ipo_dir, d))]
+        check("a real number of IPO pages were written, not silently pruned to zero",
+              len(ipo_symbol_dirs) > 500, "found %d" % len(ipo_symbol_dirs))
+        check("no IPO page slug starts with a digit (the debt/NCD filter)",
+              not any(d[0].isdigit() for d in ipo_symbol_dirs),
+              "found: %s" % [d for d in ipo_symbol_dirs if d[0].isdigit()][:5])
+
+    ipo_hub_path = os.path.join(ipo_dir, "index.html")
+    ipo_hub_html = open(ipo_hub_path, encoding="utf-8").read() if os.path.exists(ipo_hub_path) else ""
+    check("IPO hub exists and loads no app bundle (pure static, zero JS)",
+          os.path.exists(ipo_hub_path) and "/assets/js/app.js" not in ipo_hub_html and "<h1" in ipo_hub_html)
+    check("IPO hub explicitly disclaims grey market premium (GMP)",
+          "grey market" in ipo_hub_html.lower() or "GMP" in ipo_hub_html)
+    check("IPO hub links through to the full archive",
+          "/ipo/archive/" in ipo_hub_html)
+    check("IPO hub has no leaked 'None'", ">None<" not in ipo_hub_html and "None</p>" not in ipo_hub_html)
+
+    ipo_archive_path = os.path.join(ipo_dir, "archive", "index.html")
+    check("IPO archive page exists", os.path.exists(ipo_archive_path))
+
+    if ipo_symbol_dirs if os.path.isdir(ipo_dir) else False:
+        sample_ipo_path = os.path.join(ipo_dir, sorted(ipo_symbol_dirs)[0], "index.html")
+        sample_ipo_html = open(sample_ipo_path, encoding="utf-8").read()
+        check("an IPO page has real FAQPage and BreadcrumbList JSON-LD",
+              '"@type": "FAQPage"' in sample_ipo_html and '"@type": "BreadcrumbList"' in sample_ipo_html)
+        check("an IPO page explicitly states BrokerLens does not recommend applying",
+              "not investment advice" in sample_ipo_html.lower())
+        check("an IPO page has no leaked 'None'",
+              ">None<" not in sample_ipo_html and "None</p>" not in sample_ipo_html)
+
+    check("sitemap includes /ipo/ pages", "/ipo/" in open(os.path.join(ROOT, "site", "sitemap.xml"), encoding="utf-8").read())
+    search_rows_ipo = [r for r in all_search_rows if r[2] == "ipo"]
+    check("search index includes IPOs", len(search_rows_ipo) > 500, "found %d" % len(search_rows_ipo))
+    check("nav has an IPO link", '<a href="/ipo/">IPO</a>' in home_html_for_dirs)
+
     # Affiliate banner: a real referral link, kept out of the ranking table,
     # and never mixed with crypto content per the standing placement rule.
     check("pages.js defines a real Zerodha affiliate banner with the actual referral link",
