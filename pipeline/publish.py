@@ -20,6 +20,7 @@ import json
 import os
 import re
 import shutil
+import urllib.request
 from datetime import datetime, timezone
 
 from . import feeds, metrics
@@ -673,6 +674,7 @@ def build_ticker():
     """
     ingest = read_json(os.path.join(INGEST_PATH), {}) or {}
     built = feeds.build(ingest)
+    _carry_forward_stale_feeds(built)
 
     payload = {
         "generated_at": now_iso(),
@@ -683,6 +685,44 @@ def build_ticker():
     counts = " ".join("%s=%d" % (k, len(v.get("instruments") or [])) for k, v in built.items())
     log("ticker.json %.1f KB (%s)" % (size / 1024, counts), "ok")
     return payload
+
+
+def _carry_forward_stale_feeds(built):
+    """If this run's fetch came back with zero instruments for a feed,
+    reuse whatever the site is already live-serving for that feed instead of
+    publishing an empty ticker.
+
+    data/ (the fetched-raw cache) is gitignored and every Vercel build starts
+    from a fresh checkout, so there is no local "last successful fetch" to
+    fall back on - and MCX's top-gainers/full-watch endpoints return nothing
+    when there is no active session (a real empty result, not a bug), so
+    empty happens routinely on non-trading days. NSE/BSE rarely hit this
+    because their own upstream APIs keep returning last-session data outside
+    trading hours. Mirrors the same carry-forward the live Cloud Run stream
+    now does in server/quotes.py's Hub.seed_from_disk().
+    """
+    empty = [fid for fid, f in built.items() if not f.get("instruments")]
+    if not empty or not SITE_URL:
+        return
+    try:
+        req = urllib.request.Request(
+            "%s/data/ticker.json" % SITE_URL, headers={"User-Agent": "brokerlens-build-carryforward/1"})
+        with urllib.request.urlopen(req, timeout=6) as resp:
+            body = resp.read(2 * 1024 * 1024 + 1)
+        if len(body) > 2 * 1024 * 1024:
+            raise ValueError("live ticker.json exceeded the size cap")
+        live_feeds = (json.loads(body) or {}).get("feeds") or {}
+    except Exception as exc:
+        log("ticker.json: could not fetch live snapshot to carry forward %s: %s" % (empty, exc), "warn")
+        return
+    for fid in empty:
+        prev = live_feeds.get(fid) or {}
+        if prev.get("instruments"):
+            built[fid]["instruments"] = prev["instruments"]
+            built[fid]["as_of"] = prev.get("as_of")
+            built[fid]["note"] = "Carried forward from the last successful fetch; %s did not respond on this run." % fid
+            log("ticker.json: %s empty this run, carried forward %d instruments from the live site"
+                % (fid, len(prev["instruments"])), "warn")
 
 
 def build_crypto_ticker():
@@ -1479,62 +1519,45 @@ def _write_broker_pages(built):
     theme-aware redraws) via the same client route that already renders it for
     in-app navigation - this is progressive enhancement, not a fork to keep in
     sync by hand.
+
+    Built from the shared _APP_SHELL_HEAD/_APP_SHELL_FOOT templates (same as
+    every other hybrid page: /compare, /brokers, /leaderboards, ...), not by
+    string-replacing into a live copy of site/index.html. That used to be a
+    same-file skeleton swap, but _prerender_home() permanently bakes real
+    content into site/index.html's <main>, so once that ran, this function's
+    expected-skeleton match could never succeed again on any later build -
+    all 48 broker pages silently stopped regenerating and every one of them
+    served the homepage's title/canonical/JSON-LD to crawlers instead of its
+    own. The shared templates are immutable module-level strings, not a file
+    another writer can mutate first.
     """
-    shell = open(os.path.join(ROOT, "site", "index.html"), encoding="utf-8").read()
     written = 0
     for b in built:
         bid, brand = b["id"], b["profile"].get("brand") or b["id"]
         canonical = "%s/broker/%s/" % (SITE_URL, bid)
-        title = "%s: active clients, complaints and charges | BrokerLens" % _esc(brand)
-        description = _esc(
+        title = "%s: active clients, complaints and charges | BrokerLens" % brand
+        description = (
             "%s: active client count, market share, SEBI complaint record, regulatory registrations "
             "and cost, from primary NSE, BSE and SEBI disclosures." % brand
         )[:300]
-        jsonld = {"@context": "https://schema.org", "@type": "FinancialService", "name": brand, "url": canonical}
+        crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Brokers", "/brokers"), (brand, None)])
+        entity_jsonld = {"@type": "FinancialService", "name": brand, "url": canonical}
         if b["profile"].get("legal_name"):
-            jsonld["legalName"] = b["profile"]["legal_name"]
+            entity_jsonld["legalName"] = b["profile"]["legal_name"]
         if b["profile"].get("sebi_reg_no"):
-            jsonld["identifier"] = b["profile"]["sebi_reg_no"]
+            entity_jsonld["identifier"] = b["profile"]["sebi_reg_no"]
         if b["profile"].get("hq"):
-            jsonld["address"] = {"@type": "PostalAddress", "addressLocality": b["profile"]["hq"], "addressCountry": "IN"}
-        jsonld["areaServed"] = "IN"
+            entity_jsonld["address"] = {"@type": "PostalAddress", "addressLocality": b["profile"]["hq"], "addressCountry": "IN"}
+        entity_jsonld["areaServed"] = "IN"
+        jsonld = {"@context": "https://schema.org", "@graph": [entity_jsonld, crumb_jsonld]}
 
-        page = shell
-        page = page.replace(
-            "<title>BrokerLens: Indian stock broker statistics from NSE, BSE and SEBI</title>",
-            "<title>%s</title>" % title, 1)
-        page = page.replace(
-            'content="Compare every SEBI-registered Indian stock broker on active clients, market share, '
-            'complaint records and cost. Built from primary NSE, BSE and SEBI disclosures.">',
-            'content="%s">' % description, 1)
-        page = page.replace('<link rel="canonical" href="/">', '<link rel="canonical" href="%s">' % canonical, 1)
-        page = page.replace('<meta property="og:url" content="/">', '<meta property="og:url" content="%s">' % canonical, 1)
-        page = page.replace(
-            '<meta property="og:title" content="BrokerLens: broker statistics from primary sources">',
-            '<meta property="og:title" content="%s">' % title, 1)
-        page = page.replace(
-            '<meta property="og:description" content="Active clients, market share, SEBI complaint records '
-            'and cost, for every registered Indian stock broker.">',
-            '<meta property="og:description" content="%s">' % description, 1)
-        page = page.replace(
-            "</head>",
-            '<script type="application/ld+json">%s</script>\n</head>' % json.dumps(jsonld, ensure_ascii=False), 1)
-
-        old_main = (
-            '<main id="app" class="wrap" style="padding-top:24px;padding-bottom:24px">\n'
-            '  <div class="grid g3">\n'
-            '    <div class="card skeleton" style="height:96px"></div>\n'
-            '    <div class="card skeleton" style="height:96px"></div>\n'
-            '    <div class="card skeleton" style="height:96px"></div>\n'
-            '  </div>\n'
-            '</main>'
-        )
-        new_main = ('<main id="app" class="wrap" style="padding-top:24px;padding-bottom:24px">'
-                    + _broker_facts_html(b) + '</main>')
-        if old_main not in page:
-            log("broker pages: shell <main> markup did not match expected text for %s; skipping" % bid, "err")
-            continue
-        page = page.replace(old_main, new_main, 1)
+        page = _APP_SHELL_HEAD % {
+            "title": _esc(title), "description": _esc(description),
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        page += crumb_html
+        page += _broker_facts_html(b)
+        page += _APP_SHELL_FOOT
 
         dest_dir = os.path.join(ROOT, "site", "broker", bid)
         os.makedirs(dest_dir, exist_ok=True)

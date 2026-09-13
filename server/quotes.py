@@ -25,6 +25,7 @@ import signal
 import sys
 import threading
 import time
+import urllib.request
 from collections import deque
 from datetime import datetime, timedelta, timezone
 
@@ -163,8 +164,24 @@ class Hub:
         }
 
     def seed_from_disk(self):
-        """Start from the last published ticker.json so the first frame is complete."""
+        """Start from the last published ticker.json so the first frame is complete.
+
+        On Cloud Run the deploy image never has a site/ directory at all (see
+        .gcloudignore and the Dockerfile - this service ships only pipeline/,
+        server/ and config/), so the local read below always misses there and
+        every fresh instance used to start every feed completely empty. NSE
+        and BSE mask that in practice because their own upstream endpoints
+        keep returning last-session data outside trading hours, but MCX's
+        top-gainers/full-watch endpoints are session-scoped and return
+        genuinely nothing when there is no active session - so MCX alone sat
+        at "no live instruments" instead of showing real last-close prices.
+        Falling back to the same ticker.json Vercel already publishes over
+        HTTPS gives every feed a real last-known-good baseline on Cloud Run
+        too, matching what NSE/BSE get for free.
+        """
         disk = read_json(os.path.join(ROOT, "site", "data", "ticker.json"))
+        if not disk or not isinstance(disk.get("feeds"), dict):
+            disk = self._fetch_seed_over_http()
         if not disk or not isinstance(disk.get("feeds"), dict):
             log("stream: no ticker.json to seed from", "warn")
             return
@@ -175,6 +192,24 @@ class Hub:
             self.snapshot["generated_at"] = disk.get("generated_at")
         log("stream: seeded (%s)" % " ".join(
             "%s=%d" % (k, len(v.get("instruments") or [])) for k, v in disk["feeds"].items()), "ok")
+
+    @staticmethod
+    def _fetch_seed_over_http():
+        """Same-origin, non-secret, already-public JSON - a plain capped GET,
+        not the scraping session machinery pipeline/common.py's Session uses
+        for hostile third-party sources."""
+        url = os.environ.get("TICKER_SEED_URL", "https://www.brokerlens.in/data/ticker.json")
+        cap = 2 * 1024 * 1024   # ticker.json is documented to stay under 64KB
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "brokerlens-stream-seed/1"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                body = resp.read(cap + 1)
+            if len(body) > cap:
+                raise ValueError("seed response exceeded the %d byte cap" % cap)
+            return json.loads(body)
+        except Exception as exc:
+            log("stream: seed-over-http from %s failed: %s" % (url, exc), "warn")
+            return None
 
     # ---------------------------------------------------------- subscribers
 

@@ -335,6 +335,34 @@ def test_published():
         check("broker page has real FinancialService JSON-LD",
               '"@type": "FinancialService"' in html or '"@type":"FinancialService"' in html)
 
+        # Regression guard: _write_broker_pages() used to string-replace a
+        # skeleton <main> block straight out of a live copy of site/index.html.
+        # Once _prerender_home() started baking real content into that same
+        # file's <main>, the match silently stopped firing forever and every
+        # broker page fell back through Vercel's catch-all rewrite to serve
+        # the homepage's own <title>/canonical/JSON-LD instead of its own -
+        # invisible in a build log, only visible by diffing two live pages.
+        home_html = open(os.path.join(ROOT, "site", "index.html"), encoding="utf-8").read()
+        home_title = re.search(r"<title>([^<]*)</title>", home_html)
+        brand = brokers[0].get("brand") or sample_id
+        check("broker page <title> is its own, not the homepage's",
+              bool(re.search(r"<title>([^<]*)</title>", html))
+              and (not home_title or re.search(r"<title>([^<]*)</title>", html).group(1) != home_title.group(1))
+              and brand in re.search(r"<title>([^<]*)</title>", html).group(1))
+        check("broker page canonical points at its own /broker/<id>/ URL, not /",
+              ('/broker/%s/' % sample_id) in html
+              and re.search(r'<link rel="canonical" href="([^"]*)">', html).group(1) != "/")
+
+        if len(brokers) > 1:
+            other_id = brokers[1]["id"]
+            other_path = os.path.join(broker_dir, other_id, "index.html")
+            other_html = open(other_path, encoding="utf-8").read() if os.path.exists(other_path) else ""
+            om = re.search(r"<title>([^<]*)</title>", other_html)
+            sm = re.search(r"<title>([^<]*)</title>", html)
+            check("two different brokers' pages have two different <title>s",
+                  bool(om) and bool(sm) and om.group(1) != sm.group(1),
+                  "%s vs %s" % (sm.group(1) if sm else None, om.group(1) if om else None))
+
     # Leaderboards must actually be sorted the way they claim.
     ok = True
     for bd in ov["leaderboards"]:

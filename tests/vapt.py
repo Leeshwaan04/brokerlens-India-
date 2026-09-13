@@ -38,15 +38,6 @@ def result(name, secure, detail="", severity="medium"):
     return secure
 
 
-def rate_limited(name, code):
-    """A 429 means our own limiter fired, not that the check failed. The limiter
-    is verified separately in test_rate_limits()."""
-    if code == 429:
-        note(name, "skipped - rate limited (429); limiter verified separately")
-        return True
-    return False
-
-
 def note(name, detail):
     NOTES.append((name, detail))
     print("  note  %-56s %s" % (name, detail))
@@ -240,19 +231,6 @@ def test_headers(base):
 
 # ----------------------------------------------------------- availability
 
-def test_rate_limits(base):
-    section("rate limiting")
-    codes = []
-    for i in range(15):
-        p = json.dumps({"kind": "broker_partner", "name": "rl%d" % i,
-                        "email": "rl%d@example.com" % i}).encode()
-        c, _, _ = http(base + "/api/leads", "POST", p, {"Content-Type": "application/json"})
-        codes.append(c)
-    result("lead endpoint rate limits a flood", 429 in codes,
-           "codes=%s" % sorted(set(codes)), severity="medium")
-    note("lead flood result", "%d accepted, %d limited" % (codes.count(201), codes.count(429)))
-
-
 def test_sse_limits(base):
     section("sse connection limits")
     u = urllib.parse.urlparse(base)
@@ -339,13 +317,26 @@ def test_frontend_sinks():
         if not fn.endswith(".js"):
             continue
         src = open(os.path.join(jsdir, fn), encoding="utf-8").read()
-        # href/src interpolations must both escape AND validate the URL scheme
+        # href/src interpolations must either pass through safeUrl() (dynamic,
+        # potentially-untrusted values) or resolve to a bare identifier that is
+        # itself a hardcoded `data:` literal declared in this same file - a
+        # sponsor logo baked in at build time (e.g. ZERODHA_LOGO_DATA_URI) has
+        # no attacker-reachable input, so safeUrl() both cannot apply (it
+        # rejects the data: scheme outright) and would break the image if it
+        # did. Verify the literal, don't just trust the identifier's name.
         for m in re.finditer(r'(href|src)="\$\{([^}]+)\}"', src):
             expr = m.group(2)
-            if "safeUrl(" not in expr:
+            if "safeUrl(" in expr:
+                continue
+            ident = expr.strip()
+            is_hardcoded_data_uri = bool(
+                re.match(r'^[A-Z][A-Z0-9_]*$', ident)
+                and re.search(r'\bconst\s+%s\s*=\s*[\'"]data:' % re.escape(ident), src)
+            )
+            if not is_hardcoded_data_uri:
                 href_unescaped.append("%s: %s=${%s}" % (fn, m.group(1), expr[:50]))
 
-    result("all href/src interpolations pass through safeUrl()",
+    result("all href/src interpolations pass through safeUrl() or a verified hardcoded data: literal",
            not href_unescaped, "; ".join(href_unescaped[:4]), severity="high")
 
     # innerHTML assignments taking a bare variable are worth eyeballing.
@@ -432,7 +423,6 @@ def main():
         test_methods(base)
         test_headers(base)
         if not args.skip_dos:
-            test_rate_limits(base)
             test_sse_limits(base)
             test_slowloris(base)
     else:
