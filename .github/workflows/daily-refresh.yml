@@ -13,6 +13,11 @@ on:
     - cron: "0 21 * * *"  # 21:00 UTC = 02:30 IST - well outside market hours
   workflow_dispatch: {}
 
+# This job never checks out the repo and only fires a webhook - it needs no
+# access to anything, so say so explicitly rather than inheriting whatever
+# the repo's default token permissions happen to be.
+permissions: {}
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
