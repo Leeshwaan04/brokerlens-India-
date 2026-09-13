@@ -949,6 +949,35 @@ def test_published():
               or "not regulated by sebi" in btc_html.lower())
         check("BTC page has no crypto exchange affiliate banner on the coin page itself",
               "aff-banner" not in btc_html)  # the CTA lives on the hub, not every coin page
+        check("BTC page loads the self-hosted chart library and chart script, not a CDN",
+              "vendor/lightweight-charts" in btc_html and "crypto-chart.js" in btc_html
+              and "cdn." not in btc_html.lower() and "unpkg.com" not in btc_html)
+        check("BTC page has a chart container wired to its symbol",
+              "data-crypto-chart" in btc_html and 'data-symbol="BTC"' in btc_html)
+
+    vendor_path = os.path.join(ROOT, "site", "assets", "js", "vendor",
+                                "lightweight-charts.standalone.production.js")
+    check("lightweight-charts vendor file is self-hosted, not fetched from a CDN at runtime",
+          os.path.exists(vendor_path) and os.path.getsize(vendor_path) > 50_000)
+
+    history_dir = os.path.join(ROOT, "site", "data", "crypto-history")
+    check("crypto-history/ directory exists", os.path.isdir(history_dir))
+    if os.path.isdir(history_dir):
+        hist_files = [f for f in os.listdir(history_dir) if f.endswith(".json")]
+        # CoinGecko's free tier throttles a 28-coin sweep well before it
+        # finishes (confirmed live), so this can never assert "all 28" on a
+        # single run - each coin's history is cached for 20h, so the gaps
+        # fill in over the next few runs rather than blocking this one.
+        check("at least some coins have real price-history files, not zero",
+              len(hist_files) > 0, "found %d" % len(hist_files))
+        if hist_files:
+            sample = json.load(open(os.path.join(history_dir, hist_files[0])))
+            candles = sample.get("candles") or []
+            check("a history file has real, chronologically ordered daily candles",
+                  len(candles) > 30 and [c[0] for c in candles] == sorted(c[0] for c in candles))
+            dates = [c[0] for c in candles]
+            check("a history file has no duplicate dates (CoinGecko's partial-final-day artifact)",
+                  len(dates) == len(set(dates)))
     crypto_live_path = os.path.join(ROOT, "site", "assets", "js", "crypto-live.js")
     check("crypto-live.js exists", os.path.exists(crypto_live_path))
     if os.path.exists(crypto_live_path):

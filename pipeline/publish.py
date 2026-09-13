@@ -541,6 +541,7 @@ def build():
     _write_feed(built, aggregates)
     build_ticker()
     build_crypto_ticker()
+    build_crypto_history()
     _restamp_js_imports()
     _restamp_index_html_assets()
     return overview
@@ -749,6 +750,28 @@ def build_crypto_ticker():
     size = write_json(os.path.join(SITE_DATA, "crypto-ticker.json"), payload, compact=True)
     log("crypto-ticker.json %.1f KB (%d coins)" % (size / 1024, len(payload["coins"])), "ok")
     return payload
+
+
+def build_crypto_history():
+    """One small JSON file per coin (site/data/crypto-history/<symbol>.json),
+    up to a year of real daily closing prices for that coin's chart - a
+    separate file per symbol, fetched lazily only when that coin's own page
+    is actually viewed, the same separation-of-concerns as ticker.json vs.
+    the static pages themselves. A coin whose history fetch failed or is
+    still rate-limited this run simply has no file yet; the chart says so
+    rather than showing a guess."""
+    ingest = read_json(os.path.join(INGEST_PATH), {}) or {}
+    history = ingest.get("crypto", {}).get("history") or {}
+    dest_dir = os.path.join(SITE_DATA, "crypto-history")
+    os.makedirs(dest_dir, exist_ok=True)
+    written = 0
+    for symbol, points in history.items():
+        if not points:
+            continue
+        payload = {"symbol": symbol, "generated_at": now_iso(), "candles": points}
+        write_json(os.path.join(dest_dir, "%s.json" % symbol.lower()), payload, compact=True)
+        written += 1
+    log("crypto-history: %d coin files written" % written, "ok")
 
 
 def _write_sources(cfg, ingest, sample_flags):
@@ -3628,7 +3651,9 @@ def _write_crypto_pages(coins):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         body = body.replace("</head>", _stamp_asset_versions(
-            '<script type="module" src="/assets/js/crypto-live.js" defer></script></head>'))
+            '<script src="/assets/js/vendor/lightweight-charts.standalone.production.js"></script>'
+            '<script type="module" src="/assets/js/crypto-live.js" defer></script>'
+            '<script type="module" src="/assets/js/crypto-chart.js" defer></script></head>'))
         body += (
             crumb_html
             + '<h1 class="coin-name" style="margin-top:0">%s%s <span class="muted">(%s)</span></h1>' % (
@@ -3637,6 +3662,8 @@ def _write_crypto_pages(coins):
                 _esc(name), _esc(symbol))
             + '<div id="crypto-price" data-symbol="%s" class="card" style="margin-top:12px;max-width:360px">'
               '<div class="small faint">Loading live price...</div></div>' % _esc(symbol)
+            + '<div class="card coin-chart"><div class="card-title">Price history</div>'
+              '<div data-crypto-chart data-symbol="%s"></div></div>' % _esc(symbol)
             + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
             + '<p class="xs faint" style="margin-top:16px">Facts and reference price are aggregated from public '
               'market data, refreshed periodically. Cryptocurrency is not regulated by SEBI or any Indian '

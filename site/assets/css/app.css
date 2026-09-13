@@ -467,6 +467,8 @@ label { display: block; font-size: var(--fs-xs); font-weight: 560; color: var(--
   box-shadow: var(--shadow); transition: opacity var(--dur-fast) var(--ease); white-space: nowrap;
 }
 .chart-tip.on { opacity: 1; }
+.coin-chart { margin-top: 16px; }
+.coin-chart-canvas { width: 100%; margin-top: 10px; }
 
 /* ---------------------------------------------------------------- profile */
 

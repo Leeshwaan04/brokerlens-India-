@@ -14,7 +14,9 @@ regulatory concerns), confirmed via exchangeInfo, not an oversight.
 from __future__ import annotations
 
 import json
+import time
 import urllib.parse
+from datetime import datetime, timezone
 
 from ..common import Fetcher, log, to_num
 
@@ -132,10 +134,53 @@ def coingecko_prices(f, ttl=None):
     return out
 
 
+def coingecko_history(f, days=365, ttl=None):
+    """Up to a year of daily closing prices per coin, for the chart on each
+    coin's own page.
+
+    CoinGecko's free tier has no historical OHLC endpoint that stays at daily
+    granularity over a year (its /ohlc endpoint coarsens to ~4-day candles
+    past 30 days) - market_chart's daily-interval price series is the
+    honestly-available data at this range, so the chart is a line/area
+    series, not candlesticks. The tail of a days=365 response also carries
+    an extra, finer-grained point or two for the still-incomplete current
+    day, which would otherwise hand Lightweight Charts two rows for the same
+    date - it requires strictly one point per unique time, so that's
+    collapsed below, keeping the latest price for each date.
+
+    One call per coin against a free tier that throttles far sooner than
+    its own documented limit suggests (confirmed: even 1.5s spacing between
+    calls started drawing 429s after under 10 coins). retries=1 rather than
+    the usual 3 - once actually throttled, immediate retries just burn the
+    call budget other coins in this same run need, for no better odds. A
+    coin that misses out this run is not stuck: each URL is cached
+    individually on a 20-hour ttl, so whichever coins succeed today are
+    skipped (cache hit) tomorrow, and the ones that got 429'd get their
+    turn - the full 28 fills in over a few runs rather than never.
+    """
+    ttl = 20 * 3600 if ttl is None else ttl
+    out = {}
+    for i, (sym, cg_id) in enumerate(UNIVERSE.items()):
+        if i:
+            time.sleep(2.0)
+        url = "%s/coins/%s/market_chart?vs_currency=usd&days=%d&interval=daily" % (COINGECKO, cg_id, days)
+        data = f.get_json(url, ttl=ttl, retries=1)
+        points = (data or {}).get("prices") or []
+        if not points:
+            continue
+        by_date = {}
+        for ms, price in points:
+            date = datetime.fromtimestamp(ms / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
+            by_date[date] = round(price, 8)  # last write per date wins - the latest sample for that day
+        out[sym] = sorted(by_date.items())
+    return out
+
+
 def collect():
     f = crypto()
     prices = binance_prices(f)
     meta = coingecko_meta(f)
+    history = coingecko_history(f)
     coins = []
     for sym in UNIVERSE:
         row = {"symbol": sym}
@@ -153,4 +198,4 @@ def collect():
             log("crypto: skipping %s - missing %s" % (
                 sym, "CoinGecko metadata" if not row.get("name") else "any price"), "warn")
     coins.sort(key=lambda r: r.get("market_cap_rank") or 9999)
-    return {"coins": coins}
+    return {"coins": coins, "history": history}
