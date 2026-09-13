@@ -32,7 +32,7 @@ const ROUTES = [
 ];
 
 const TITLES = {
-  '/': 'BrokerLens: Indian stock broker statistics from NSE, BSE and SEBI',
+  '/': 'BrokerLens: Indian Stock Broker and Crypto Exchange Data',
   '/brokers': 'All Indian stock brokers, compared: BrokerLens',
   '/compare': 'Compare Indian stock brokers side by side: BrokerLens',
   '/leaderboards': 'Broker rankings by clients, complaints and cost: BrokerLens',
@@ -48,7 +48,7 @@ const TITLES = {
 /* Per-route descriptions. Without these every page inherited the homepage copy,
  * and a broker description leaked onto whatever page was visited next. */
 const DESCRIPTIONS = {
-  '/': 'Compare every SEBI-registered Indian stock broker on active clients, market share, complaint records and cost. Built from primary NSE, BSE and SEBI disclosures.',
+  '/': 'Compare Indian stock brokers and crypto exchanges on active clients, market share, complaint records and cost. Built from primary NSE, BSE, SEBI and exchange disclosures.',
   '/brokers': 'Every Indian stock broker we track, side by side: active clients, growth, complaint rate, reliability and monthly cost, from primary regulator and exchange sources.',
   '/compare': 'Put Indian stock brokers head to head on clients, complaints, regulatory standing and real cost, using regulator-sourced figures.',
   '/leaderboards': 'Indian broker rankings by active clients, growth, complaint rate, resolution rate and cost. Every board states the metric it sorts on.',
