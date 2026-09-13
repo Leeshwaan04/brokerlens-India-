@@ -1010,6 +1010,26 @@ def test_published():
               os.path.exists(p) and "/assets/js/app.js" not in html and must_contain in html)
         check("site/%s/ has no leaked 'None'" % route, ">None<" not in html and "None</p>" not in html)
 
+    # /coming-soon/us and /coming-soon/gcc: same plain-static contract as
+    # methodology/sources above. Regression guard for the same bug class
+    # _write_broker_pages() had - before this existed, these routes had no
+    # static page at all and fell through to the homepage's own title/
+    # canonical/content via Vercel's catch-all rewrite.
+    home_title_html = open(os.path.join(ROOT, "site", "index.html"), encoding="utf-8").read()
+    home_title_m = re.search(r"<title>([^<]*)</title>", home_title_html)
+    for market, must_contain in (("us", "US stock broker"), ("gcc", "GCC stock broker")):
+        p = os.path.join(ROOT, "site", "coming-soon", market, "index.html")
+        html = open(p, encoding="utf-8").read() if os.path.exists(p) else ""
+        check("site/coming-soon/%s/ exists and is readable with zero JS" % market,
+              os.path.exists(p) and "/assets/js/app.js" not in html and must_contain in html)
+        check("site/coming-soon/%s/ has no leaked 'None'" % market, ">None<" not in html and "None</p>" not in html)
+        title_m = re.search(r"<title>([^<]*)</title>", html)
+        check("coming-soon/%s <title> is its own, not the homepage's" % market,
+              bool(title_m) and (not home_title_m or title_m.group(1) != home_title_m.group(1)))
+        canon_m = re.search(r'<link rel="canonical" href="([^"]*)">', html)
+        check("coming-soon/%s canonical points at its own URL, not /" % market,
+              bool(canon_m) and canon_m.group(1).rstrip("/").endswith("/coming-soon/%s" % market))
+
     # /compare, /leaderboards, /algo: hybrid pages like /brokers, /registry,
     # /calculator above - real content for first paint, app.js for hydration.
     for route, must_contain in (

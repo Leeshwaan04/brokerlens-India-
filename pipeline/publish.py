@@ -520,6 +520,7 @@ def build():
     calc_slugs = _write_calculator_pages()
     _write_calculator_hub()
     _write_methodology_page()
+    _write_coming_soon_pages()
     _write_sources_page(sources_data)
     _write_algo_page(algo_data)
     _write_leaderboards_page(overview)
@@ -3851,6 +3852,65 @@ def _write_methodology_page():
     os.makedirs(dest_dir, exist_ok=True)
     _write_text(os.path.join(dest_dir, "index.html"), body)
     log("methodology page: written", "ok")
+
+
+# Same text app.js's TITLES/DESCRIPTIONS maps use for these two routes, so a
+# client-side navigation here from elsewhere in the SPA doesn't flash a
+# different title than what this static page already served a crawler.
+_COMING_SOON = {
+    "us": {
+        "h1": "US stock broker comparison",
+        "title": "US stock broker comparison, coming soon: BrokerLens",
+        "description": "BrokerLens is researching US stock broker data for a future comparison. Not live yet.",
+        "body": "BrokerLens is researching primary-source data for US stock brokers (SEC/FINRA disclosures, "
+                "brokerage fee schedules) before building this the same way as the Indian broker comparison: "
+                "real regulator data, not marketing copy.",
+    },
+    "gcc": {
+        "h1": "GCC stock broker comparison",
+        "title": "GCC stock broker comparison, coming soon: BrokerLens",
+        "description": "BrokerLens is researching GCC (UAE, Saudi and Gulf) stock broker data for a future "
+                        "comparison. Not live yet.",
+        "body": "BrokerLens is researching primary-source data for stock brokers in the UAE, Saudi Arabia and "
+                "the wider Gulf before building this section.",
+    },
+}
+
+
+def _write_coming_soon_pages():
+    """/coming-soon/us and /coming-soon/gcc were, until now, reachable only by
+    executing pages.js's comingSoon() client-side - a direct hit or a crawler
+    that doesn't render JS fell through Vercel's catch-all rewrite to
+    index.html and got the HOMEPAGE's title/canonical/content instead of
+    this page's own, the same class of bug _write_broker_pages() had. No
+    data dependency and no interactivity, so a plain static page (like
+    methodology/sources) is a strictly complete port of what pages.js
+    already renders - no SPA shell or hydration needed."""
+    for market, m in _COMING_SOON.items():
+        canonical = "%s/coming-soon/%s" % (SITE_URL, market)
+        crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), (m["h1"], None)])
+        jsonld = {"@context": "https://schema.org", "@graph": [
+            {"@type": "WebPage", "name": m["title"], "url": canonical, "description": m["description"]},
+            crumb_jsonld,
+        ]}
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(m["title"]), "description": _esc(m["description"]),
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += crumb_html + (
+            '<div style="max-width:60ch;margin-top:16px">'
+            '<span class="badge badge-warn">Coming soon</span>'
+            '<h1 style="margin-top:12px">%s</h1>'
+            '<p class="muted">%s</p>'
+            '<p class="small"><a href="/brokers">See the live India broker comparison instead &rarr;</a></p>'
+            '</div>'
+        ) % (_esc(m["h1"]), _esc(m["body"]))
+        body += _REGISTRY_PAGE_FOOT % {"source_note": "Nothing on this page is fabricated to fill the gap: "
+                                                        "there is no live data for this market yet."}
+        dest_dir = os.path.join(ROOT, "site", "coming-soon", market)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("coming-soon pages: %d written" % len(_COMING_SOON), "ok")
 
 
 def _status_badge_html(st):

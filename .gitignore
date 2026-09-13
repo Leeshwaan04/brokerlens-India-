@@ -31,6 +31,7 @@ site/leaderboards/
 site/registry/
 site/algo/
 site/calculator/
+site/coming-soon/
 
 # Personal data. Leads are DPDP-regulated and must never reach a repo.
 data/leads/
