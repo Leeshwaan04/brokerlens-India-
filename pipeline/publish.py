@@ -3631,7 +3631,10 @@ def _write_crypto_pages(coins):
             '<script type="module" src="/assets/js/crypto-live.js" defer></script></head>'))
         body += (
             crumb_html
-            + '<h1 style="margin-top:0">%s <span class="muted">(%s)</span></h1>' % (_esc(name), _esc(symbol))
+            + '<h1 class="coin-name" style="margin-top:0">%s%s <span class="muted">(%s)</span></h1>' % (
+                ('<img class="coin-icon" src="%s" width="28" height="28" alt="" loading="lazy" '
+                 'style="width:28px;height:28px">' % _esc(c["image"])) if c.get("image") else "",
+                _esc(name), _esc(symbol))
             + '<div id="crypto-price" data-symbol="%s" class="card" style="margin-top:12px;max-width:360px">'
               '<div class="small faint">Loading live price...</div></div>' % _esc(symbol)
             + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
@@ -3682,11 +3685,15 @@ def _write_crypto_hub(coins):
 
     rows_html = "".join(
         '<tr data-crypto-row="%s"><td class="rank-cell">%s</td>'
-        '<td><a href="/crypto/%s/">%s</a> <span class="xs faint">%s</span></td>'
+        '<td><a class="coin-name" href="/crypto/%s/">%s<span>%s</span></a> <span class="xs faint">%s</span></td>'
         '<td class="right num" data-role="price">—</td>'
-        '<td class="right num" data-role="change">—</td></tr>'
+        '<td class="right num" data-role="change">—</td>'
+        '<td class="right num faint" data-role="volume">—</td></tr>'
         % (_esc(c["symbol"]), ("#%d" % c["market_cap_rank"]) if c.get("market_cap_rank") else "—",
-           _esc(c["symbol"].lower()), _esc(c["name"]), _esc(c["symbol"]))
+           _esc(c["symbol"].lower()),
+           ('<img class="coin-icon" src="%s" width="22" height="22" alt="" loading="lazy">' % _esc(c["image"])
+            if c.get("image") else ""),
+           _esc(c["name"]), _esc(c["symbol"]))
         for c in ranked
     )
     faq_html = "".join(
@@ -3718,6 +3725,7 @@ def _write_crypto_hub(coins):
         + '<div class="grid g-main" style="margin-top:16px">'
         + '<div class="table-scroll"><table class="data"><thead><tr>'
           "<th>Rank</th><th>Coin</th><th class=\"right\">Price</th><th class=\"right\">24h</th>"
+          "<th class=\"right\">Volume (24h)</th>"
           "</tr></thead><tbody>" + rows_html + "</tbody></table></div>"
         + '<div class="stack">' + _crypto_banner_html() + _delta_banner_html() + "</div>"
         + "</div>"

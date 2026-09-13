@@ -933,6 +933,10 @@ def test_published():
               and hub_html.index("aff-banner-binance") < hub_html.index("aff-banner-delta")
               and "delta.exchange/?code=UAIYQN" in hub_html)
         check("crypto hub loads crypto-live.js", "crypto-live.js" in hub_html)
+        check("crypto hub shows a real per-coin icon, not a placeholder",
+              'class="coin-icon"' in hub_html and "coin-images.coingecko.com" in hub_html)
+        check("crypto hub has a real Volume (24h) column, not just rank/price/change",
+              "Volume (24h)" in hub_html and 'data-role="volume"' in hub_html)
     btc_path = os.path.join(crypto_dir, "btc", "index.html")
     check("a sample crypto coin page (BTC) exists", os.path.exists(btc_path))
     if os.path.exists(btc_path):

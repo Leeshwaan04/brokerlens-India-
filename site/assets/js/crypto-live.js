@@ -19,6 +19,23 @@ function fmtUsd(n) {
   return `$${n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })}`;
 }
 
+function fmtVolume(n) {
+  if (n == null) return '—';
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
+  return `$${n.toFixed(0)}`;
+}
+
+// CSP has no 'unsafe-inline' for scripts, so a coin icon's fallback on a
+// broken/rate-limited CoinGecko image has to be a real listener, not an
+// inline onerror= attribute (which a strict script-src silently drops).
+function hideBrokenIcons(root) {
+  root.querySelectorAll('img.coin-icon').forEach((img) => {
+    img.addEventListener('error', () => img.classList.add('is-broken'), { once: true });
+  });
+}
+
 async function paintOne() {
   const el = document.getElementById('crypto-price');
   if (!el) return;
@@ -50,17 +67,20 @@ async function paintList() {
       const c = bySym[row.dataset.cryptoRow];
       const priceEl = row.querySelector('[data-role="price"]');
       const chgEl = row.querySelector('[data-role="change"]');
+      const volEl = row.querySelector('[data-role="volume"]');
       if (!c) {
         if (priceEl) priceEl.textContent = '—';
         return;
       }
       if (priceEl) priceEl.textContent = fmtUsd(c.price_usd);
       if (chgEl) { chgEl.textContent = pct(c.change_pct_24h); chgEl.className = `num ${cls(c.change_pct_24h)}`; }
+      if (volEl) volEl.textContent = fmtVolume(c.volume_24h_usd);
     });
   } catch {
     /* leave the static "—" placeholders in place - never show a stale guess */
   }
 }
 
+hideBrokenIcons(document);
 paintOne();
 paintList();

@@ -418,6 +418,12 @@ table.data tbody tr:hover { background: var(--bg-hover); }
 table.data tbody tr.promoted { background: color-mix(in srgb, var(--accent-soft) 55%, transparent); }
 table.data tbody tr.promoted:hover { background: var(--accent-soft); }
 .rank-cell { color: var(--text-faint); font-family: var(--font-mono); width: 34px; }
+.coin-name { display: inline-flex; align-items: center; gap: 8px; }
+.coin-icon {
+  width: 22px; height: 22px; border-radius: 50%; flex: none; object-fit: cover;
+  background: var(--bg-sunken); vertical-align: middle;
+}
+.coin-icon.is-broken { visibility: hidden; }
 .bname { display: flex; align-items: center; gap: var(--space-2); font-weight: 560; }
 .bname a { color: var(--text); }
 
