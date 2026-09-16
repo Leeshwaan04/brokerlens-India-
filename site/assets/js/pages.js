@@ -847,8 +847,66 @@ function fmtPlan(plan) {
 
 /* =========================================================== LEADERBOARDS */
 
+function stockSlug(symbol) {
+  return String(symbol || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function fmtUsdBoard(n) {
+  if (n == null) return '—';
+  const d = n < 1 ? 6 : n < 100 ? 4 : 2;
+  return `$${n.toFixed(d)}`;
+}
+
+function marketBoardHtml(name, kind, rows, fmt, hrefOf) {
+  if (!rows.length) return '';
+  return `
+    <div class="card" style="margin-top:16px">
+      <div class="card-head"><div><h3>${esc(name)} ${provDot(kind)}</h3></div></div>
+      <div class="table-scroll"><table class="data"><tbody>
+        ${rows.map((r, i) => `<tr>
+          <td class="rank-cell">${i + 1}</td>
+          <td><a href="${safeUrl(hrefOf(r.symbol))}">${esc(r.symbol)}</a></td>
+          <td class="right num">${fmt(r.last)}</td>
+          <td class="right num ${cls(r.change_pct)}">${pct(r.change_pct)}</td>
+        </tr>`).join('')}
+      </tbody></table></div>
+    </div>`;
+}
+
+/* Real NSE and crypto market movers - never sample-gated, always real, and
+ * previously only ever rendered server-side: pages.js's own leaderboards()
+ * replaces #app's whole innerHTML on every navigation (see app.js's
+ * render()), so without this the real content the static page shipped for
+ * crawlers vanished the moment this file finished loading in a real
+ * browser, back to the old "not published yet" notice alone. */
+async function marketMoverBoards() {
+  const boards = [];
+  try {
+    const m = await (await fetch('/data/market-movers.json')).json();
+    if ((m.gainers || []).length) boards.push(marketBoardHtml("Today's NSE top gainers", 'nse', m.gainers, inr, (s) => `/stock/${stockSlug(s)}/`));
+    if ((m.losers || []).length) boards.push(marketBoardHtml("Today's NSE top losers", 'nse', m.losers, inr, (s) => `/stock/${stockSlug(s)}/`));
+    if ((m.most_active || []).length) boards.push(marketBoardHtml('Most active NSE stocks by volume', 'nse', m.most_active, inr, (s) => `/stock/${stockSlug(s)}/`));
+  } catch { /* leave the NSE boards out rather than show a stale guess */ }
+  try {
+    const t = await (await fetch('/data/crypto-ticker.json')).json();
+    const coins = (t.coins || []).filter((c) => c.price_usd != null)
+      .map((c) => ({ symbol: c.symbol, last: c.price_usd, change_pct: c.change_pct_24h, rank: c.market_cap_rank }));
+    const cryptoHref = (s) => `/crypto/${s.toLowerCase()}/`;
+    const byCap = coins.filter((c) => c.rank).sort((a, b) => a.rank - b.rank).slice(0, 10);
+    if (byCap.length) boards.push(marketBoardHtml('Top crypto by market cap', 'crypto', byCap, fmtUsdBoard, cryptoHref));
+    const byChg = coins.filter((c) => c.change_pct != null);
+    const gainers = [...byChg].sort((a, b) => b.change_pct - a.change_pct).slice(0, 10);
+    if (gainers.length) boards.push(marketBoardHtml('Top crypto 24h gainers', 'crypto', gainers, fmtUsdBoard, cryptoHref));
+    const losers = [...byChg].sort((a, b) => a.change_pct - b.change_pct).slice(0, 10);
+    if (losers.length) boards.push(marketBoardHtml('Top crypto 24h losers', 'crypto', losers, fmtUsdBoard, cryptoHref));
+  } catch { /* leave the crypto boards out rather than show a stale guess */ }
+  return boards;
+}
+
 export async function leaderboards() {
   const o = await loadOverview();
+  const marketBoards = await marketMoverBoards();
+
   onMount(() => {
     (o.leaderboards || []).filter((bd) => (bd.rows || []).length).forEach((bd, i) => {
       const c = document.getElementById(`lb-${i}`);
@@ -860,14 +918,16 @@ export async function leaderboards() {
   });
 
   return `
-  ${sampleBanner(o.metadata)}
   <h1 style="margin-top:16px">Rankings</h1>
-  <p class="muted" style="max-width:64ch">Every ranking states the metric it sorts on and where that metric comes from.
+  <p class="muted" style="max-width:64ch">Real movers from NSE and the tracked crypto universe, as of the last
+  data refresh. Every ranking states the metric it sorts on and where that metric comes from.
   We do not publish an overall "best broker" — that depends on what you trade.</p>
 
+  ${marketBoards.length ? `<div class="grid g2" style="margin-top:8px">${marketBoards.join('')}</div>` : ''}
+
   ${!(o.leaderboards || []).some((bd) => (bd.rows || []).length)
-    ? `<div style="margin-top:16px">${pending('Rankings',
-        'Every ranking here sorts on active clients, complaint records or published charges. Those come from NSE and SEBI monthly disclosures, which are being brought in from the primary sources now.')}</div>`
+    ? `<div style="margin-top:16px">${pending('Broker rankings by active clients, complaints and cost',
+        'Those sort on NSE member-wise client counts and SEBI Annexure-B complaint disclosures, which are being brought in from the primary sources now.')}</div>`
     : ''}
   ${(o.leaderboards || []).filter((bd) => (bd.rows || []).length).map((bd, i) => `
     <div class="card" style="margin-top:16px">

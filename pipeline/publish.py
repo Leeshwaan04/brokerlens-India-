@@ -524,7 +524,7 @@ def build():
     _write_coming_soon_pages()
     _write_sources_page(sources_data)
     _write_algo_page(algo_data)
-    _write_leaderboards_page(overview)
+    _write_leaderboards_page(overview, nse_d.get("live") or {}, crypto_coins)
     _write_registry_landing_page(reg_rows, overview)
     _write_compare_page(overview)
     _write_brokers_page(overview)
@@ -546,6 +546,7 @@ def build():
     build_ticker()
     build_crypto_ticker()
     build_crypto_history()
+    build_market_movers()
     _restamp_js_imports()
     _restamp_index_html_assets()
     return overview
@@ -747,7 +748,8 @@ def build_crypto_ticker():
         "coins": [
             {"symbol": c["symbol"], "price_usd": c.get("price_usd"),
              "change_pct_24h": c.get("change_pct_24h"), "high_24h": c.get("high_24h"),
-             "low_24h": c.get("low_24h"), "volume_24h_usd": c.get("volume_24h_usd")}
+             "low_24h": c.get("low_24h"), "volume_24h_usd": c.get("volume_24h_usd"),
+             "market_cap_rank": c.get("market_cap_rank")}
             for c in coins if c.get("price_usd") is not None
         ],
     }
@@ -776,6 +778,33 @@ def build_crypto_history():
         write_json(os.path.join(dest_dir, "%s.json" % symbol.lower()), payload, compact=True)
         written += 1
     log("crypto-history: %d coin files written" % written, "ok")
+
+
+def build_market_movers():
+    """site/data/market-movers.json - NSE's own gainers/losers/most-active
+    rows, the same real data _write_leaderboards_page() bakes into the
+    server-rendered /leaderboards page, published as its own small file so
+    pages.js's client-side leaderboards() can render the identical boards
+    after hydration instead of replacing them with the old broker-only
+    view. Crypto's equivalent boards need no separate file - crypto-ticker.json
+    already has every coin's price, 24h change and market-cap rank, which is
+    all client-side sorting needs."""
+    ingest = read_json(os.path.join(INGEST_PATH), {}) or {}
+    nse_live = (ingest.get("nse") or {}).get("live") or {}
+
+    def rows(key):
+        return [r for r in (nse_live.get(key) or []) if r.get("symbol") and r.get("last") is not None][:10]
+
+    payload = {
+        "generated_at": now_iso(),
+        "gainers": rows("gainers"),
+        "losers": rows("losers"),
+        "most_active": rows("quotes"),
+    }
+    size = write_json(os.path.join(SITE_DATA, "market-movers.json"), payload, compact=True)
+    log("market-movers.json %.1f KB (gainers=%d losers=%d most_active=%d)"
+        % (size / 1024, len(payload["gainers"]), len(payload["losers"]), len(payload["most_active"])), "ok")
+    return payload
 
 
 def _write_sources(cfg, ingest, sample_flags):
@@ -2334,6 +2363,14 @@ def _write_mutual_fund_pages(schemes):
 
 
 _REPORT_SLUG = "state-of-indian-broking-2026"
+# Fixed at this report's real first publish date - datePublished must not
+# change on every rebuild (it did: this used to be datetime.now() at build
+# time, so both the JSON-LD and the page's own "Published <date>" line
+# silently relabelled themselves as "published today" on every single
+# deploy). Update only if genuinely re-issuing the report under this slug;
+# ordinary data refreshes belong in dateModified below, which is meant to
+# change.
+_REPORT_PUBLISHED = "2026-09-16"
 
 
 def _write_reports(built, reg_rows, companies, indices, etfs, funds, defaulter_count):
@@ -2368,9 +2405,11 @@ def _write_reports(built, reg_rows, companies, indices, etfs, funds, defaulter_c
 
     jsonld = {
         "@context": "https://schema.org", "@type": "Article", "headline": "State of Indian Broking & Investing 2026",
-        "url": canonical, "datePublished": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "url": canonical, "datePublished": _REPORT_PUBLISHED,
+        "dateModified": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "author": {"@type": "Organization", "name": "BrokerLens", "url": SITE_URL},
-        "publisher": {"@type": "Organization", "name": "BrokerLens", "url": SITE_URL},
+        "publisher": {"@type": "Organization", "name": "BrokerLens", "url": SITE_URL,
+                      "logo": {"@type": "ImageObject", "url": "%s/apple-touch-icon.png" % SITE_URL}},
     }
 
     def stat(n, label):
@@ -2396,8 +2435,10 @@ def _write_reports(built, reg_rows, companies, indices, etfs, funds, defaulter_c
         "title": _esc(title), "description": description,
         "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
     }
+    published_dt = datetime.strptime(_REPORT_PUBLISHED, "%Y-%m-%d")
     body += (
-        '<p class="xs faint">Published %s</p>' % datetime.now(timezone.utc).strftime("%-d %B %Y")
+        '<p class="xs faint">Published %s &middot; figures last refreshed %s</p>'
+        % (published_dt.strftime("%-d %B %Y"), datetime.now(timezone.utc).strftime("%-d %B %Y"))
         + '<h1 style="margin-top:4px">State of Indian Broking &amp; Investing, 2026</h1>'
         + '<p class="muted" style="max-width:68ch">Every figure below is counted directly from SEBI, NSE and '
           'AMFI\'s own published registers, the same primary sources this pipeline pulls for every other page '
@@ -3959,16 +4000,24 @@ def _write_ipo_hub(records):
         for q, a in _ipo_faqs
     )
     crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("IPO", None)])
-    jsonld = {
-        "@context": "https://schema.org",
-        "@graph": [
-            {"@type": "FAQPage", "mainEntity": [
-                {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
-                for q, a in _ipo_faqs
-            ]},
-            crumb_jsonld,
-        ],
-    }
+    graph = [
+        {"@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+            for q, a in _ipo_faqs
+        ]},
+        crumb_jsonld,
+    ]
+    open_and_forthcoming = active + forthcoming
+    if open_and_forthcoming:
+        graph.append({
+            "@type": "ItemList", "name": "Open and forthcoming IPOs",
+            "itemListElement": [
+                {"@type": "ListItem", "position": i + 1, "name": r.get("company") or r["symbol"],
+                 "url": "%s/ipo/%s/" % (SITE_URL, r["symbol"].lower())}
+                for i, r in enumerate(open_and_forthcoming)
+            ],
+        })
+    jsonld = {"@context": "https://schema.org", "@graph": graph}
     body = _REGISTRY_PAGE_HEAD % {
         "title": _esc(title), "description": _esc(description),
         "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
@@ -4516,22 +4565,87 @@ def _pending_html(what, detail):
     ) % (_esc(what), _esc(detail))
 
 
-def _write_leaderboards_page(overview):
+def _usd_html(n):
+    """Adaptive-decimal $ formatter for a leaderboard cell - matches the
+    same rule crypto-live.js/crypto-chart.js use client-side, so a coin's
+    price reads the same number of decimals wherever it's shown."""
+    if n is None:
+        return "&mdash;"
+    d = 6 if n < 1 else 4 if n < 100 else 2
+    return "$%.*f" % (d, n)
+
+
+def _write_leaderboards_page(overview, nse_live, crypto_coins):
     """/leaderboards has no user input at all in the JS version (no onMount
     listeners, just chart draws over server data) - the hybrid shell exists
     here only so the bar charts (drawn client-side onto <canvas>) render in
     once app.js loads; the table/ranking content itself needs no
-    hydration to become correct."""
+    hydration to become correct.
+
+    Broker rankings (active clients, complaints, cost) stay gated on real
+    NSE/SEBI disclosures not yet ingested - see the pending notice below,
+    never sample data standing in for them. But that isn't the only real
+    ranking this site can publish honestly: NSE's own gainers/losers/most-
+    active feeds and the crypto universe's market-cap and 24h movers are
+    already fetched, real, and completely unused as rankings anywhere on
+    the site. Until now this whole page was one paragraph explaining why
+    it was empty - it doesn't need to be, and shouldn't be.
+    """
     boards = [bd for bd in (overview.get("leaderboards") or []) if bd.get("rows")]
+
+    def market_board(rows, currency):
+        rows = [r for r in (rows or []) if r.get("symbol") and r.get("last") is not None][:10]
+        fmt = _usd_html if currency == "USD" else _inr_html
+        href = "/crypto/%s/" if currency == "USD" else "/stock/%s/"
+        return rows, fmt, href
+
+    market_boards = []
+    g_rows, g_fmt, g_href = market_board(nse_live.get("gainers"), "INR")
+    if g_rows:
+        market_boards.append(("Today's NSE top gainers", "nse", g_rows, g_fmt, g_href))
+    l_rows, l_fmt, l_href = market_board(nse_live.get("losers"), "INR")
+    if l_rows:
+        market_boards.append(("Today's NSE top losers", "nse", l_rows, l_fmt, l_href))
+    a_rows, a_fmt, a_href = market_board(nse_live.get("quotes"), "INR")
+    if a_rows:
+        market_boards.append(("Most active NSE stocks by volume", "nse", a_rows, a_fmt, a_href))
+
+    cc = [dict(c, symbol=c.get("symbol")) for c in (crypto_coins or []) if c.get("price_usd") is not None]
+    by_cap = sorted([c for c in cc if c.get("market_cap_rank")], key=lambda c: c["market_cap_rank"])
+    if by_cap:
+        rows = [dict(symbol=c["symbol"], last=c["price_usd"], change_pct=c.get("change_pct_24h"))
+                for c in by_cap[:10]]
+        market_boards.append(("Top crypto by market cap", "crypto", rows, _usd_html, "/crypto/%s/"))
+    by_chg = [c for c in cc if c.get("change_pct_24h") is not None]
+    gainers_c = sorted(by_chg, key=lambda c: -c["change_pct_24h"])[:10]
+    if gainers_c:
+        rows = [dict(symbol=c["symbol"], last=c["price_usd"], change_pct=c["change_pct_24h"]) for c in gainers_c]
+        market_boards.append(("Top crypto 24h gainers", "crypto", rows, _usd_html, "/crypto/%s/"))
+    losers_c = sorted(by_chg, key=lambda c: c["change_pct_24h"])[:10]
+    if losers_c:
+        rows = [dict(symbol=c["symbol"], last=c["price_usd"], change_pct=c["change_pct_24h"]) for c in losers_c]
+        market_boards.append(("Top crypto 24h losers", "crypto", rows, _usd_html, "/crypto/%s/"))
+
     canonical = "%s/leaderboards" % SITE_URL
-    title = "Broker Rankings: Active Clients, Growth, Complaints, Cost | BrokerLens"
-    description = ("Indian stock broker rankings by active clients, growth, complaint rate, resolution rate "
-                    "and cost. Every board states the metric it sorts on and where that metric comes from.")[:300]
+    title = "Market Rankings: NSE Movers, Crypto and Broker Stats | BrokerLens"
+    description = ("Today's real NSE top gainers, losers and most-active stocks, plus crypto market-cap and "
+                    "24h movers. Broker rankings by active clients, complaints and cost publish once that "
+                    "data is live.")[:300]
     crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Rankings", None)])
-    jsonld = {"@context": "https://schema.org", "@graph": [
+    graph = [
         {"@type": "WebPage", "name": title, "url": canonical, "description": description},
         crumb_jsonld,
-    ]}
+    ]
+    for name, _kind, rows, fmt, href in market_boards:
+        graph.append({
+            "@type": "ItemList", "name": name,
+            "itemListElement": [
+                {"@type": "ListItem", "position": i + 1, "name": r["symbol"],
+                 "url": SITE_URL + (href % _esc(_stock_slug(r["symbol"]) if href.startswith("/stock") else r["symbol"].lower()))}
+                for i, r in enumerate(rows)
+            ],
+        })
+    jsonld = {"@context": "https://schema.org", "@graph": graph}
     body = _APP_SHELL_HEAD % {
         "title": _esc(title), "description": _esc(description),
         "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
@@ -4539,15 +4653,41 @@ def _write_leaderboards_page(overview):
     body += crumb_html
     body += (
         '<h1 style="margin-top:16px">Rankings</h1>'
-        '<p class="muted" style="max-width:64ch">Every ranking states the metric it sorts on and where that '
-        'metric comes from. We do not publish an overall &quot;best broker&quot; &mdash; that depends on what '
-        'you trade.</p>'
+        '<p class="muted" style="max-width:64ch">Real movers from NSE and the tracked crypto universe, as of '
+        'the last data refresh. Every ranking states the metric it sorts on and where that metric comes from. '
+        'We do not publish an overall &quot;best broker&quot; &mdash; that depends on what you trade.</p>'
     )
+
+    def board_html(name, kind, rows, fmt, href):
+        return (
+            '<div class="card" style="margin-top:16px"><div class="card-head">'
+            '<div><h3>%s %s</h3></div></div>'
+            '<div class="table-scroll"><table class="data"><tbody>%s</tbody></table></div></div>'
+        ) % (
+            _esc(name), _prov_dot_html(kind),
+            "".join(
+                '<tr><td class="rank-cell">%d</td>'
+                '<td><a href="%s">%s</a></td>'
+                '<td class="right num">%s</td>'
+                '<td class="right num %s">%s</td></tr>'
+                % (i + 1,
+                   href % (_esc(_stock_slug(r["symbol"])) if href.startswith("/stock") else _esc(r["symbol"].lower())),
+                   _esc(r["symbol"]), fmt(r.get("last")),
+                   _cls_class(r.get("change_pct")), _pct_html(r.get("change_pct")))
+                for i, r in enumerate(rows)
+            ),
+        )
+
+    if market_boards:
+        body += '<div class="grid g2" style="margin-top:8px">'
+        body += "".join(board_html(*b) for b in market_boards)
+        body += "</div>"
+
     if not boards:
         body += '<div style="margin-top:16px">%s</div>' % _pending_html(
-            "Rankings",
-            "Every ranking here sorts on active clients, complaint records or published charges. Those come "
-            "from NSE and SEBI monthly disclosures, which are being brought in from the primary sources now.")
+            "Broker rankings by active clients, complaints and cost",
+            "Those sort on NSE member-wise client counts and SEBI Annexure-B complaint disclosures, which are "
+            "being brought in from the primary sources now.")
     for i, bd in enumerate(boards):
         rows = bd.get("rows", [])[:10]
         body += (
@@ -4570,7 +4710,7 @@ def _write_leaderboards_page(overview):
     dest_dir = os.path.join(ROOT, "site", "leaderboards")
     os.makedirs(dest_dir, exist_ok=True)
     _write_text(os.path.join(dest_dir, "index.html"), body)
-    log("leaderboards page: written, %d boards" % len(boards), "ok")
+    log("leaderboards page: written, %d market boards, %d broker boards" % (len(market_boards), len(boards)), "ok")
 
 
 def _write_registry_landing_page(reg_rows, overview):

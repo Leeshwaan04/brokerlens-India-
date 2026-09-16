@@ -598,6 +598,18 @@ def test_published():
         check("report loads no app bundle (must be readable with zero JS)",
               "/assets/js/app.js" not in report_html)
 
+        # Regression guard: datePublished used to be datetime.now() at build
+        # time, so it (and the page's own "Published <date>" line) silently
+        # relabelled itself as "published today" on every single deploy -
+        # not a real published date at all. It must now be a fixed constant.
+        m = re.search(r'"datePublished":\s*"([^"]+)"', report_html)
+        check("report's datePublished is a fixed date, not today's build date",
+              bool(m) and m.group(1) == "2026-09-16", str(m.group(1)) if m else "missing")
+        check("report has dateModified separate from datePublished",
+              '"dateModified"' in report_html)
+        check("report's publisher carries a logo ImageObject (Article rich-result requirement)",
+              '"logo"' in report_html and '"ImageObject"' in report_html)
+
     # site/calculator/ (singular - the interactive brokerage-cost tool) is now
     # a deliberate real hybrid page too, same invariant as site/registry/ and
     # site/brokers/ above. site/calculators/ (plural, checked below) is the
@@ -1175,6 +1187,48 @@ def test_ticker():
           "formatLast" in app_js and "feed.currency" in app_js)
 
 
+def test_leaderboards_market_movers():
+    section("leaderboards: real NSE/crypto market movers")
+    mm = load("site/data/market-movers.json")
+    if not check("market-movers.json exists", bool(mm)):
+        return
+    check("market-movers.json has at least one real board",
+          any((mm.get(k) or []) for k in ("gainers", "losers", "most_active")))
+    for k in ("gainers", "losers", "most_active"):
+        rows = mm.get(k) or []
+        if rows:
+            check("market-movers %s rows have symbol+last" % k,
+                  all(r.get("symbol") and r.get("last") is not None for r in rows))
+
+    lb_path = os.path.join(ROOT, "site", "leaderboards", "index.html")
+    lb_html = open(lb_path, encoding="utf-8").read() if os.path.exists(lb_path) else ""
+    check("leaderboards page carries real NSE/crypto board titles, not just the empty notice",
+          "top gainers" in lb_html.lower() or "most active" in lb_html.lower())
+    check("leaderboards page links out to real stock/crypto pages",
+          "/stock/" in lb_html or "/crypto/" in lb_html)
+    check("leaderboards page has ItemList JSON-LD for its real boards",
+          '"@type": "ItemList"' in lb_html or '"@type":"ItemList"' in lb_html)
+
+    # Regression guard for the exact bug this feature shipped with: pages.js's
+    # marketBoardHtml() was missing a closing </div> for .table-scroll, so a
+    # forgiving HTML parser nested every subsequent board *inside* the first
+    # one instead of as a sibling - the grid silently collapsed to one card
+    # and the rest became invisible, only catchable by inspecting the live
+    # DOM (a curl/grep check on the string can't see this: the markup is
+    # "valid" text, just wrong once parsed). Count div opens vs closes in the
+    # function body as a cheap proxy for "balanced enough to not swallow its
+    # siblings".
+    pages_js = open(os.path.join(ROOT, "site", "assets", "js", "pages.js"), encoding="utf-8").read()
+    m = re.search(r"function marketBoardHtml\([^)]*\)\s*\{(.*?)\n\}", pages_js, re.S)
+    if check("pages.js defines marketBoardHtml()", bool(m)):
+        body = m.group(1)
+        opens = len(re.findall(r"<div\b", body))
+        closes = len(re.findall(r"</div>", body))
+        check("marketBoardHtml()'s <div> opens and closes balance (regression: a missing "
+              "</div> here nests every later board inside the first)", opens == closes,
+              "opens=%d closes=%d" % (opens, closes))
+
+
 # ---------------------------------------------------------------- hub logic
 
 def test_hub():
@@ -1442,6 +1496,7 @@ def main():
     test_regression_guards()
     test_published()
     test_ticker()
+    test_leaderboards_market_movers()
     test_hub()
     if args.url:
         test_server(args.url.rstrip("/"))

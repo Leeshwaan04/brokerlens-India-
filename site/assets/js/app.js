@@ -6,7 +6,7 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=557d965307';
-import * as pages from './pages.js?v=2f482f0b40';
+import * as pages from './pages.js?v=d6d87dfdc0';
 import { clearRedraws } from './chart.js?v=f69d0c170f';
 import './nav-widgets.js?v=652718f215';
 import './search.js?v=8f5c9e48ac';
@@ -35,7 +35,7 @@ const TITLES = {
   '/': 'BrokerLens: Indian Stock Broker and Crypto Exchange Data',
   '/brokers': 'All Indian stock brokers, compared: BrokerLens',
   '/compare': 'Compare Indian stock brokers side by side: BrokerLens',
-  '/leaderboards': 'Broker rankings by clients, complaints and cost: BrokerLens',
+  '/leaderboards': 'Market Rankings: NSE Movers, Crypto and Broker Stats | BrokerLens',
   '/calculator': 'Brokerage cost calculator: BrokerLens',
   '/registry': 'SEBI-registered brokers and intermediaries: BrokerLens',
   '/algo': 'Algo trading platforms in India (APIs, no-code builders and vendors) | BrokerLens',
@@ -51,7 +51,7 @@ const DESCRIPTIONS = {
   '/': 'Compare Indian stock brokers and crypto exchanges on active clients, market share, complaint records and cost. Built from primary NSE, BSE, SEBI and exchange disclosures.',
   '/brokers': 'Every Indian stock broker we track, side by side: active clients, growth, complaint rate, reliability and monthly cost, from primary regulator and exchange sources.',
   '/compare': 'Put Indian stock brokers head to head on clients, complaints, regulatory standing and real cost, using regulator-sourced figures.',
-  '/leaderboards': 'Indian broker rankings by active clients, growth, complaint rate, resolution rate and cost. Every board states the metric it sorts on.',
+  '/leaderboards': "Today's real NSE top gainers, losers and most-active stocks, plus crypto market-cap and 24h movers. Broker rankings by active clients, complaints and cost publish once that data is live.",
   '/calculator': 'Work out what a month of your actual trading costs at each Indian broker, using their published charges.',
   '/registry': 'Search every SEBI-registered broking and depository-participant entity: legal name, registration number, city, exchange memberships and validity.',
   '/algo': 'Algo trading platforms in India: official broker APIs, no-code strategy builders, backtesting tools and institutional vendors, with SEBI framework context.',
