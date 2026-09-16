@@ -4058,7 +4058,8 @@ def _write_crypto_hub(coins):
 
     rows_html = "".join(
         '<tr data-crypto-row="%s"><td class="rank-cell">%s</td>'
-        '<td><a class="coin-name" href="/crypto/%s/">%s<span>%s</span></a> <span class="xs faint">%s</span></td>'
+        '<td><a class="coin-name" href="/crypto/%s/">%s<span>%s</span>'
+        '<span class="xs faint">%s</span></a></td>'
         '<td class="right num" data-role="price">—</td>'
         '<td class="right num" data-role="change">—</td>'
         '<td class="right num faint" data-role="volume">—</td></tr>'
