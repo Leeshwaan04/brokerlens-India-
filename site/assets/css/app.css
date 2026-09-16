@@ -623,6 +623,41 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
 :root[data-theme="dark"] .aff-banner-zerodha .aff-cta:hover { background: #6ba3e8; }
 :root[data-theme="dark"] .aff-banner-zerodha .aff-fine { color: #7a8492; }
 
+/* 5paisa variant: same white-in-light/dark-in-dark treatment as the other
+   three, own accent (5paisa's own brand crimson, #C01F41) so it reads as
+   a distinct sponsor stacked below Zerodha's, not a duplicate. */
+.aff-banner-5paisa { background: var(--bg-raised); border-color: var(--border); }
+.aff-banner-5paisa .aff-tag { background: rgba(0, 0, 0, 0.06); color: var(--text-muted); }
+.aff-banner-5paisa .aff-art { height: auto; padding: var(--space-4) var(--space-4) 0; background: none; }
+.aff-banner-5paisa .aff-body { padding: var(--space-3) var(--space-4) var(--space-4); }
+.aff-banner-5paisa h4 { color: var(--text); font-size: 16px; }
+.aff-banner-5paisa .aff-body p.muted { color: var(--text-muted); }
+.aff-banner-5paisa .aff-features li { color: var(--text-muted); }
+.aff-banner-5paisa .aff-features li::before { color: #C01F41; }
+.aff-banner-5paisa .aff-cta { background: #C01F41; color: #fff; }
+.aff-banner-5paisa .aff-cta:hover { background: #9c1935; }
+.aff-banner-5paisa .aff-fine { color: var(--text-faint); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .aff-banner-5paisa { background: linear-gradient(160deg, #241016 0%, #14080b 100%); border-color: #4a1c28; }
+  :root:not([data-theme="light"]) .aff-banner-5paisa .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+  :root:not([data-theme="light"]) .aff-banner-5paisa h4 { color: #fff; }
+  :root:not([data-theme="light"]) .aff-banner-5paisa .aff-body p.muted { color: #b8c0cc; }
+  :root:not([data-theme="light"]) .aff-banner-5paisa .aff-features li { color: #cfd6e0; }
+  :root:not([data-theme="light"]) .aff-banner-5paisa .aff-features li::before { color: #e8637d; }
+  :root:not([data-theme="light"]) .aff-banner-5paisa .aff-cta { background: #d94766; color: #14080b; }
+  :root:not([data-theme="light"]) .aff-banner-5paisa .aff-cta:hover { background: #e8637d; }
+  :root:not([data-theme="light"]) .aff-banner-5paisa .aff-fine { color: #7a8492; }
+}
+:root[data-theme="dark"] .aff-banner-5paisa { background: linear-gradient(160deg, #241016 0%, #14080b 100%); border-color: #4a1c28; }
+:root[data-theme="dark"] .aff-banner-5paisa .aff-tag { background: rgba(255, 255, 255, 0.12); color: #e8e9ec; }
+:root[data-theme="dark"] .aff-banner-5paisa h4 { color: #fff; }
+:root[data-theme="dark"] .aff-banner-5paisa .aff-body p.muted { color: #b8c0cc; }
+:root[data-theme="dark"] .aff-banner-5paisa .aff-features li { color: #cfd6e0; }
+:root[data-theme="dark"] .aff-banner-5paisa .aff-features li::before { color: #e8637d; }
+:root[data-theme="dark"] .aff-banner-5paisa .aff-cta { background: #d94766; color: #14080b; }
+:root[data-theme="dark"] .aff-banner-5paisa .aff-cta:hover { background: #e8637d; }
+:root[data-theme="dark"] .aff-banner-5paisa .aff-fine { color: #7a8492; }
+
 /* Delta Exchange variant: same white-in-light/dark-in-dark treatment as
    Binance, own accent green so the two are visually distinct in the
    stacked sidebar. */
@@ -665,16 +700,18 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
    high-contrast motion reads as spammy and would undercut the site's
    credibility-first design elsewhere. Disabled entirely under
    prefers-reduced-motion. */
-.aff-banner-binance, .aff-banner-delta, .aff-banner-zerodha {
+.aff-banner-binance, .aff-banner-delta, .aff-banner-zerodha, .aff-banner-5paisa {
   max-width: 280px; margin-inline: auto; box-shadow: var(--shadow-lg);
 }
 @media (prefers-reduced-motion: no-preference) {
   .aff-banner-binance { animation: aff-glow-binance 3.6s ease-in-out infinite; }
   .aff-banner-delta { animation: aff-glow-delta 3.6s ease-in-out infinite; }
   .aff-banner-zerodha { animation: aff-glow-zerodha 3.6s ease-in-out infinite; }
+  .aff-banner-5paisa { animation: aff-glow-5paisa 3.6s ease-in-out infinite; }
   .aff-banner-binance .aff-cta { animation: aff-pulse 2.4s ease-in-out infinite; }
   .aff-banner-delta .aff-cta { animation: aff-pulse 2.4s ease-in-out infinite; }
   .aff-banner-zerodha .aff-cta { animation: aff-pulse 2.4s ease-in-out infinite; }
+  .aff-banner-5paisa .aff-cta { animation: aff-pulse 2.4s ease-in-out infinite; }
 }
 /* var(--shadow-lg) stays in every keyframe stop so the card keeps a real,
    theme-aware drop shadow lifting it off the page at all times - without
@@ -692,6 +729,10 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
 @keyframes aff-glow-zerodha {
   0%, 100% { box-shadow: var(--shadow-lg), 0 0 0 0 rgba(56, 126, 209, 0); }
   50% { box-shadow: var(--shadow-lg), 0 0 24px 3px rgba(56, 126, 209, 0.45); }
+}
+@keyframes aff-glow-5paisa {
+  0%, 100% { box-shadow: var(--shadow-lg), 0 0 0 0 rgba(192, 31, 65, 0); }
+  50% { box-shadow: var(--shadow-lg), 0 0 24px 3px rgba(192, 31, 65, 0.45); }
 }
 @keyframes aff-pulse {
   0%, 100% { transform: scale(1); }
