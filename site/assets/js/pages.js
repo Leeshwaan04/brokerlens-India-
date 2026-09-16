@@ -760,6 +760,13 @@ export async function compare(params) {
     }
   });
 
+  // The chart card used to render unconditionally - with active_clients
+  // still sample-gated in production, every single broker's clients.series
+  // is empty, so this was a permanently-empty "Not published yet" box on
+  // every comparison anyone ever loads, not a real feature. Same rule the
+  // table rows above already follow: no card for data nobody has.
+  const hasClientSeries = list.some((b) => (b.clients?.series || []).length > 0);
+
   const opts = (o.brokers || [])
     .filter((b) => !ids.includes(b.id))
     .sort((a, b) => (b.clients || 0) - (a.clients || 0))
@@ -827,13 +834,13 @@ export async function compare(params) {
     </table>
   </div>
 
-  <div class="card" style="margin-top:16px">
+  ${hasClientSeries ? `<div class="card" style="margin-top:16px">
     <div class="card-title">Active clients over time</div>
     <div class="chart-box"><canvas id="cmp-chart"></canvas></div>
     <div class="legend" style="margin-top:8px">
       ${list.map((b, i) => `<span><i style="background:var(--c${(i % 8) + 1})"></i>${esc(b.profile.brand)}</span>`).join('')}
     </div>
-  </div>`;
+  </div>` : ''}`;
 }
 
 function fmtPlan(plan) {

@@ -6,7 +6,7 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=557d965307';
-import * as pages from './pages.js?v=d6d87dfdc0';
+import * as pages from './pages.js?v=1348d421de';
 import { clearRedraws } from './chart.js?v=f69d0c170f';
 import './nav-widgets.js?v=652718f215';
 import './search.js?v=8f5c9e48ac';

@@ -919,6 +919,16 @@ def test_published():
           "export async function comingSoon" in pages_js_src
           and all(k in pages_js_src for k in ["us:", "gcc:"]))
 
+    # Regression guard: /compare's "Active clients over time" chart card used
+    # to render unconditionally regardless of whether any compared broker
+    # actually had client-history data - with active_clients still
+    # sample-gated in production, every single comparison hit this, showing
+    # a permanently-empty chart on 100% of real page loads. The table rows
+    # above it already drop a metric nobody has; the chart card must too.
+    check("compare()'s chart card is gated on at least one broker actually having client-history data",
+          "hasClientSeries" in pages_js_src
+          and re.search(r"hasClientSeries\s*\?\s*`<div", pages_js_src))
+
     # Crypto vertical (Phase 1, 28 hand-verified coins): real static pages
     # with live price loaded client-side, same architecture as the rest of
     # the site's "static facts + client-refreshed live number" pattern.
