@@ -71,6 +71,15 @@
       "max_mb_per_min": 3,
       "note": "1.28MB uncompressed. Slow loop only - contract list, units, expiries. NEVER put this on the fast path.",
       "feed": "MCX"
+    },
+    "crypto_prices": {
+      "label": "Crypto prices",
+      "exchange": "CRYPTO",
+      "interval": 8,
+      "wire_bytes": 14900,
+      "max_mb_per_min": 2,
+      "note": "Binance's whole 28-symbol universe in one call, ~14.9KB. No session hours to widen the interval against, so this alone governs its own cadence.",
+      "feed": "CRYPTO"
     }
   },
   "limits": {

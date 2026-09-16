@@ -1164,6 +1164,16 @@ def test_ticker():
     size = os.path.getsize(os.path.join(ROOT, "site/data/ticker.json"))
     check("ticker payload stays small (<64KB)", size < 65536, "%d bytes" % size)
 
+    crypto_feed = t["feeds"].get("CRYPTO") or {}
+    check("crypto feed is marked USD, not the implicit-INR default the other feeds use",
+          crypto_feed.get("currency") == "USD")
+    check("crypto feed is always Open - it has no exchange hours to be closed during",
+          crypto_feed.get("status") == "Open")
+
+    app_js = open(os.path.join(ROOT, "site", "assets", "js", "app.js"), encoding="utf-8").read()
+    check("app.js formats a non-INR feed's price with its own currency, not silently as rupees",
+          "formatLast" in app_js and "feed.currency" in app_js)
+
 
 # ---------------------------------------------------------------- hub logic
 

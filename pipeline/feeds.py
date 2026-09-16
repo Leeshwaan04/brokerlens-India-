@@ -57,23 +57,26 @@ def _session_status(exchange_id):
                 return "Open"
     return "Closed"
 
-# id -> (label, kind, exchange-for-session-status)
-# One feed per exchange plus Indices: the dropdown stays NSE / BSE / MCX / Indices.
+# id -> (label, kind, exchange-for-session-status, currency)
+# One feed per exchange plus Indices and Crypto: the dropdown stays
+# NSE / BSE / MCX / Indices / Crypto. Currency is a display hint only (the
+# front end prefixes $ for anything non-INR) - it changes no arithmetic.
 FEED_DEFS = [
-    ("NSE",      "NSE",      "exchange", "NSE"),
-    ("BSE",      "BSE",      "exchange", "BSE"),
-    ("MCX",      "MCX",      "exchange", "MCX"),
-    ("INDICES",  "Indices",  "derived",  "NSE"),
+    ("NSE",      "NSE",      "exchange", "NSE",    "INR"),
+    ("BSE",      "BSE",      "exchange", "BSE",    "INR"),
+    ("MCX",      "MCX",      "exchange", "MCX",    "INR"),
+    ("INDICES",  "Indices",  "derived",  "NSE",    "INR"),
+    ("CRYPTO",   "Crypto",   "exchange", "CRYPTO", "USD"),
 ]
 
 FEED_ORDER = [f[0] for f in FEED_DEFS]
-FEED_META = {f[0]: {"label": f[1], "kind": f[2], "exchange": f[3]} for f in FEED_DEFS}
+FEED_META = {f[0]: {"label": f[1], "kind": f[2], "exchange": f[3], "currency": f[4]} for f in FEED_DEFS}
 
 
 def empty_feeds():
     return {
         fid: {"id": fid, "label": m["label"], "kind": m["kind"], "exchange": m["exchange"],
-              "status": None, "as_of": None, "instruments": [], "note": None}
+              "currency": m["currency"], "status": None, "as_of": None, "instruments": [], "note": None}
         for fid, m in FEED_META.items()
     }
 
@@ -84,13 +87,16 @@ def build(ingest):
     nse_d = ingest.get("nse") or {}
     bse_d = ingest.get("bse") or {}
     mcx_d = ingest.get("mcx") or {}
+    crypto_d = ingest.get("crypto") or {}
     pulse = nse_d.get("pulse") or {}
     nse_live = nse_d.get("live") or {}
 
     # Session status. NSE's own marketStatus is authoritative for NSE because it
     # accounts for trading holidays; BSE keeps the same equity hours and holiday
     # calendar so it follows NSE. MCX is a separate market and must be computed
-    # from its own published hours, never borrowed from NSE.
+    # from its own published hours, never borrowed from NSE. Crypto has no
+    # exchange hours at all - it trades every hour of every day - so it is
+    # never derived from config/market_timings.json the way the other three are.
     status = {}
     for s in pulse.get("status") or []:
         mk = (s.get("market") or "").lower()
@@ -99,6 +105,7 @@ def build(ingest):
     status.setdefault("NSE", _session_status("NSE"))
     status.setdefault("BSE", status.get("NSE"))
     status["MCX"] = _session_status("MCX")
+    status["CRYPTO"] = "Open"
     for fid, meta in FEED_META.items():
         feeds[fid]["status"] = status.get(meta["exchange"])
 
@@ -117,6 +124,11 @@ def build(ingest):
 
     feeds["INDICES"]["instruments"] = [
         dict(i, symbol=i.get("name")) for i in (pulse.get("indices") or [])
+    ]
+
+    feeds["CRYPTO"]["instruments"] = [
+        {"symbol": c["symbol"], "last": c.get("price_usd"), "change_pct": c.get("change_pct_24h")}
+        for c in (crypto_d.get("coins") or []) if c.get("price_usd") is not None
     ]
 
     return feeds

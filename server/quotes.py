@@ -36,6 +36,7 @@ if ROOT not in sys.path:
 from pipeline import feeds as feedmod  # noqa: E402
 from pipeline.common import log, read_json  # noqa: E402
 from pipeline.sources import bse as bse_src  # noqa: E402
+from pipeline.sources import crypto as crypto_src  # noqa: E402
 from pipeline.sources import mcx as mcx_src  # noqa: E402
 from pipeline.sources import nse as nse_src  # noqa: E402
 
@@ -66,8 +67,12 @@ def market_open(exchange):
     """Approximate IST session windows; only used to decide how hard to poll.
 
     The open/closed flag shown in the UI comes from NSE's own marketStatus, not
-    from here.
+    from here. Crypto has no session at all - it trades every hour of every
+    day - so it is always "open" for polling-cadence purposes; the bandwidth
+    budget and circuit breaker are what actually govern its poll rate.
     """
+    if exchange == "CRYPTO":
+        return True
     t = datetime.now(IST)
     if t.weekday() >= 5:
         return False
@@ -394,6 +399,8 @@ class Worker(threading.Thread):
             self._fetcher = nse_src.nse()
         elif self.exchange == "BSE":
             self._fetcher = bse_src.bse()
+        elif self.exchange == "CRYPTO":
+            self._fetcher = crypto_src.crypto()
         else:
             self._fetcher = mcx_src.fetcher()
 
@@ -478,6 +485,25 @@ class Worker(threading.Thread):
         live = mcx_src.live_quotes(self._fetcher, self._mcx_watch)
         if live.get("quotes"):
             self.hub.apply("MCX", instruments=live["quotes"], as_of=live.get("as_of"))
+        return self.spec.get("wire_bytes")
+
+    def _poll_crypto_prices(self):
+        """Binance first - it works fine from Cloud Run's IP, just not from
+        Vercel/GitHub Actions build infra (451, see pipeline/sources/crypto.py) -
+        CoinGecko only if that comes back empty. Same field shape
+        (symbol/last/change_pct) as feeds.build()'s CRYPTO instruments, on
+        purpose: the front end's rendering and live-patch code has no idea
+        which source answered."""
+        prices = crypto_src.binance_prices(self._fetcher, ttl=0)
+        if not prices:
+            prices = crypto_src.coingecko_prices(self._fetcher, ttl=0)
+        if not prices:
+            raise RuntimeError("crypto prices: neither Binance nor CoinGecko returned anything")
+        instruments = [
+            {"symbol": sym, "last": row.get("price_usd"), "change_pct": row.get("change_pct_24h")}
+            for sym, row in prices.items() if row.get("price_usd") is not None
+        ]
+        self.hub.apply("CRYPTO", instruments=instruments, status="Open")
         return self.spec.get("wire_bytes")
 
     # --------------------------------------------------------------- health

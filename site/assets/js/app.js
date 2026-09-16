@@ -204,6 +204,22 @@ let pollTimer = null;
 const currentExchange = () => select?.value || localStorage.getItem(EXCH_KEY) || 'NSE';
 const currentFeed = currentExchange;   // feeds are no longer only exchanges
 
+/* Every other feed is implicitly INR (no symbol shown, matching how the rest
+ * of the site prices things); crypto is the one USD feed mixed into the same
+ * strip, so it needs its own $-prefixed, adaptive-decimal format or a cheap
+ * coin's price reads as a suspiciously large rupee number. Mirrors
+ * crypto-live.js's fmtUsd() - not shared as an import since the two modules
+ * never load on the same page (this strip is everywhere, that file is
+ * crypto-page-only), and the formatter is small enough that duplicating it
+ * is cheaper than a new shared module just for this. */
+function formatLast(value, currency) {
+  if (currency === 'USD') {
+    const d = value < 1 ? 6 : value < 100 ? 4 : 2;
+    return `$${value.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })}`;
+  }
+  return value.toLocaleString('en-IN');
+}
+
 function tickItem(label, value, changePct, change, q = {}) {
   const chg = changePct != null
     ? `<span class="num ${cls(changePct)}">${pct(changePct)}</span>`
@@ -232,7 +248,7 @@ function buildItems(feed) {
     const key = String(label || '').toUpperCase();
     if (!key || seen.has(key) || q.last == null) continue;
     seen.add(key);
-    items.push(tickItem(label, q.last.toLocaleString('en-IN'), q.change_pct, q.change, q));
+    items.push(tickItem(label, formatLast(q.last, feed.currency), q.change_pct, q.change, q));
   }
   return items;
 }
@@ -328,7 +344,7 @@ function patchInstruments(feedId, instruments) {
     nodes.forEach((node) => {
       const cell = node.querySelector('[data-role="last"]');
       if (!cell) return;
-      const next = q.last.toLocaleString('en-IN');
+      const next = formatLast(q.last, tickerData?.feeds?.[feedId]?.currency);
       if (cell.textContent === next) return;
       const rose = q.change_pct != null ? q.change_pct >= 0 : true;
       cell.textContent = next;
