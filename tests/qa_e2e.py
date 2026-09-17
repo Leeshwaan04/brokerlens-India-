@@ -12,6 +12,7 @@ import json
 import math
 import os
 import re
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -269,6 +270,30 @@ def test_regression_guards():
           "empty NSE payload reported no shortfall")
     check("a populated source reports no shortfall",
           not runmod._shortfalls("nse", {"pulse": {"indices": [1]}, "live": {"quotes": [1]}}))
+
+    # A missing closing brace after affiliateBanner() swallowed fivepaisaBanner()
+    # as a nested function, so the next top-level `export` became a syntax
+    # error - this broke app.js's whole import graph in production (ticker,
+    # search, mega-menus, client-side routing all silently dead) while every
+    # other test here still passed, because a plain `node --check` on a .js
+    # file doesn't validate module syntax (it tolerates a stray top-level
+    # `export`). Piping through stdin with --input-type=module does.
+    import shutil
+    js_dir = os.path.join(ROOT, "site", "assets", "js")
+    if not shutil.which("node"):
+        skip("site/assets/js/*.js parse as valid ES modules", "node not on PATH")
+    elif os.path.isdir(js_dir):
+        for fname in sorted(os.listdir(js_dir)):
+            if not fname.endswith(".js"):
+                continue
+            with open(os.path.join(js_dir, fname), "rb") as fh:
+                src = fh.read()
+            result = subprocess.run(
+                ["node", "--input-type=module", "--check"],
+                input=src, capture_output=True)
+            check("%s parses as a valid ES module" % fname, result.returncode == 0,
+                  result.stderr.decode(errors="replace").strip().splitlines()[-1]
+                  if result.returncode else "")
 
 
 def test_published():
