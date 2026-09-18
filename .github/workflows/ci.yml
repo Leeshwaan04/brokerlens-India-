@@ -10,20 +10,16 @@ name: QA + VAPT, then deploy
 # search, every mega-menu) on every page, and node --check on a plain .js
 # file doesn't validate module syntax, so nothing caught it before this.
 #
-# TRANSITIONAL STATE, READ BEFORE REMOVING THIS COMMENT: the `deploy` job
-# below fires the same VERCEL_DEPLOY_HOOK daily-refresh.yml uses, only after
-# `test` passes - that is the real gate. But Vercel's own git integration
-# (project setting gitProviderOptions.createDeployments) is still "enabled"
-# as of this commit, so it ALSO deploys immediately on every push,
-# independently of this workflow and before `test` has even started. Until
-# a project owner sets that to "disabled" in the Vercel dashboard (or via
-# `vercel api -X PATCH /v9/projects/<id> -d
-# '{"gitProviderOptions":{"createDeployments":"disabled"}}'`, which needs
-# interactive approval, not something a Claude Code session can do
-# unattended), every push produces two production deployments: an
-# ungated one immediately, and this gated one a few minutes later. Once
-# that setting is flipped, the ungated one stops and this becomes the only
-# deploy path.
+# The `deploy` job below fires the same VERCEL_DEPLOY_HOOK daily-refresh.yml
+# uses, only after `test` passes - this is the ONLY deploy path for a push to
+# main. Vercel's own git integration (project setting
+# gitProviderOptions.createDeployments) is set to "disabled" as of 2026-09-18
+# specifically so it can't also deploy ungated the instant a commit lands,
+# racing ahead of `test` - a broken commit that fails the `test` job above
+# now simply never reaches production, rather than shipping immediately and
+# getting caught a few minutes later. To roll this back (re-enable Vercel's
+# own auto-deploy), see `vercel api /v9/projects/<id> -X PATCH --input -`
+# with `{"gitProviderOptions":{"createDeployments":"enabled"}}` piped in.
 
 on:
   push:
