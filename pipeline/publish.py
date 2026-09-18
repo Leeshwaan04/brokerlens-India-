@@ -525,7 +525,8 @@ def build():
     _write_sources_page(sources_data)
     _write_algo_page(algo_data)
     _write_leaderboards_page(overview, nse_d.get("live") or {}, crypto_coins)
-    _write_registry_landing_page(reg_rows, overview)
+    registry_letters = _write_registry_directory(reg_rows)
+    _write_registry_landing_page(reg_rows, overview, registry_letters)
     _write_compare_page(overview)
     _write_brokers_page(overview)
     _write_calculator_tool_page(built)
@@ -539,7 +540,8 @@ def build():
     _write_ipo_hub(ipo_records)
     _write_ipo_archive(ipo_records)
     _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
-                    fund_slugs, report_slugs, calc_slugs, stock_letters, amc_slugs, crypto_slugs, ipo_records)
+                    fund_slugs, report_slugs, calc_slugs, stock_letters, amc_slugs, crypto_slugs, ipo_records,
+                    registry_letters)
     _write_search_index(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
                          fund_slugs, report_slugs, amc_slugs, crypto_coins, ipo_records)
     _write_feed(built, aggregates)
@@ -4987,12 +4989,139 @@ def _write_leaderboards_page(overview, nse_live, crypto_coins):
     log("leaderboards page: written, %d market boards, %d broker boards" % (len(market_boards), len(boards)), "ok")
 
 
-def _write_registry_landing_page(reg_rows, overview):
+def _write_registry_directory(reg_rows):
+    """A-Z browse pages for every SEBI-registered entity not one of the 48
+    tracked in depth.
+
+    /registry only ever hard-links the first 60 of ~1,700 entities (its
+    default page of a client-side search widget) - everything past that sat
+    behind a JS "Next" button with no href and no new URL, so ~96% of this
+    page family had no on-site path a crawler could follow, only a
+    sitemap.xml entry. Google's own Page Indexing report showed the result
+    directly: "Discovered - currently not indexed" on the overwhelming
+    majority of this family. Same fix as _write_stock_directory: a full,
+    uncapped, server-rendered A-Z directory with a real <a href> to every
+    entity.
+
+    Nested under /registry/az/ rather than under /sebi-registry/ itself -
+    that path already belongs to the ~1,700 individual entity pages, and
+    _write_registry_pages() prunes anything under it that isn't a current
+    entity slug on every run. A letter directory living in that same tree
+    would get deleted by that prune the moment it wasn't a recognised slug."""
+    groups = {}
+    for r in reg_rows or []:
+        name = (r.get("name") or "").strip()
+        slug = (r.get("slug") or "").strip()
+        if not name or not slug:
+            continue
+        letter = name[0].upper()
+        letter = letter if letter.isalpha() else "0-9"
+        groups.setdefault(letter, []).append((name, slug))
+
+    letters = sorted(groups.keys(), key=lambda l: (l == "0-9", l))
+    nav_html = "".join(
+        '<a class="chip" href="/registry/az/%s/">%s</a>' % (_esc(slugify(l)), _esc(l)) for l in letters
+    )
+
+    written = 0
+    for letter in letters:
+        rows = sorted(groups[letter], key=lambda r: r[0])
+        letter_slug = slugify(letter)
+        canonical = "%s/registry/az/%s/" % (SITE_URL, letter_slug)
+        title = "SEBI-Registered Entities Starting With %s | BrokerLens" % letter
+        description = _esc(
+            "%d SEBI-registered entities whose name starts with %s, each linking to its own registration "
+            "page (registration number, category, exchange memberships and validity)." % (len(rows), letter)
+        )[:300]
+        list_html = "".join(
+            '<a href="/sebi-registry/%s/">%s</a>' % (_esc(slug), _esc(name))
+            for name, slug in rows
+        )
+        crumb_html, crumb_jsonld = _breadcrumb([
+            ("BrokerLens", "/"), ("SEBI registry", "/registry"), ("Browse A-Z", "/registry/az/"), (letter, None),
+        ])
+        jsonld = {
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "ItemList", "name": title, "url": canonical,
+                    "itemListElement": [
+                        {"@type": "ListItem", "position": i + 1, "url": "%s/sebi-registry/%s/" % (SITE_URL, slug), "name": name}
+                        for i, (name, slug) in enumerate(rows)
+                    ],
+                },
+                crumb_jsonld,
+            ],
+        }
+        body = _REGISTRY_PAGE_HEAD % {
+            "title": _esc(title), "description": description,
+            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+        }
+        body += (
+            crumb_html
+            + '<h1 style="margin-top:0">SEBI-registered entities starting with %s</h1>' % _esc(letter)
+            + '<p class="muted" style="max-width:70ch">%d registered entit%s. Each link goes to that '
+              'entity\'s own registration page. <a href="/registry" data-link>Search the full register &rarr;</a></p>'
+              % (len(rows), "y" if len(rows) == 1 else "ies")
+            + '<div class="row-wrap" style="margin:16px 0">' + nav_html + '</div>'
+            + '<div class="link-columns">' + list_html + '</div>'
+        )
+        body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+            "This page lists SEBI's own recognised-intermediary register, grouped alphabetically by entity name.")}
+        dest_dir = os.path.join(ROOT, "site", "registry", "az", letter_slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        _write_text(os.path.join(dest_dir, "index.html"), body)
+        written += 1
+
+    total = sum(len(v) for v in groups.values())
+    canonical = "%s/registry/az/" % SITE_URL
+    title = "Browse SEBI-Registered Entities A-Z | BrokerLens"
+    description = ("Every SEBI-registered entity BrokerLens has a registration page for (%d entities), "
+                    "browsable alphabetically." % total)
+    counts_html = "".join(
+        '<a class="card" href="/registry/az/%s/" style="display:block;text-align:center"><h3>%s</h3>'
+        '<p class="xs faint" style="margin-top:4px">%d entities</p></a>'
+        % (_esc(slugify(l)), _esc(l), len(groups[l]))
+        for l in letters
+    )
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("SEBI registry", "/registry"), ("Browse A-Z", None)])
+    body = _REGISTRY_PAGE_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical),
+        "jsonld": json.dumps({"@context": "https://schema.org", "@graph": [
+            {"@type": "CollectionPage", "name": title, "url": canonical}, crumb_jsonld]}, ensure_ascii=False),
+    }
+    body += (
+        crumb_html
+        + '<h1 style="margin-top:0">Browse SEBI-registered entities</h1>'
+        '<p class="muted" style="max-width:70ch">%d entities across %d letters, sourced from SEBI\'s own '
+        'recognised-intermediary register. <a href="/registry" data-link>Search the full register instead &rarr;</a></p>'
+        % (total, len(letters))
+        + '<div class="grid g4" style="margin-top:16px">' + counts_html + '</div>'
+    )
+    body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
+        "This page indexes SEBI's own recognised-intermediary register alphabetically by entity name.")}
+    dest_dir = os.path.join(ROOT, "site", "registry", "az")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+
+    log("registry directory: %d letter pages written, %d entities linked" % (written, total), "ok")
+    return letters
+
+
+def _write_registry_landing_page(reg_rows, overview, registry_letters=None):
     """/registry is a client-side paginated search over up to ~1,700 entities
     (regState = {q:'', page:0, per:60} by default) - pre-rendering page one
     of that default, unfiltered view is a faithful, complete match for what
     a fresh visitor or a crawler would see before typing anything, without
-    needing to fake pagination server-side for every possible query."""
+    needing to fake pagination server-side for every possible query.
+
+    The "Browse alphabetically" row below is the other half of the orphan-page
+    fix in _write_registry_directory(): this page is the one already-indexed,
+    highest-authority page in the whole registry family, so it is also the
+    best available inbound link into the ~1,700 individual entity pages -
+    every one of them is now two real <a> hops away from a page Google
+    already trusts, not just a sitemap.xml entry."""
     per = 60
     page_rows = reg_rows[:per]
     total = len(reg_rows)
@@ -5016,6 +5145,8 @@ def _write_registry_landing_page(reg_rows, overview):
         'brokers tracked in depth &mdash; %s of them. Straight from SEBI\'s register: legal name, registration '
         'number, city, exchange memberships and validity. Nothing here is curated or scored.</p>'
 
+        '%s'
+
         '<div class="card" style="margin-top:16px"><div class="row-wrap">'
         '<div class="grow" style="min-width:240px">'
         '<input type="search" id="reg-q" placeholder="Search by name, registration number or city&hellip;">'
@@ -5032,6 +5163,13 @@ def _write_registry_landing_page(reg_rows, overview):
         '<a href="/sources" data-link>Lineage &rarr;</a></p>'
     ) % (
         overview.get("metadata", {}).get("broker_count", 0), _full_html(total),
+        (
+            '<p class="small" style="margin-top:12px">Browse alphabetically: '
+            + " &middot; ".join(
+                '<a href="/registry/az/%s/">%s</a>' % (_esc(slugify(l)), _esc(l))
+                for l in registry_letters
+            ) + '</p>'
+        ) if registry_letters else "",
         _full_html(total), min(per, total), "" if total > per else " disabled",
         "".join(
             '<tr><td>%s%s</td><td class="num small">%s</td><td class="small">%s</td>'
@@ -5707,7 +5845,7 @@ def _write_calculator_hub():
 
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
                     fund_slugs=None, report_slugs=None, calc_slugs=None, stock_letters=None, amc_slugs=None,
-                    crypto_slugs=None, ipo_records=None):
+                    crypto_slugs=None, ipo_records=None, registry_letters=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator", "/calculators",
             "/registry", "/algo", "/methodology", "/sources", "/stocks", "/funds-by", "/etfs", "/crypto",
@@ -5791,6 +5929,12 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     # does, so weekly matches the hub pages they mirror.
     for letter in (stock_letters or []):
         body += ("<url><loc>%s/stocks/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
+                 % (SITE_URL, slugify(letter), today))
+    if registry_letters:
+        body += ("<url><loc>%s/registry/az/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
+                 % (SITE_URL, today))
+    for letter in (registry_letters or []):
+        body += ("<url><loc>%s/registry/az/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
                  % (SITE_URL, slugify(letter), today))
     for amc_slug in (amc_slugs or {}).values():
         body += ("<url><loc>%s/funds-by/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"

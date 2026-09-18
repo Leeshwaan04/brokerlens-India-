@@ -735,6 +735,34 @@ def test_published():
         etf_dir_html = open(os.path.join(etfs_dir_path, "index.html"), encoding="utf-8").read()
         check("ETF directory links /etf/ pages", '/etf/' in etf_dir_html)
 
+    # The SEBI registry was the one directory family that shipped without
+    # this fix: /registry only ever hard-linked the first 60 of ~1,691
+    # entities, the rest sat behind a client-side "Next" button with no href,
+    # so ~96% of this family had no on-site path at all - Google's Page
+    # Indexing report showed almost the entire family stuck on "Discovered -
+    # currently not indexed". Nested under /registry/az/, not /sebi-registry/
+    # itself, because that path already belongs to the individual entity
+    # pages and gets pruned to just their slugs on every run.
+    registry_az_dir = os.path.join(ROOT, "site", "registry", "az")
+    check("SEBI registry A-Z directory exists", os.path.isdir(registry_az_dir))
+    if os.path.isdir(registry_az_dir):
+        reg_letter_dirs = [d for d in os.listdir(registry_az_dir) if os.path.isdir(os.path.join(registry_az_dir, d))]
+        check("registry directory has more than one letter page", len(reg_letter_dirs) > 1,
+              "found %d" % len(reg_letter_dirs))
+        reg_overview_html = open(os.path.join(registry_az_dir, "index.html"), encoding="utf-8").read()
+        check("registry directory overview links every letter page",
+              all('/registry/az/%s/' % d in reg_overview_html for d in reg_letter_dirs))
+        if reg_letter_dirs:
+            reg_sample_html = open(os.path.join(registry_az_dir, reg_letter_dirs[0], "index.html"),
+                                    encoding="utf-8").read()
+            check("a registry letter page actually links /sebi-registry/ entity pages",
+                  '/sebi-registry/' in reg_sample_html)
+        registry_landing_html = open(os.path.join(ROOT, "site", "registry", "index.html"), encoding="utf-8").read()
+        check("the (already-indexed) /registry page links into the new A-Z directory",
+              all('/registry/az/%s/' % d in registry_landing_html for d in reg_letter_dirs),
+              "this is the actual inbound link that rescues the orphaned pages - "
+              "a directory nobody links to is exactly as orphaned as before")
+
     # Site-wide footer must link the three directory pages above, or they are
     # just as orphaned as the pages they exist to fix - a directory page
     # with no inbound link of its own defeats the point.
