@@ -89,7 +89,7 @@
     "breaker_base_backoff_s": 5,
     "breaker_max_backoff_s": 300,
     "max_sse_clients": 200,
-    "max_sse_clients_per_ip": 6,
+    "max_sse_clients_per_ip": 40,
     "subscriber_queue_depth": 60,
     "max_instruments_per_exchange": 400,
     "total_max_mb_per_min": 12

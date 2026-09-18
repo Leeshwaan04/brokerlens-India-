@@ -49,7 +49,16 @@ DEFAULT_LIMITS = {
     "breaker_base_backoff_s": 5,
     "breaker_max_backoff_s": 300,
     "max_sse_clients": 200,
-    "max_sse_clients_per_ip": 6,
+    # 6 was too low for real traffic: many Indian mobile carriers use
+    # carrier-grade NAT, so a large number of genuinely different visitors
+    # can share one public IP and collide against this cap - live symptom
+    # was every visitor behind one such IP getting "too many connections
+    # from this address" on /api/stream and falling back to the static,
+    # unrefreshed ticker.json. containerConcurrency is 250 and each
+    # subscriber is one thread plus a small bounded queue, so this has
+    # plenty of headroom under max_sse_clients (200) and the container's
+    # own resource limits.
+    "max_sse_clients_per_ip": 40,
     "subscriber_queue_depth": 60,
     "max_instruments_per_exchange": 400,
     "total_max_mb_per_min": 12,
