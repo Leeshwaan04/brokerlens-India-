@@ -22,7 +22,7 @@
   "categories": {
     "broker_api": {
       "label": "Broker trading APIs",
-      "blurb": "Official REST/WebSocket APIs from brokers themselves — the execution layer most retail algos ultimately trade through."
+      "blurb": "Official REST/WebSocket APIs from brokers themselves: the execution layer most retail algos ultimately trade through."
     },
     "no_code": {
       "label": "No-code algo platforms",
@@ -72,7 +72,7 @@
       "id": "breeze", "name": "Breeze API", "category": "broker_api",
       "operator": "ICICI Securities", "hq": "Mumbai", "website": "https://api.icicidirect.com",
       "pricing": "free", "works_with": ["icici-direct"],
-      "summary": "ICICI Direct's Breeze API — a bank-broker opening its execution and data stack to retail algo traders."
+      "summary": "ICICI Direct's Breeze API: a bank-broker opening its execution and data stack to retail algo traders."
     },
     {
       "id": "kotak-neo-api", "name": "Kotak Neo Trade API", "category": "broker_api",
@@ -164,7 +164,7 @@
       "id": "sensibull", "name": "Sensibull", "category": "analytics",
       "operator": "Sensibull", "hq": "Bengaluru", "website": "https://sensibull.com",
       "pricing": "freemium", "works_with": ["zerodha", "angel-one", "upstox", "icici-direct", "dhan", "5paisa"],
-      "summary": "India's largest options-trading platform: chains, Greeks, strategy builder and broker-connected execution. Analytics rather than automation — no unattended algos."
+      "summary": "India's largest options-trading platform: chains, Greeks, strategy builder and broker-connected execution. Analytics rather than automation (no unattended algos)."
     },
     {
       "id": "quantsapp", "name": "Quantsapp", "category": "analytics",

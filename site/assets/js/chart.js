@@ -132,7 +132,7 @@ export function lineChart(canvas, series, opts = {}) {
     ctx.fillText(opts.fmtY ? opts.fmtY(v) : String(Math.round(v)), padL - 7, y);
   }
 
-  // x labels: first, middle, last only — monthly series get crowded fast
+  // x labels: first, middle, last only; monthly series get crowded fast
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   [0, Math.floor((n - 1) / 2), n - 1].forEach((i) => {
@@ -317,7 +317,7 @@ function clip(ctx, text, maxW) {
   return t + '…';
 }
 
-/* Redraw everything on resize and on theme change — canvases are raster, so
+/* Redraw everything on resize and on theme change: canvases are raster, so
  * they must be re-rendered rather than restyled. */
 const redrawers = new Set();
 export function registerRedraw(fn) { redrawers.add(fn); return () => redrawers.delete(fn); }

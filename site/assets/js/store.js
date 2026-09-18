@@ -49,7 +49,7 @@ export const loadSearchIndex = () => get('/data/search.json');
 /* Indian numbering: lakh (1e5) and crore (1e7). Anything else misreads to the
  * audience this site is for. */
 export function inr(n, opts = {}) {
-  if (n == null || Number.isNaN(n)) return '—';
+  if (n == null || Number.isNaN(n)) return '-';
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
   const d = opts.decimals;
@@ -60,17 +60,17 @@ export function inr(n, opts = {}) {
 }
 
 export function count(n) {
-  if (n == null || Number.isNaN(n)) return '—';
+  if (n == null || Number.isNaN(n)) return '-';
   const abs = Math.abs(n);
   if (abs >= 1e7) return `${(n / 1e7).toFixed(2)} Cr`;
   if (abs >= 1e5) return `${(n / 1e5).toFixed(2)} L`;
   return Math.round(n).toLocaleString('en-IN');
 }
 
-export const full = (n) => (n == null ? '—' : Math.round(n).toLocaleString('en-IN'));
+export const full = (n) => (n == null ? '-' : Math.round(n).toLocaleString('en-IN'));
 
 export function pct(n, opts = {}) {
-  if (n == null || Number.isNaN(n)) return '—';
+  if (n == null || Number.isNaN(n)) return '-';
   const s = n > 0 && opts.sign !== false ? '+' : '';
   return `${s}${n.toFixed(opts.decimals ?? 2)}%`;
 }
@@ -78,7 +78,7 @@ export function pct(n, opts = {}) {
 export const cls = (n) => (n == null ? '' : n > 0 ? 'up' : n < 0 ? 'down' : '');
 
 export function month(m) {
-  if (!m) return '—';
+  if (!m) return '-';
   const [y, mm] = String(m).split('-');
   const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return `${names[Number(mm) - 1] || mm} ${y}`;
@@ -90,8 +90,8 @@ export const esc = (s) =>
 /* Escaping alone does NOT make a URL safe to put in href.
  *
  * esc() stops attribute-breakout, but `javascript:alert(1)` survives it intact
- * and fires on click. Several URLs here come from third parties — circular PDF
- * links from NSE's feed, broker websites — so the scheme has to be validated,
+ * and fires on click. Several URLs here come from third parties (circular PDF
+ * links from NSE's feed, broker websites), so the scheme has to be validated,
  * not just the characters escaped.
  *
  * Allowlist http/https (plus mailto for contact links). Anything else, including
@@ -100,7 +100,7 @@ export const esc = (s) =>
 export function safeUrl(url, { allowMailto = false } = {}) {
   const raw = String(url ?? '').trim();
   if (!raw) return '';
-  // Strip control characters — "java\tscript:" is a real bypass.
+  // Strip control characters: "java\tscript:" is a real bypass.
   const cleaned = raw.replace(/[\x00-\x1f\x7f]/g, '');
   if (cleaned.startsWith('//')) return '';            // protocol-relative
   if (cleaned.startsWith('/') || cleaned.startsWith('#')) return esc(cleaned);  // same-origin
@@ -154,7 +154,7 @@ export function provDot(kind) {
         : 'curated';
   const title = {
     primary: 'Sourced from a primary exchange or regulator feed',
-    sample: 'SAMPLE data — not a real figure, pending first ingest',
+    sample: 'SAMPLE data (not a real figure, pending first ingest)',
     curated: 'Hand-curated or broker-supplied, not regulator-verified',
     none: 'Not available',
   }[k];

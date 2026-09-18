@@ -7,7 +7,7 @@
  * core pages). It's fetched lazily, only on first open, so it never adds
  * weight to a page a visitor doesn't search from.
  */
-import { esc, loadSearchIndex } from './store.js?v=557d965307';
+import { esc, loadSearchIndex } from './store.js?v=e83a0661a2';
 
 const toggle = document.getElementById('search-toggle');
 const overlay = document.getElementById('search-overlay');

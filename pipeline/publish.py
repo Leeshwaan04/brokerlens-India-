@@ -676,7 +676,7 @@ def _derive_tags(built, boards):
 
 
 def build_ticker():
-    """Emit site/data/ticker.json — the payload the rolling header polls.
+    """Emit site/data/ticker.json: the payload the rolling header polls.
 
     Separate from overview.json and deliberately small so it can be refreshed
     every minute (or streamed) without republishing the site.
@@ -827,7 +827,7 @@ def _write_sources(cfg, ingest, sample_flags):
 
 
 def _write_algo(brokers_cfg):
-    """Emit site/data/algo.json — the curated algo-platform directory.
+    """Emit site/data/algo.json: the curated algo-platform directory.
 
     Entirely curated (config/algo_platforms.json), so every record is published
     with provenance:'curated' and the page must say so. `works_with` broker ids
@@ -862,7 +862,7 @@ def _write_algo(brokers_cfg):
 
 
 def _write_timings():
-    """Emit site/data/timings.json — curated session timings for the nav mega menu."""
+    """Emit site/data/timings.json: curated session timings for the nav mega menu."""
     cfg = read_json(os.path.join(CONFIG, "market_timings.json"), {}) or {}
     payload = {
         "generated_at": now_iso(),
@@ -1179,7 +1179,7 @@ def _source_note(claim):
 
 _PROV_DOT_TITLE = {
     "primary": "Sourced from a primary exchange or regulator feed",
-    "sample": "SAMPLE data — not a real figure, pending first ingest",
+    "sample": "SAMPLE data (not a real figure, pending first ingest)",
     "curated": "Hand-curated or broker-supplied, not regulator-verified",
     "none": "Not available",
 }
@@ -1230,7 +1230,7 @@ def _indian_grouping(n):
 def _count_html(n):
     """Python port of store.js's count()."""
     if n is None:
-        return "&mdash;"
+        return "-"
     a = abs(n)
     if a >= 1e7:
         return "%.2f Cr" % (n / 1e7)
@@ -1242,13 +1242,13 @@ def _count_html(n):
 
 def _full_html(n):
     """Python port of store.js's full()."""
-    return "&mdash;" if n is None else _indian_grouping(n) if n >= 0 else "-" + _indian_grouping(n)
+    return "-" if n is None else _indian_grouping(n) if n >= 0 else "-" + _indian_grouping(n)
 
 
 def _pct_html(n, sign=True, decimals=2):
     """Python port of store.js's pct()."""
     if n is None:
-        return "&mdash;"
+        return "-"
     s = "+" if n > 0 and sign else ""
     return "%s%.*f%%" % (s, decimals, n)
 
@@ -1256,7 +1256,7 @@ def _pct_html(n, sign=True, decimals=2):
 def _inr_html(n, decimals=None):
     """Python port of store.js's inr()."""
     if n is None:
-        return "&mdash;"
+        return "-"
     a, sign = abs(n), ("-" if n < 0 else "")
     if a >= 1e7:
         return "%s&#8377;%.*f Cr" % (sign, decimals if decimals is not None else 2, a / 1e7)
@@ -1275,7 +1275,7 @@ def _cls_class(n):
 def _fmt_board_html(bd, v):
     """Python port of pages.js's fmtBoard()."""
     if v is None:
-        return "&mdash;"
+        return "-"
     unit = bd.get("unit")
     if unit == "clients":
         return _count_html(v)
@@ -4222,7 +4222,7 @@ def _ipo_row_html(r):
         r.get("status"), "")
     date_val = {"Listed": r.get("listing_date"), "Active": r.get("bidding_end"),
                 "Forthcoming": r.get("bidding_start"), "Closed": r.get("bidding_end")}.get(r.get("status"))
-    sub = ("%.2fx" % r["times_subscribed"]) if r.get("times_subscribed") is not None else "—"
+    sub = ("%.2fx" % r["times_subscribed"]) if r.get("times_subscribed") is not None else "-"
     return (
         '<tr><td><a href="/ipo/%s/">%s</a> <span class="xs faint">%s</span></td>'
         '<td>%s</td><td class="right num">%s</td>'
@@ -4230,7 +4230,7 @@ def _ipo_row_html(r):
     ) % (
         _esc(r["symbol"].lower()), _esc(company), _esc(r["symbol"]),
         _ipo_status_badge(r.get("status")), _esc(detail),
-        date_label, _ipo_long_date(date_val) if date_val else "—", sub,
+        date_label, _ipo_long_date(date_val) if date_val else "-", sub,
     )
 
 
@@ -4385,10 +4385,10 @@ def _write_crypto_hub(coins):
         '<tr data-crypto-row="%s"><td class="rank-cell">%s</td>'
         '<td><a class="coin-name" href="/crypto/%s/">%s<span>%s</span>'
         '<span class="xs faint">%s</span></a></td>'
-        '<td class="right num" data-role="price">—</td>'
-        '<td class="right num" data-role="change">—</td>'
-        '<td class="right num faint" data-role="volume">—</td></tr>'
-        % (_esc(c["symbol"]), ("#%d" % c["market_cap_rank"]) if c.get("market_cap_rank") else "—",
+        '<td class="right num" data-role="price">-</td>'
+        '<td class="right num" data-role="change">-</td>'
+        '<td class="right num faint" data-role="volume">-</td></tr>'
+        % (_esc(c["symbol"]), ("#%d" % c["market_cap_rank"]) if c.get("market_cap_rank") else "-",
            _esc(c["symbol"].lower()),
            ('<img class="coin-icon" src="%s" width="22" height="22" alt="" loading="lazy">' % _esc(c["image"])
             if c.get("image") else ""),
@@ -4491,42 +4491,42 @@ def _write_methodology_page():
         '<div class="grid g2">'
         '<div class="card"><div class="card-title">Regulator-sourced %s</div>'
         '<ul class="small" style="padding-left:18px;margin-top:8px">'
-        '<li>Legal entity names and SEBI registration numbers &mdash; SEBI recognised-intermediary register</li>'
-        '<li>Exchange memberships and registration validity &mdash; same register</li>'
-        '<li>Depository-participant licences &mdash; SEBI CDSL and NSDL registers</li>'
-        '<li>Defaulter / expelled status &mdash; SEBI defaulter list</li>'
-        '<li>Circulars naming a member &mdash; NSE circular feed</li>'
+        '<li>Legal entity names and SEBI registration numbers (SEBI recognised-intermediary register)</li>'
+        '<li>Exchange memberships and registration validity (same register)</li>'
+        '<li>Depository-participant licences (SEBI CDSL and NSDL registers)</li>'
+        '<li>Defaulter / expelled status (SEBI defaulter list)</li>'
+        '<li>Circulars naming a member (NSE circular feed)</li>'
         '</ul></div>'
         '<div class="card"><div class="card-title">Market context %s</div>'
         '<ul class="small" style="padding-left:18px;margin-top:8px">'
-        '<li>Index levels and market breadth &mdash; NSE</li>'
-        '<li>Institutional flows &mdash; NSE FII/DII report</li>'
-        '<li>Cash-market turnover &mdash; NSE bhavcopy</li>'
-        '<li>Delivery percentage &mdash; BSE scrip-wise gross delivery archive</li>'
-        '<li>Corporate actions &mdash; BSE</li>'
+        '<li>Index levels and market breadth (NSE)</li>'
+        '<li>Institutional flows (NSE FII/DII report)</li>'
+        '<li>Cash-market turnover (NSE bhavcopy)</li>'
+        '<li>Delivery percentage (BSE scrip-wise gross delivery archive)</li>'
+        '<li>Corporate actions (BSE)</li>'
         '</ul></div></div>'
 
         '<div class="section-title"><h2>Derived metrics</h2></div>'
         '<div class="stack">'
         '<div class="card"><h4>Market share</h4>'
         '<p class="small muted">A broker\'s active clients divided by the total across all tracked brokers, for '
-        'the same month. It is share of the tracked set, not of every broker in India &mdash; smaller firms '
+        'the same month. It is share of the tracked set, not of every broker in India: smaller firms '
         'outside the tracked set are not in the denominator.</p></div>'
         '<div class="card"><h4>Complaints per 10,000 clients</h4>'
         '<p class="small muted">Complaints received over 12 months &divide; active clients &times; 10,000. '
         'Normalising matters: a large broker will always show more raw complaints than a small one, which tells '
         'you nothing on its own.</p></div>'
-        '<div class="card"><h4>Reliability score (0&ndash;100)</h4>'
+        '<div class="card"><h4>Reliability score (0 to 100)</h4>'
         '<p class="small muted">A weighted composite, disclosed in full: complaint rate percentile against peers '
         '(40%%), resolution rate (20%%), regulatory flags (20%%), complaint backlog in months of current inflow '
         '(10%%), and years since founding (10%%). Missing components are dropped and remaining weights '
-        'renormalised, so a broker is not penalised for a dataset we have not ingested &mdash; instead the '
+        'renormalised, so a broker is not penalised for a dataset we have not ingested: instead the '
         'profile shows lower confidence. It is arithmetic over public disclosures, not an opinion, and it is '
         'not a recommendation.</p></div>'
         '<div class="card"><h4>Cost of a standard month</h4>'
-        '<p class="small muted">Brokerage on a fixed basket &mdash; &#8377;50,000 of delivery across 4 orders, '
+        '<p class="small muted">Brokerage on a fixed basket (&#8377;50,000 of delivery across 4 orders, '
         '&#8377;1,00,000 of intraday turnover across 10 orders, &#8377;2,00,000 of F&amp;O premium turnover '
-        'across 10 orders &mdash; plus demat AMC divided by twelve. Statutory charges (STT, stamp duty, exchange '
+        'across 10 orders) plus demat AMC divided by twelve. Statutory charges (STT, stamp duty, exchange '
         'transaction charges, SEBI turnover fees, GST) are excluded because they are identical at every broker '
         'for an identical trade; including them would compress the differences that actually depend on your '
         'choice of broker. Use the <a href="/calculator" data-link>calculator</a> to price your own pattern '
@@ -4541,7 +4541,7 @@ def _write_methodology_page():
         '<li>We do not scrape competitor comparison sites. Every figure traces to a primary exchange or '
         'regulator source.</li>'
         '<li>We do not let paid placement move a broker up a factual ranking.</li>'
-        '<li>We do not invent a number to fill a gap. Missing data shows as &quot;&mdash;&quot; or '
+        '<li>We do not invent a number to fill a gap. Missing data shows as &quot;-&quot; or '
         '&quot;unverified&quot;.</li>'
         '</ul></div>'
 
@@ -4666,7 +4666,7 @@ def _write_sources_page(sources_data):
                   '<thead><tr><th>Dataset</th><th>Cadence</th><th>Last run</th><th>Status</th><th>Notes</th></tr></thead>'
                   '<tbody>')
         for r in pub_rows:
-            last_run = (r.get("last_run") or "—")[:16].replace("T", " ")
+            last_run = (r.get("last_run") or "-")[:16].replace("T", " ")
             body += (
                 '<tr><td><div style="font-weight:560">%s</div>'
                 '<div class="xs faint" style="word-break:break-all">%s</div></td>'
@@ -4676,7 +4676,7 @@ def _write_sources_page(sources_data):
                 '<td class="xs muted">%s</td></tr>'
             ) % (
                 _esc(r.get("title") or ""), _esc(r.get("url") or ""),
-                _esc(r.get("cadence") or "—"), _esc(last_run),
+                _esc(r.get("cadence") or "-"), _esc(last_run),
                 _status_badge_html(r.get("last_status")), _esc(r.get("notes") or ""),
             )
         body += "</tbody></table></div>"
@@ -4706,7 +4706,7 @@ def _algo_card_html(p):
     """Python port of pages.js's algoCard()."""
     site = _safe_url(p.get("website"))
     works = " ".join(
-        '<a class="badge" href="/broker/%s/" data-link title="Executes through %s &mdash; view broker profile">%s</a>'
+        '<a class="badge" href="/broker/%s/" data-link title="Executes through %s (view broker profile)">%s</a>'
         % (_esc(b["id"]), _esc(b["brand"]), _esc(b["brand"]))
         for b in (p.get("works_with") or [])
     )
@@ -4769,7 +4769,7 @@ def _write_algo_page(algo_data):
         '<p class="muted" style="max-width:75ch">The execution and automation layer around the brokers we '
         'track: official broker APIs, no-code strategy builders, backtesting tools and the institutional '
         'vendors behind broker dealing desks. Platform details are curated and verified against each '
-        'platform\'s own material &mdash; not regulator filings &mdash; so treat them as a directory, not an '
+        'platform\'s own material (not regulator filings), so treat them as a directory, not an '
         'endorsement.</p>'
 
         '<div class="banner" style="margin-top:14px"><span>&sect;</span>'
@@ -4778,7 +4778,7 @@ def _write_algo_page(algo_data):
         'algo order, API access requires authentication with static-IP whitelisting, orders above an '
         'exchange-set rate threshold need an exchange-issued algo ID, and algo providers must be empanelled '
         'with the exchanges. Strategies split into <em>white-box</em> (logic disclosed) and <em>black-box</em> '
-        '(undisclosed &mdash; the provider needs a Research Analyst registration and audit trail). '
+        '(undisclosed: the provider needs a Research Analyst registration and audit trail). '
         'Implementation timelines have moved; check the latest SEBI and exchange circulars before relying on '
         'any platform\'s compliance claims.</div></div>'
 
@@ -4825,7 +4825,7 @@ def _sample_banner_html(meta):
         return ""
     return (
         '<div class="banner"><span>&#9888;</span><div><strong>Sample data in use for: %s.</strong> '
-        'These are placeholder figures generated to exercise the interface &mdash; not facts about any broker. '
+        'These are placeholder figures generated to exercise the interface, not facts about any broker. '
         'Regulator-sourced fields (legal entity, SEBI registration, exchange memberships, defaulter status) are '
         'real. See <a href="/sources" data-link>sources</a> for what is live.</div></div>'
     ) % _esc(", ".join(which))
@@ -4846,7 +4846,7 @@ def _usd_html(n):
     same rule crypto-live.js/crypto-chart.js use client-side, so a coin's
     price reads the same number of decimals wherever it's shown."""
     if n is None:
-        return "&mdash;"
+        return "-"
     d = 6 if n < 1 else 4 if n < 100 else 2
     return "$%.*f" % (d, n)
 
@@ -4931,7 +4931,7 @@ def _write_leaderboards_page(overview, nse_live, crypto_coins):
         '<h1 style="margin-top:16px">Rankings</h1>'
         '<p class="muted" style="max-width:64ch">Real movers from NSE and the tracked crypto universe, as of '
         'the last data refresh. Every ranking states the metric it sorts on and where that metric comes from. '
-        'We do not publish an overall &quot;best broker&quot; &mdash; that depends on what you trade.</p>'
+        'We do not publish an overall &quot;best broker&quot;: that depends on what you trade.</p>'
     )
 
     def board_html(name, kind, rows, fmt, href):
@@ -5142,7 +5142,7 @@ def _write_registry_landing_page(reg_rows, overview, registry_letters=None):
     body += (
         '<h1 style="margin-top:16px">SEBI-registered intermediaries</h1>'
         '<p class="muted" style="max-width:70ch">Every registered entity we hold that is not one of the %d '
-        'brokers tracked in depth &mdash; %s of them. Straight from SEBI\'s register: legal name, registration '
+        'brokers tracked in depth (%s of them). Straight from SEBI\'s register: legal name, registration '
         'number, city, exchange memberships and validity. Nothing here is curated or scored.</p>'
 
         '%s'
@@ -5151,7 +5151,7 @@ def _write_registry_landing_page(reg_rows, overview, registry_letters=None):
         '<div class="grow" style="min-width:240px">'
         '<input type="search" id="reg-q" placeholder="Search by name, registration number or city&hellip;">'
         '</div>'
-        '<span class="small faint" id="reg-meta">%s entities &middot; showing 1&ndash;%d</span>'
+        '<span class="small faint" id="reg-meta">%s entities &middot; showing 1 to %d</span>'
         '<button class="btn btn-sm" id="reg-prev" disabled>&larr; Prev</button>'
         '<button class="btn btn-sm" id="reg-next"%s>Next &rarr;</button>'
         '</div></div>'
@@ -5177,10 +5177,10 @@ def _write_registry_landing_page(reg_rows, overview, registry_letters=None):
             % (
                 ('<a href="/sebi-registry/%s/">%s</a>' % (_esc(e["slug"]), _esc(e["name"]))) if e.get("slug") else _esc(e.get("name") or ""),
                 ('<div class="xs faint">trading as %s</div>' % _esc(e["trade_name"])) if e.get("trade_name") else "",
-                _esc(e.get("reg") or "&mdash;"), _esc(e.get("city") or "&mdash;"),
+                _esc(e.get("reg") or "-"), _esc(e.get("city") or "-"),
                 " &middot; ".join(_esc(x) for x in (e.get("exchanges") or [])[:3]),
                 (" +%d" % (len(e["exchanges"]) - 3)) if len(e.get("exchanges") or []) > 3 else "",
-                _esc(e.get("validity") or "&mdash;"),
+                _esc(e.get("validity") or "-"),
             )
             for e in page_rows
         ),
@@ -5234,7 +5234,7 @@ def _dir_row_html(b):
     faintDash matches its JS namesake: a dash reading at full text weight
     down a whole column looks broken, not "not published yet"."""
     def faint_dash(s):
-        return '<span class="faint">&mdash;</span>' if s == "&mdash;" else s
+        return '<span class="faint">-</span>' if s == "-" else s
     return (
         '<tr class="%s"><td class="rank-cell">%s</td>'
         '<td><div class="bname">%s<span>%s</span> %s</div>'
@@ -5248,14 +5248,14 @@ def _dir_row_html(b):
         '<td class="small">%s</td></tr>'
     ) % (
         "promoted" if b.get("tier") == "featured" else "",
-        faint_dash(_full_html(b.get("rank"))) if b.get("rank") is not None else '<span class="faint">&mdash;</span>',
+        faint_dash(_full_html(b.get("rank"))) if b.get("rank") is not None else '<span class="faint">-</span>',
         _mark_html(b["id"], b["brand"]), '<a href="/broker/%s/" data-link>%s</a>' % (_esc(b["id"]), _esc(b["brand"])),
         _broker_badge_html(b),
         _esc(b.get("hq") or ""), (" &middot; est. %s" % b["founded"]) if b.get("founded") else "",
         faint_dash(_count_html(b.get("clients"))),
         _cls_class(b.get("clients_yoy")), faint_dash(_pct_html(b.get("clients_yoy"))),
-        faint_dash("%.2f" % b["complaints_per_10k"] if b.get("complaints_per_10k") is not None else "&mdash;"),
-        faint_dash("%.1f" % b["reliability"] if b.get("reliability") is not None else "&mdash;"),
+        faint_dash("%.2f" % b["complaints_per_10k"] if b.get("complaints_per_10k") is not None else "-"),
+        faint_dash("%.1f" % b["reliability"] if b.get("reliability") is not None else "-"),
         _inr_html(b["cost"], decimals=0) if b.get("cost") is not None else '<span class="faint">unverified</span>',
         _esc(TYPE_LABEL.get(b.get("type"), b.get("type") or "")),
     )
@@ -5275,10 +5275,10 @@ def _dir_row_simple_html(b):
         _mark_html(b["id"], b["brand"]), '<a href="/broker/%s/" data-link>%s</a>' % (_esc(b["id"]), _esc(b["brand"])),
         _broker_badge_html(b),
         _esc(b.get("hq") or ""), (" &middot; est. %s" % b["founded"]) if b.get("founded") else "",
-        _esc(b.get("sebi_reg_no") or "&mdash;"),
-        _esc(TYPE_LABEL.get(b.get("type"), b.get("type") or "&mdash;")),
-        " &middot; ".join(_esc(SEGMENT_LABEL.get(s, s)) for s in (b.get("segments") or [])) or "&mdash;",
-        _esc(b.get("hq") or "&mdash;"),
+        _esc(b.get("sebi_reg_no") or "-"),
+        _esc(TYPE_LABEL.get(b.get("type"), b.get("type") or "-")),
+        " &middot; ".join(_esc(SEGMENT_LABEL.get(s, s)) for s in (b.get("segments") or [])) or "-",
+        _esc(b.get("hq") or "-"),
     )
 
 
@@ -5361,12 +5361,12 @@ def _write_brokers_page(overview):
         "".join((_dir_row_html if has_clients else _dir_row_simple_html)(b) for b in rows_sorted),
         (
             '%s exchange/regulator sourced &middot; %s curated or broker-supplied &middot; %s sample pending '
-            'ingest. Cost is a fixed basket of trades &mdash; see <a href="/methodology" data-link>methodology</a>.'
+            'ingest. Cost is a fixed basket of trades (see <a href="/methodology" data-link>methodology</a>).'
             % (_prov_dot_html("nse"), _prov_dot_html("curated"), _prov_dot_html("sample"))
             if has_clients else
             '%s Legal name, registration and segments come straight from SEBI\'s own register. Active-client '
-            'counts, complaint records and cost are not yet available for these brokers &mdash; shown only once '
-            'traced to NSE and SEBI\'s own disclosures, never estimated. See '
+            'counts, complaint records and cost are not yet available for these brokers. They will be shown only '
+            'once traced to NSE and SEBI\'s own disclosures, never estimated. See '
             '<a href="/methodology" data-link>methodology</a>.' % _prov_dot_html("sebi_registry")
         ),
         " &middot; ".join('<a href="/brokers-by/type/%s/">%s</a>' % (k.replace("_", "-"), _esc(v)) for k, v in TYPE_LABEL.items()),
@@ -5397,7 +5397,7 @@ def _calc_leg_cost(plan, turnover, trades):
 def _fmt_plan_html(plan):
     """Python port of pages.js's fmtPlan()."""
     if not plan:
-        return "&mdash;"
+        return "-"
     bits = []
     if plan.get("flat_per_order") is not None:
         bits.append("Free" if plan["flat_per_order"] == 0 else "&#8377;%s/order" % plan["flat_per_order"])
@@ -5405,7 +5405,7 @@ def _fmt_plan_html(plan):
         bits.append("%s%%" % plan["pct_of_turnover"])
     if plan.get("cap_per_order") is not None:
         bits.append("max &#8377;%s" % plan["cap_per_order"])
-    return _esc(", ".join(bits)) if bits else "&mdash;"
+    return _esc(", ".join(bits)) if bits else "-"
 
 
 # Default example basket, identical to the pre-filled <input value> attributes
@@ -5494,7 +5494,7 @@ def _write_calculator_tool_page(built):
             '<th class="right">Per year</th><th></th></tr></thead><tbody>%s</tbody></table></div>'
             '<p class="xs faint" style="margin-top:10px">Brokerage plus amortised AMC only. Statutory charges '
             'are excluded because they are identical at every broker for the same trade. Only brokers with '
-            'verified published pricing appear &mdash; %d of %d today.</p></div></div>'
+            'verified published pricing appear (%d of %d today).</p></div></div>'
         ) % (
             basket["delivery_buy_value"], basket["delivery_trades"], basket["intraday_turnover"],
             basket["intraday_trades"], basket["fno_premium_turnover"], basket["fno_trades"],
@@ -5522,7 +5522,7 @@ _MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 def _month_html(m):
     """Python port of store.js's month()."""
     if not m:
-        return "&mdash;"
+        return "-"
     y, mm = str(m).split("-")
     try:
         name = _MONTH_NAMES[int(mm) - 1]
@@ -5550,7 +5550,7 @@ def _ad_slot_html(overview, placement):
         return ""
     b = featured[0]
     return (
-        '<div class="ad-slot"><div class="ad-tag">Sponsored &mdash; %s</div>'
+        '<div class="ad-slot"><div class="ad-tag">Sponsored: %s</div>'
         '<div class="row" style="margin-top:8px">%s<div class="grow">'
         '<div style="font-weight:600">%s</div><div class="xs muted">%s active clients &middot; %s</div></div>'
         '<a class="btn btn-sm btn-primary" href="/broker/%s/" data-link>View</a></div></div>'
@@ -5691,8 +5691,8 @@ def _prerender_home(overview):
                 '<a href="/broker/%s/" data-link>%s</a>' % (_esc(b["id"]), _esc(b["brand"])), _broker_badge_html(b),
                 _count_html(b.get("clients")), _pct_html(b.get("share"), sign=False),
                 _cls_class(b.get("clients_yoy")), _pct_html(b.get("clients_yoy")),
-                "%.2f" % b["complaints_per_10k"] if b.get("complaints_per_10k") is not None else "&mdash;",
-                "%.1f" % b["reliability"] if b.get("reliability") is not None else "&mdash;",
+                "%.2f" % b["complaints_per_10k"] if b.get("complaints_per_10k") is not None else "-",
+                "%.1f" % b["reliability"] if b.get("reliability") is not None else "-",
             )
         return (
             '<tr><td><div class="bname">%s<span>%s</span> %s</div></td>'
@@ -5700,10 +5700,10 @@ def _prerender_home(overview):
             '<td class="xs muted">%s</td><td class="small">%s</td></tr>'
         ) % (
             _mark_html(b["id"], b["brand"]), '<a href="/broker/%s/" data-link>%s</a>' % (_esc(b["id"]), _esc(b["brand"])),
-            _broker_badge_html(b), _esc(b.get("sebi_reg_no") or "&mdash;"),
-            _esc(TYPE_LABEL.get(b.get("type"), b.get("type") or "&mdash;")),
-            " &middot; ".join(_esc(SEGMENT_LABEL.get(s, s)) for s in (b.get("segments") or [])) or "&mdash;",
-            _esc(b.get("hq") or "&mdash;"),
+            _broker_badge_html(b), _esc(b.get("sebi_reg_no") or "-"),
+            _esc(TYPE_LABEL.get(b.get("type"), b.get("type") or "-")),
+            " &middot; ".join(_esc(SEGMENT_LABEL.get(s, s)) for s in (b.get("segments") or [])) or "-",
+            _esc(b.get("hq") or "-"),
         )
 
     html += (
@@ -5730,7 +5730,7 @@ def _prerender_home(overview):
         ('<dt>NSE CM turnover</dt><dd class="num">%s</dd>' % _inr_html(m["turnover"][-1]["turnover_inr"])
          if m.get("turnover") else ""),
         _prov_dot_html("nse"),
-        ('<div class="card"><div class="card-title">BSE delivery % &mdash; investors vs churn</div>'
+        ('<div class="card"><div class="card-title">BSE delivery % (investors vs churn)</div>'
          '<div class="chart-box"><canvas id="bse-delivery" height="160"></canvas></div></div>'
          if bse_delivery else ""),
     )

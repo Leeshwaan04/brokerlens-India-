@@ -1145,6 +1145,26 @@ def test_published():
             m = re.search(r"<title>(.*?)</title>", title_html)
             check("%s <title> has no em dash" % label, bool(m) and "—" not in m.group(1))
 
+    # The no-em-dash rule applies to every character variant (—, –, &mdash;,
+    # &ndash;) and to the source we write, not just a handful of sample
+    # titles - checking the templates directly catches a regression before
+    # it can spread across thousands of generated pages. Regulator-sourced
+    # scheme/entity names (e.g. an AMFI fund name that itself contains an en
+    # dash) are the one legitimate exception: that is disclosed data, not our
+    # copy, and altering it would misquote the source - so this checks the
+    # code we author, not every character a third-party feed might contain.
+    dash_chars = ("—", "–", "&mdash;", "&ndash;")
+    publish_src = open(os.path.join(ROOT, "pipeline", "publish.py"), encoding="utf-8").read()
+    check("pipeline/publish.py has no em or en dash in its own source",
+          not any(d in publish_src for d in dash_chars))
+    js_dir_for_dash = os.path.join(ROOT, "site", "assets", "js")
+    if os.path.isdir(js_dir_for_dash):
+        for fname in sorted(os.listdir(js_dir_for_dash)):
+            if fname.endswith(".js"):
+                js_src = open(os.path.join(js_dir_for_dash, fname), encoding="utf-8").read()
+                check("%s has no em or en dash in its own source" % fname,
+                      not any(d in js_src for d in dash_chars))
+
     src = load("site/data/sources.json")
     check("sources.json lists every configured source",
           len(src["sources"]) == len((load("config/sources.json") or {}).get("sources", {})))

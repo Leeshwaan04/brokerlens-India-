@@ -5,11 +5,11 @@
  * server (and any production host) must rewrite unknown paths to /index.html.
  */
 
-import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=557d965307';
-import * as pages from './pages.js?v=f5f7a36bef';
-import { clearRedraws } from './chart.js?v=f69d0c170f';
-import './nav-widgets.js?v=652718f215';
-import './search.js?v=8f5c9e48ac';
+import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=e83a0661a2';
+import * as pages from './pages.js?v=cd399f3c3d';
+import { clearRedraws } from './chart.js?v=ec48a39b98';
+import './nav-widgets.js?v=0cdd96e7bf';
+import './search.js?v=b4e9f68a6c';
 
 const app = document.getElementById('app');
 let isFirstRender = true;
@@ -173,14 +173,14 @@ window.addEventListener('popstate', render);
  * requests, gate on session cookies, sit behind bot walls, and our own CSP is
  * default-src 'self'. Everything comes from our origin, in two tiers:
  *
- *   1. First paint from /data/ticker.json — a static ~7KB file the pipeline
+ *   1. First paint from /data/ticker.json: a static ~7KB file the pipeline
  *      writes. Always available, CDN-cacheable, survives an exchange outage.
  *   2. Then an upgrade to /api/stream (Server-Sent Events) if a stream server is
  *      running. Pushed frames patch individual prices in place at 1-3s.
  *
  * If the stream is absent (a static-only deploy) or drops, we fall back to
  * polling tier 1. The strip therefore works on a plain CDN and gets sharper when
- * a live backend exists — no feature detection needed beyond the EventSource.
+ * a live backend exists, so no feature detection is needed beyond the EventSource.
  */
 
 const EXCH_KEY = 'bl-exchange';
@@ -224,11 +224,11 @@ function tickItem(label, value, changePct, change, q = {}) {
   const chg = changePct != null
     ? `<span class="num ${cls(changePct)}">${pct(changePct)}</span>`
     : change != null ? `<span class="num ${cls(change)}">${change > 0 ? '+' : ''}${change}</span>` : '';
-  // A broker stock links straight to that broker's profile — the one thing this
+  // A broker stock links straight to that broker's profile: the one thing this
   // ticker can do that a generic market ticker cannot.
   const sym = q.broker_id
     ? `<a class="tick-sym" href="/broker/${esc(q.broker_id)}" data-link title="${esc(q.name || label)}${
-        q.relation === 'parent' ? ' — parent company' : ''}">${esc(label)}${
+        q.relation === 'parent' ? ' (parent company)' : ''}">${esc(label)}${
         q.relation === 'parent' ? '<sup>P</sup>' : ''}</a>`
     : `<span class="tick-sym"${q.name ? ` title="${esc(q.name)}"` : ''}>${esc(label)}</span>`;
   // data-sym lets a pushed update patch this item in place. Rebuilding the whole
@@ -237,7 +237,7 @@ function tickItem(label, value, changePct, change, q = {}) {
     ${sym}<span class="num" data-role="last">${value}</span>${chg}</span>`;
 }
 
-/* Instruments only — every row is a tradable thing with a price. Market breadth,
+/* Instruments only: every row is a tradable thing with a price. Market breadth,
  * delivery percentage and the site's own aggregates belong on the pages that
  * explain them, not in a price strip. */
 function buildItems(feed) {
@@ -312,7 +312,7 @@ async function refreshTicker() {
   } catch {
     if (track && !tickerData) {
       track.style.animation = 'none';
-      track.innerHTML = `<span class="tick faint xs">Market data unavailable — run
+      track.innerHTML = `<span class="tick faint xs">Market data unavailable. Run
         <code>python3 -m pipeline.run all</code> to populate site/data.</span>`;
     }
   }

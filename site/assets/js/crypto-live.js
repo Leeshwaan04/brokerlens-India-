@@ -5,7 +5,7 @@
  * JSON snapshot, never a live call to Binance itself - the browser never
  * calls a third-party market API directly, same rule as store.js's ticker.
  */
-import { esc, cls, pct } from './store.js?v=557d965307';
+import { esc, cls, pct } from './store.js?v=e83a0661a2';
 
 async function loadCryptoTicker() {
   const r = await fetch(`/data/crypto-ticker.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -14,13 +14,13 @@ async function loadCryptoTicker() {
 }
 
 function fmtUsd(n) {
-  if (n == null) return '—';
+  if (n == null) return '-';
   const d = n < 1 ? 6 : n < 100 ? 4 : 2;
   return `$${n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })}`;
 }
 
 function fmtVolume(n) {
-  if (n == null) return '—';
+  if (n == null) return '-';
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
@@ -69,7 +69,7 @@ async function paintList() {
       const chgEl = row.querySelector('[data-role="change"]');
       const volEl = row.querySelector('[data-role="volume"]');
       if (!c) {
-        if (priceEl) priceEl.textContent = '—';
+        if (priceEl) priceEl.textContent = '-';
         return;
       }
       if (priceEl) priceEl.textContent = fmtUsd(c.price_usd);
@@ -77,7 +77,7 @@ async function paintList() {
       if (volEl) volEl.textContent = fmtVolume(c.volume_24h_usd);
     });
   } catch {
-    /* leave the static "—" placeholders in place - never show a stale guess */
+    /* leave the static "-" placeholders in place - never show a stale guess */
   }
 }
 

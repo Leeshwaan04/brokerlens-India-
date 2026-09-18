@@ -6,8 +6,8 @@ import {
   cls, count, esc, full, initials, inr, loadAlgo, loadBroker, loadOverview,
   loadRegistry, loadSources, markColor, month, pct, provDot, safeUrl,
   SEGMENT_LABEL, TYPE_LABEL,
-} from './store.js?v=557d965307';
-import { barChart, donut, lineChart, registerRedraw, sparkline } from './chart.js?v=f69d0c170f';
+} from './store.js?v=e83a0661a2';
+import { barChart, donut, lineChart, registerRedraw, sparkline } from './chart.js?v=ec48a39b98';
 
 const after = [];
 export const runAfter = () => { while (after.length) { try { after.shift()(); } catch (e) { console.error(e); } } };
@@ -35,7 +35,7 @@ function sampleBanner(meta) {
   return `<div class="banner">
     <span>⚠</span>
     <div><strong>Sample data in use for: ${esc(which.join(', '))}.</strong>
-    These are placeholder figures generated to exercise the interface — not facts about any broker.
+    These are placeholder figures generated to exercise the interface, not facts about any broker.
     Regulator-sourced fields (legal entity, SEBI registration, exchange memberships, defaulter status)
     are real. See <a href="/sources" data-link>sources</a> for what is live.</div>
   </div>`;
@@ -85,7 +85,7 @@ function adSlot(overview, placement) {
   if (!featured.length) return '';
   const b = featured[Math.floor(Math.random() * featured.length)];
   return `<div class="ad-slot">
-    <div class="ad-tag">Sponsored — ${esc(placement)}</div>
+    <div class="ad-tag">Sponsored: ${esc(placement)}</div>
     <div class="row" style="margin-top:8px">
       ${mark(b.id, b.brand, 34)}
       <div class="grow">
@@ -278,20 +278,20 @@ export async function home() {
           </tr></thead>
           <tbody>
             ${top.map((b) => hasClients ? `<tr>
-              <td class="rank-cell">${b.rank ?? '—'}</td>
+              <td class="rank-cell">${b.rank ?? '-'}</td>
               <td><div class="bname">${mark(b.id, b.brand)}<span>${brokerLink(b)}</span> ${badge(b)}</div></td>
               <td class="right num">${count(b.clients)}</td>
               <td class="right num">${pct(b.share, { sign: false })}</td>
               <td class="right num ${cls(b.clients_yoy)}">${pct(b.clients_yoy)}</td>
               <td>${sparkCell(b)}</td>
-              <td class="right num">${b.complaints_per_10k?.toFixed(2) ?? '—'}</td>
-              <td class="right num">${b.reliability?.toFixed(1) ?? '—'}</td>
+              <td class="right num">${b.complaints_per_10k?.toFixed(2) ?? '-'}</td>
+              <td class="right num">${b.reliability?.toFixed(1) ?? '-'}</td>
             </tr>` : `<tr>
               <td><div class="bname">${mark(b.id, b.brand)}<span>${brokerLink(b)}</span> ${badge(b)}</div></td>
-              <td class="small num">${esc(b.sebi_reg_no || '—')}</td>
-              <td class="small">${esc(TYPE_LABEL[b.type] || b.type || '—')}</td>
-              <td class="xs muted">${(b.segments || []).map((x) => esc(SEGMENT_LABEL[x] || x)).join(' · ') || '—'}</td>
-              <td class="small">${esc(b.hq || '—')}</td>
+              <td class="small num">${esc(b.sebi_reg_no || '-')}</td>
+              <td class="small">${esc(TYPE_LABEL[b.type] || b.type || '-')}</td>
+              <td class="xs muted">${(b.segments || []).map((x) => esc(SEGMENT_LABEL[x] || x)).join(' · ') || '-'}</td>
+              <td class="small">${esc(b.hq || '-')}</td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -318,7 +318,7 @@ export async function home() {
       </div>
 
       ${(m.bse_delivery || []).length ? `<div class="card">
-        <div class="card-title">BSE delivery % — investors vs churn</div>
+        <div class="card-title">BSE delivery % (investors vs churn)</div>
         <div class="chart-box"><canvas id="bse-delivery"></canvas></div>
       </div>` : ''}
 
@@ -345,7 +345,7 @@ function leaderCard(bd) {
 }
 
 function fmtBoard(bd, v) {
-  if (v == null) return '—';
+  if (v == null) return '-';
   if (bd.unit === 'clients') return count(v);
   if (bd.unit === '%') return pct(v);
   if (bd.unit === 'bps') return `${v > 0 ? '+' : ''}${v.toFixed(0)}`;
@@ -462,11 +462,11 @@ export async function brokers(params) {
       <p class="xs faint" style="margin-top:10px">
         ${hasClients
           ? `${provDot('nse')} exchange/regulator sourced · ${provDot('curated')} curated or broker-supplied ·
-             ${provDot('sample')} sample pending ingest. Cost is a fixed basket of trades — see
-             <a href="/methodology" data-link>methodology</a>.`
+             ${provDot('sample')} sample pending ingest. Cost is a fixed basket of trades (see
+             <a href="/methodology" data-link>methodology</a>).`
           : `${provDot('sebi_registry')} Legal name, registration and segments come straight from SEBI's own register.
-             Active-client counts, complaint records and cost are not yet available for these brokers — shown only
-             once traced to NSE and SEBI's own disclosures, never estimated. See
+             Active-client counts, complaint records and cost are not yet available for these brokers. They will be
+             shown only once traced to NSE and SEBI's own disclosures, never estimated. See
              <a href="/methodology" data-link>methodology</a>.`}
       </p>
       <p class="xs faint" style="margin-top:6px">Dedicated category pages:
@@ -511,18 +511,18 @@ function filterSort(list) {
 // explanation doesn't help the at-a-glance impression of the table). Muting
 // it to match the existing "unverified" cost treatment fixes that without
 // changing what's actually shown.
-const faintDash = (s) => (s === '—' ? '<span class="faint">—</span>' : s);
+const faintDash = (s) => (s === '-' ? '<span class="faint">-</span>' : s);
 
 function dirRow(b) {
   return `<tr class="${b.tier === 'featured' ? 'promoted' : ''}">
-    <td class="rank-cell">${faintDash(b.rank ?? '—')}</td>
+    <td class="rank-cell">${faintDash(b.rank ?? '-')}</td>
     <td><div class="bname">${mark(b.id, b.brand)}<span>${brokerLink(b)}</span> ${badge(b)}</div>
       <div class="xs faint">${esc(b.hq || '')}${b.founded ? ` · est. ${b.founded}` : ''}</div></td>
     <td class="right num">${faintDash(count(b.clients))}</td>
     <td class="right num ${cls(b.clients_yoy)}">${faintDash(pct(b.clients_yoy))}</td>
     <td>${sparkCell(b)}</td>
-    <td class="right num">${faintDash(b.complaints_per_10k?.toFixed(2) ?? '—')}</td>
-    <td class="right num">${faintDash(b.reliability?.toFixed(1) ?? '—')}</td>
+    <td class="right num">${faintDash(b.complaints_per_10k?.toFixed(2) ?? '-')}</td>
+    <td class="right num">${faintDash(b.reliability?.toFixed(1) ?? '-')}</td>
     <td class="right num">${b.cost != null ? inr(b.cost, { decimals: 0 }) : '<span class="faint">unverified</span>'}</td>
     <td class="small">${esc(TYPE_LABEL[b.type] || b.type || '')}</td>
   </tr>`;
@@ -530,15 +530,15 @@ function dirRow(b) {
 
 // No active-client/complaint/cost data exists for any broker yet (see hasClients
 // above) - this mirrors home()'s own no-client-data table shape rather than
-// showing the data-heavy dirRow() columns with every cell reading "—".
+// showing the data-heavy dirRow() columns with every cell reading "-".
 function dirRowSimple(b) {
   return `<tr class="${b.tier === 'featured' ? 'promoted' : ''}">
     <td><div class="bname">${mark(b.id, b.brand)}<span>${brokerLink(b)}</span> ${badge(b)}</div>
       <div class="xs faint">${esc(b.hq || '')}${b.founded ? ` · est. ${b.founded}` : ''}</div></td>
-    <td class="small num">${esc(b.sebi_reg_no || '—')}</td>
-    <td class="small">${esc(TYPE_LABEL[b.type] || b.type || '—')}</td>
-    <td class="xs muted">${(b.segments || []).map((x) => esc(SEGMENT_LABEL[x] || x)).join(' · ') || '—'}</td>
-    <td class="small">${esc(b.hq || '—')}</td>
+    <td class="small num">${esc(b.sebi_reg_no || '-')}</td>
+    <td class="small">${esc(TYPE_LABEL[b.type] || b.type || '-')}</td>
+    <td class="xs muted">${(b.segments || []).map((x) => esc(SEGMENT_LABEL[x] || x)).join(' · ') || '-'}</td>
+    <td class="small">${esc(b.hq || '-')}</td>
   </tr>`;
 }
 
@@ -601,7 +601,7 @@ export async function broker(id) {
     </div>
     <div class="card" style="min-width:200px">
       <div class="stat-label">Reliability score</div>
-      <div class="stat-value" style="color:${relColor}">${rel.score?.toFixed(1) ?? '—'}<span class="muted" style="font-size:var(--fs-base)">/100</span></div>
+      <div class="stat-value" style="color:${relColor}">${rel.score?.toFixed(1) ?? '-'}<span class="muted" style="font-size:var(--fs-base)">/100</span></div>
       <div class="meter" style="margin-top:8px"><i style="width:${rel.score ?? 0}%;background:${relColor}"></i></div>
       <div class="xs faint" style="margin-top:6px">confidence: ${esc(rel.confidence || 'none')} ·
         <a href="/methodology" data-link>how it is built</a></div>
@@ -615,15 +615,15 @@ export async function broker(id) {
 
   <div class="grid g4" style="margin-top:20px">
     ${statTile('Active clients', count(c.active_clients),
-      `${month(c.as_of)} · rank ${b.rank ?? '—'} of ${o.metadata.broker_count}`,
+      `${month(c.as_of)} · rank ${b.rank ?? '-'} of ${o.metadata.broker_count}`,
       provDot(b.provenance?.active_clients))}
     ${statTile('Market share', pct(shareOfMkt, { sign: false }),
       c.market_share_change_1y_bps != null
         ? `<span class="${cls(c.market_share_change_1y_bps)}">${c.market_share_change_1y_bps > 0 ? '+' : ''}${c.market_share_change_1y_bps.toFixed(0)} bps</span> in 12 months` : '')}
     ${statTile('12-month growth', pct(c.yoy_pct),
       c.net_adds_12m != null ? `${c.net_adds_12m > 0 ? '+' : ''}${count(c.net_adds_12m)} clients` : '')}
-    ${statTile('Complaints per 10k clients', k.per_10k_clients_12m?.toFixed(2) ?? '—',
-      k.available ? `${full(k.received_12m)} in 12 months · ${k.resolution_rate_pct?.toFixed(1) ?? '—'}% resolved` : 'no disclosure ingested',
+    ${statTile('Complaints per 10k clients', k.per_10k_clients_12m?.toFixed(2) ?? '-',
+      k.available ? `${full(k.received_12m)} in 12 months · ${k.resolution_rate_pct?.toFixed(1) ?? '-'}% resolved` : 'no disclosure ingested',
       provDot(b.provenance?.complaints))}
   </div>
 
@@ -638,18 +638,18 @@ export async function broker(id) {
     <div class="card">
       <div class="card-title">Registration &amp; entity</div>
       <dl class="kv" style="margin-top:10px">
-        <dt>Type</dt><dd>${esc(TYPE_LABEL[p.type] || p.type || '—')}</dd>
-        <dt>Head office</dt><dd>${esc(p.sebi_city || p.hq || '—')}</dd>
+        <dt>Type</dt><dd>${esc(TYPE_LABEL[p.type] || p.type || '-')}</dd>
+        <dt>Head office</dt><dd>${esc(p.sebi_city || p.hq || '-')}</dd>
         ${p.founded ? `<dt>Founded</dt><dd class="num">${p.founded}</dd>` : ''}
         ${p.sebi_validity ? `<dt>Registration</dt><dd class="small">${esc(p.sebi_validity)}</dd>` : ''}
-        ${p.listed_company ? '<dt>Listed</dt><dd>Yes — publicly traded</dd>' : ''}
-        <dt>Segments</dt><dd class="small">${(p.segments || []).map((s) => esc(SEGMENT_LABEL[s] || s)).join(', ') || '—'}</dd>
+        ${p.listed_company ? '<dt>Listed</dt><dd>Yes, publicly traded</dd>' : ''}
+        <dt>Segments</dt><dd class="small">${(p.segments || []).map((s) => esc(SEGMENT_LABEL[s] || s)).join(', ') || '-'}</dd>
         ${(p.apps || []).length ? `<dt>Apps</dt><dd class="small">${(p.apps).map(esc).join(', ')}</dd>` : ''}
       </dl>
       ${(p.dp_registrations || []).length ? `<hr class="sep">
         <div class="card-title">Depository participant</div>
         <div class="small" style="margin-top:6px">${p.dp_registrations.map((d) =>
-          `${esc(d.depository)} — <span class="num">${esc(d.reg_no)}</span>`).join('<br>')}</div>` : ''}
+          `${esc(d.depository)}: <span class="num">${esc(d.reg_no)}</span>`).join('<br>')}</div>` : ''}
       ${(p.sebi_exchanges || []).length ? `<hr class="sep">
         <div class="card-title">Exchange memberships (SEBI register)</div>
         <div class="xs muted" style="margin-top:6px">${p.sebi_exchanges.map(esc).join(' · ')}</div>` : ''}
@@ -666,7 +666,7 @@ export async function broker(id) {
         <td>${esc(e.legal_name)}</td>
         <td class="num">${esc(e.reg_no)}</td>
         <td class="small">${(e.categories || []).map((x) => esc(x.replace(/_/g, ' '))).join(', ')}</td>
-        <td class="small">${esc(e.validity || '—')}</td>
+        <td class="small">${esc(e.validity || '-')}</td>
       </tr>`).join('')}</tbody>
     </table></div>
   </div>` : ''}
@@ -680,7 +680,7 @@ export async function broker(id) {
       ${k.available ? `
         <div class="grid g3" style="margin-bottom:12px">
           <div class="stat"><div class="stat-label">Received 12m</div><div class="stat-value sm">${full(k.received_12m)}</div></div>
-          <div class="stat"><div class="stat-label">Resolved</div><div class="stat-value sm">${k.resolution_rate_pct?.toFixed(1) ?? '—'}%</div></div>
+          <div class="stat"><div class="stat-label">Resolved</div><div class="stat-value sm">${k.resolution_rate_pct?.toFixed(1) ?? '-'}%</div></div>
           <div class="stat"><div class="stat-label">Pending</div><div class="stat-value sm">${full(k.pending_latest)}</div></div>
         </div>
         <div class="chart-box"><canvas id="p-complaints"></canvas></div>
@@ -695,8 +695,8 @@ export async function broker(id) {
       <div class="card">
         <div class="card-title">Reliability breakdown</div>
         <div class="chart-box" style="margin-top:8px"><canvas id="p-rel"></canvas></div>
-        <div class="xs faint">Each component is 0–100. Weights: ${Object.entries(rel.weights || {})
-          .map(([kk, v]) => `${esc(kk.replace(/_/g, ' '))} ${(v * 100).toFixed(0)}%`).join(' · ') || '—'}</div>
+        <div class="xs faint">Each component is 0 to 100. Weights: ${Object.entries(rel.weights || {})
+          .map(([kk, v]) => `${esc(kk.replace(/_/g, ' '))} ${(v * 100).toFixed(0)}%`).join(' · ') || '-'}</div>
       </div>
 
       <div class="card">
@@ -712,7 +712,7 @@ export async function broker(id) {
             <dt>F&amp;O</dt><dd class="num">${inr(cost.fno, { decimals: 0 })}</dd>
             <dt>AMC (monthly)</dt><dd class="num">${inr(cost.amc_monthly, { decimals: 0 })}</dd>
           </dl>
-          <div class="xs faint" style="margin-top:8px">${provDot(b.provenance?.charges)} Statutory charges excluded —
+          <div class="xs faint" style="margin-top:8px">${provDot(b.provenance?.charges)} Statutory charges excluded:
             identical at every broker. <a href="/methodology" data-link>Basket definition</a></div>`
           : `<p class="small muted" style="margin-top:8px">This broker has not published verified pricing here yet, so we
              show nothing rather than guess. Check the broker's own website for current charges.</p>`}
@@ -722,7 +722,7 @@ export async function broker(id) {
 
   ${(flags.circulars || []).length ? `<div class="card" style="margin-top:16px">
     <div class="card-title">Exchange circulars naming this member</div>
-    <p class="xs faint" style="margin-top:4px">Automatically matched from the NSE circular feed. Context matters — a
+    <p class="xs faint" style="margin-top:4px">Automatically matched from the NSE circular feed. Context matters: a
     mention is not by itself an adverse finding.</p>
     <table class="data" style="margin-top:8px"><tbody>
       ${flags.circulars.slice(0, 8).map((x) => `<tr>
@@ -749,7 +749,7 @@ export async function broker(id) {
         ${(b.peers || []).map((x) => `<tr>
           <td><div class="bname">${mark(x.id, x.brand, 22)}<a href="/broker/${esc(x.id)}" data-link>${esc(x.brand)}</a></div></td>
           <td class="right num">${count(x.clients)}</td>
-          <td class="right num">${x.reliability?.toFixed(1) ?? '—'}</td>
+          <td class="right num">${x.reliability?.toFixed(1) ?? '-'}</td>
           <td class="right"><a class="small" href="/compare?b=${esc(p.id)},${esc(x.id)}" data-link>vs</a></td>
         </tr>`).join('') || '<tr><td class="empty">No peers computed.</td></tr>'}
       </tbody></table>
@@ -806,7 +806,7 @@ export async function compare(params) {
       </div>`;
   }
 
-  // Each fn returns null for "no data on this broker" rather than a "—"
+  // Each fn returns null for "no data on this broker" rather than a "-"
   // string, so a row can be dropped entirely below when NONE of the
   // compared brokers have it - a metric nobody has data for yet is noise,
   // not a comparison.
@@ -853,7 +853,7 @@ export async function compare(params) {
       <tbody>
         ${rows.map(([label, cells, klass]) => `<tr>
           <td class="muted small">${esc(label)}</td>
-          ${cells.map((c) => `<td class="right ${klass}">${c ?? '<span class="faint">—</span>'}</td>`).join('')}
+          ${cells.map((c) => `<td class="right ${klass}">${c ?? '<span class="faint">-</span>'}</td>`).join('')}
         </tr>`).join('')}
       </tbody>
     </table>
@@ -869,12 +869,12 @@ export async function compare(params) {
 }
 
 function fmtPlan(plan) {
-  if (!plan) return '—';
+  if (!plan) return '-';
   const bits = [];
   if (plan.flat_per_order != null) bits.push(plan.flat_per_order === 0 ? 'Free' : `₹${plan.flat_per_order}/order`);
   if (plan.pct_of_turnover != null) bits.push(`${plan.pct_of_turnover}%`);
   if (plan.cap_per_order != null) bits.push(`max ₹${plan.cap_per_order}`);
-  return esc(bits.join(', ') || '—');
+  return esc(bits.join(', ') || '-');
 }
 
 /* =========================================================== LEADERBOARDS */
@@ -884,7 +884,7 @@ function stockSlug(symbol) {
 }
 
 function fmtUsdBoard(n) {
-  if (n == null) return '—';
+  if (n == null) return '-';
   const d = n < 1 ? 6 : n < 100 ? 4 : 2;
   return `$${n.toFixed(d)}`;
 }
@@ -953,7 +953,7 @@ export async function leaderboards() {
   <h1 style="margin-top:16px">Rankings</h1>
   <p class="muted" style="max-width:64ch">Real movers from NSE and the tracked crypto universe, as of the last
   data refresh. Every ranking states the metric it sorts on and where that metric comes from.
-  We do not publish an overall "best broker" — that depends on what you trade.</p>
+  We do not publish an overall "best broker": that depends on what you trade.</p>
 
   ${marketBoards.length ? `<div class="grid g2" style="margin-top:8px">${marketBoards.join('')}</div>` : ''}
 
@@ -1048,7 +1048,7 @@ export async function calculator(params) {
         </table></div>
         <p class="xs faint" style="margin-top:10px">Brokerage plus amortised AMC only. Statutory charges are excluded
         because they are identical at every broker for the same trade. Only brokers with verified published pricing
-        appear — ${priced.length} of ${o.metadata.broker_count} today.</p>`
+        appear (${priced.length} of ${o.metadata.broker_count} today).</p>`
         : `<div class="empty">No broker has verified pricing on file yet.</div>`;
       runAfter();
     };
@@ -1087,6 +1087,14 @@ const regState = { q: '', page: 0, per: 60 };
 export async function registry() {
   const r = await loadRegistry();
   const o = await loadOverview();
+  // Mirrors _write_registry_directory()'s letter grouping server-side, so a
+  // client-side navigation to /registry shows the same "Browse alphabetically"
+  // links as a full page load, instead of losing the only inbound path into
+  // the /registry/az/ directory that rescues ~1,691 pages from being orphaned.
+  const regLetters = [...new Set((r.entities || []).map((e) => {
+    const c = (e.name || '')[0];
+    return c && /[A-Za-z]/.test(c) ? c.toUpperCase() : '0-9';
+  }))].sort((a, b) => (a === '0-9') - (b === '0-9') || a.localeCompare(b));
 
   onMount(() => {
     const render = () => {
@@ -1097,13 +1105,13 @@ export async function registry() {
       const page = rows.slice(start, start + regState.per);
       document.getElementById('reg-body').innerHTML = page.length ? page.map((e) => `<tr>
         <td>${e.slug ? `<a href="/sebi-registry/${esc(e.slug)}/">${esc(e.name)}</a>` : esc(e.name)}${e.trade_name ? `<div class="xs faint">trading as ${esc(e.trade_name)}</div>` : ''}</td>
-        <td class="num small">${esc(e.reg || '—')}</td>
-        <td class="small">${esc(e.city || '—')}</td>
+        <td class="num small">${esc(e.reg || '-')}</td>
+        <td class="small">${esc(e.city || '-')}</td>
         <td class="xs muted">${(e.exchanges || []).slice(0, 3).map(esc).join(' · ')}${(e.exchanges || []).length > 3 ? ` +${e.exchanges.length - 3}` : ''}</td>
-        <td class="small">${esc(e.validity || '—')}</td>
+        <td class="small">${esc(e.validity || '-')}</td>
       </tr>`).join('') : `<tr><td colspan="5" class="empty">Nothing matches “${esc(regState.q)}”.</td></tr>`;
       document.getElementById('reg-meta').textContent =
-        `${rows.length.toLocaleString('en-IN')} entities · showing ${rows.length ? start + 1 : 0}–${Math.min(start + regState.per, rows.length)}`;
+        `${rows.length.toLocaleString('en-IN')} entities · showing ${rows.length ? start + 1 : 0} to ${Math.min(start + regState.per, rows.length)}`;
       document.getElementById('reg-prev').disabled = regState.page === 0;
       document.getElementById('reg-next').disabled = start + regState.per >= rows.length;
     };
@@ -1116,8 +1124,10 @@ export async function registry() {
   return `
   <h1 style="margin-top:16px">SEBI-registered intermediaries</h1>
   <p class="muted" style="max-width:70ch">Every registered entity we hold that is not one of the
-  ${o.metadata.broker_count} brokers tracked in depth — ${count(r.count)} of them. Straight from SEBI's register:
+  ${o.metadata.broker_count} brokers tracked in depth (${count(r.count)} of them). Straight from SEBI's register:
   legal name, registration number, city, exchange memberships and validity. Nothing here is curated or scored.</p>
+  ${regLetters.length ? `<p class="small" style="margin-top:12px">Browse alphabetically: ${regLetters.map((l) =>
+    `<a href="/registry/az/${l.toLowerCase()}/">${l}</a>`).join(' · ')}</p>` : ''}
 
   <div class="card" style="margin-top:16px">
     <div class="row-wrap">
@@ -1152,7 +1162,7 @@ const PRICING_LABEL = {
 function algoCard(p) {
   const site = safeUrl(p.website);
   const works = (p.works_with || []).map((b) =>
-    `<a class="badge" href="/broker/${esc(b.id)}" data-link title="Executes through ${esc(b.brand)} — view broker profile">${esc(b.brand)}</a>`).join(' ');
+    `<a class="badge" href="/broker/${esc(b.id)}" data-link title="Executes through ${esc(b.brand)} (view broker profile)">${esc(b.brand)}</a>`).join(' ');
   return `<div class="card" style="display:flex;flex-direction:column;gap:8px">
     <div class="row">
       ${mark(p.id, p.name, 30)}
@@ -1205,8 +1215,8 @@ export async function algo(params) {
   <h1 style="margin-top:16px">Algo trading platforms in India</h1>
   <p class="muted" style="max-width:75ch">The execution and automation layer around the brokers we track:
   official broker APIs, no-code strategy builders, backtesting tools and the institutional vendors behind
-  broker dealing desks. Platform details are curated and verified against each platform's own material —
-  not regulator filings — so treat them as a directory, not an endorsement.</p>
+  broker dealing desks. Platform details are curated and verified against each platform's own material
+  (not regulator filings), so treat them as a directory, not an endorsement.</p>
 
   <div class="banner" style="margin-top:14px">
     <span>§</span>
@@ -1214,7 +1224,7 @@ export async function algo(params) {
     SEBI has brought retail algo trading inside a formal perimeter: brokers remain responsible for every
     algo order, API access requires authentication with static-IP whitelisting, orders above an exchange-set
     rate threshold need an exchange-issued algo ID, and algo providers must be empanelled with the exchanges.
-    Strategies split into <em>white-box</em> (logic disclosed) and <em>black-box</em> (undisclosed — the provider
+    Strategies split into <em>white-box</em> (logic disclosed) and <em>black-box</em> (undisclosed: the provider
     needs a Research Analyst registration and audit trail). Implementation timelines have moved; check the
     latest SEBI and exchange circulars before relying on any platform's compliance claims.</div>
   </div>
@@ -1249,19 +1259,19 @@ export async function methodology() {
   <div class="grid g2">
     <div class="card"><div class="card-title">Regulator-sourced ${provDot('sebi_registry')}</div>
       <ul class="small" style="padding-left:18px;margin-top:8px">
-        <li>Legal entity names and SEBI registration numbers — SEBI recognised-intermediary register</li>
-        <li>Exchange memberships and registration validity — same register</li>
-        <li>Depository-participant licences — SEBI CDSL and NSDL registers</li>
-        <li>Defaulter / expelled status — SEBI defaulter list</li>
-        <li>Circulars naming a member — NSE circular feed</li>
+        <li>Legal entity names and SEBI registration numbers (SEBI recognised-intermediary register)</li>
+        <li>Exchange memberships and registration validity (same register)</li>
+        <li>Depository-participant licences (SEBI CDSL and NSDL registers)</li>
+        <li>Defaulter / expelled status (SEBI defaulter list)</li>
+        <li>Circulars naming a member (NSE circular feed)</li>
       </ul></div>
     <div class="card"><div class="card-title">Market context ${provDot('nse')}</div>
       <ul class="small" style="padding-left:18px;margin-top:8px">
-        <li>Index levels and market breadth — NSE</li>
-        <li>Institutional flows — NSE FII/DII report</li>
-        <li>Cash-market turnover — NSE bhavcopy</li>
-        <li>Delivery percentage — BSE scrip-wise gross delivery archive</li>
-        <li>Corporate actions — BSE</li>
+        <li>Index levels and market breadth (NSE)</li>
+        <li>Institutional flows (NSE FII/DII report)</li>
+        <li>Cash-market turnover (NSE bhavcopy)</li>
+        <li>Delivery percentage (BSE scrip-wise gross delivery archive)</li>
+        <li>Corporate actions (BSE)</li>
       </ul></div>
   </div>
 
@@ -1270,7 +1280,7 @@ export async function methodology() {
     <div class="card">
       <h4>Market share</h4>
       <p class="small muted">A broker's active clients divided by the total across all tracked brokers, for the same
-      month. It is share of the tracked set, not of every broker in India — smaller firms outside the tracked set are
+      month. It is share of the tracked set, not of every broker in India: smaller firms outside the tracked set are
       not in the denominator.</p>
     </div>
     <div class="card">
@@ -1279,17 +1289,17 @@ export async function methodology() {
       broker will always show more raw complaints than a small one, which tells you nothing on its own.</p>
     </div>
     <div class="card">
-      <h4>Reliability score (0–100)</h4>
+      <h4>Reliability score (0 to 100)</h4>
       <p class="small muted">A weighted composite, disclosed in full: complaint rate percentile against peers (40%),
       resolution rate (20%), regulatory flags (20%), complaint backlog in months of current inflow (10%), and years
       since founding (10%). Missing components are dropped and remaining weights renormalised, so a broker is not
-      penalised for a dataset we have not ingested — instead the profile shows lower confidence. It is arithmetic over
+      penalised for a dataset we have not ingested: instead the profile shows lower confidence. It is arithmetic over
       public disclosures, not an opinion, and it is not a recommendation.</p>
     </div>
     <div class="card">
       <h4>Cost of a standard month</h4>
-      <p class="small muted">Brokerage on a fixed basket — ₹50,000 of delivery across 4 orders, ₹1,00,000 of intraday
-      turnover across 10 orders, ₹2,00,000 of F&amp;O premium turnover across 10 orders — plus demat AMC divided by
+      <p class="small muted">Brokerage on a fixed basket (₹50,000 of delivery across 4 orders, ₹1,00,000 of intraday
+      turnover across 10 orders, ₹2,00,000 of F&amp;O premium turnover across 10 orders) plus demat AMC divided by
       twelve. Statutory charges (STT, stamp duty, exchange transaction charges, SEBI turnover fees, GST) are excluded
       because they are identical at every broker for an identical trade; including them would compress the differences
       that actually depend on your choice of broker. Use the
@@ -1304,7 +1314,7 @@ export async function methodology() {
       <li>We do not give investment advice, and we are not a SEBI-registered adviser or research analyst.</li>
       <li>We do not scrape competitor comparison sites. Every figure traces to a primary exchange or regulator source.</li>
       <li>We do not let paid placement move a broker up a factual ranking.</li>
-      <li>We do not invent a number to fill a gap. Missing data shows as "—" or "unverified".</li>
+      <li>We do not invent a number to fill a gap. Missing data shows as "-" or "unverified".</li>
     </ul>
   </div>
 
@@ -1336,8 +1346,8 @@ export async function sources() {
       <tbody>${rows.map((r) => `<tr>
         <td><div style="font-weight:560">${esc(r.title)}</div>
           <div class="xs faint" style="word-break:break-all">${esc(r.url || '')}</div></td>
-        <td class="small">${esc(r.cadence || '—')}</td>
-        <td class="small nowrap">${esc((r.last_run || '—').slice(0, 16).replace('T', ' '))}</td>
+        <td class="small">${esc(r.cadence || '-')}</td>
+        <td class="small nowrap">${esc((r.last_run || '-').slice(0, 16).replace('T', ' '))}</td>
         <td>${statusBadge(r.last_status)}</td>
         <td class="xs muted">${esc(r.notes || '')}</td>
       </tr>`).join('')}</tbody>

@@ -1,4 +1,4 @@
-"""MCX adapter — live commodity futures quotes.
+"""MCX adapter: live commodity futures quotes.
 
 VERIFIED WORKING 2026-07-30. Two things had to be right:
 
@@ -20,7 +20,7 @@ VERIFIED WORKING 2026-07-30. Two things had to be right:
    Sec-Fetch-*) it returns data. Handled centrally in common.Fetcher.
 
    The HTML page still 403s from a plain client while the JSON endpoint answers,
-   so warm-up failure is expected and harmless — do not treat it as fatal.
+   so warm-up failure is expected and harmless; do not treat it as fatal.
 
 Returns 2,238 contracts, of which ~112 are FUTCOM (futures); the rest are
 OPTFUT (options). Only futures are surfaced, one contract per product, choosing
@@ -50,7 +50,7 @@ HEATMAP = HEATMAP_PAGE + "/GetTopHeatMap"
 GAINERS_PAGE = BASE + "/market-data/top-gainers"
 GAINERS = GAINERS_PAGE + "/GetTopGainers"
 
-# .NET serialises as /Date(millis)/ or /Date(millis+0530)/ — the offset is optional.
+# .NET serialises as /Date(millis)/ or /Date(millis+0530)/; the offset is optional.
 _DOTNET_DATE = re.compile(r"/Date\((-?\d+)(?:[+-]\d{4})?\)/")
 
 
