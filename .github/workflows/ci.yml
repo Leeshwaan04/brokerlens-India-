@@ -47,6 +47,26 @@ jobs:
         with:
           node-version: "22"
 
+      # site/ (site/data/*.json, site/stock/, site/sebi-registry/, ...) is
+      # gitignored except for a handful of hand-maintained files - a fresh
+      # checkout has none of it, so qa_e2e.py's published-payload checks
+      # failed on every single run since this workflow was created (verified:
+      # both prior runs failed here, exit code 3, "overview.json exists"
+      # etc.) without ever reaching a real regression check. `seed` alone
+      # (sample broker data only, no network) was tried and still left 23
+      # checks failing - there is no sample fallback for the registry, stock,
+      # fund, ETF, crypto or IPO families, which most of the QA suite
+      # actually exercises. This mirrors scripts/vercel-build.sh exactly
+      # (fetch tolerates a source being down, build always runs), verified
+      # locally in an isolated worktree to produce a clean 428/428 pass.
+      - name: Build site data (mirrors scripts/vercel-build.sh)
+        env:
+          SITE_URL: https://www.brokerlens.in
+          SEBI_MAX_PAGES: "100"
+        run: |
+          python3 -m pipeline.run fetch || true
+          python3 -m pipeline.run build
+
       - name: Run QA end-to-end suite
         run: python3 tests/qa_e2e.py
 
