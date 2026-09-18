@@ -1,4 +1,4 @@
-name: QA + VAPT
+name: QA + VAPT, then deploy
 
 # Runs on every push to main so a broken commit shows a red X on GitHub
 # within about a minute, independent of whose machine (or which Claude
@@ -10,9 +10,20 @@ name: QA + VAPT
 # search, every mega-menu) on every page, and node --check on a plain .js
 # file doesn't validate module syntax, so nothing caught it before this.
 #
-# NOTE: Vercel's own git integration deploys on push independently of this
-# workflow's result - a red X here does not stop or roll back a deploy, it
-# only makes a regression immediately visible so it can be reverted fast.
+# TRANSITIONAL STATE, READ BEFORE REMOVING THIS COMMENT: the `deploy` job
+# below fires the same VERCEL_DEPLOY_HOOK daily-refresh.yml uses, only after
+# `test` passes - that is the real gate. But Vercel's own git integration
+# (project setting gitProviderOptions.createDeployments) is still "enabled"
+# as of this commit, so it ALSO deploys immediately on every push,
+# independently of this workflow and before `test` has even started. Until
+# a project owner sets that to "disabled" in the Vercel dashboard (or via
+# `vercel api -X PATCH /v9/projects/<id> -d
+# '{"gitProviderOptions":{"createDeployments":"disabled"}}'`, which needs
+# interactive approval, not something a Claude Code session can do
+# unattended), every push produces two production deployments: an
+# ungated one immediately, and this gated one a few minutes later. Once
+# that setting is flipped, the ungated one stops and this becomes the only
+# deploy path.
 
 on:
   push:
@@ -41,3 +52,15 @@ jobs:
 
       - name: Run VAPT suite
         run: python3 tests/vapt.py
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Trigger Vercel production deploy
+        run: |
+          curl -fsS -X POST "$DEPLOY_HOOK_URL" -o /dev/null
+          echo "Deploy triggered - tests passed on this commit."
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK }}
