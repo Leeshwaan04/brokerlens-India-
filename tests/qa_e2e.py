@@ -23,6 +23,7 @@ sys.path.insert(0, ROOT)
 from pipeline import feeds as feedmod          # noqa: E402
 from pipeline import metrics                    # noqa: E402
 from pipeline.identity import Resolver          # noqa: E402
+from pipeline.publish import CONTACT_EMAIL      # noqa: E402
 
 PASS, FAIL, SKIP = [], [], []
 
@@ -825,6 +826,38 @@ def test_published():
           'href="/calculators/">Calculators' in home_nav_html)
     check("homepage nav has a Reports link matching static pages",
           "Reports</a>" in home_nav_html and "/reports/state-of-indian-broking-2026/" in home_nav_html)
+
+    # About/Contact/Privacy/Terms: added because the site had no such pages
+    # at all (an E-E-A-T gap), plus the one real support address, and every
+    # footer must actually link to them - a page nothing links to is as
+    # orphaned as the SEBI registry entities were before the /registry/az/
+    # fix above. site/index.html is hand-maintained (see
+    # _restamp_index_html_assets's docstring), so it does not regenerate
+    # from _APP_SHELL_FOOT on every build like every other page does - this
+    # check exists specifically so a future footer change that forgets to
+    # hand-sync index.html fails CI instead of shipping silently, the same
+    # class of bug as the nav-consistency check just above.
+    company_pages = {
+        "about": "About BrokerLens",
+        "contact": "Contact BrokerLens",
+        "privacy-policy": "Privacy Policy",
+        "terms-of-service": "Terms of Service",
+    }
+    for slug, heading in company_pages.items():
+        page_path = os.path.join(ROOT, "site", slug, "index.html")
+        check("%s page exists" % slug, os.path.exists(page_path))
+        if os.path.exists(page_path):
+            page_html = open(page_path, encoding="utf-8").read()
+            check("%s page has its own heading, not a generic shell" % slug, heading in page_html)
+            check("%s page carries the real contact address" % slug, CONTACT_EMAIL in page_html)
+    company_targets = ["/about", "/contact", "/privacy-policy", "/terms-of-service"]
+    check("homepage footer links all four company pages and the contact address",
+          all(t in home_html_for_dirs for t in company_targets) and CONTACT_EMAIL in home_html_for_dirs,
+          "missing: %s" % [t for t in company_targets if t not in home_html_for_dirs])
+    if os.path.isdir(stock_dir) and slugs:
+        check("a static page footer links all four company pages and the contact address too",
+              all(t in stock_html for t in company_targets) and CONTACT_EMAIL in stock_html,
+              "missing: %s" % [t for t in company_targets if t not in stock_html])
 
     # Breadcrumbs: a shared helper builds both the visible trail and its
     # BreadcrumbList JSON-LD from the same data, so a page can never show one

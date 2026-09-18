@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/assets/js/theme-init.js?v=0dec48e1b2"></script>
+<title>About BrokerLens | BrokerLens</title>
+<meta name="description" content="What BrokerLens is, how it sources broker, stock, fund and crypto data, and what it deliberately does not do.">
+<link rel="canonical" href="https://www.brokerlens.in/about">
+<meta name="theme-color" content="#2f4a8f">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/assets/css/app.css?v=cdfa40ee0b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrokerLens">
+<meta property="og:locale" content="en_IN">
+<meta property="og:url" content="https://www.brokerlens.in/about">
+<meta property="og:title" content="About BrokerLens | BrokerLens">
+<meta property="og:description" content="What BrokerLens is, how it sources broker, stock, fund and crypto data, and what it deliberately does not do.">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "AboutPage", "name": "About BrokerLens | BrokerLens", "url": "https://www.brokerlens.in/about", "description": "What BrokerLens is, how it sources broker, stock, fund and crypto data, and what it deliberately does not do."}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "BrokerLens", "item": "https://www.brokerlens.in/"}, {"@type": "ListItem", "position": 2, "name": "About"}]}]}</script>
+</head>
+<body>
+<header class="site"><div class="wrap nav">
+  <a class="brand" href="/">
+    <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" role="img" aria-label="BrokerLens">
+      <defs><clipPath id="bl-lens-reg"><circle cx="256" cy="256" r="143"/></clipPath></defs>
+      <g fill="none" stroke="var(--accent)" stroke-width="30" stroke-linecap="round">
+        <path d="M50 369 L84 359" opacity=".38"/><path d="M18 379 L30 375" opacity=".18"/>
+        <path d="M438 161 L470 149" opacity=".38"/><path d="M486 143 L496 140" opacity=".18"/>
+      </g>
+      <circle cx="256" cy="256" r="166" fill="none" stroke="var(--accent)" stroke-width="46"/>
+      <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="var(--up)"
+            stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-reg)"/>
+    </svg>
+    <span>BrokerLens</span>
+  </a>
+  <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
+          aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
+  <nav class="nav-links" id="navlinks">
+    <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
+    <a href="/compare">Compare</a>
+    <a href="/leaderboards">Rankings</a>
+    <a href="/calculators/">Calculators</a>
+    <a href="/registry">SEBI registry</a>
+    <a href="/algo">Algo platforms</a>
+    <a href="/ipo/">IPO</a>
+    <a href="/reports/state-of-indian-broking-2026/">Reports</a>
+    <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
+  </nav>
+  <button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+  <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
+</div>
+<div class="mega" id="mega-timings" hidden>
+  <div class="wrap">
+    <div id="mega-timings-body" class="mega-grid"><div class="small faint" style="padding:16px 0">Loading timings...</div></div>
+  </div>
+</div>
+<div class="mega" id="mega-markets" hidden>
+  <div class="wrap">
+    <div class="markets-list">
+      <a href="/brokers"><span>India</span><span class="badge badge-up">Live</span></a>
+      <a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>
+      <a href="/coming-soon/us"><span>US</span><span class="badge badge-warn">Coming soon</span></a>
+      <a href="/coming-soon/gcc"><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
+    </div>
+  </div>
+</div>
+</header>
+<div class="search-overlay" id="search-overlay" hidden>
+  <div class="search-modal" role="dialog" aria-modal="true" aria-label="Search BrokerLens">
+    <div class="search-input-row">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
+      <kbd class="search-esc">Esc</kbd>
+    </div>
+    <div id="search-results" class="search-results"></div>
+  </div>
+</div>
+<main class="wrap" style="padding-top:24px;padding-bottom:24px">
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">BrokerLens</a><span class="sep"> &rsaquo; </span><span aria-current="page">About</span></nav><h1 style="margin-top:16px">About BrokerLens</h1><p class="muted" style="max-width:70ch">BrokerLens compares Indian stock brokers, and tracks stocks, mutual funds, ETFs, IPOs and crypto assets, using figures taken directly from NSE, BSE, SEBI, AMFI and exchange disclosures rather than from marketing pages.</p><div class="section-title"><h2>What we track</h2></div><div class="card"><ul class="small" style="padding-left:18px"><li>Every SEBI-registered stock broker and depository participant, including the full recognised-intermediary register</li><li>Listed NSE and BSE equities, index constituents and ETFs</li><li>AMFI-registered mutual fund schemes, grouped by AMC</li><li>Live and forthcoming IPOs, with subscription and allotment status</li><li>Major crypto assets by market capitalisation</li></ul></div><div class="section-title"><h2>How we work</h2></div><p class="small muted" style="max-width:70ch">Every figure traces to a named primary source, refreshed on its own schedule and marked with when it last ran. The full method, including how derived scores like the reliability rating are calculated, is on the <a href="/methodology" data-link>methodology page</a>; the complete source list, with cadence and status, is on the <a href="/sources" data-link>sources page</a>.</p><div class="section-title"><h2>What BrokerLens is not</h2></div><div class="card"><p class="small muted">BrokerLens is an information service, not a SEBI-registered investment adviser or research analyst. Nothing on this site is investment advice, and we do not recommend any broker, security or strategy. Some pages carry a clearly marked sponsored banner linking to a broker's own signup page, and we may earn a commission if you open an account through one of those links; this never affects any ranking, score or comparison, which is built only from the regulator and exchange data described above.</p></div><div class="section-title"><h2>Get in touch</h2></div><p class="small">Questions, corrections or partnership enquiries: see the <a href="/contact" data-link>contact page</a>, or write to <a href="mailto:letmeknow@brokerlens.in">letmeknow@brokerlens.in</a>.</p></main>
+<footer class="site"><div class="wrap">
+  <p class="small muted" style="max-width:70ch">This page states who publishes BrokerLens and how it sources its data. It is not curated, scored or ranked, and nothing on it is investment advice. BrokerLens is not a SEBI-registered investment adviser or research analyst.</p>
+  <p class="small"><a href="/registry">Search the full SEBI registry →</a> ·
+  <a href="/brokers">Brokers tracked in depth →</a> ·
+  <a href="/brokers-by/type/">Brokers by type →</a> ·
+  <a href="/brokers-by/segment/">Brokers by segment →</a> ·
+  <a href="/brokers-by/city/">Brokers by city →</a> ·
+  <a href="/stocks/">Browse stocks A-Z →</a> ·
+  <a href="/funds-by/">Browse mutual funds by AMC →</a> ·
+  <a href="/etfs/">Browse ETFs →</a> · <a href="/ipo/">IPO tracker →</a> · <a href="/">BrokerLens home →</a></p>
+  <p class="small"><a href="/about">About</a> · <a href="/contact">Contact</a> ·
+  <a href="mailto:letmeknow@brokerlens.in">letmeknow@brokerlens.in</a> · <a href="/privacy-policy">Privacy policy</a> ·
+  <a href="/terms-of-service">Terms of service</a></p>
+</div></footer>
+<script type="module" src="/assets/js/nav-widgets.js?v=0cdd96e7bf"></script>
+<script type="module" src="/assets/js/search.js?v=b4e9f68a6c"></script>
+</body>
+</html>

@@ -491,7 +491,7 @@ label { display: block; font-size: var(--fs-xs); font-weight: 560; color: var(--
 /* ---------------------------------------------------------------- footer */
 
 footer.site { border-top: 1px solid var(--border); margin-top: var(--space-8); padding: var(--space-6) 0; font-size: var(--fs-sm); color: var(--text-muted); background: var(--bg-sunken); }
-footer.site .cols { display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: var(--space-5); }
+footer.site .cols { display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: var(--space-5); }
 @media (max-width: 760px) { footer.site .cols { grid-template-columns: 1fr 1fr; } }
 footer.site h5 { margin: 0 0 var(--space-2); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); }
 footer.site ul { list-style: none; padding: 0; margin: 0; }

@@ -13,6 +13,11 @@ const after = [];
 export const runAfter = () => { while (after.length) { try { after.shift()(); } catch (e) { console.error(e); } } };
 const onMount = (fn) => after.push(fn);
 
+/* Single source of truth for the site's contact address, mirrored from
+ * pipeline/publish.py's CONTACT_EMAIL so the server-rendered and
+ * client-rendered paths can never drift apart. */
+const CONTACT_EMAIL = 'letmeknow@brokerlens.in';
+
 /* ------------------------------------------------------------- shared bits */
 
 /* Says plainly what the site does not yet publish, and why, instead of leaving
@@ -1399,6 +1404,195 @@ export async function comingSoon(market) {
     <h1 style="margin-top:12px">${esc(m.h1)}</h1>
     <p class="muted">${esc(m.body)}</p>
     <p class="small"><a href="/brokers" data-link>See the live India broker comparison instead →</a></p>
+  </div>`;
+}
+
+/* ======================================================= COMPANY PAGES */
+
+export async function about() {
+  return `
+  <h1 style="margin-top:16px">About BrokerLens</h1>
+  <p class="muted" style="max-width:70ch">BrokerLens compares Indian stock brokers, and tracks stocks, mutual
+  funds, ETFs, IPOs and crypto assets, using figures taken directly from NSE, BSE, SEBI, AMFI and exchange
+  disclosures rather than from marketing pages.</p>
+
+  <div class="section-title"><h2>What we track</h2></div>
+  <div class="card">
+    <ul class="small" style="padding-left:18px">
+      <li>Every SEBI-registered stock broker and depository participant, including the full recognised-
+      intermediary register</li>
+      <li>Listed NSE and BSE equities, index constituents and ETFs</li>
+      <li>AMFI-registered mutual fund schemes, grouped by AMC</li>
+      <li>Live and forthcoming IPOs, with subscription and allotment status</li>
+      <li>Major crypto assets by market capitalisation</li>
+    </ul>
+  </div>
+
+  <div class="section-title"><h2>How we work</h2></div>
+  <p class="small muted" style="max-width:70ch">Every figure traces to a named primary source, refreshed on its
+  own schedule and marked with when it last ran. The full method, including how derived scores like the
+  reliability rating are calculated, is on the <a href="/methodology" data-link>methodology page</a>; the
+  complete source list, with cadence and status, is on the <a href="/sources" data-link>sources page</a>.</p>
+
+  <div class="section-title"><h2>What BrokerLens is not</h2></div>
+  <div class="card">
+    <p class="small muted">BrokerLens is an information service, not a SEBI-registered investment adviser or
+    research analyst. Nothing on this site is investment advice, and we do not recommend any broker, security or
+    strategy. Some pages carry a clearly marked sponsored banner linking to a broker's own signup page, and we
+    may earn a commission if you open an account through one of those links; this never affects any ranking,
+    score or comparison, which is built only from the regulator and exchange data described above.</p>
+  </div>
+
+  <div class="section-title"><h2>Get in touch</h2></div>
+  <p class="small">Questions, corrections or partnership enquiries: see the
+  <a href="/contact" data-link>contact page</a>, or write to
+  <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</p>`;
+}
+
+export async function contact() {
+  return `
+  <h1 style="margin-top:16px">Contact BrokerLens</h1>
+  <p class="muted" style="max-width:70ch">One address for everything below. Tell us which of these it is so we
+  can route it to the right place, and include the page URL for anything data-related.</p>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <div class="card-title">Data corrections</div>
+      <p class="small muted">Spotted a wrong figure, an outdated registration, or a broker that should be listed
+      and is not? Tell us the page and what looks wrong, and we will check it against the primary source (NSE,
+      BSE, SEBI or AMFI).</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Advertising and partnerships</div>
+      <p class="small muted">Enquiries about a sponsored banner or a broker partnership. This is entirely
+      separate from our rankings and comparisons, which are never affected by an advertising relationship.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Privacy and data requests</div>
+      <p class="small muted">Questions about the <a href="/privacy-policy" data-link>privacy policy</a>, or a
+      request to access or delete data we hold about you.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Everything else</div>
+      <p class="small muted">General feedback, bug reports, or anything not covered above, including the
+      <a href="/terms-of-service" data-link>terms of service</a>.</p>
+    </div>
+  </div>
+
+  <div class="section-title"><h2>Email</h2></div>
+  <div class="card">
+    <p style="font-size:1.1rem"><a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a></p>
+    <p class="small muted">We read every message. Response times vary, but data corrections referencing a
+    primary source are prioritised.</p>
+  </div>`;
+}
+
+export async function privacyPolicy() {
+  return `
+  <h1 style="margin-top:16px">Privacy Policy</h1>
+  <p class="muted" style="max-width:70ch">This page states what BrokerLens collects, what it does not, and how
+  to reach us about either.</p>
+
+  <div class="section-title"><h2>What we collect</h2></div>
+  <div class="card">
+    <p class="small muted">BrokerLens runs no third-party analytics or advertising tracking. The site stores two
+    preferences in your own browser's local storage (never sent to us or anyone else): your light or dark theme
+    choice, and your selected market exchange on the price ticker. Clearing your browser data removes them. If
+    you write to us by email, we hold that message and your email address only for as long as needed to answer
+    it.</p>
+  </div>
+
+  <div class="section-title"><h2>Affiliate and sponsored links</h2></div>
+  <div class="card">
+    <p class="small muted">Some pages carry a clearly marked sponsored banner linking to a broker's own
+    account-opening page. Once you follow that link, you are on the broker's own site and subject to their
+    privacy policy, not ours; BrokerLens may earn a commission if you open an account, disclosed on the
+    <a href="/methodology" data-link>methodology page</a>. We do not receive or store any personal or financial
+    information from that process.</p>
+  </div>
+
+  <div class="section-title"><h2>Hosting and infrastructure</h2></div>
+  <div class="card">
+    <p class="small muted">The site is served over HTTPS by a standard web hosting provider, which may log basic
+    technical request data (IP address, timestamp, requested page) for security and reliability, the same as any
+    web server. BrokerLens does not access this data for tracking or profiling individual visitors.</p>
+  </div>
+
+  <div class="section-title"><h2>Your rights</h2></div>
+  <div class="card">
+    <p class="small muted">You can ask us what data we hold about you, ask us to correct or delete it, or ask a
+    question about this policy, at any time: write to
+    <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</p>
+  </div>
+
+  <div class="section-title"><h2>Children's privacy</h2></div>
+  <div class="card">
+    <p class="small muted">BrokerLens is not directed at children and does not knowingly collect information
+    from anyone under 18.</p>
+  </div>
+
+  <div class="section-title"><h2>Changes to this policy</h2></div>
+  <div class="card">
+    <p class="small muted">If this policy changes, the updated date at the top of the static version of this
+    page will change too. Material changes will be reflected here before they take effect.</p>
+  </div>`;
+}
+
+export async function termsOfService() {
+  return `
+  <h1 style="margin-top:16px">Terms of Service</h1>
+  <p class="muted" style="max-width:70ch">By using BrokerLens, you agree to the terms below.</p>
+
+  <div class="section-title"><h2>What BrokerLens is</h2></div>
+  <div class="card">
+    <p class="small muted">BrokerLens is an information service that publishes broker, stock, mutual fund, ETF,
+    IPO and crypto data assembled from primary NSE, BSE, SEBI and AMFI disclosures. BrokerLens is not a
+    SEBI-registered investment adviser or research analyst, does not recommend any broker, security or strategy,
+    and nothing on this site is investment advice. Verify anything material with the broker or with SEBI before
+    acting on it.</p>
+  </div>
+
+  <div class="section-title"><h2>Accuracy of information</h2></div>
+  <div class="card">
+    <p class="small muted">Figures are reproduced from exchange and regulator disclosures and may lag their
+    source; each page states when its data last refreshed. BrokerLens does not guarantee that any figure is
+    current or error-free, and is not liable for decisions made in reliance on it. See the
+    <a href="/methodology" data-link>methodology page</a> for exactly how each figure is calculated.</p>
+  </div>
+
+  <div class="section-title"><h2>Sponsored links</h2></div>
+  <div class="card">
+    <p class="small muted">Some pages carry a clearly marked sponsored banner linking to a broker's own
+    account-opening page; BrokerLens may earn a commission if you open an account through one of those links.
+    Account opening happens entirely on the broker's own site, under their own terms, not ours.</p>
+  </div>
+
+  <div class="section-title"><h2>Intellectual property</h2></div>
+  <div class="card">
+    <p class="small muted">The BrokerLens name, logo and site design belong to BrokerLens. Underlying facts
+    sourced from NSE, BSE, SEBI and AMFI remain the property of those regulators and exchanges; BrokerLens
+    republishes and computes derived figures from them under its own methodology.</p>
+  </div>
+
+  <div class="section-title"><h2>Limitation of liability</h2></div>
+  <div class="card">
+    <p class="small muted">BrokerLens is provided as is, without warranty of any kind. To the fullest extent
+    permitted by law, BrokerLens is not liable for any loss arising from use of, or reliance on, information
+    published on this site.</p>
+  </div>
+
+  <div class="section-title"><h2>Governing law</h2></div>
+  <div class="card"><p class="small muted">These terms are governed by the laws of India.</p></div>
+
+  <div class="section-title"><h2>Changes to these terms</h2></div>
+  <div class="card">
+    <p class="small muted">If these terms change, the updated date at the top of the static version of this page
+    will change too.</p>
+  </div>
+
+  <div class="section-title"><h2>Contact</h2></div>
+  <div class="card">
+    <p class="small muted">Questions about these terms: <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</p>
   </div>`;
 }
 

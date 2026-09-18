@@ -6,7 +6,7 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=e83a0661a2';
-import * as pages from './pages.js?v=cd399f3c3d';
+import * as pages from './pages.js?v=206b11ed45';
 import { clearRedraws } from './chart.js?v=ec48a39b98';
 import './nav-widgets.js?v=0cdd96e7bf';
 import './search.js?v=b4e9f68a6c';
@@ -29,6 +29,10 @@ const ROUTES = [
   [/^\/sources\/?$/, () => pages.sources()],
   [/^\/coming-soon\/us\/?$/, () => pages.comingSoon('us')],
   [/^\/coming-soon\/gcc\/?$/, () => pages.comingSoon('gcc')],
+  [/^\/about\/?$/, () => pages.about()],
+  [/^\/contact\/?$/, () => pages.contact()],
+  [/^\/privacy-policy\/?$/, () => pages.privacyPolicy()],
+  [/^\/terms-of-service\/?$/, () => pages.termsOfService()],
 ];
 
 const TITLES = {
@@ -43,6 +47,10 @@ const TITLES = {
   '/sources': 'Data sources and lineage: BrokerLens',
   '/coming-soon/us': 'US stock broker comparison, coming soon: BrokerLens',
   '/coming-soon/gcc': 'GCC stock broker comparison, coming soon: BrokerLens',
+  '/about': 'About BrokerLens: BrokerLens',
+  '/contact': 'Contact BrokerLens: BrokerLens',
+  '/privacy-policy': 'Privacy Policy: BrokerLens',
+  '/terms-of-service': 'Terms of Service: BrokerLens',
 };
 
 /* Per-route descriptions. Without these every page inherited the homepage copy,
@@ -59,6 +67,10 @@ const DESCRIPTIONS = {
   '/sources': 'Every data source behind BrokerLens, when it last ran, and exactly which fields it feeds.',
   '/coming-soon/us': 'BrokerLens is researching US stock broker data for a future comparison. Not live yet.',
   '/coming-soon/gcc': 'BrokerLens is researching GCC (UAE, Saudi and Gulf) stock broker data for a future comparison. Not live yet.',
+  '/about': 'What BrokerLens is, how it sources broker, stock, fund and crypto data, and what it deliberately does not do.',
+  '/contact': 'How to reach BrokerLens for data corrections, advertising enquiries, or privacy and legal questions.',
+  '/privacy-policy': 'What BrokerLens does and does not collect, how affiliate links work, and how to reach us about your data.',
+  '/terms-of-service': 'The terms for using BrokerLens: what the site is, the limits on the information it publishes, and your responsibilities.',
 };
 
 /* Alias routes must not compete with their primary in search. */
