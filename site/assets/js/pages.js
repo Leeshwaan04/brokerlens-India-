@@ -330,7 +330,7 @@ export async function home() {
     </div>
   </div>
 
-  <div class="section-title"><h2>Rankings</h2><a class="small" href="/leaderboards" data-link>All rankings →</a></div>
+  <div class="section-title"><h2>Movers</h2><a class="small" href="/leaderboards" data-link>All movers →</a></div>
   <div class="grid g3">
     ${(o.leaderboards || []).slice(0, 3).map((bd) => leaderCard(bd)).join('')}
   </div>`;
@@ -955,7 +955,7 @@ export async function leaderboards() {
   });
 
   return `
-  <h1 style="margin-top:16px">Rankings</h1>
+  <h1 style="margin-top:16px">Movers</h1>
   <p class="muted" style="max-width:64ch">Real movers from NSE and the tracked crypto universe, as of the last
   data refresh. Every ranking states the metric it sorts on and where that metric comes from.
   We do not publish an overall "best broker": that depends on what you trade.</p>

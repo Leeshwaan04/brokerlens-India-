@@ -950,7 +950,7 @@ def test_published():
         # Compare, Rankings, a calculators link and the market-timings mega
         # menu entirely, so navigation felt different depending on which
         # page a visitor landed on first.
-        NAV_LINKS = ["Brokers", "Compare", "Rankings", "SEBI registry", "Algo platforms", "Reports"]
+        NAV_LINKS = ["Brokers", "Compare", "Movers", "SEBI registry", "Algo platforms", "Reports"]
         for label, path in [
             ("stock", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
             ("fund", hdfc_flexicap_path if os.path.isdir(fund_dir) and os.path.exists(hdfc_flexicap_path) else ""),
@@ -1236,7 +1236,7 @@ def test_published():
     # /compare, /leaderboards, /algo: hybrid pages like /brokers, /registry,
     # /calculator above - real content for first paint, app.js for hydration.
     for route, must_contain in (
-        ("compare", "Compare brokers"), ("leaderboards", "Rankings"), ("algo", "Algo trading platforms"),
+        ("compare", "Compare brokers"), ("leaderboards", "Movers"), ("algo", "Algo trading platforms"),
     ):
         p = os.path.join(ROOT, "site", route, "index.html")
         html = open(p, encoding="utf-8").read() if os.path.exists(p) else ""

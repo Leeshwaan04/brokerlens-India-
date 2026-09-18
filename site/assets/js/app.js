@@ -6,7 +6,7 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=e83a0661a2';
-import * as pages from './pages.js?v=206b11ed45';
+import * as pages from './pages.js?v=1f9a440bcc';
 import { clearRedraws } from './chart.js?v=ec48a39b98';
 import './nav-widgets.js?v=0cdd96e7bf';
 import './search.js?v=b4e9f68a6c';
@@ -39,7 +39,7 @@ const TITLES = {
   '/': 'BrokerLens: Indian Stock Broker and Crypto Exchange Data',
   '/brokers': 'All Indian stock brokers, compared: BrokerLens',
   '/compare': 'Compare Indian stock brokers side by side: BrokerLens',
-  '/leaderboards': 'Market Rankings: NSE Movers, Crypto and Broker Stats | BrokerLens',
+  '/leaderboards': 'Market Movers: NSE Gainers, Losers and Broker Stats | BrokerLens',
   '/calculator': 'Brokerage cost calculator: BrokerLens',
   '/registry': 'SEBI-registered brokers and intermediaries: BrokerLens',
   '/algo': 'Algo trading platforms in India (APIs, no-code builders and vendors) | BrokerLens',

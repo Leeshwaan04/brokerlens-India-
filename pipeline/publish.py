@@ -934,7 +934,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
   <nav class="nav-links" id="navlinks">
     <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
     <a href="/compare">Compare</a>
-    <a href="/leaderboards">Rankings</a>
+    <a href="/leaderboards">Movers</a>
     <a href="/calculators/">Calculators</a>
     <a href="/registry">SEBI registry</a>
     <a href="/algo">Algo platforms</a>
@@ -1064,7 +1064,7 @@ _APP_SHELL_HEAD = """<!doctype html>
     <nav class="nav-links" id="navlinks">
       <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
       <a href="/compare" data-link>Compare</a>
-      <a href="/leaderboards" data-link>Rankings</a>
+      <a href="/leaderboards" data-link>Movers</a>
       <a href="/calculators/">Calculators</a>
       <a href="/registry" data-link>SEBI registry</a>
       <a href="/algo" data-link>Algo platforms</a>
@@ -1133,7 +1133,7 @@ _APP_SHELL_FOOT = """</main>
           <li><a href="/brokers-by/type/">Brokers by type</a></li>
           <li><a href="/brokers-by/segment/">Brokers by segment</a></li>
           <li><a href="/brokers-by/city/">Brokers by city</a></li>
-          <li><a href="/leaderboards" data-link>Rankings</a></li>
+          <li><a href="/leaderboards" data-link>Movers</a></li>
           <li><a href="/calculator" data-link>Cost calculator</a></li>
           <li><a href="/registry" data-link>SEBI registry</a></li>
           <li><a href="/algo" data-link>Algo platforms</a></li>
@@ -5179,11 +5179,11 @@ def _write_leaderboards_page(overview, nse_live, crypto_coins):
         market_boards.append(("Top crypto 24h losers", "crypto", rows, _usd_html, "/crypto/%s/"))
 
     canonical = "%s/leaderboards" % SITE_URL
-    title = "Market Rankings: NSE Movers, Crypto and Broker Stats | BrokerLens"
+    title = "Market Movers: NSE Gainers, Losers and Broker Stats | BrokerLens"
     description = ("Today's real NSE top gainers, losers and most-active stocks, plus crypto market-cap and "
                     "24h movers. Broker rankings by active clients, complaints and cost publish once that "
                     "data is live.")[:300]
-    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Rankings", None)])
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Movers", None)])
     graph = [
         {"@type": "WebPage", "name": title, "url": canonical, "description": description},
         crumb_jsonld,
@@ -5204,7 +5204,7 @@ def _write_leaderboards_page(overview, nse_live, crypto_coins):
     }
     body += crumb_html
     body += (
-        '<h1 style="margin-top:16px">Rankings</h1>'
+        '<h1 style="margin-top:16px">Movers</h1>'
         '<p class="muted" style="max-width:64ch">Real movers from NSE and the tracked crypto universe, as of '
         'the last data refresh. Every ranking states the metric it sorts on and where that metric comes from. '
         'We do not publish an overall &quot;best broker&quot;: that depends on what you trade.</p>'
@@ -6013,7 +6013,7 @@ def _prerender_home(overview):
 
     boards = (overview.get("leaderboards") or [])[:3]
     html += (
-        '<div class="section-title"><h2>Rankings</h2><a class="small" href="/leaderboards" data-link>All rankings &rarr;</a></div>'
+        '<div class="section-title"><h2>Movers</h2><a class="small" href="/leaderboards" data-link>All movers &rarr;</a></div>'
         '<div class="grid g3">%s</div>'
     ) % "".join(_leader_card_html(bd) for bd in boards)
 
@@ -6228,7 +6228,7 @@ _CORE_PAGES = [
     ("BrokerLens home", "/", ""),
     ("Brokers", "/brokers", ""),
     ("Compare brokers", "/compare", ""),
-    ("Rankings", "/leaderboards", ""),
+    ("Movers", "/leaderboards", ""),
     ("Brokerage cost calculator", "/calculator", ""),
     ("Financial calculators", "/calculators/", ""),
     ("SEBI registry", "/registry", ""),
