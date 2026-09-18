@@ -1,0 +1,43 @@
+name: QA + VAPT
+
+# Runs on every push to main so a broken commit shows a red X on GitHub
+# within about a minute, independent of whose machine (or which Claude
+# session) made the push and whether they ran the local pre-push hook
+# (.githooks/pre-push, git config core.hooksPath .githooks).
+#
+# Added after a missing brace in site/assets/js/pages.js shipped straight
+# to production: it broke the whole client-side ES module graph (ticker,
+# search, every mega-menu) on every page, and node --check on a plain .js
+# file doesn't validate module syntax, so nothing caught it before this.
+#
+# NOTE: Vercel's own git integration deploys on push independently of this
+# workflow's result - a red X here does not stop or roll back a deploy, it
+# only makes a regression immediately visible so it can be reverted fast.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run QA end-to-end suite
+        run: python3 tests/qa_e2e.py
+
+      - name: Run VAPT suite
+        run: python3 tests/vapt.py
