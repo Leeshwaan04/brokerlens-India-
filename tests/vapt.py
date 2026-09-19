@@ -235,8 +235,19 @@ def test_sse_limits(base):
     section("sse connection limits")
     u = urllib.parse.urlparse(base)
     socks, statuses = [], []
+    # Read the real cap instead of hardcoding a guess that goes stale the
+    # next time it's tuned (it already did once: raised 6 -> 40 after real
+    # carrier-grade-NAT traffic tripped it in production, see
+    # server/quotes.py's DEFAULT_LIMITS comment). +5 guarantees this probe
+    # actually exceeds whatever the cap currently is.
     try:
-        for _ in range(12):
+        cfg = json.load(open(os.path.join(ROOT, "config", "stream.json"), encoding="utf-8"))
+        cap = (cfg.get("limits") or {}).get("max_sse_clients_per_ip", 6)
+    except Exception:
+        cap = 6
+    attempts = cap + 5
+    try:
+        for _ in range(attempts):
             try:
                 s = socket.create_connection((u.hostname, u.port or 80), timeout=5)
                 s.sendall(b"GET /api/stream HTTP/1.1\r\nHost: %s\r\n\r\n" % u.netloc.encode())
@@ -248,7 +259,8 @@ def test_sse_limits(base):
                 statuses.append("ERR %s" % exc)
         limited = any("503" in st or "429" in st for st in statuses)
         result("SSE connections are capped per IP", limited,
-               "statuses=%s" % list(dict.fromkeys(statuses))[:4], severity="medium")
+               "cap=%d, %d attempts, statuses=%s" % (cap, attempts, list(dict.fromkeys(statuses))[:4]),
+               severity="medium")
     finally:
         for s in socks:
             try:

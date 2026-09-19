@@ -1515,10 +1515,20 @@ def http(url, method="GET", data=None, headers=None, timeout=10):
 def test_server(base):
     section("http routes")
     routes = ["/", "/brokers", "/broker/zerodha", "/compare", "/leaderboards",
-              "/calculator", "/registry", "/algo", "/methodology", "/sources"]
+              "/calculator", "/registry", "/algo"]
     for r in routes:
         code, body, _ = http(base + r)
         check("GET %s" % r, code == 200 and b'id="app"' in body, "code=%s" % code)
+
+    # /methodology and /sources have no data dependency and no interactivity
+    # (see _write_methodology_page()/_write_sources_page()'s own docstrings),
+    # so - unlike the hybrid SPA-shell routes above - they are deliberately
+    # plain static pages with no app.js and no id="app" at all, the same
+    # zero-JS shape as /sebi-registry/, /stock/, /etf/ and /fund/ below.
+    for r in ("/methodology", "/sources"):
+        code, body, _ = http(base + r)
+        check("GET %s serves a static page with no SPA shell" % r,
+              code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
 
     # Static SEBI-registry entity pages live outside the SPA (see test_published
     # for why: site/registry/ would shadow the /registry SPA route on disk).
@@ -1610,9 +1620,18 @@ def test_server(base):
         found = [n for n in needles if n in src]
         check("%s has no lead-capture code" % fn, not found, "still present: %s" % found)
 
+    # The real lead-capture risk is a <form> that POSTs somewhere, or an
+    # <input> beyond the one known, client-side-only search box (fetches a
+    # precomputed index, never submits - see the store.js/pages.js checks
+    # above). A blanket "-zero <input> tags" check was wrong the moment the
+    # search box shipped and had apparently never actually been run since
+    # (only exercised via --url, which every prior CI/local run skipped).
     src = open(os.path.join(ROOT, "site", "index.html"), encoding="utf-8").read()
-    check("no input elements anywhere in the shell",
-          "<input" not in src.lower(), "the shell must not collect input")
+    check("shell has no <form> element (the actual lead-capture vector)", "<form" not in src.lower())
+    inputs = re.findall(r"<input\b[^>]*>", src, re.I)
+    unexpected = [i for i in inputs if 'id="search-input"' not in i]
+    check("shell's only <input> is the known client-side search box",
+          len(inputs) == 1 and not unexpected, "found: %s" % (unexpected or inputs))
 
 
 def _dechunk(raw):
