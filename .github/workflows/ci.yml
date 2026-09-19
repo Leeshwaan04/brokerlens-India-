@@ -64,11 +64,26 @@ jobs:
           python3 -m pipeline.run complaints || true
           python3 -m pipeline.run build
 
-      - name: Run QA end-to-end suite
-        run: python3 tests/qa_e2e.py
+      # Both suites accept --url to additionally probe a running server
+      # (real HTTP routes, the SSE stream, security headers, DoS/slowloris
+      # resistance) - discovered 2026-09-19 that nothing had ever actually
+      # passed one in here, so every run silently printed "SKIP http + sse
+      # checks" and 490+65 real checks (three of which turned out to be
+      # failing test bugs, not site bugs) never ran in CI at all. Backed by
+      # the same devserver.py the Makefile's `make serve` uses locally.
+      - name: Start a local server for the live-probe checks
+        run: |
+          python3 server/devserver.py --port 8091 &
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8091/ -o /dev/null && break
+            sleep 1
+          done
 
-      - name: Run VAPT suite
-        run: python3 tests/vapt.py
+      - name: Run QA end-to-end suite (offline + live server)
+        run: python3 tests/qa_e2e.py --url http://127.0.0.1:8091
+
+      - name: Run VAPT suite (offline + live server probes)
+        run: python3 tests/vapt.py --url http://127.0.0.1:8091
 
   deploy:
     needs: test
