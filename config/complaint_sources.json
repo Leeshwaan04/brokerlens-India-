@@ -21,10 +21,10 @@
   "last_reviewed": null,
   "brokers": {
     "zerodha": {
-      "url": "https://zerodha.com/investor-attention/",
-      "format": "html",
-      "verified": null,
-      "note": "Zerodha publishes complaint data under investor attention/charter."
+      "url": "https://docs.google.com/spreadsheets/d/12_L4ku18tU12orNkyFJIY2Kkv03YNssT8GNK8tNdf_c/export?format=csv",
+      "format": "gsheet_annexure_blocks",
+      "verified": "2026-09-19",
+      "note": "Zerodha publishes real monthly Annexure-B data (Dec 2021 onward) as a public Google Sheet, linked from https://zerodha.com/disclosure/ under Complaint resolution. The old investor-attention/ URL was the wrong page entirely (investor education content, no complaint table)."
     },
     "groww": {
       "url": "https://groww.in/investor-charter",

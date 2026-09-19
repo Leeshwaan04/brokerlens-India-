@@ -24,4 +24,12 @@ export SEBI_MAX_PAGES="${SEBI_MAX_PAGES:-100}"
 export PUBLISH_MODE=production
 
 "$PY" -m pipeline.run fetch || true
+# Crawls each configured broker's own SEBI Annexure-B disclosure page for
+# real complaint counts (see pipeline/sources/complaints.py). This was built
+# but never actually wired into a deploy until now, so data/manual/
+# complaints.json stayed 100% sample data regardless of how many brokers'
+# pages could genuinely be parsed. Same "never let one source kill the
+# build" tolerance as fetch: a bad run here leaves the existing file
+# untouched rather than failing the deploy.
+"$PY" -m pipeline.run complaints || true
 "$PY" -m pipeline.run build

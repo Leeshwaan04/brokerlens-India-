@@ -164,6 +164,71 @@ def parse_annexure_b(html, url=""):
     return [dedup[m] for m in sorted(dedup)], None
 
 
+def parse_annexure_b_gsheet_blocks(csv_text, url=""):
+    """Extract [{month, received, resolved, pending}] from a Google Sheets
+    CSV export shaped like Zerodha's public disclosure sheet: a "Monthly
+    Complaint Data" section with one 5-row block per month (four
+    complaint-source-channel rows, then a row the source itself labels
+    "Total"), followed by a simplified recap table and an annual table that
+    this deliberately never reads.
+
+    Column positions (received=3, total pending=5, resolved=6) are SEBI's
+    own Annexure-B layout, confirmed against a broker's published Annexure-B
+    PDF quoting the circular's footnotes ("Resolved*" includes prior months'
+    complaints resolved this month; "Total Pending#" is complaints pending
+    as of the last day of the month) - not inferred from column position
+    alone. Cross-checked by independently summing the four channel rows for
+    several months and matching the Total row on 5 of 6 fields; the sheet's
+    own simplified recap table was found to mismatch its own detailed
+    section on at least one field for one month, which is exactly why only
+    the row explicitly labelled "Total" is trusted here, never a re-derived
+    or a differently-sourced figure for the same month.
+    """
+    import csv
+    import io
+
+    rows = list(csv.reader(io.StringIO(csv_text or "")))
+    out, current_month, in_detail = [], None, False
+    for row in rows:
+        row = [c.strip() for c in row]
+        label = row[1] if len(row) > 1 else ""
+        if label == "Monthly Complaint Data":
+            in_detail = True
+            continue
+        if not in_detail:
+            continue
+        # A recap/annual table starts a differently-shaped section this
+        # parser must never enter - stop rather than misread it.
+        if label in ("Month", "Year", "Annual complaint disposal trend"):
+            break
+        month = _parse_month(label)
+        if month:
+            current_month = month
+            continue
+        if label.lower() == "total" and current_month:
+            def _num(i):
+                v = (row[i] if len(row) > i else "").replace(",", "").strip()
+                try:
+                    return int(float(v))
+                except ValueError:
+                    return None
+            received, resolved, pending = _num(3), _num(6), _num(5)
+            if received is not None and resolved is not None:
+                out.append({"month": current_month, "received": received,
+                            "resolved": resolved, "pending": pending, "source_url": url})
+            current_month = None
+    if not out:
+        return [], "no parseable monthly Total rows found in the sheet"
+    dedup = {r["month"]: r for r in out}
+    return [dedup[m] for m in sorted(dedup)], None
+
+
+_PARSERS = {
+    "html": parse_annexure_b,
+    "gsheet_annexure_blocks": parse_annexure_b_gsheet_blocks,
+}
+
+
 def collect(sources=None, ttl=12 * 3600):
     """Crawl every configured broker disclosure page.
 
@@ -184,6 +249,8 @@ def collect(sources=None, ttl=12 * 3600):
     got, failures = {}, {}
     for bid, entry in entries.items():
         url = entry.get("url") if isinstance(entry, dict) else entry
+        fmt = entry.get("format", "html") if isinstance(entry, dict) else "html"
+        parser = _PARSERS.get(fmt, parse_annexure_b)
         if not url:
             failures[bid] = "no url configured"
             continue
@@ -195,7 +262,7 @@ def collect(sources=None, ttl=12 * 3600):
         if not html:
             failures[bid] = "fetch returned nothing"
             continue
-        rows, reason = parse_annexure_b(html, url)
+        rows, reason = parser(html, url)
         if rows:
             got[bid] = rows
         else:

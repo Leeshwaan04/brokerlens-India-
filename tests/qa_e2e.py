@@ -264,6 +264,26 @@ def test_regression_guards():
                                             "broker_supplied", "manual", "estimate"),
                   "got %r" % raw.get("provenance"))
 
+    # complaints.json sat at 100% sample data for every broker until this
+    # regression was added: the crawler in pipeline/sources/complaints.py
+    # existed but was never wired into a deploy, and every one of the 12
+    # already-configured broker URLs turned out to be stale or simply the
+    # wrong page. Zerodha's real Annexure-B disclosure (a public Google
+    # Sheet, linked from zerodha.com/disclosure/) is the first fix -
+    # December 2021 is pinned here (48 received, 32 resolved, 5 pending)
+    # against the row the sheet itself labels "Total", cross-checked by
+    # independently summing that same month's four complaint-channel rows.
+    complaints_raw = load("data/manual/complaints.json") or {}
+    dec_2021 = next((r for r in (complaints_raw.get("brokers") or {}).get("zerodha") or []
+                     if r.get("month") == "2021-12"), None)
+    check("zerodha has real complaints data, not just sample",
+          complaints_raw.get("provenance") == "sebi_annexure_b" and dec_2021 is not None,
+          "provenance=%r" % complaints_raw.get("provenance"))
+    if dec_2021:
+        check("zerodha December 2021 complaint figures match the source's own Total row",
+              (dec_2021.get("received"), dec_2021.get("resolved"), dec_2021.get("pending")) == (48, 32, 5),
+              "got %r" % dec_2021)
+
     # The exit-code contract: an all-empty adapter result must not read as ok.
     from pipeline import run as runmod
     check("an empty source is detected as a shortfall",

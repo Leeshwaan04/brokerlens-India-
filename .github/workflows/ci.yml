@@ -61,6 +61,7 @@ jobs:
           SEBI_MAX_PAGES: "100"
         run: |
           python3 -m pipeline.run fetch || true
+          python3 -m pipeline.run complaints || true
           python3 -m pipeline.run build
 
       - name: Run QA end-to-end suite
