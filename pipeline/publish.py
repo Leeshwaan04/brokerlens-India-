@@ -1877,8 +1877,11 @@ def _stock_slug(symbol):
 
 def _stock_price_html(history):
     """Last close + day change from real bhavcopy history (see nse.py's
-    equity_history()) - the last two points, both actually published by NSE,
-    never a live tick. Returns "" if fewer than 2 points exist yet."""
+    equity_history()) as a hero stat tile - the page's single most-wanted
+    number gets the same visual weight the homepage gives its own headline
+    figures, not one more box in a flat grid of static reference facts.
+    Both points are actually published by NSE, never a live tick. Returns ""
+    if fewer than 2 points exist yet."""
     if not history or len(history) < 2:
         return ""
     last, prev = history[-1], history[-2]
@@ -1886,10 +1889,35 @@ def _stock_price_html(history):
         return ""
     chg_pct = (last["close"] - prev["close"]) / prev["close"] * 100
     return (
-        '<div class="mega-seg"><div class="mega-seg-label">Last close</div>'
-        '<div style="margin-top:2px">%s <span class="%s">%s</span></div>'
-        '<div class="xs faint" style="margin-top:2px">as of %s</div></div>'
+        '<div class="card stat" style="margin-bottom:12px">'
+        '<div class="stat-label">Last close</div>'
+        '<div class="stat-value sm">%s <span class="%s" style="font-family:var(--font);font-size:var(--fs-base)">%s</span></div>'
+        '<div class="stat-sub">as of %s</div></div>'
     ) % (_inr_html(last["close"]), _cls_class(chg_pct), _pct_html(chg_pct), _iso_to_long_date(last["date"]))
+
+
+def _listing_details_html(symbol, c, sector):
+    """Static reference facts (ISIN, series, face value, market lot) as a
+    compact key-value list, not a grid of boxy tiles - these matter far less
+    than the price/chart above them, and a flat 3-column grid of 7 items
+    always left one cell empty (7 doesn't divide by 3)."""
+    def fact(raw):
+        return _esc(raw) if raw else "Not disclosed"
+    rows = [
+        ("NSE symbol", fact(symbol)),
+        ("ISIN", fact(c.get("isin"))),
+        ("Series", fact(c.get("series"))),
+        ("Sector", fact(sector)),
+        ("Listed since", fact(_long_date(c.get("listing_date")) if c.get("listing_date") else None)),
+        ("Face value", fact(("Rs %s" % c["face_value"]) if c.get("face_value") else None)),
+        ("Market lot", fact(c.get("market_lot"))),
+    ]
+    return (
+        '<div class="card"><div class="card-title">Listing details</div>'
+        '<dl class="kv" style="margin-top:10px">'
+        + "".join("<dt>%s</dt><dd>%s</dd>" % (label, value) for label, value in rows)
+        + '</dl></div>'
+    )
 
 
 def _iso_to_long_date(iso_date):
@@ -2019,25 +2047,10 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
         if c.get("isin"):
             corp_jsonld["identifier"] = c["isin"]
 
-        def fact(raw):
-            return _esc(raw) if raw else "Not disclosed"
-
         history = (equity_history or {}).get(symbol.upper()) or []
         price_row = history[-1] if history else None
         sector = industry_by_symbol.get(symbol.upper())
-
-        facts_html = "".join(
-            '<div class="mega-seg"><div class="mega-seg-label">%s</div><div style="margin-top:2px">%s</div></div>'
-            % (label, value) for label, value in [
-                ("NSE symbol", fact(symbol)),
-                ("ISIN", fact(c.get("isin"))),
-                ("Series", fact(c.get("series"))),
-                ("Sector", fact(sector)),
-                ("Listed on NSE since", fact(_long_date(c.get("listing_date")) if c.get("listing_date") else None)),
-                ("Face value", fact(("Rs %s" % c["face_value"]) if c.get("face_value") else None)),
-                ("Market lot", fact(c.get("market_lot"))),
-            ]
-        ) + _stock_price_html(history)
+        listing_html = _listing_details_html(symbol, c, sector)
 
         broker_link = ""
         match = by_symbol.get(symbol.upper())
@@ -2137,9 +2150,13 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
             + '<p class="muted">NSE: %s</p>' % _esc(symbol)
             + broker_link
-            + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
-            + ('<div class="card" style="margin-top:16px"><div class="card-title">Price history</div>'
-               '<div data-stock-chart data-symbol="%s"></div></div>' % _esc(slug) if history else "")
+            + (
+                '<div class="grid g-main" style="margin-top:16px">'
+                '<div class="card"><div class="card-title">Price history</div>'
+                '<div data-stock-chart data-symbol="%s"></div></div>'
+                '<div>%s%s</div></div>' % (_esc(slug), _stock_price_html(history), listing_html)
+                if history else listing_html
+              )
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L)%s.</p>'
               % (" and NSE's daily bhavcopy for price history" if history else "; price history was not available "
                  "for this symbol in the latest data refresh")
