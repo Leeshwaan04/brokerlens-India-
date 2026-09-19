@@ -1889,7 +1889,7 @@ def _stock_price_html(history):
         return ""
     chg_pct = (last["close"] - prev["close"]) / prev["close"] * 100
     return (
-        '<div class="card stat" style="margin-bottom:12px">'
+        '<div class="card stat">'
         '<div class="stat-label">Last close</div>'
         '<div class="stat-value sm">%s <span class="%s" style="font-family:var(--font);font-size:var(--fs-base)">%s</span></div>'
         '<div class="stat-sub">as of %s</div></div>'
@@ -2154,8 +2154,12 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                 '<div class="grid g-main" style="margin-top:16px">'
                 '<div class="card"><div class="card-title">Price history</div>'
                 '<div data-stock-chart data-symbol="%s"></div></div>'
-                '<div>%s%s</div></div>' % (_esc(slug), _stock_price_html(history), listing_html)
-                if history else listing_html
+                '<div class="stack">%s%s%s%s</div></div>'
+                % (_esc(slug), _stock_price_html(history), listing_html,
+                   affiliateBanner_html(), fivepaisaBanner_html())
+                if history else
+                listing_html + '<div class="grid g2" style="margin-top:16px">%s%s</div>'
+                % (affiliateBanner_html(), fivepaisaBanner_html())
               )
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L)%s.</p>'
               % (" and NSE's daily bhavcopy for price history" if history else "; price history was not available "
@@ -2366,6 +2370,8 @@ def _write_etf_pages(etfs, indices):
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-ETF register. '
               'Live price and trading data are not carried on this page.</p>'
             + index_html
+            + '<div class="grid g2" style="margin-top:20px">%s%s</div>'
+              % (affiliateBanner_html(), fivepaisaBanner_html())
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + etf_faq_html + '</div>'
         )
@@ -2531,6 +2537,8 @@ def _write_mutual_fund_pages(schemes):
               '</tr></thead><tbody>' + rows_html + '</tbody></table></div>'
             + '<p class="xs faint" style="margin-top:16px">Source: AMFI daily NAV master file. '
               'Historical NAV, returns and portfolio holdings are not carried on this page.</p>'
+            + '<div class="grid g2" style="margin-top:20px">%s%s</div>'
+              % (affiliateBanner_html(), fivepaisaBanner_html())
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
         )
@@ -4385,6 +4393,8 @@ def _write_ipo_pages(records):
             + '<p class="xs faint" style="margin-top:16px">Facts are NSE\'s own public-issue disclosures, '
               'refreshed periodically. Not investment advice; BrokerLens does not publish grey market premium '
               '(GMP) or recommend any IPO.</p>'
+            + '<div class="grid g2" style="margin-top:20px">%s%s</div>'
+              % (affiliateBanner_html(), fivepaisaBanner_html())
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
         )

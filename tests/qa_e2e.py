@@ -557,6 +557,18 @@ def test_published():
                   "Trade ITC" in itc_html and 'href="/compare"' in itc_html)
             check("stock page lists peer stocks in the same sector index",
                   "Other Nifty FMCG stocks" in itc_html and "/stock/hindunilvr/" in itc_html)
+            check("stock page carries both sponsored broker banners",
+                  "aff-banner-zerodha" in itc_html and "aff-banner-5paisa" in itc_html)
+        # A stock with no price history yet takes a different layout branch
+        # (no chart, no g-main split) - the banners must still render there,
+        # not only on the common chart-having path. ABAN (BE series, delisted
+        # from active trading) has no bhavcopy rows in the fetch window.
+        aban_path = os.path.join(stock_dir, "aban", "index.html")
+        if os.path.exists(aban_path):
+            aban_html = open(aban_path, encoding="utf-8").read()
+            check("a stock page with no price history still carries both sponsored broker banners",
+                  "data-stock-chart" not in aban_html
+                  and "aff-banner-zerodha" in aban_html and "aff-banner-5paisa" in aban_html)
         stock_chart_path = os.path.join(ROOT, "site", "assets", "js", "stock-chart.js")
         check("stock-chart.js exists", os.path.exists(stock_chart_path))
         # Corporate actions are matched by an exact BSE-symbol-to-NSE-symbol
@@ -667,6 +679,8 @@ def test_published():
               bool(re.search(r"had a NAV of Rs \d+\.\d{4}\.", fund_html)) and "Growth Option variant" in fund_html)
         check("fund page shows real NAV figures, not placeholders",
               bool(re.search(r"Rs \d+\.\d{4}", fund_html)))
+        check("fund page carries both sponsored broker banners",
+              "aff-banner-zerodha" in fund_html and "aff-banner-5paisa" in fund_html)
 
     # The single hand-written data report. Its defaulter-count claim was
     # caught overstating a relationship the raw data didn't support (only 2
@@ -797,6 +811,12 @@ def test_published():
     if os.path.exists(os.path.join(etfs_dir_path, "index.html")):
         etf_dir_html = open(os.path.join(etfs_dir_path, "index.html"), encoding="utf-8").read()
         check("ETF directory links /etf/ pages", '/etf/' in etf_dir_html)
+        etf_dir = os.path.join(ROOT, "site", "etf")
+        etf_slugs = sorted(d for d in os.listdir(etf_dir)) if os.path.isdir(etf_dir) else []
+        if etf_slugs:
+            etf_html = open(os.path.join(etf_dir, etf_slugs[0], "index.html"), encoding="utf-8").read()
+            check("ETF page carries both sponsored broker banners",
+                  "aff-banner-zerodha" in etf_html and "aff-banner-5paisa" in etf_html)
 
     # The SEBI registry was the one directory family that shipped without
     # this fix: /registry only ever hard-linked the first 60 of ~1,691
@@ -1197,6 +1217,8 @@ def test_published():
               "not investment advice" in sample_ipo_html.lower())
         check("an IPO page has no leaked 'None'",
               ">None<" not in sample_ipo_html and "None</p>" not in sample_ipo_html)
+        check("an IPO page carries both sponsored broker banners",
+              "aff-banner-zerodha" in sample_ipo_html and "aff-banner-5paisa" in sample_ipo_html)
 
     check("sitemap includes /ipo/ pages", "/ipo/" in open(os.path.join(ROOT, "site", "sitemap.xml"), encoding="utf-8").read())
     search_rows_ipo = [r for r in all_search_rows if r[2] == "ipo"]
