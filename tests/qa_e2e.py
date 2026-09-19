@@ -533,6 +533,48 @@ def test_published():
         check("angelone stock page FAQs mention its broker link, unlike a generic stock",
               "listed parent of a BrokerLens-tracked broker" in angel_html)
 
+        # Tier 1 of the Page Depth Plan: last close, sector, a real price
+        # chart, corporate actions and peer links, built from data this
+        # pipeline was already fetching (bhavcopy, index constituent files,
+        # BSE corporate actions) but never rendering. ITC is a stable,
+        # always-listed, always-index-member reference stock.
+        eq_hist_dir = os.path.join(ROOT, "site", "data", "equity-history")
+        check("equity-history directory exists", os.path.isdir(eq_hist_dir))
+        if os.path.isdir(eq_hist_dir):
+            hist_files = [f for f in os.listdir(eq_hist_dir) if f.endswith(".json")]
+            check("a large number of stocks have real price history", len(hist_files) > 1000,
+                  "found %d" % len(hist_files))
+        itc_path = os.path.join(stock_dir, "itc", "index.html")
+        if os.path.exists(itc_path):
+            itc_html = open(itc_path, encoding="utf-8").read()
+            check("stock page shows a real Sector field", "Fast Moving Consumer Goods" in itc_html)
+            check("stock page shows a last-close price with a day-change badge",
+                  "Last close" in itc_html and ('class="up"' in itc_html or 'class="down"' in itc_html))
+            check("stock page loads the price chart (vendor lib + stock-chart.js)",
+                  "lightweight-charts" in itc_html and "stock-chart.js" in itc_html
+                  and "data-stock-chart" in itc_html)
+            check("stock page has a trade-this-stock CTA linking to /compare",
+                  "Trade ITC" in itc_html and 'href="/compare"' in itc_html)
+            check("stock page lists peer stocks in the same sector index",
+                  "Other Nifty FMCG stocks" in itc_html and "/stock/hindunilvr/" in itc_html)
+        stock_chart_path = os.path.join(ROOT, "site", "assets", "js", "stock-chart.js")
+        check("stock-chart.js exists", os.path.exists(stock_chart_path))
+        # Corporate actions are matched by an exact BSE-symbol-to-NSE-symbol
+        # string match, never fuzzy - so this only proves the wiring fires
+        # for at least one real, currently-disclosed action, not that every
+        # BSE symbol resolves (most legitimately won't, see the note above
+        # actions_by_symbol's construction in publish.py).
+        raw_action_symbols = {(a.get("symbol") or "").strip().upper() for a in
+                              (load("data/_ingest.json") or {}).get("bse", {}).get("corporate_actions", [])}
+        if raw_action_symbols:
+            check("at least one stock page's corporate action matches real BSE ingest data by exact symbol",
+                  any(os.path.exists(os.path.join(stock_dir, sym.lower(), "index.html"))
+                      and "Upcoming corporate actions" in
+                      open(os.path.join(stock_dir, sym.lower(), "index.html"), encoding="utf-8").read()
+                      for sym in raw_action_symbols
+                      if os.path.isdir(os.path.join(stock_dir, sym.lower()))),
+                  "0 of %d BSE action symbols matched an existing stock page" % len(raw_action_symbols))
+
     # Static /index/:slug pages - Phase 2 of the 60-70k-page plan. Sourced
     # from NSE's own published index-constituent files (Nifty 50, sectoral
     # indices), cross-linked both ways with the /stock/ pages above. No SPA

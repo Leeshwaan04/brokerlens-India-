@@ -513,8 +513,10 @@ def build():
     hub_groups = _write_broker_hub_pages(built)
     equity_companies = ((nse_d.get("universe") or {}).get("companies")) or []
     index_universe = nse_d.get("indices") or {}
+    equity_history = nse_d.get("equity_history") or {}
+    build_equity_history(equity_history)
     _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"),
-                        index_universe)
+                        index_universe, equity_history, bse_d.get("corporate_actions") or [])
     _write_index_pages(index_universe, equity_companies)
     etf_universe = nse_d.get("etfs") or []
     _write_etf_pages(etf_universe, index_universe)
@@ -788,6 +790,28 @@ def build_crypto_history():
         write_json(os.path.join(dest_dir, "%s.json" % symbol.lower()), payload, compact=True)
         written += 1
     log("crypto-history: %d coin files written" % written, "ok")
+
+
+def build_equity_history(equity_history):
+    """One small JSON file per NSE-listed stock (site/data/equity-history/
+    <symbol-slug>.json), real daily OHLCV from NSE's own bhavcopy - see
+    pipeline/sources/nse.py's equity_history(). Same lazy-per-page-fetch
+    shape as build_crypto_history(), and the same honesty rule: a symbol
+    with no file yet (delisted, newly listed, or this run's fetch simply
+    didn't reach it) shows "not enough history yet" rather than a guess."""
+    dest_dir = os.path.join(SITE_DATA, "equity-history")
+    os.makedirs(dest_dir, exist_ok=True)
+    written = 0
+    for symbol, points in (equity_history or {}).items():
+        if not points:
+            continue
+        slug = _stock_slug(symbol)
+        if not slug:
+            continue
+        payload = {"symbol": symbol, "generated_at": now_iso(), "candles": points}
+        write_json(os.path.join(dest_dir, "%s.json" % slug), payload, compact=True)
+        written += 1
+    log("equity-history: %d stock files written" % written, "ok")
 
 
 def build_market_movers():
@@ -1851,27 +1875,93 @@ def _stock_slug(symbol):
     return re.sub(r"[^a-z0-9]+", "-", (symbol or "").lower()).strip("-")
 
 
-def _write_stock_pages(companies, brokers_cfg, indices=None):
-    """One static page per NSE-listed equity - Phase 1 of docs/SCALE_TO_60K_PLAN.md.
+def _stock_price_html(history):
+    """Last close + day change from real bhavcopy history (see nse.py's
+    equity_history()) - the last two points, both actually published by NSE,
+    never a live tick. Returns "" if fewer than 2 points exist yet."""
+    if not history or len(history) < 2:
+        return ""
+    last, prev = history[-1], history[-2]
+    if last.get("close") is None or prev.get("close") is None or not prev["close"]:
+        return ""
+    chg_pct = (last["close"] - prev["close"]) / prev["close"] * 100
+    return (
+        '<div class="mega-seg"><div class="mega-seg-label">Last close</div>'
+        '<div style="margin-top:2px">%s <span class="%s">%s</span></div>'
+        '<div class="xs faint" style="margin-top:2px">as of %s</div></div>'
+    ) % (_inr_html(last["close"]), _cls_class(chg_pct), _pct_html(chg_pct), _iso_to_long_date(last["date"]))
 
-    The data (NSE's own EQUITY_L.csv) was already being fetched on every run;
-    only the page-generation step is new. Unlike the sample-gated broker
-    metrics, every field here is always real and always available - there is
-    no "not published yet" state for a company's own listing facts.
+
+def _iso_to_long_date(iso_date):
+    """'2026-09-18' -> '18 Sep 2026'. Never falls back to a guessed format -
+    an unparseable string is returned as-is so it's visibly wrong, not
+    silently mangled."""
+    try:
+        y, m, d = iso_date.split("-")
+        return "%d %s %s" % (int(d), _MONTH_NAMES[int(m) - 1], y)
+    except (ValueError, IndexError, AttributeError):
+        return iso_date
+
+
+# Sectoral index slugs (see nse.py's INDEX_FILES): the subset that names an
+# actual industry rather than a broad-market cap band (Nifty 50/100/500) or a
+# strategy/thematic cut (Commodities, CPSE, Infrastructure, Consumption) that
+# cuts across sectors - kept separate so "Sector" means one real thing.
+_SECTOR_INDEX_SLUGS = {
+    "nifty-bank", "nifty-auto", "nifty-it", "nifty-pharma", "nifty-fmcg", "nifty-metal",
+    "nifty-realty", "nifty-energy", "nifty-psu-bank", "nifty-media", "nifty-consumer-durables",
+    "nifty-healthcare", "nifty-oil-gas",
+}
+
+
+def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None, corporate_actions=None):
+    """One static page per NSE-listed equity - Phase 1 of docs/SCALE_TO_60K_PLAN.md,
+    completed: sector, a real price snapshot and corporate actions were named
+    in that plan as in-scope "from data this pipeline already pulls" but
+    hadn't actually shipped until now.
+
+    The data (NSE's own EQUITY_L.csv, index constituent files, bhavcopy) was
+    already being fetched on every run; only the page-generation step is new
+    for most of this. Unlike the sample-gated broker metrics, every field
+    here is always real and always available - there is no "not published
+    yet" state for a company's own listing facts, though price/chart/
+    corporate-action fields degrade honestly to nothing when that day's
+    fetch didn't reach this symbol.
 
     Path is /stock/:symbol/, checked against the live SPA route list before
     use (nothing named "stock" exists there) - same discipline that avoided
     two prior collisions (site/registry/, site/brokers/).
     """
     by_symbol = {s["symbol"].upper(): s for s in (brokers_cfg or [])}
-    membership = {}
+    # A peer link must only ever point at a symbol this same run is actually
+    # about to write a /stock/ page for - an index file can lag EQUITY_L.csv
+    # by a day (a recent delisting, a symbol change), and a dead link is
+    # worse than a peer list one entry shorter.
+    valid_symbols = {(c.get("symbol") or "").strip().upper() for c in companies} - {""}
+    membership, industry_by_symbol, sector_members = {}, {}, {}
     for slug, idx in (indices or {}).items():
         for con in idx["constituents"]:
             sym = (con.get("symbol") or "").upper()
-            if sym:
-                membership.setdefault(sym, []).append((slug, idx["label"]))
+            if not sym:
+                continue
+            membership.setdefault(sym, []).append((slug, idx["label"]))
+            if con.get("industry") and sym not in industry_by_symbol:
+                industry_by_symbol[sym] = con["industry"]
+            if slug in _SECTOR_INDEX_SLUGS and sym in valid_symbols:
+                sector_members.setdefault(slug, []).append((sym, con.get("name") or sym))
 
-    def stock_faqs(name, symbol, c, member_of, match):
+    # BSE's corporate-actions feed uses BSE's own symbol/short-name, which
+    # doesn't always match NSE's ticker for the same company - only an exact
+    # match is trusted (same discipline as the identity Resolver's strict
+    # mode elsewhere in this file); anything that doesn't match exactly is a
+    # real gap on that stock's page, never a fuzzy guess.
+    actions_by_symbol = {}
+    for a in (corporate_actions or []):
+        sym = (a.get("symbol") or "").strip().upper()
+        if sym:
+            actions_by_symbol.setdefault(sym, []).append(a)
+
+    def stock_faqs(name, symbol, c, member_of, match, price_row):
         """Every question is answered from a fact already on this page -
         varying genuinely with real data (an absent ISIN, index membership,
         a broker link) rather than a fixed list reworded per symbol, which
@@ -1903,9 +1993,10 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
             faqs.append(("Is %s a listed stock broker?" % name,
                          "Yes, %s is the listed parent of a BrokerLens-tracked broker; see its broker profile "
                          "for regulatory and cost details." % name))
-        faqs.append(("Does this page show %s's live share price?" % name,
-                     "No. This page carries NSE's own listing facts only (symbol, ISIN, listing date, face "
-                     "value, market lot); live price and trading data are not carried here."))
+        faqs.append(("What was %s's last closing price?" % name,
+                     "%s closed at %s on %s, from NSE's own daily bhavcopy." % (name, _inr_html(price_row["close"]), price_row["date"])
+                     if price_row else
+                     "A recent closing price for %s was not available in this site's latest data refresh." % name))
         return faqs
 
     written = 0
@@ -1920,8 +2011,8 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
         canonical = "%s/stock/%s/" % (SITE_URL, slug)
         title = "%s (%s): NSE Listing Details | BrokerLens" % (_esc(name), _esc(symbol))
         description = _esc(
-            "%s (NSE: %s): ISIN, listing date, face value and market lot, "
-            "sourced directly from NSE's own listed-securities register." % (name, symbol)
+            "%s (NSE: %s): last close, sector, listing facts and price history, sourced directly from "
+            "NSE's own listed-securities register and daily bhavcopy." % (name, symbol)
         )[:300]
 
         corp_jsonld = {"@type": "Corporation", "name": name, "tickerSymbol": symbol, "url": canonical}
@@ -1931,17 +2022,22 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
         def fact(raw):
             return _esc(raw) if raw else "Not disclosed"
 
+        history = (equity_history or {}).get(symbol.upper()) or []
+        price_row = history[-1] if history else None
+        sector = industry_by_symbol.get(symbol.upper())
+
         facts_html = "".join(
             '<div class="mega-seg"><div class="mega-seg-label">%s</div><div style="margin-top:2px">%s</div></div>'
             % (label, value) for label, value in [
                 ("NSE symbol", fact(symbol)),
                 ("ISIN", fact(c.get("isin"))),
                 ("Series", fact(c.get("series"))),
+                ("Sector", fact(sector)),
                 ("Listed on NSE since", fact(_long_date(c.get("listing_date")) if c.get("listing_date") else None)),
                 ("Face value", fact(("Rs %s" % c["face_value"]) if c.get("face_value") else None)),
                 ("Market lot", fact(c.get("market_lot"))),
             ]
-        )
+        ) + _stock_price_html(history)
 
         broker_link = ""
         match = by_symbol.get(symbol.upper())
@@ -1963,7 +2059,49 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
                 + '</p>'
             )
 
-        faqs = stock_faqs(name, symbol, c, member_of, match)
+        # Real, upcoming corporate actions for this exact symbol - see the
+        # exact-match-only note above actions_by_symbol's construction.
+        actions = actions_by_symbol.get(symbol.upper()) or []
+        actions_html = ""
+        if actions:
+            actions_html = (
+                '<div class="section-title"><h2>Upcoming corporate actions</h2></div>'
+                '<div class="table-scroll"><table class="data"><thead><tr>'
+                '<th>Purpose</th><th>Ex-date</th><th>Record date</th></tr></thead><tbody>'
+                + "".join(
+                    "<tr><td>%s</td><td>%s</td><td>%s</td></tr>"
+                    % (_esc(a.get("purpose") or "-"), _esc(a.get("ex_date") or "-"), _esc(a.get("record_date") or "-"))
+                    for a in actions
+                )
+                + '</tbody></table></div>'
+                '<p class="xs faint" style="margin-top:4px">Source: BSE corporate-actions disclosure.</p>'
+            )
+
+        # Other constituents of the same sector index - a real comparison
+        # set, not a random sample, capped so this never reads as padding.
+        peers_html = ""
+        my_sectors = [slug for slug, _l in member_of if slug in _SECTOR_INDEX_SLUGS]
+        if my_sectors:
+            peers = [(s, n) for s, n in sector_members.get(my_sectors[0], []) if s != symbol.upper()][:10]
+            if peers:
+                sector_label = dict(member_of)[my_sectors[0]]
+                peers_html = (
+                    '<div class="section-title"><h2>Other %s stocks</h2></div>'
+                    '<p class="small" style="max-width:70ch">'
+                    + ", ".join('<a href="/stock/%s/">%s</a>' % (_esc(_stock_slug(s)), _esc(n)) for s, n in peers)
+                    + '</p>'
+                ) % _esc(sector_label)
+
+        trade_cta_html = (
+            '<div class="card" style="margin-top:20px;background:var(--accent-soft);border-style:solid">'
+            '<div class="card-title">Trade %s</div>'
+            '<p class="small muted" style="margin-top:4px">%s is tradable through any SEBI-registered broker '
+            'with an NSE cash-market membership. <a href="/compare">Compare brokers side by side</a> '
+            'or see the <a href="/brokers">full broker directory</a> before opening an account.</p>'
+            '</div>'
+        ) % (_esc(symbol), _esc(name))
+
+        faqs = stock_faqs(name, symbol, c, member_of, match, price_row)
         faq_html = "".join(
             '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
             for q, a in faqs
@@ -1990,15 +2128,25 @@ def _write_stock_pages(companies, brokers_cfg, indices=None):
             "title": _esc(title), "description": description,
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
+        if history:
+            body = body.replace("</head>", _stamp_asset_versions(
+                '<script src="/assets/js/vendor/lightweight-charts.standalone.production.js"></script>'
+                '<script type="module" src="/assets/js/stock-chart.js" defer></script></head>'))
         body += (
             crumb_html
             + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
             + '<p class="muted">NSE: %s</p>' % _esc(symbol)
             + broker_link
             + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
-            + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L). '
-              'Live price and trading data are not carried on this page.</p>'
+            + ('<div class="card" style="margin-top:16px"><div class="card-title">Price history</div>'
+               '<div data-stock-chart data-symbol="%s"></div></div>' % _esc(slug) if history else "")
+            + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L)%s.</p>'
+              % (" and NSE's daily bhavcopy for price history" if history else "; price history was not available "
+                 "for this symbol in the latest data refresh")
             + index_html
+            + trade_cta_html
+            + actions_html
+            + peers_html
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
         )

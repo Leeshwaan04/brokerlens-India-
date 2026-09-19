@@ -532,6 +532,20 @@ def member_circulars(f: Fetcher, broker_aliases):
     return hits
 
 
+def _bhavcopy_day(fa: Fetcher, day, ttl=7 * 86400):
+    """One day's full NSE cash-market bhavcopy, every listed instrument, real
+    OHLCV per row - shared by cm_turnover() (aggregate) and equity_history()
+    (per-symbol), so both draw on the exact same cached fetch instead of
+    downloading the same file twice. Returns None on a non-trading day or a
+    fetch miss; the caller decides how to count that against its own budget."""
+    stamp = day.strftime("%Y%m%d")
+    url = "%s/content/cm/BhavCopy_NSE_CM_0_0_0_%s_F_0000.csv.zip" % (ARCH, stamp)
+    text = fa.get_zip_member(url, ttl=ttl, retries=1)
+    if not text:
+        return None
+    return list(csv.DictReader(io.StringIO(text)))
+
+
 def cm_turnover(fa: Fetcher, days_back=7):
     """Market-wide CM turnover for the last N trading days, from bhavcopy."""
     series = []
@@ -542,16 +556,12 @@ def cm_turnover(fa: Fetcher, days_back=7):
         day = day - timedelta(days=1)
         if day.weekday() >= 5:
             continue
-        stamp = day.strftime("%Y%m%d")
-        url = "%s/content/cm/BhavCopy_NSE_CM_0_0_0_%s_F_0000.csv.zip" % (ARCH, stamp)
-        text = fa.get_zip_member(url, ttl=7 * 86400, retries=1)
-        if not text:
+        rows = _bhavcopy_day(fa, day)
+        if rows is None:
             continue
         turnover = 0.0
         trades = 0
-        rows = 0
-        for r in csv.DictReader(io.StringIO(text)):
-            rows += 1
+        for r in rows:
             turnover += to_num(r.get("TtlTrfVal")) or 0
             trades += to_num(r.get("TtlNbOfTxsExctd")) or 0
         series.append(
@@ -559,13 +569,64 @@ def cm_turnover(fa: Fetcher, days_back=7):
                 "date": day.isoformat(),
                 "turnover_inr": turnover,
                 "trades": trades,
-                "instruments": rows,
+                "instruments": len(rows),
             }
         )
     series.sort(key=lambda r: r["date"])
     if series:
         snapshot("nse_cm_turnover", series)
     return series
+
+
+def equity_history(fa: Fetcher, days_back=120):
+    """Per-symbol daily OHLCV, built from the same bhavcopy _bhavcopy_day()
+    already downloads for cm_turnover() - real Open/High/Low/Close/Volume,
+    not a synthesized price series, because NSE actually publishes real OHLC
+    per instrument every trading day (unlike crypto's free-tier history,
+    which is close-price-only past 30 days - see crypto.py).
+
+    days_back counts actual trading days found, not calendar days walked
+    (weekends and market holidays don't count against it) - 120 trading days
+    is roughly 6 months, measured at well under a minute per cold-cache
+    fetch pass for the full ~2,900-symbol universe. This pipeline
+    deliberately never fetches concurrently (see stream.json's per-source
+    bandwidth budgets for why), so this is a direct, linear deploy-time
+    cost every build pays fresh, not a one-time backfill.
+
+    Returns {symbol: [{date, open, high, low, close, volume}, ...]} sorted
+    chronologically. A symbol absent from a given day's bhavcopy (delisted,
+    suspended, newly listed) just has fewer points - never a filled-in gap.
+    """
+    by_symbol = {}
+    day = datetime.now(timezone.utc).date()
+    tried = 0
+    got_days = 0
+    while got_days < days_back and tried < days_back * 2:
+        tried += 1
+        day = day - timedelta(days=1)
+        if day.weekday() >= 5:
+            continue
+        rows = _bhavcopy_day(fa, day)
+        if rows is None:
+            continue
+        got_days += 1
+        date_str = day.isoformat()
+        for r in rows:
+            if (r.get("SctySrs") or "").strip() != "EQ":
+                continue
+            symbol = (r.get("TckrSymb") or "").strip()
+            o, h, l, c = (to_num(r.get(k)) for k in ("OpnPric", "HghPric", "LwPric", "ClsPric"))
+            if not symbol or c is None:
+                continue
+            by_symbol.setdefault(symbol, []).append({
+                "date": date_str, "open": o, "high": h, "low": l, "close": c,
+                "volume": to_num(r.get("TtlTradgVol")),
+            })
+    for symbol in by_symbol:
+        by_symbol[symbol].sort(key=lambda p: p["date"])
+    if by_symbol:
+        log("nse equity history: %d symbols, %d trading days" % (len(by_symbol), got_days), "ok")
+    return by_symbol
 
 
 def collect(broker_aliases):
@@ -580,6 +641,7 @@ def collect(broker_aliases):
         "etfs": etf_universe(fa),
         "circulars": member_circulars(f, broker_aliases),
         "turnover": cm_turnover(fa),
+        "equity_history": equity_history(fa),
         "ipo": {
             "current": ipo_current(f),
             "upcoming": ipo_upcoming(f),
