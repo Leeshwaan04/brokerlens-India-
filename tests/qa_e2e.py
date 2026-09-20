@@ -1175,6 +1175,19 @@ def test_published():
         check("crypto-live.js fetches the precomputed snapshot, not a live third-party API",
               "crypto-ticker.json" in crypto_live_src and "binance.com" not in crypto_live_src.lower())
     check("sitemap includes /crypto/ pages", "/crypto/" in open(os.path.join(ROOT, "site", "sitemap.xml"), encoding="utf-8").read())
+
+    # Every one of ~9,500 sitemap URLs used to get today's date stamped as
+    # lastmod on every single build, regardless of whether anything about
+    # that page had actually changed - a pattern that teaches a crawler to
+    # stop trusting the field altogether. Stock and ETF pages now use the
+    # real last date in their own price history (see nse.py's
+    # equity_history()); a real, varied spread of dates is the only way to
+    # confirm this wasn't silently reverted to the old fake-it constant.
+    sitemap_xml = open(os.path.join(ROOT, "site", "sitemap.xml"), encoding="utf-8").read()
+    stock_lastmods = re.findall(r"/stock/[^/]+/</loc><lastmod>([^<]+)</lastmod>", sitemap_xml)
+    check("stock URLs in the sitemap have real, varied lastmod dates, not one fake constant",
+          len(stock_lastmods) > 100 and len(set(stock_lastmods)) > 5,
+          "found %d urls across %d distinct dates" % (len(stock_lastmods), len(set(stock_lastmods))))
     all_search_rows = json.loads(open(search_json_path, encoding="utf-8").read()) if os.path.exists(search_json_path) else []
     search_rows_crypto = [r for r in all_search_rows if r[2] == "crypto"]
     check("search index includes crypto coins", len(search_rows_crypto) >= 20, "found %d" % len(search_rows_crypto))

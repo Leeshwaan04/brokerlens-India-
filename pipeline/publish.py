@@ -521,7 +521,7 @@ def build():
     etf_universe = nse_d.get("etfs") or []
     _write_etf_pages(etf_universe, index_universe)
     mf_schemes = amfi_d.get("schemes") or []
-    _funds, fund_slugs = _write_mutual_fund_pages(mf_schemes)
+    _funds, fund_slugs, fund_nav_dates = _write_mutual_fund_pages(mf_schemes)
     report_slugs = _write_reports(built, reg_rows, equity_companies, index_universe, etf_universe,
                                    _funds, len(sebi_d.get("defaulters") or []))
     calc_slugs = _write_calculator_pages()
@@ -551,7 +551,7 @@ def build():
     _write_ipo_archive(ipo_records)
     _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
                     fund_slugs, report_slugs, calc_slugs, stock_letters, amc_slugs, crypto_slugs, ipo_records,
-                    registry_letters)
+                    registry_letters, equity_history, fund_nav_dates)
     _write_search_index(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
                          fund_slugs, report_slugs, amc_slugs, crypto_coins, ipo_records)
     _write_feed(built, aggregates)
@@ -2427,6 +2427,7 @@ def _write_mutual_fund_pages(schemes):
     """
     funds = _group_mutual_funds(schemes)
     used_slugs = {}
+    nav_dates = {}
     written = 0
     for fund in funds:
         amc, name = fund["amc"], fund["name"]
@@ -2454,6 +2455,13 @@ def _write_mutual_fund_pages(schemes):
 
         variants_sorted = sorted(
             fund["variants"], key=lambda v: (v.get("plan") or "", v.get("option") or ""))
+        for v in variants_sorted:
+            try:
+                iso = datetime.strptime(v.get("nav_date") or "", "%d-%b-%Y").strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+            if iso > nav_dates.get(slug, ""):
+                nav_dates[slug] = iso
         rows_html = "".join(
             "<tr><td>%s</td><td>%s</td><td class=\"right num\">%s</td><td class=\"small\">%s</td>"
             "<td class=\"small num\">%s</td><td class=\"small num\">%s</td></tr>"
@@ -2555,7 +2563,7 @@ def _write_mutual_fund_pages(schemes):
     log("mutual fund pages: %d written across %d AMCs%s" % (
         written, len(set(f["amc"] for f in funds)),
         (", %d stale pruned" % pruned) if pruned else ""), "ok")
-    return funds, used_slugs
+    return funds, used_slugs, nav_dates
 
 
 _REPORT_SLUG = "state-of-indian-broking-2026"
@@ -6296,7 +6304,8 @@ def _write_calculator_hub():
 
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
                     fund_slugs=None, report_slugs=None, calc_slugs=None, stock_letters=None, amc_slugs=None,
-                    crypto_slugs=None, ipo_records=None, registry_letters=None):
+                    crypto_slugs=None, ipo_records=None, registry_letters=None, equity_history=None,
+                    fund_nav_dates=None):
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator", "/calculators",
             "/registry", "/algo", "/methodology", "/sources", "/stocks", "/funds-by", "/etfs", "/crypto",
@@ -6333,23 +6342,36 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
                      % (SITE_URL, dim, today))
     # A company's own listing facts (ISIN, listing date, face value) almost
     # never change, so these get the lowest changefreq of anything published.
+    # lastmod uses the real last date in this symbol's own price history
+    # (see nse.py's equity_history()) when available - genuinely the last
+    # time this page's displayed data changed, not "today" on every build
+    # regardless of whether anything did. A blanket fake lastmod on 9,500+
+    # URLs is exactly the pattern that teaches a crawler to ignore the field
+    # entirely; falls back to `today` only when no real history exists yet.
+    eq_hist = equity_history or {}
     for c in (companies or []):
         slug = _stock_slug(c.get("symbol"))
         if slug:
+            hist = eq_hist.get((c.get("symbol") or "").upper()) or []
+            lastmod = hist[-1]["date"] if hist else today
             body += ("<url><loc>%s/stock/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
-                     % (SITE_URL, slug, today))
+                     % (SITE_URL, slug, lastmod))
     # An index's constituent list changes only at NSE's periodic
     # rebalancing (quarterly/semi-annually), so weekly matches the hub pages
     # rather than overclaiming daily freshness.
     for slug in (indices or {}):
         body += ("<url><loc>%s/index/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
                  % (SITE_URL, slug, today))
-    # An ETF's own listing facts change as rarely as a stock's.
+    # An ETF's own listing facts change as rarely as a stock's; same real
+    # lastmod source (ETFs share the same bhavcopy classification as
+    # equities - see equity_history()'s own docstring).
     for e in (etfs or []):
         slug = _stock_slug(e.get("symbol"))
         if slug:
+            hist = eq_hist.get((e.get("symbol") or "").upper()) or []
+            lastmod = hist[-1]["date"] if hist else today
             body += ("<url><loc>%s/etf/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
-                     % (SITE_URL, slug, today))
+                     % (SITE_URL, slug, lastmod))
     # A coin's market-cap rank and supply facts move slower than a stock's
     # listing facts but faster than "almost never" - daily matches the price
     # ticker's own refresh cadence without overclaiming the facts are live.
@@ -6363,10 +6385,13 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         body += ("<url><loc>%s/ipo/%s/</loc><lastmod>%s</lastmod><changefreq>%s</changefreq></url>"
                  % (SITE_URL, r["symbol"].lower(), today, freq))
     # A fund's NAV moves daily, but its own scheme facts (plans, ISINs) are
-    # stable - weekly matches the other data-heavy static families.
+    # stable - weekly matches the other data-heavy static families. lastmod
+    # is the real latest NAV date across the scheme's variants (see
+    # _write_mutual_fund_pages's nav_dates), not a fixed "today".
     for slug in (fund_slugs or {}):
+        lastmod = (fund_nav_dates or {}).get(slug, today)
         body += ("<url><loc>%s/fund/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
-                 % (SITE_URL, slug, today))
+                 % (SITE_URL, slug, lastmod))
     for slug in (report_slugs or []):
         body += ("<url><loc>%s/reports/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
                  % (SITE_URL, slug, today))
