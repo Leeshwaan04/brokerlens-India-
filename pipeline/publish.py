@@ -3945,7 +3945,9 @@ def affiliateBanner_html():
     copy, same .aff-banner-zerodha styling) so the SPA's own render of
     /brokers and / shows the identical banner a fresh visit already saw."""
     return (
-        '<div class="aff-banner aff-banner-zerodha"><span class="aff-tag">Sponsored</span>'
+        '<div class="aff-banner aff-banner-zerodha">'
+        '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
+        '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-zerodha">'
         '<img src="%s" width="152" height="20" alt="Zerodha" style="display:block"></div>'
         '<div class="aff-body">'
@@ -3976,7 +3978,9 @@ def fivepaisaBanner_html():
     the same INZ000010231 this pipeline's own SEBI-registry match already
     carries for 5paisa's broker profile, not a fresh, unverified lookup."""
     return (
-        '<div class="aff-banner aff-banner-5paisa"><span class="aff-tag">Sponsored</span>'
+        '<div class="aff-banner aff-banner-5paisa">'
+        '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
+        '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-5paisa">'
         '<img src="%s" width="120" height="29" alt="5paisa" style="display:block"></div>'
         '<div class="aff-body">'
@@ -4005,6 +4009,7 @@ def _crypto_banner_html():
     third-party logo mirror."""
     return (
         '<div class="aff-banner aff-banner-binance">'
+        '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
         '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-binance">'
         '<div class="aff-logo">'
@@ -4067,6 +4072,7 @@ def _delta_banner_html():
     directly from delta.exchange's own favicon, not a third-party mirror."""
     return (
         '<div class="aff-banner aff-banner-delta">'
+        '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
         '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-delta">'
         '<div class="aff-logo">'

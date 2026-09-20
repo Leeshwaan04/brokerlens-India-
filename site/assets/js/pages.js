@@ -124,6 +124,7 @@ const ZERODHA_LOGO_DATA_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDo
 
 function affiliateBanner() {
   return `<div class="aff-banner aff-banner-zerodha">
+    <button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>
     <span class="aff-tag">Sponsored</span>
     <div class="aff-art aff-art-zerodha">
       <img src="${ZERODHA_LOGO_DATA_URI}" width="152" height="20" alt="Zerodha" style="display:block">
@@ -149,6 +150,7 @@ const FIVEPAISA_LOGO_DATA_URI = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTE1I
 
 function fivepaisaBanner() {
   return `<div class="aff-banner aff-banner-5paisa">
+    <button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>
     <span class="aff-tag">Sponsored</span>
     <div class="aff-art aff-art-5paisa">
       <img src="${FIVEPAISA_LOGO_DATA_URI}" width="120" height="29" alt="5paisa" style="display:block">
