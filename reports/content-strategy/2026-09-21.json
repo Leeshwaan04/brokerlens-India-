@@ -1,0 +1,56 @@
+{
+  "date": "2026-09-21",
+  "manual_data_gaps": [
+    {
+      "dataset": "active_clients",
+      "status": "sample/placeholder",
+      "note": "SAMPLE DATA - replace with NSE member-wise UCC ingest."
+    },
+    {
+      "dataset": "charges",
+      "status": "sample/placeholder",
+      "note": "SAMPLE pricing for a handful of demo brokers. Others stay null by design."
+    }
+  ],
+  "coverage": [
+    {
+      "check": "SEBI registry size",
+      "live_site": 1696,
+      "live_generated_at": "2026-09-21T08:25:46+00:00"
+    }
+  ],
+  "gsc_opportunities": {
+    "ready": true,
+    "days_tracked": 11,
+    "candidates": [
+      {
+        "query": "kfintech ipo",
+        "page": "https://www.brokerlens.in/ipo/kfintech/",
+        "position": 8.4,
+        "impressions": 63,
+        "clicks": 1
+      },
+      {
+        "query": "ipo premium",
+        "page": "https://www.brokerlens.in/ipo/premium/",
+        "position": 16.4,
+        "impressions": 24,
+        "clicks": 1
+      },
+      {
+        "query": "(\"nsdl\" or \"national depository services limited\" or \"vijay chandok\" or \"mr. vijay chandok\") and (\"competitor\" or \"competitors\" or \"competition\" or \"rival\" or \"rivals\")",
+        "page": "https://www.brokerlens.in/methodology",
+        "position": 8.2,
+        "impressions": 13,
+        "clicks": 0
+      },
+      {
+        "query": "adani ipo date",
+        "page": "https://www.brokerlens.in/ipo/adanienpp1/",
+        "position": 14.3,
+        "impressions": 12,
+        "clicks": 0
+      }
+    ]
+  }
+}
