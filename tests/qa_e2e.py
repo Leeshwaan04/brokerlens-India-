@@ -1341,6 +1341,19 @@ def test_published():
               os.path.exists(p) and "/assets/js/app.js" in html and must_contain in html)
         check("site/%s/ has no leaked 'None'" % route, ">None<" not in html and "None</p>" not in html)
 
+    # Programmatic 1v1 comparison pages
+    cmp_dir = os.path.join(ROOT, "site", "compare")
+    cmp_sample = os.path.join(cmp_dir, "zerodha-vs-groww", "index.html")
+    check("programmatic 1v1 comparison page exists", os.path.exists(cmp_sample))
+    if os.path.exists(cmp_sample):
+        cmp_html = open(cmp_sample, encoding="utf-8").read()
+        check("comparison page has real FAQPage JSON-LD", '"@type": "FAQPage"' in cmp_html or '"@type":"FAQPage"' in cmp_html)
+        check("comparison page canonical is self-referential", "compare/zerodha-vs-groww" in cmp_html)
+        check("comparison page contains pre-rendered comparison table", "Detailed head to head comparison" in cmp_html)
+        check("comparison page has no leaked 'None'", ">None<" not in cmp_html and "None</p>" not in cmp_html)
+        m_cmp_title = re.search(r"<title>(.*?)</title>", cmp_html)
+        check("comparison sample <title> has no em dash", bool(m_cmp_title) and "—" not in m_cmp_title.group(1))
+
     # The homepage's own CLS fix: <main id="app"> must carry real prerendered
     # content, not the empty 3-card loading skeleton that caused a measured
     # 0.54-0.58 Cumulative Layout Shift (the footer jumping ~1,437px the

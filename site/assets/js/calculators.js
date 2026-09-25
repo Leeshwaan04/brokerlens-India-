@@ -23,6 +23,34 @@ function showResult(html) {
   if (out) { out.innerHTML = html; out.hidden = false; }
 }
 
+function donut(l1, v1, l2, v2) {
+  const total = v1 + v2;
+  if (total <= 0) return '';
+  const pct1 = Math.max(1, Math.min(99, Math.round((v1 / total) * 100)));
+  const pct2 = 100 - pct1;
+  const dash1 = pct1;
+  const dash2 = pct2;
+  return `
+    <div style="grid-column:1/-1;margin-top:14px;padding:12px 16px;background:var(--bg-sub);border:1px solid var(--border);border-radius:var(--r);display:flex;align-items:center;gap:18px">
+      <svg width="68" height="68" viewBox="0 0 42 42" style="transform:rotate(-90deg);flex-shrink:0" aria-hidden="true">
+        <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="var(--accent)" stroke-width="4.5" stroke-dasharray="${dash1} ${100 - dash1}" stroke-dashoffset="0"></circle>
+        <circle cx="21" cy="21" r="15.9155" fill="transparent" stroke="var(--up)" stroke-width="4.5" stroke-dasharray="${dash2} ${100 - dash2}" stroke-dashoffset="${-dash1}"></circle>
+      </svg>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:var(--fs-xs)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--accent)"></span>
+          <span class="muted">${l1}:</span>
+          <strong>${inr(v1)} (${pct1}%)</strong>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--up)"></span>
+          <span class="muted">${l2}:</span>
+          <strong>${inr(v2)} (${pct2}%)</strong>
+        </div>
+      </div>
+    </div>`;
+}
+
 const CALCULATORS = {
   sip() {
     const monthly = num('sip-monthly');
@@ -36,7 +64,8 @@ const CALCULATORS = {
     showResult(`
       <div class="mega-seg"><div class="mega-seg-label">Invested amount</div><div style="margin-top:2px">${inr(invested)}</div></div>
       <div class="mega-seg"><div class="mega-seg-label">Est. returns</div><div style="margin-top:2px">${inr(fv - invested)}</div></div>
-      <div class="mega-seg"><div class="mega-seg-label">Total value</div><div style="margin-top:2px;font-weight:700">${inr(fv)}</div></div>`);
+      <div class="mega-seg"><div class="mega-seg-label">Total value</div><div style="margin-top:2px;font-weight:700">${inr(fv)}</div></div>
+      ${donut('Invested', invested, 'Est. Returns', fv - invested)}`);
   },
 
   lumpsum() {
@@ -48,7 +77,8 @@ const CALCULATORS = {
     showResult(`
       <div class="mega-seg"><div class="mega-seg-label">Invested amount</div><div style="margin-top:2px">${inr(principal)}</div></div>
       <div class="mega-seg"><div class="mega-seg-label">Est. returns</div><div style="margin-top:2px">${inr(fv - principal)}</div></div>
-      <div class="mega-seg"><div class="mega-seg-label">Total value</div><div style="margin-top:2px;font-weight:700">${inr(fv)}</div></div>`);
+      <div class="mega-seg"><div class="mega-seg-label">Total value</div><div style="margin-top:2px;font-weight:700">${inr(fv)}</div></div>
+      ${donut('Principal', principal, 'Est. Returns', fv - principal)}`);
   },
 
   emi() {
@@ -63,7 +93,8 @@ const CALCULATORS = {
     showResult(`
       <div class="mega-seg"><div class="mega-seg-label">Monthly EMI</div><div style="margin-top:2px;font-weight:700">${inr(emi)}</div></div>
       <div class="mega-seg"><div class="mega-seg-label">Total interest</div><div style="margin-top:2px">${inr(total - principal)}</div></div>
-      <div class="mega-seg"><div class="mega-seg-label">Total payment</div><div style="margin-top:2px">${inr(total)}</div></div>`);
+      <div class="mega-seg"><div class="mega-seg-label">Total payment</div><div style="margin-top:2px">${inr(total)}</div></div>
+      ${donut('Principal loan', principal, 'Total interest', total - principal)}`);
   },
 
   cagr() {
@@ -88,7 +119,8 @@ const CALCULATORS = {
     showResult(`
       <div class="mega-seg"><div class="mega-seg-label">Principal</div><div style="margin-top:2px">${inr(principal)}</div></div>
       <div class="mega-seg"><div class="mega-seg-label">Interest earned</div><div style="margin-top:2px">${inr(fv - principal)}</div></div>
-      <div class="mega-seg"><div class="mega-seg-label">Maturity value</div><div style="margin-top:2px;font-weight:700">${inr(fv)}</div></div>`);
+      <div class="mega-seg"><div class="mega-seg-label">Maturity value</div><div style="margin-top:2px;font-weight:700">${inr(fv)}</div></div>
+      ${donut('Principal', principal, 'Interest', fv - principal)}`);
   },
 
   'capital-gains'() {
@@ -144,7 +176,8 @@ const CALCULATORS = {
     showResult(`
       <div class="mega-seg"><div class="mega-seg-label">Total invested</div><div style="margin-top:2px">${inr(invested)}</div></div>
       <div class="mega-seg"><div class="mega-seg-label">Est. returns</div><div style="margin-top:2px">${inr(balance - invested)}</div></div>
-      <div class="mega-seg"><div class="mega-seg-label">Total value</div><div style="margin-top:2px;font-weight:700">${inr(balance)}</div></div>`);
+      <div class="mega-seg"><div class="mega-seg-label">Total value</div><div style="margin-top:2px;font-weight:700">${inr(balance)}</div></div>
+      ${donut('Total invested', invested, 'Est. Returns', balance - invested)}`);
   },
 
   swp() {
@@ -211,6 +244,7 @@ const CALCULATORS = {
       <div class="mega-seg"><div class="mega-seg-label">Total invested</div><div style="margin-top:2px">${inr(invested)}</div></div>
       <div class="mega-seg"><div class="mega-seg-label">Interest earned</div><div style="margin-top:2px">${inr(balance - invested)}</div></div>
       <div class="mega-seg"><div class="mega-seg-label">Maturity value</div><div style="margin-top:2px;font-weight:700">${inr(balance)}</div></div>
+      ${donut('Total invested', invested, 'Interest earned', balance - invested)}
       <p class="xs faint" style="grid-column:1/-1;margin-top:4px">At the PPF rate of 7.1% p.a. for Jul-Sep 2026, compounded annually. This rate is revised quarterly by the Ministry of Finance - verify the current rate before relying on this.</p>`);
   },
 

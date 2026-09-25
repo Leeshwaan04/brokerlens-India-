@@ -6,7 +6,7 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=e83a0661a2';
-import * as pages from './pages.js?v=20a7d16662';
+import * as pages from './pages.js?v=87d930b792';
 import { clearRedraws } from './chart.js?v=ec48a39b98';
 import './nav-widgets.js?v=0cdd96e7bf';
 import './search.js?v=b4e9f68a6c';
@@ -19,6 +19,7 @@ const ROUTES = [
   [/^\/brokers\/?$/, (_m, q) => pages.brokers(q)],
   [/^\/broker\/([a-z0-9-]+)\/?$/i, (m) => pages.broker(m[1])],
   [/^\/compare\/?$/, (_m, q) => pages.compare(q)],
+  [/^\/compare\/([a-z0-9-]+)-vs-([a-z0-9-]+)\/?$/i, (m) => pages.compare(new URLSearchParams({ b: `${m[1]},${m[2]}` }))],
   [/^\/leaderboards\/?$/, () => pages.leaderboards()],
   [/^\/rankings\/?$/, () => pages.leaderboards()],
   [/^\/calculator\/?$/, (_m, q) => pages.calculator(q)],
