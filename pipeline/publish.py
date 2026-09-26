@@ -549,6 +549,8 @@ def build():
     _write_ipo_pages(ipo_records)
     _write_ipo_hub(ipo_records)
     _write_ipo_archive(ipo_records)
+    from .news_engine import write_news_suite
+    write_news_suite(ingest, SITE_URL)
     _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
                     fund_slugs, report_slugs, calc_slugs, stock_letters, amc_slugs, crypto_slugs, ipo_records,
                     registry_letters, equity_history, fund_nav_dates, comparison_pairs=comparison_pairs)
@@ -963,6 +965,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
     <a href="/registry">SEBI registry</a>
     <a href="/algo">Algo platforms</a>
     <a href="/ipo/">IPO</a>
+    <a href="/news/">News &amp; Blogs</a>
     <a href="/reports/state-of-indian-broking-2026/">Reports</a>
     <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
   </nav>
@@ -1001,7 +1004,8 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
 _REGISTRY_PAGE_FOOT = f"""</main>
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">%(source_note)s</p>
-  <p class="small"><a href="/registry">Search the full SEBI registry →</a> ·
+  <p class="small"><a href="/news/">Market News, Blogs &amp; Research →</a> ·
+  <a href="/registry">Search the full SEBI registry →</a> ·
   <a href="/brokers">Brokers tracked in depth →</a> ·
   <a href="/brokers-by/type/">Brokers by type →</a> ·
   <a href="/brokers-by/segment/">Brokers by segment →</a> ·
@@ -1093,6 +1097,7 @@ _APP_SHELL_HEAD = """<!doctype html>
       <a href="/registry" data-link>SEBI registry</a>
       <a href="/algo" data-link>Algo platforms</a>
       <a href="/ipo/">IPO</a>
+      <a href="/news/" data-link>News &amp; Blogs</a>
       <a href="/reports/state-of-indian-broking-2026/">Reports</a>
       <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
     </nav>
@@ -1165,8 +1170,9 @@ _APP_SHELL_FOOT = """</main>
         </ul>
       </div>
       <div>
-        <h5>Data</h5>
+        <h5>Data &amp; News</h5>
         <ul>
+          <li><a href="/news/" data-link>News &amp; Blogs</a></li>
           <li><a href="/methodology" data-link>Methodology</a></li>
           <li><a href="/sources" data-link>Sources &amp; lineage</a></li>
           <li><a href="/reports/state-of-indian-broking-2026/">State of Indian Broking, 2026</a></li>
@@ -2173,7 +2179,11 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                 % (_esc(slug), _stock_price_html(history), listing_html,
                    affiliateBanner_html(), fivepaisaBanner_html())
                 if history else
-                listing_html + '<div class="grid g2" style="margin-top:16px">%s%s</div>'
+                listing_html
+                + '<div class="aff-block" style="margin-top:24px">'
+                  '<div class="section-title"><h2>Trade Indian equities with top brokers</h2></div>'
+                  '<p class="muted small" style="margin-top:4px">Open an account with verified SEBI-registered brokers offering Rs 0 delivery and Rs 20 intraday.</p>'
+                  '<div class="grid g2 aff-pair" style="margin-top:14px">%s%s</div></div>'
                 % (affiliateBanner_html(), fivepaisaBanner_html())
               )
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L)%s.</p>'
@@ -2385,7 +2395,10 @@ def _write_etf_pages(etfs, indices):
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-ETF register. '
               'Live price and trading data are not carried on this page.</p>'
             + index_html
-            + '<div class="grid g2" style="margin-top:20px">%s%s</div>'
+            + '<div class="aff-block" style="margin-top:24px">'
+              '<div class="section-title"><h2>Invest in ETFs with zero delivery brokerage</h2></div>'
+              '<p class="muted small" style="margin-top:4px">Trade equity, gold, and index ETFs at Rs 0 delivery brokerage with top discount brokers.</p>'
+              '<div class="grid g2 aff-pair" style="margin-top:14px">%s%s</div></div>'
               % (affiliateBanner_html(), fivepaisaBanner_html())
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + etf_faq_html + '</div>'
@@ -2560,7 +2573,10 @@ def _write_mutual_fund_pages(schemes):
               '</tr></thead><tbody>' + rows_html + '</tbody></table></div>'
             + '<p class="xs faint" style="margin-top:16px">Source: AMFI daily NAV master file. '
               'Historical NAV, returns and portfolio holdings are not carried on this page.</p>'
-            + '<div class="grid g2" style="margin-top:20px">%s%s</div>'
+            + '<div class="aff-block" style="margin-top:24px">'
+              '<div class="section-title"><h2>Invest in direct mutual funds at zero commission</h2></div>'
+              '<p class="muted small" style="margin-top:4px">Save up to 1-1.5 percent each year in distributor commissions by investing in direct mutual fund plans.</p>'
+              '<div class="grid g2 aff-pair" style="margin-top:14px">%s%s</div></div>'
               % (affiliateBanner_html(), fivepaisaBanner_html())
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
@@ -4107,7 +4123,10 @@ def _write_ipo_pages(records):
             + '<p class="xs faint" style="margin-top:16px">Facts are NSE\'s own public-issue disclosures, '
               'refreshed periodically. Not investment advice; BrokerLens does not publish grey market premium '
               '(GMP) or recommend any IPO.</p>'
-            + '<div class="grid g2" style="margin-top:20px">%s%s</div>'
+            + '<div class="aff-block" style="margin-top:24px">'
+              '<div class="section-title"><h2>Apply for IPOs online with top SEBI-registered brokers</h2></div>'
+              '<p class="muted small" style="margin-top:4px">Open a free Demat account in 5 minutes with India\'s leading brokers and submit your IPO bid seamlessly via UPI.</p>'
+              '<div class="grid g2 aff-pair" style="margin-top:14px">%s%s</div></div>'
               % (affiliateBanner_html(), fivepaisaBanner_html())
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
@@ -5426,14 +5445,25 @@ def _write_compare_pages(overview, built=None):
     ) % "".join('<option value="%s">%s</option>' % (_esc(b["id"]), _esc(b["brand"])) for b in brokers)
 
     popular_cards = "".join(
-        '<div class="card">'
-        '<div class="card-head"><div class="card-title">Comparison</div></div>'
-        '<h3 style="margin-top:4px"><a href="/compare/%s-vs-%s/">%s vs %s</a></h3>'
-        '<p class="xs muted" style="margin-top:6px">Head to head charges and client metrics</p>'
-        '<div class="row-wrap" style="margin-top:10px">'
-        '<a class="btn btn-sm" href="/compare/%s-vs-%s/">Compare &rarr;</a>'
-        '</div></div>'
-        % (id1, id2, _esc(b_brand.get(id1, id1)), _esc(b_brand.get(id2, id2)), id1, id2)
+        '<a class="cmp-card" href="/compare/%s-vs-%s/">'
+        '<div class="cmp-vs-row">'
+        '<div class="cmp-broker">%s<span>%s</span></div>'
+        '<span class="cmp-vs-badge">VS</span>'
+        '<div class="cmp-broker"><span>%s</span>%s</div>'
+        '</div>'
+        '<div class="cmp-tags">'
+        '<span class="cmp-tag">Active Clients &amp; Charges</span>'
+        '<span class="cmp-tag">Demat AMC &amp; Features</span>'
+        '</div>'
+        '<div class="cmp-action">'
+        '<span>Compare head-to-head</span>'
+        '<span class="arr">&rarr;</span>'
+        '</div></a>'
+        % (
+            id1, id2,
+            _mark_html(id1, b_brand.get(id1, id1), 22), _esc(b_brand.get(id1, id1)),
+            _esc(b_brand.get(id2, id2)), _mark_html(id2, b_brand.get(id2, id2), 22),
+        )
         for id1, id2 in COMPARISON_PAIRS[:12]
         if id1 in b_brand and id2 in b_brand
     )
@@ -5450,9 +5480,19 @@ def _write_compare_pages(overview, built=None):
     _write_text(os.path.join(dest_dir, "index.html"), body)
     log("compare hub page: written", "ok")
 
-    # 2. Programmatic 1v1 comparison pages
+    # 2. Programmatic 1v1 comparison pages across top brokers
+    all_pairs = list(COMPARISON_PAIRS)
+    seen_pairs = set(all_pairs)
+    ranked_ids = [b["id"] for b in brokers if b.get("id") in built_map]
+    for i in range(min(len(ranked_ids), 20)):
+        for j in range(i + 1, min(len(ranked_ids), 20)):
+            p = (ranked_ids[i], ranked_ids[j])
+            if p not in seen_pairs:
+                seen_pairs.add(p)
+                all_pairs.append(p)
+
     written_pairs = []
-    for id1, id2 in COMPARISON_PAIRS:
+    for id1, id2 in all_pairs:
         b1 = built_map.get(id1)
         b2 = built_map.get(id2)
         if not b1 or not b2:
@@ -5635,7 +5675,7 @@ def _write_compare_pages(overview, built=None):
         )
 
         # Related comparisons
-        related = [p for p in COMPARISON_PAIRS if p != (id1, id2) and (p[0] in (id1, id2) or p[1] in (id1, id2))][:6]
+        related = [p for p in all_pairs if p != (id1, id2) and (p[0] in (id1, id2) or p[1] in (id1, id2))][:6]
         if related:
             p_page += (
                 '<div class="section-title" style="margin-top:28px"><h2>Related comparisons</h2></div>'
@@ -6010,23 +6050,37 @@ def _leader_card_html(bd):
     )
 
 
+def _popular_comparisons_widget_html():
+    pairs = [
+        ("zerodha", "groww", "Zerodha vs Groww", "Discount leader vs #1 active clients"),
+        ("groww", "angel-one", "Groww vs Angel One", "Direct onboarding vs full-stack broking"),
+        ("zerodha", "upstox", "Zerodha vs Upstox", "Pioneer flat fee vs modern tech stack"),
+        ("angel-one", "upstox", "Angel One vs Upstox", "F&O volume vs SmartAPI algorithmic tools"),
+        ("dhan", "zerodha", "Dhan vs Zerodha", "Superfast TradingView vs Kite platform"),
+        ("icici-direct", "zerodha", "ICICI Direct vs Zerodha", "3-in-1 bank account vs low-cost discount"),
+    ]
+    links = "".join(
+        '<a class="cmp-mini-link" href="/compare/%s-vs-%s/" data-link>'
+        '<div><div style="font-size:13px;font-weight:600;color:var(--text)">%s</div>'
+        '<div class="xs muted">%s</div></div>'
+        '<span style="color:var(--accent-text);font-size:12px;font-weight:700">&rarr;</span></a>'
+        % (b1, b2, _esc(label), _esc(sub))
+        for b1, b2, label, sub in pairs
+    )
+    return (
+        '<div class="card" style="padding:18px">'
+        '<div class="row-between" style="align-items:center;margin-bottom:12px">'
+        '<div class="card-title" style="margin:0">Popular Comparisons</div>'
+        '<a class="xs link-arrow" href="/compare" data-link>All 191 pairs &rarr;</a></div>'
+        '<div style="display:flex;flex-direction:column;gap:8px">%s</div></div>'
+        % links
+    )
+
+
 def _prerender_home(overview):
     """Ports pages.js's home() to Python and injects the result into
     site/index.html's <main id="app">, replacing the empty loading-skeleton
     placeholder that was there before.
-
-    This is the single highest-impact fix in this whole batch: a real-browser
-    trace showed the skeleton-to-real-content swap alone caused a Cumulative
-    Layout Shift of 0.54-0.58 (Google's "poor" threshold starts at 0.25) on
-    the single highest-traffic page on the site, because the footer jumped
-    ~1,437px the instant the real content replaced 3 tiny skeleton cards.
-    Real content on first paint eliminates that swap almost entirely - app.js
-    still re-renders home() moments later (same content, live ticker/chart
-    data), but onto a page that's already the right shape, not a blank one.
-
-    <canvas> chart elements are left empty (charts need JS to draw) but are
-    otherwise positioned exactly where the live version puts them, so the
-    residual shift is bounded to a canvas's own height, not the whole page.
     """
     meta = overview.get("metadata") or {}
     agg = overview.get("aggregates") or {}
@@ -6034,8 +6088,8 @@ def _prerender_home(overview):
     conc = agg.get("concentration") or {}
     has_clients = bool(meta.get("data_status", {}).get("active_clients"))
     brokers = overview.get("brokers") or []
-    top = (sorted(brokers, key=lambda b: -(b.get("clients") or 0))[:12] if has_clients
-           else sorted(brokers, key=lambda b: b.get("brand") or "")[:12])
+    top = (sorted(brokers, key=lambda b: -(b.get("clients") or 0))[:20] if has_clients
+           else sorted(brokers, key=lambda b: b.get("brand") or "")[:20])
     nifty = ((m.get("nse") or {}).get("indices") or [{}])[0]
     breadth = (m.get("nse") or {}).get("breadth")
     bse_delivery = m.get("bse_delivery") or []
@@ -6044,8 +6098,9 @@ def _prerender_home(overview):
     html = _sample_banner_html(meta)
     html += (
         '<section class="pitch" style="margin-top:16px">'
-        '<h1 style="max-width:22ch">Every Indian stock broker, measured the same way.</h1>'
-        '<p class="muted" style="max-width:62ch;margin-top:12px">%d brokers tracked in depth and %s '
+        '<div class="pill-tag accent" style="margin-bottom:12px"><span>✦</span> Verified Regulatory &amp; Market Intelligence</div>'
+        '<h1 style="max-width:24ch">Every Indian stock broker, measured the same way.</h1>'
+        '<p class="muted" style="max-width:64ch;margin-top:12px">%d brokers tracked in depth and %s '
         'SEBI-registered entities on file. %s</p>'
         '<div class="row-wrap" style="margin-top:18px">'
         '<a class="btn btn-primary" href="/brokers" data-link>Browse brokers</a>'
@@ -6084,21 +6139,51 @@ def _prerender_home(overview):
     tiles += _stat_tile_html("SEBI-registered on file", _count_html(overview.get("registry_count")),
                               "%s tracked brokers matched to the register" % meta.get("verified_count", 0),
                               _prov_dot_html("sebi_registry"))
-    html += '<div class="grid g4" style="margin-top:24px">%s</div>' % tiles
+    html += '<div class="grid g4" style="margin-top:28px">%s</div>' % tiles
 
     if has_clients:
         total_series = agg.get("total_series") or []
         html += (
-            '<div class="grid g-main" style="margin-top:16px">'
-            '<div class="card"><div class="card-head"><div>'
+            '<div class="section-title" style="margin-top:56px;margin-bottom:20px">'
+            '<div><div class="section-eyebrow">MARKET INTELLIGENCE BENTO</div>'
+            '<h2>Industry Concentration &amp; Live Exchange Activity</h2></div>'
+            '<span class="xs faint"><span class="dot-src primary" title="Sourced from primary NSE/BSE feeds"></span> Live &amp; Regulatory Feeds</span></div>'
+            '<div class="grid g2" style="margin-top:0">'
+            '<div class="card" style="padding:22px"><div class="card-head"><div>'
             '<div class="card-title">Total active clients across tracked brokers</div>'
             '<div class="xs faint">Monthly, %d months to %s</div></div></div>'
             '<div class="chart-box"><canvas id="mkt-total" height="200"></canvas></div></div>'
-            '<div class="card"><div class="card-title">Share of active clients</div>'
-            '<div class="row" style="margin-top:12px;align-items:center;gap:16px">'
-            '<canvas id="mkt-share" width="168" height="168"></canvas></div>'
-            '<div class="legend" id="share-legend" style="margin-top:12px"></div></div></div>'
-        ) % (len(total_series), _month_html(total_series[-1][0] if total_series else None))
+            '<div class="card" style="padding:22px"><div class="card-title">Share of active clients</div>'
+            '<div class="row" style="margin-top:12px;align-items:center;gap:18px">'
+            '<canvas id="mkt-share" width="168" height="168"></canvas>'
+            '<div class="legend" id="share-legend" style="flex:1"></div></div></div></div>'
+            '<div class="grid g2" style="margin-top:20px">'
+            '<div class="card" style="padding:22px">'
+            '<div class="row-between" style="align-items:center;margin-bottom:12px">'
+            '<div class="card-title" style="margin:0">Live market snapshot</div>'
+            '<span class="xs faint">%s Live at last build</span></div>'
+            '<dl class="kv" style="margin-top:8px">%s%s%s%s%s</dl></div>%s</div>'
+        ) % (
+            len(total_series), _month_html(total_series[-1][0] if total_series else None),
+            _prov_dot_html("nse"),
+            ('<dt>NIFTY 50</dt><dd class="num">%s <span class="%s">%s</span></dd>' % (
+                _full_html(nifty.get("last")), _cls_class(nifty.get("change_pct")), _pct_html(nifty.get("change_pct")))
+             if nifty.get("last") is not None else ""),
+            ('<dt>NSE breadth</dt><dd class="num"><span class="up">%s &#9650;</span> / <span class="down">%s &#9660;</span></dd>' % (
+                _full_html(breadth.get("advances")), _full_html(breadth.get("declines")))
+             if breadth else ""),
+            ('<dt>BSE delivery</dt><dd class="num">%.2f%%</dd>' % delivery["delivery_pct"] if delivery else ""),
+            ('<dt>NSE symbols</dt><dd class="num">%s</dd>' % _full_html((m.get("universe") or {}).get("nse_symbols"))
+             if (m.get("universe") or {}).get("nse_symbols") else ""),
+            ('<dt>NSE CM turnover</dt><dd class="num">%s</dd>' % _inr_html(m["turnover"][-1]["turnover_inr"])
+             if m.get("turnover") else ""),
+            ('<div class="card" style="padding:22px">'
+             '<div class="row-between" style="align-items:center;margin-bottom:12px">'
+             '<div class="card-title" style="margin:0">BSE delivery % (investors vs churn)</div>'
+             '<span class="xs faint">Cash market</span></div>'
+             '<div class="chart-box" style="margin-top:8px"><canvas id="bse-delivery" height="160"></canvas></div></div>'
+             if bse_delivery else ""),
+        )
     else:
         html += '<div style="margin-top:16px">%s</div>' % _pending_html(
             "Client and complaint statistics",
@@ -6141,39 +6226,96 @@ def _prerender_home(overview):
         )
 
     html += (
-        '<div class="grid g-main" style="margin-top:16px"><div>'
-        '<div class="section-title"><h2>%s</h2><a class="small" href="/brokers" data-link>All %d &rarr;</a></div>'
+        '<div class="section-title" style="margin-top:56px;margin-bottom:20px"><div>'
+        '<div class="section-eyebrow">RETAIL BROKERAGE LANDSCAPE</div>'
+        '<h2>%s</h2></div><a class="small link-arrow" href="/brokers" data-link>All %d &rarr;</a></div>'
+        '<div class="grid g-main" style="margin-top:0"><div>'
         '<div class="table-scroll"><table class="data"><thead><tr>%s</tr></thead>'
-        '<tbody>%s</tbody></table></div></div>'
-        '<div class="stack">%s%s%s<div class="card"><div class="card-title">Market snapshot</div>'
-        '<dl class="kv" style="margin-top:10px">%s%s%s%s%s</dl>'
-        '<div class="xs faint" style="margin-top:10px">%s Live from NSE and BSE at last build.</div></div>%s</div></div>'
+        '<tbody>%s</tbody></table></div>'
+        '<div class="card row-between" style="margin-top:14px;padding:16px 20px;align-items:center;background:var(--bg-raised)">'
+        '<div><div style="font-size:14px;font-weight:650;color:var(--text)">Explore all %d tracked brokers</div>'
+        '<div class="xs muted">Compare active clients, market share, complaints and trading fees</div></div>'
+        '<a class="btn btn-sm btn-primary link-arrow" href="/brokers" data-link>View all %d &rarr;</a></div></div>'
+        '<div class="stack" style="gap:16px">%s%s%s%s</div></div>'
     ) % (
         "Largest brokers by active clients" if has_clients else "Brokers on the SEBI register",
         meta.get("broker_count", 0), table_head, "".join(home_row(b) for b in top),
+        meta.get("broker_count", 0), meta.get("broker_count", 0),
         _ad_slot_html(overview, "homepage rail"), affiliateBanner_html(), fivepaisaBanner_html(),
-        ('<dt>NIFTY 50</dt><dd class="num">%s <span class="%s">%s</span></dd>' % (
-            _full_html(nifty.get("last")), _cls_class(nifty.get("change_pct")), _pct_html(nifty.get("change_pct")))
-         if nifty.get("last") is not None else ""),
-        ('<dt>NSE breadth</dt><dd class="num"><span class="up">%s &#9650;</span> / <span class="down">%s &#9660;</span></dd>' % (
-            _full_html(breadth.get("advances")), _full_html(breadth.get("declines")))
-         if breadth else ""),
-        ('<dt>BSE delivery</dt><dd class="num">%.2f%%</dd>' % delivery["delivery_pct"] if delivery else ""),
-        ('<dt>NSE symbols</dt><dd class="num">%s</dd>' % _full_html((m.get("universe") or {}).get("nse_symbols"))
-         if (m.get("universe") or {}).get("nse_symbols") else ""),
-        ('<dt>NSE CM turnover</dt><dd class="num">%s</dd>' % _inr_html(m["turnover"][-1]["turnover_inr"])
-         if m.get("turnover") else ""),
-        _prov_dot_html("nse"),
-        ('<div class="card"><div class="card-title">BSE delivery % (investors vs churn)</div>'
-         '<div class="chart-box"><canvas id="bse-delivery" height="160"></canvas></div></div>'
-         if bse_delivery else ""),
+        _popular_comparisons_widget_html(),
     )
 
     boards = (overview.get("leaderboards") or [])[:3]
     html += (
-        '<div class="section-title"><h2>Movers</h2><a class="small" href="/leaderboards" data-link>All movers &rarr;</a></div>'
+        '<div class="section-title" style="margin-top:56px;margin-bottom:20px"><div>'
+        '<div class="section-eyebrow">MARKET MOMENTUM &amp; SHIFTS</div>'
+        '<h2>Movers &amp; Market Share Gainers</h2></div>'
+        '<a class="small link-arrow" href="/leaderboards" data-link>All movers &rarr;</a></div>'
         '<div class="grid g3">%s</div>'
     ) % "".join(_leader_card_html(bd) for bd in boards)
+
+    html += (
+        '<div class="section-title" style="margin-top:56px;margin-bottom:20px"><div>'
+        '<div class="section-eyebrow">EDITORIAL &amp; REAL-TIME RESEARCH</div>'
+        '<h2>Market News, Blogs &amp; Research</h2></div>'
+        '<a class="small link-arrow" href="/news/" data-link>View all articles &rarr;</a></div>'
+        '<div class="grid g3" style="margin-top:0">'
+        '<a class="card card-interactive" href="/news/indian-stock-market-wrap-2026-09-25/" data-link style="display:flex;flex-direction:column;padding:20px">'
+        '<div class="row-wrap" style="gap:6px;margin-bottom:10px"><span class="badge badge-verified">Market News</span><span class="xs muted">&middot; Daily Wrap</span></div>'
+        '<h3 style="font-size:15px;margin-bottom:8px;line-height:1.35;font-weight:650">Indian Stock Market Today: Nifty 50, Gainers &amp; Sectoral Action</h3>'
+        '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">NSE market summary, advance-decline ratios, turnover volume, and top moving stocks.</p>'
+        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Read Dispatch &rarr;</div></a>'
+        '<a class="card card-interactive" href="/news/best-stock-brokers-india-beginners-guide/" data-link style="display:flex;flex-direction:column;padding:20px">'
+        '<div class="row-wrap" style="gap:6px;margin-bottom:10px"><span class="badge badge-verified">Blog &amp; Guide</span><span class="xs muted">&middot; 7 min read</span></div>'
+        '<h3 style="font-size:15px;margin-bottom:8px;line-height:1.35;font-weight:650">How to Choose the Best Stock Broker in India</h3>'
+        '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">Comprehensive guide comparing discount brokers with bank-backed 3-in-1 accounts and trading tech.</p>'
+        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Read Guide &rarr;</div></a>'
+        '<a class="card card-interactive" href="/news/zerodha-vs-groww-active-clients-market-share-2026/" data-link style="display:flex;flex-direction:column;padding:20px">'
+        '<div class="row-wrap" style="gap:6px;margin-bottom:10px"><span class="badge badge-verified">Research</span><span class="xs muted">&middot; 9 min read</span></div>'
+        '<h3 style="font-size:15px;margin-bottom:8px;line-height:1.35;font-weight:650">Zerodha vs Groww: Active Clients &amp; Market Share</h3>'
+        '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">Data-driven analysis comparing active client growth, complaints per 10k, and revenue trajectory.</p>'
+        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Read Research &rarr;</div></a>'
+        '</div>'
+        '<div class="section-title" style="margin-top:56px;margin-bottom:20px"><div>'
+        '<div class="section-eyebrow">FINANCIAL SUITE &amp; DECISION TOOLS</div>'
+        '<h2>Calculators &amp; Fair-Cost Estimators</h2></div>'
+        '<a class="small link-arrow" href="/calculator" data-link>All calculators &rarr;</a></div>'
+        '<div class="grid g4" style="margin-top:0">'
+        '<a class="card card-interactive" href="/calculator" data-link style="display:flex;flex-direction:column;padding:20px">'
+        '<div class="pill-tag accent" style="align-self:flex-start;margin-bottom:12px">Brokerage</div>'
+        '<h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Brokerage &amp; Regulatory Fees</h3>'
+        '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">Calculate exact STT, GST, stamp duty and SEBI charges across delivery, intraday and F&amp;O.</p>'
+        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Calculate fees &rarr;</div></a>'
+        '<a class="card card-interactive" href="/calculator/sip/" data-link style="display:flex;flex-direction:column;padding:20px">'
+        '<div class="pill-tag up" style="align-self:flex-start;margin-bottom:12px">SIP Compounder</div>'
+        '<h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Stock &amp; MF Wealth SIP</h3>'
+        '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">Project future corpus from disciplined monthly investments with compounding growth curves.</p>'
+        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Project returns &rarr;</div></a>'
+        '<a class="card card-interactive" href="/calculator/direct-vs-regular/" data-link style="display:flex;flex-direction:column;padding:20px">'
+        '<div class="pill-tag accent" style="align-self:flex-start;margin-bottom:12px">Direct vs Regular</div>'
+        '<h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Mutual Fund Commission Leak</h3>'
+        '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">See how much wealth you lose to distributor commissions compared to direct mutual fund plans.</p>'
+        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Compare plans &rarr;</div></a>'
+        '<a class="card card-interactive" href="/calculator/margin/" data-link style="display:flex;flex-direction:column;padding:20px">'
+        '<div class="pill-tag" style="align-self:flex-start;margin-bottom:12px">Derivatives</div>'
+        '<h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Span &amp; F&amp;O Margin Rules</h3>'
+        '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">Compute required upfront margin, exposure margin and peak intraday leverage limits.</p>'
+        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Check margins &rarr;</div></a>'
+        '</div>'
+        '<div class="card" style="margin-top:48px;padding:24px 28px;background:radial-gradient(80% 120% at 50% 0%, var(--bg-hover) 0%, var(--bg-raised) 100%);border-radius:20px">'
+        '<div class="row-between" style="align-items:center;flex-wrap:wrap;gap:18px">'
+        '<div style="max-width:68ch">'
+        '<div class="row-wrap" style="gap:8px;align-items:center;margin-bottom:6px">'
+        '<span class="badge badge-verified" style="font-size:12px;padding:3px 10px">&#10022; SEBI Register Primary Sourced</span>'
+        '<span class="xs muted">Updated daily directly from regulatory circulars</span></div>'
+        '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">Verify Any Market Intermediary Before You Deposit Funds</div>'
+        '<div class="xs muted" style="line-height:1.5">'
+        'BrokerLens cross-references 1,785 registered stock brokers against official SEBI registration records, exchange membership master feeds (NSE, BSE, MCX), and 445 defaulter circulars. Never trade with unverified or flagged entities.'
+        '</div></div>'
+        '<div class="row-wrap" style="gap:10px">'
+        '<a class="btn btn-primary link-arrow" href="/registry" data-link>Search SEBI Register &rarr;</a>'
+        '<a class="btn" href="/sources" data-link>Audit Sources</a></div></div></div>'
+    )
 
     index_path = os.path.join(ROOT, "site", "index.html")
     try:
@@ -6284,9 +6426,14 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     _require_site_url()
     urls = ["/", "/brokers", "/leaderboards", "/compare", "/calculator", "/calculators",
             "/registry", "/algo", "/methodology", "/sources", "/stocks", "/funds-by", "/etfs", "/crypto",
-            "/ipo", "/ipo/archive", "/about", "/contact", "/privacy-policy", "/terms-of-service"]
+            "/ipo", "/ipo/archive", "/news", "/about", "/contact", "/privacy-policy", "/terms-of-service"]
     if comparison_pairs:
         urls += ["/compare/%s-vs-%s/" % (p[0], p[1]) for p in comparison_pairs]
+    news_dir = os.path.join(ROOT, "site", "news")
+    if os.path.isdir(news_dir):
+        for item in sorted(os.listdir(news_dir)):
+            if item != "index.html" and os.path.isdir(os.path.join(news_dir, item)):
+                urls.append("/news/%s/" % item)
     # Trailing slash: /broker/<id>/ is now a real static directory on disk (see
     # _write_broker_pages), and every static host 301s the no-slash form to add
     # it. The sitemap should point straight at the canonical form rather than
@@ -6418,6 +6565,7 @@ _CORE_PAGES = [
     ("Crypto prices and market data", "/crypto/", ""),
     ("IPO tracker", "/ipo/", ""),
     ("Full IPO archive", "/ipo/archive/", ""),
+    ("Market news, blogs & research", "/news/", ""),
 ]
 
 

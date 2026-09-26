@@ -6,9 +6,9 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=e83a0661a2';
-import * as pages from './pages.js?v=87d930b792';
+import * as pages from './pages.js?v=2815dd40ce';
 import { clearRedraws } from './chart.js?v=ec48a39b98';
-import './nav-widgets.js?v=0cdd96e7bf';
+import './nav-widgets.js?v=e31572368b';
 import './search.js?v=b4e9f68a6c';
 
 const app = document.getElementById('app');
@@ -30,6 +30,8 @@ const ROUTES = [
   [/^\/sources\/?$/, () => pages.sources()],
   [/^\/coming-soon\/us\/?$/, () => pages.comingSoon('us')],
   [/^\/coming-soon\/gcc\/?$/, () => pages.comingSoon('gcc')],
+  [/^\/news\/?$/, (_m, q) => pages.news(q)],
+  [/^\/news\/([a-z0-9-]+)\/?$/i, (m) => pages.newsArticle(m[1])],
   [/^\/about\/?$/, () => pages.about()],
   [/^\/contact\/?$/, () => pages.contact()],
   [/^\/privacy-policy\/?$/, () => pages.privacyPolicy()],
@@ -38,6 +40,7 @@ const ROUTES = [
 
 const TITLES = {
   '/': 'BrokerLens: Indian Stock Broker and Crypto Exchange Data',
+  '/news': 'Market News, Blogs, IPO Bulletins & Research | BrokerLens',
   '/brokers': 'All Indian stock brokers, compared: BrokerLens',
   '/compare': 'Compare Indian stock brokers side by side: BrokerLens',
   '/leaderboards': 'Market Movers: NSE Gainers, Losers and Broker Stats | BrokerLens',
@@ -68,6 +71,7 @@ const DESCRIPTIONS = {
   '/sources': 'Every data source behind BrokerLens, when it last ran, and exactly which fields it feeds.',
   '/coming-soon/us': 'BrokerLens is researching US stock broker data for a future comparison. Not live yet.',
   '/coming-soon/gcc': 'BrokerLens is researching GCC (UAE, Saudi and Gulf) stock broker data for a future comparison. Not live yet.',
+  '/news': 'Automated real-time stock market news, investor educational blogs, live IPO bidding dispatches, and broker empirical research.',
   '/about': 'What BrokerLens is, how it sources broker, stock, fund and crypto data, and what it deliberately does not do.',
   '/contact': 'How to reach BrokerLens for data corrections, advertising enquiries, or privacy and legal questions.',
   '/privacy-policy': 'What BrokerLens does and does not collect, how affiliate links work, and how to reach us about your data.',

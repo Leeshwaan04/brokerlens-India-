@@ -3,7 +3,7 @@
  */
 
 import {
-  cls, count, esc, full, initials, inr, loadAlgo, loadBroker, loadOverview,
+  cls, count, esc, full, initials, inr, loadAlgo, loadBroker, loadNews, loadOverview,
   loadRegistry, loadSources, markColor, month, pct, provDot, safeUrl,
   SEGMENT_LABEL, TYPE_LABEL,
 } from './store.js?v=e83a0661a2';
@@ -170,6 +170,34 @@ function fivepaisaBanner() {
   </div>`;
 }
 
+function popularComparisonsWidget() {
+  const pairs = [
+    ['zerodha', 'groww', 'Zerodha vs Groww', 'Discount leader vs #1 active clients'],
+    ['groww', 'angel-one', 'Groww vs Angel One', 'Direct onboarding vs full-stack broking'],
+    ['zerodha', 'upstox', 'Zerodha vs Upstox', 'Pioneer flat fee vs modern tech stack'],
+    ['angel-one', 'upstox', 'Angel One vs Upstox', 'F&O volume vs SmartAPI algorithmic tools'],
+    ['dhan', 'zerodha', 'Dhan vs Zerodha', 'Superfast TradingView vs Kite platform'],
+    ['icici-direct', 'zerodha', 'ICICI Direct vs Zerodha', '3-in-1 bank account vs low-cost discount'],
+  ];
+  return `<div class="card" style="padding:18px">
+    <div class="row-between" style="align-items:center;margin-bottom:12px">
+      <div class="card-title" style="margin:0">Popular Comparisons</div>
+      <a class="xs link-arrow" href="/compare" data-link>All 191 pairs &rarr;</a>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${pairs.map(([b1, b2, label, sub]) => `
+        <a class="cmp-mini-link" href="/compare/${esc(b1)}-vs-${esc(b2)}/" data-link>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${esc(label)}</div>
+            <div class="xs muted">${esc(sub)}</div>
+          </div>
+          <span style="color:var(--accent-text);font-size:12px;font-weight:700">&rarr;</span>
+        </a>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
 /* =========================================================== HOME */
 
 export async function home() {
@@ -177,8 +205,8 @@ export async function home() {
   const m = o.market || {}, agg = o.aggregates || {}, meta = o.metadata || {};
   const hasClients = HAS(o, 'active_clients');
   const top = hasClients
-    ? [...(o.brokers || [])].sort((a, b) => (b.clients || 0) - (a.clients || 0)).slice(0, 12)
-    : [...(o.brokers || [])].sort((a, b) => String(a.brand).localeCompare(String(b.brand))).slice(0, 12);
+    ? [...(o.brokers || [])].sort((a, b) => (b.clients || 0) - (a.clients || 0)).slice(0, 20)
+    : [...(o.brokers || [])].sort((a, b) => String(a.brand).localeCompare(String(b.brand))).slice(0, 20);
   const conc = agg.concentration || {};
 
   onMount(() => {
@@ -217,8 +245,9 @@ export async function home() {
   ${sampleBanner(meta)}
 
   <section class="pitch" style="margin-top:16px">
-    <h1 style="max-width:22ch">Every Indian stock broker, measured the same way.</h1>
-    <p class="muted" style="max-width:62ch;margin-top:12px">
+    <div class="pill-tag accent" style="margin-bottom:12px"><span>✦</span> Verified Regulatory &amp; Market Intelligence</div>
+    <h1 style="max-width:24ch">Every Indian stock broker, measured the same way.</h1>
+    <p class="muted" style="max-width:64ch;margin-top:12px">
       ${meta.broker_count} brokers tracked in depth and ${count(o.registry_count)} SEBI-registered entities on file.
       ${hasClients
         ? 'Active clients, market share, investor-complaint records, regulatory registrations and real cost, assembled from NSE, BSE and SEBI primary disclosures, not from marketing pages.'
@@ -232,7 +261,7 @@ export async function home() {
     </div>
   </section>
 
-  <div class="grid g4" style="margin-top:24px">
+  <div class="grid g4" style="margin-top:28px">
     ${hasClients
       ? `${statTile('Total active clients', count(agg.total_active_clients),
             `<span class="${cls(agg.total_yoy_pct)}">${pct(agg.total_yoy_pct)}</span> year on year`,
@@ -251,8 +280,17 @@ export async function home() {
       `${meta.verified_count} tracked brokers matched to the register`, provDot('sebi_registry'))}
   </div>
 
-  ${hasClients ? `<div class="grid g-main" style="margin-top:16px">
-    <div class="card">
+  ${hasClients ? `
+  <div class="section-title" style="margin-top:56px;margin-bottom:20px">
+    <div>
+      <div class="section-eyebrow">MARKET INTELLIGENCE BENTO</div>
+      <h2>Industry Concentration &amp; Live Exchange Activity</h2>
+    </div>
+    <span class="xs faint"><span class="dot-src primary" title="Sourced from primary NSE/BSE feeds"></span> Live &amp; Regulatory Feeds</span>
+  </div>
+
+  <div class="grid g2" style="margin-top:0">
+    <div class="card" style="padding:22px">
       <div class="card-head">
         <div>
           <div class="card-title">Total active clients across tracked brokers</div>
@@ -261,20 +299,52 @@ export async function home() {
       </div>
       <div class="chart-box"><canvas id="mkt-total"></canvas></div>
     </div>
-    <div class="card">
+    <div class="card" style="padding:22px">
       <div class="card-title">Share of active clients</div>
-      <div class="row" style="margin-top:12px;align-items:center;gap:16px">
+      <div class="row" style="margin-top:12px;align-items:center;gap:18px">
         <canvas id="mkt-share"></canvas>
+        <div class="legend" id="share-legend" style="flex:1"></div>
       </div>
-      <div class="legend" id="share-legend" style="margin-top:12px"></div>
     </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card" style="padding:22px">
+      <div class="row-between" style="align-items:center;margin-bottom:12px">
+        <div class="card-title" style="margin:0">Live market snapshot</div>
+        <span class="xs faint">${provDot('nse')} Live at last build</span>
+      </div>
+      <dl class="kv" style="margin-top:8px">
+        ${nifty ? `<dt>NIFTY 50</dt><dd class="num">${full(nifty.last)}
+          <span class="${cls(nifty.change_pct)}">${pct(nifty.change_pct)}</span></dd>` : ''}
+        ${breadth ? `<dt>NSE breadth</dt><dd class="num"><span class="up">${full(breadth.advances)} ▲</span> /
+          <span class="down">${full(breadth.declines)} ▼</span></dd>` : ''}
+        ${delivery ? `<dt>BSE delivery</dt><dd class="num">${delivery.delivery_pct.toFixed(2)}%</dd>` : ''}
+        ${m.universe?.nse_symbols ? `<dt>NSE symbols</dt><dd class="num">${full(m.universe.nse_symbols)}</dd>` : ''}
+        ${(m.turnover || []).length ? `<dt>NSE CM turnover</dt><dd class="num">${inr(m.turnover.slice(-1)[0].turnover_inr)}</dd>` : ''}
+      </dl>
+    </div>
+    ${(m.bse_delivery || []).length ? `
+    <div class="card" style="padding:22px">
+      <div class="row-between" style="align-items:center;margin-bottom:12px">
+        <div class="card-title" style="margin:0">BSE delivery % (investors vs churn)</div>
+        <span class="xs faint">Cash market</span>
+      </div>
+      <div class="chart-box" style="margin-top:8px"><canvas id="bse-delivery"></canvas></div>
+    </div>` : ''}
   </div>` : `<div style="margin-top:16px">${pending('Client and complaint statistics',
       'NSE publishes member-wise active-client counts monthly, and every broker must publish its complaint record in SEBI\'s Annexure-B format. Both are being brought in from those primary sources.')}</div>`}
 
-  <div class="grid g-main" style="margin-top:16px">
+  <div class="section-title" style="margin-top:56px;margin-bottom:20px">
     <div>
-      <div class="section-title"><h2>${hasClients ? 'Largest brokers by active clients' : 'Brokers on the SEBI register'}</h2>
-        <a class="small" href="/brokers" data-link>All ${meta.broker_count} →</a></div>
+      <div class="section-eyebrow">RETAIL BROKERAGE LANDSCAPE</div>
+      <h2>${hasClients ? 'Largest brokers by active clients' : 'Brokers on the SEBI register'}</h2>
+    </div>
+    <a class="small link-arrow" href="/brokers" data-link>All ${meta.broker_count} &rarr;</a>
+  </div>
+
+  <div class="grid g-main" style="margin-top:0">
+    <div>
       <div class="table-scroll">
         <table class="data">
           <thead><tr>
@@ -303,38 +373,113 @@ export async function home() {
           </tbody>
         </table>
       </div>
+      <div class="card row-between" style="margin-top:14px;padding:16px 20px;align-items:center;background:var(--bg-raised)">
+        <div>
+          <div style="font-size:14px;font-weight:650;color:var(--text)">Explore all ${meta.broker_count} tracked brokers</div>
+          <div class="xs muted">Compare active clients, market share, complaints and trading fees</div>
+        </div>
+        <a class="btn btn-sm btn-primary link-arrow" href="/brokers" data-link>View all ${meta.broker_count} &rarr;</a>
+      </div>
     </div>
 
-    <div class="stack">
+    <div class="stack" style="gap:16px">
       ${adSlot(o, 'homepage rail')}
       ${affiliateBanner()}
       ${fivepaisaBanner()}
-
-      <div class="card">
-        <div class="card-title">Market snapshot</div>
-        <dl class="kv" style="margin-top:10px">
-          ${nifty ? `<dt>NIFTY 50</dt><dd class="num">${full(nifty.last)}
-            <span class="${cls(nifty.change_pct)}">${pct(nifty.change_pct)}</span></dd>` : ''}
-          ${breadth ? `<dt>NSE breadth</dt><dd class="num"><span class="up">${full(breadth.advances)} ▲</span> /
-            <span class="down">${full(breadth.declines)} ▼</span></dd>` : ''}
-          ${delivery ? `<dt>BSE delivery</dt><dd class="num">${delivery.delivery_pct.toFixed(2)}%</dd>` : ''}
-          ${m.universe?.nse_symbols ? `<dt>NSE symbols</dt><dd class="num">${full(m.universe.nse_symbols)}</dd>` : ''}
-          ${(m.turnover || []).length ? `<dt>NSE CM turnover</dt><dd class="num">${inr(m.turnover.slice(-1)[0].turnover_inr)}</dd>` : ''}
-        </dl>
-        <div class="xs faint" style="margin-top:10px">${provDot('nse')} Live from NSE and BSE at last build.</div>
-      </div>
-
-      ${(m.bse_delivery || []).length ? `<div class="card">
-        <div class="card-title">BSE delivery % (investors vs churn)</div>
-        <div class="chart-box"><canvas id="bse-delivery"></canvas></div>
-      </div>` : ''}
-
+      ${popularComparisonsWidget()}
     </div>
   </div>
 
-  <div class="section-title"><h2>Movers</h2><a class="small" href="/leaderboards" data-link>All movers →</a></div>
+  <div class="section-title" style="margin-top:56px;margin-bottom:20px">
+    <div>
+      <div class="section-eyebrow">MARKET MOMENTUM &amp; SHIFTS</div>
+      <h2>Movers &amp; Market Share Gainers</h2>
+    </div>
+    <a class="small link-arrow" href="/leaderboards" data-link>All movers &rarr;</a>
+  </div>
   <div class="grid g3">
     ${(o.leaderboards || []).slice(0, 3).map((bd) => leaderCard(bd)).join('')}
+  </div>
+
+  <div class="section-title" style="margin-top:56px;margin-bottom:20px">
+    <div>
+      <div class="section-eyebrow">EDITORIAL &amp; REAL-TIME RESEARCH</div>
+      <h2>Market News, Blogs &amp; Research</h2>
+    </div>
+    <a class="small link-arrow" href="/news/" data-link>View all articles &rarr;</a>
+  </div>
+  <div class="grid g3" style="margin-top:0">
+    <a class="card card-interactive" href="/news/indian-stock-market-wrap-2026-09-25/" data-link style="display:flex;flex-direction:column;padding:20px">
+      <div class="row-wrap" style="gap:6px;margin-bottom:10px"><span class="badge badge-verified">Market News</span><span class="xs muted">&middot; Daily Wrap</span></div>
+      <h3 style="font-size:15px;margin-bottom:8px;line-height:1.35;font-weight:650">Indian Stock Market Today: Nifty 50, Gainers &amp; Sectoral Action</h3>
+      <p class="xs muted" style="line-height:1.45;flex:1 0 auto">NSE market summary, advance-decline ratios, turnover volume, and top moving stocks.</p>
+      <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Read Dispatch &rarr;</div>
+    </a>
+    <a class="card card-interactive" href="/news/best-stock-brokers-india-beginners-guide/" data-link style="display:flex;flex-direction:column;padding:20px">
+      <div class="row-wrap" style="gap:6px;margin-bottom:10px"><span class="badge badge-verified">Blog &amp; Guide</span><span class="xs muted">&middot; 7 min read</span></div>
+      <h3 style="font-size:15px;margin-bottom:8px;line-height:1.35;font-weight:650">How to Choose the Best Stock Broker in India</h3>
+      <p class="xs muted" style="line-height:1.45;flex:1 0 auto">Comprehensive guide comparing discount brokers with bank-backed 3-in-1 accounts and trading tech.</p>
+      <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Read Guide &rarr;</div>
+    </a>
+    <a class="card card-interactive" href="/news/zerodha-vs-groww-active-clients-market-share-2026/" data-link style="display:flex;flex-direction:column;padding:20px">
+      <div class="row-wrap" style="gap:6px;margin-bottom:10px"><span class="badge badge-verified">Research</span><span class="xs muted">&middot; 9 min read</span></div>
+      <h3 style="font-size:15px;margin-bottom:8px;line-height:1.35;font-weight:650">Zerodha vs Groww: Active Clients &amp; Market Share</h3>
+      <p class="xs muted" style="line-height:1.45;flex:1 0 auto">Data-driven analysis comparing active client growth, complaints per 10k, and revenue trajectory.</p>
+      <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Read Research &rarr;</div>
+    </a>
+  </div>
+
+  <div class="section-title" style="margin-top:56px;margin-bottom:20px">
+    <div>
+      <div class="section-eyebrow">FINANCIAL SUITE &amp; DECISION TOOLS</div>
+      <h2>Calculators &amp; Fair-Cost Estimators</h2>
+    </div>
+    <a class="small link-arrow" href="/calculator" data-link>All calculators &rarr;</a>
+  </div>
+  <div class="grid g4" style="margin-top:0">
+    <a class="card card-interactive" href="/calculator" data-link style="display:flex;flex-direction:column;padding:20px">
+      <div class="pill-tag accent" style="align-self:flex-start;margin-bottom:12px">Brokerage</div>
+      <h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Brokerage &amp; Regulatory Fees</h3>
+      <p class="xs muted" style="line-height:1.45;flex:1 0 auto">Calculate exact STT, GST, stamp duty and SEBI charges across delivery, intraday and F&amp;O.</p>
+      <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Calculate fees &rarr;</div>
+    </a>
+    <a class="card card-interactive" href="/calculator/sip/" data-link style="display:flex;flex-direction:column;padding:20px">
+      <div class="pill-tag up" style="align-self:flex-start;margin-bottom:12px">SIP Compounder</div>
+      <h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Stock &amp; MF Wealth SIP</h3>
+      <p class="xs muted" style="line-height:1.45;flex:1 0 auto">Project future corpus from disciplined monthly investments with compounding growth curves.</p>
+      <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Project returns &rarr;</div>
+    </a>
+    <a class="card card-interactive" href="/calculator/direct-vs-regular/" data-link style="display:flex;flex-direction:column;padding:20px">
+      <div class="pill-tag accent" style="align-self:flex-start;margin-bottom:12px">Direct vs Regular</div>
+      <h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Mutual Fund Commission Leak</h3>
+      <p class="xs muted" style="line-height:1.45;flex:1 0 auto">See how much wealth you lose to distributor commissions compared to direct mutual fund plans.</p>
+      <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Compare plans &rarr;</div>
+    </a>
+    <a class="card card-interactive" href="/calculator/margin/" data-link style="display:flex;flex-direction:column;padding:20px">
+      <div class="pill-tag" style="align-self:flex-start;margin-bottom:12px">Derivatives</div>
+      <h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Span &amp; F&amp;O Margin Rules</h3>
+      <p class="xs muted" style="line-height:1.45;flex:1 0 auto">Compute required upfront margin, exposure margin and peak intraday leverage limits.</p>
+      <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Check margins &rarr;</div>
+    </a>
+  </div>
+
+  <div class="card" style="margin-top:48px;padding:24px 28px;background:radial-gradient(80% 120% at 50% 0%, var(--bg-hover) 0%, var(--bg-raised) 100%);border-radius:20px">
+    <div class="row-between" style="align-items:center;flex-wrap:wrap;gap:18px">
+      <div style="max-width:68ch">
+        <div class="row-wrap" style="gap:8px;align-items:center;margin-bottom:6px">
+          <span class="badge badge-verified" style="font-size:12px;padding:3px 10px">✦ SEBI Register Primary Sourced</span>
+          <span class="xs muted">Updated daily directly from regulatory circulars</span>
+        </div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">Verify Any Market Intermediary Before You Deposit Funds</div>
+        <div class="xs muted" style="line-height:1.5">
+          BrokerLens cross-references 1,785 registered stock brokers against official SEBI registration records, exchange membership master feeds (NSE, BSE, MCX), and 445 defaulter circulars. Never trade with unverified or flagged entities.
+        </div>
+      </div>
+      <div class="row-wrap" style="gap:10px">
+        <a class="btn btn-primary link-arrow" href="/registry" data-link>Search SEBI Register &rarr;</a>
+        <a class="btn" href="/sources" data-link>Audit Sources</a>
+      </div>
+    </div>
   </div>`;
 }
 
@@ -820,14 +965,21 @@ export async function compare(params) {
       ['groww', 'paytm-money', 'Groww', 'Paytm Money'],
     ];
     const popularCards = popularPairs.map(([id1, id2, name1, name2]) => `
-      <div class="card">
-        <div class="card-head"><div class="card-title">Comparison</div></div>
-        <h3 style="margin-top:4px"><a href="/compare/${id1}-vs-${id2}/" data-link>${name1} vs ${name2}</a></h3>
-        <p class="xs muted" style="margin-top:6px">Head-to-head charges and client metrics</p>
-        <div class="row-wrap" style="margin-top:10px">
-          <a class="btn btn-sm" href="/compare/${id1}-vs-${id2}/" data-link>Compare &rarr;</a>
+      <a class="cmp-card" href="/compare/${id1}-vs-${id2}/" data-link>
+        <div class="cmp-vs-row">
+          <div class="cmp-broker">${mark(id1, name1, 22)} <span>${esc(name1)}</span></div>
+          <span class="cmp-vs-badge">VS</span>
+          <div class="cmp-broker"><span>${esc(name2)}</span> ${mark(id2, name2, 22)}</div>
         </div>
-      </div>`).join('');
+        <div class="cmp-tags">
+          <span class="cmp-tag">Active Clients &amp; Charges</span>
+          <span class="cmp-tag">Demat AMC &amp; Features</span>
+        </div>
+        <div class="cmp-action">
+          <span>Compare head-to-head</span>
+          <span class="arr">&rarr;</span>
+        </div>
+      </a>`).join('');
 
     return `<h1 style="margin-top:16px">Compare brokers</h1>
       <p class="muted">Pick two to four brokers to see them side by side on clients, growth, complaints, reliability and cost.</p>
@@ -1623,6 +1775,93 @@ export async function termsOfService() {
   <div class="card">
     <p class="small muted">Questions about these terms: <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</p>
   </div>`;
+}
+
+/* =========================================================== NEWS & INSIGHTS */
+
+export async function news(query) {
+  let newsData = { articles: [] };
+  try {
+    newsData = await loadNews();
+  } catch (e) {
+    console.warn('Could not load /data/news.json', e);
+  }
+
+  const articles = newsData.articles || [];
+  const activeCat = query?.get('category') || 'All';
+  const categories = ['All', 'Market News', 'IPO Bulletin', 'Blog & Guide', 'Research Article'];
+
+  onMount(() => {
+    const tabs = document.querySelectorAll('.news-tab-pill');
+    const search = document.getElementById('news-search-input');
+    const cards = document.querySelectorAll('.news-article-card');
+
+    function applyFilter() {
+      const activeBtn = document.querySelector('.news-tab-pill.btn-primary');
+      const cat = activeBtn ? activeBtn.getAttribute('data-cat') : 'All';
+      const term = (search?.value || '').toLowerCase().trim();
+
+      cards.forEach((card) => {
+        const cCat = card.getAttribute('data-category');
+        const text = card.textContent.toLowerCase();
+        const matchesCat = cat === 'All' || cCat === cat;
+        const matchesTerm = !term || text.includes(term);
+        card.style.display = matchesCat && matchesTerm ? 'flex' : 'none';
+      });
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.remove('btn-primary'));
+        tab.classList.add('btn-primary');
+        applyFilter();
+      });
+    });
+
+    if (search) {
+      search.addEventListener('input', applyFilter);
+    }
+  });
+
+  const cardsHtml = articles.map((a) => `
+    <a class="card card-interactive news-article-card" href="/news/${esc(a.slug)}/" data-category="${esc(a.category)}" style="display:flex;flex-direction:column;height:100%">
+      <div class="row-wrap" style="gap:6px;margin-bottom:8px;align-items:center">
+        <span class="badge ${esc(a.category_badge || 'badge-verified')}">${esc(a.category || 'News')}</span>
+        <span class="xs muted">&middot; ${esc(a.date_str || '')}</span>
+        <span class="xs muted">&middot; ${esc(a.read_time || '4 min read')}</span>
+      </div>
+      <h3 style="font-size:16px;margin-bottom:8px;font-weight:650;color:var(--text);line-height:1.35">${esc(a.title)}</h3>
+      <p class="small muted" style="line-height:1.5;margin-bottom:12px;flex:1 0 auto">${esc(a.description)}</p>
+      <div class="row" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:auto">
+        Read Dispatch <span class="arr">&rarr;</span>
+      </div>
+    </a>
+  `).join('');
+
+  return `
+    <div class="crumb"><a href="/" data-link>BrokerLens</a> &rsaquo; <span>News &amp; Insights</span></div>
+    <div class="hero-spotlight">
+      <div class="pill-tag accent" style="margin-bottom:12px"><span>✦</span> Real-Time Intelligence &amp; Research</div>
+      <h1>Market News, Blogs, IPO Bulletins &amp; Research</h1>
+      <p class="lead">Automated, data-backed market wraps, investor educational guides, live IPO bidding updates, and investigative broker research direct from exchange disclosures.</p>
+    </div>
+
+    <div class="row-wrap" style="gap:12px;margin:24px 0 16px 0;align-items:center;justify-content:space-between">
+      <div class="row-wrap" style="gap:8px" id="news-pill-tabs">
+        ${categories.map((c) => `<button class="btn btn-sm ${c === activeCat ? 'btn-primary' : ''} news-tab-pill" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+      </div>
+      <div style="flex:1 1 240px;max-width:320px">
+        <input type="search" id="news-search-input" class="search-input" placeholder="Search news, blogs &amp; guides..." style="width:100%;padding:7px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);color:var(--text)">
+      </div>
+    </div>
+
+    <div class="grid g2" id="news-cards-grid">${cardsHtml}</div>
+  `;
+}
+
+export async function newsArticle(slug) {
+  location.href = `/news/${encodeURIComponent(slug)}/`;
+  return `<div class="empty" style="padding-top:60px"><p class="muted">Loading dispatch...</p></div>`;
 }
 
 /* =========================================================== 404 */
