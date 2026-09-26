@@ -1,0 +1,324 @@
+{
+  "date": "2026-09-24",
+  "sitemaps": [
+    {
+      "path": "https://www.brokerlens.in/sitemap.xml",
+      "lastDownloaded": "2026-09-23T11:12:31.685Z",
+      "warnings": "0",
+      "errors": "0",
+      "submitted": "9518",
+      "indexed": "0"
+    }
+  ],
+  "performance_28d": {
+    "range": {
+      "start": "2026-08-24",
+      "end": "2026-09-21"
+    },
+    "totals": {
+      "clicks": 17,
+      "impressions": 10177,
+      "ctr": 0.0016704333300579738,
+      "position": 22.132652058563426
+    },
+    "top_queries": [
+      {
+        "keys": [
+          "ashlar securities private limited"
+        ],
+        "clicks": 1,
+        "impressions": 1,
+        "ctr": 1,
+        "position": 19
+      },
+      {
+        "keys": [
+          "brokerlens"
+        ],
+        "clicks": 1,
+        "impressions": 4,
+        "ctr": 0.25,
+        "position": 1
+      },
+      {
+        "keys": [
+          "ipo premium"
+        ],
+        "clicks": 1,
+        "impressions": 25,
+        "ctr": 0.04,
+        "position": 17.04
+      },
+      {
+        "keys": [
+          "kfin ipo"
+        ],
+        "clicks": 1,
+        "impressions": 64,
+        "ctr": 0.015625,
+        "position": 8.09375
+      },
+      {
+        "keys": [
+          "kfin technologies ipo"
+        ],
+        "clicks": 1,
+        "impressions": 104,
+        "ctr": 0.009615384615384616,
+        "position": 8.01923076923077
+      },
+      {
+        "keys": [
+          "kfintech ipo"
+        ],
+        "clicks": 1,
+        "impressions": 69,
+        "ctr": 0.014492753623188406,
+        "position": 8.869565217391305
+      },
+      {
+        "keys": [
+          "kfintech share price ipo"
+        ],
+        "clicks": 1,
+        "impressions": 39,
+        "ctr": 0.02564102564102564,
+        "position": 11
+      },
+      {
+        "keys": [
+          "tradewings solutions limited"
+        ],
+        "clicks": 1,
+        "impressions": 1,
+        "ctr": 1,
+        "position": 11
+      },
+      {
+        "keys": [
+          "\"axisamc.com\" -site:axisamc.com -site:axisbank.com -site:facebook.com -site:instagram.com -site:threads.com -site:threads.net -site:linkedin.com -site:x.com -site:twitter.com -site:tiktok.com -site:youtube.com -site:youtu.be -site:reddit.com -site:t.me -site:telegram.me -site:telegram.org -site:pinterest.com -site:vimeo.com"
+        ],
+        "clicks": 0,
+        "impressions": 10,
+        "ctr": 0,
+        "position": 1.8
+      },
+      {
+        "keys": [
+          "\"axisamc.net\" -site:axisamc.net -site:axisbank.com -site:facebook.com -site:instagram.com -site:threads.com -site:threads.net -site:linkedin.com -site:x.com -site:twitter.com -site:tiktok.com -site:youtube.com -site:youtu.be -site:reddit.com -site:t.me -site:telegram.me -site:telegram.org -site:pinterest.com -site:vimeo.com"
+        ],
+        "clicks": 0,
+        "impressions": 3,
+        "ctr": 0,
+        "position": 2.333333333333333
+      },
+      {
+        "keys": [
+          "\"unionamc.co.in\" -site:unionamc.co.in -site:unionmf.com -site:facebook.com -site:instagram.com -site:threads.com -site:threads.net -site:linkedin.com -site:x.com -site:twitter.com -site:tiktok.com -site:youtube.com -site:youtu.be -site:reddit.com -site:t.me -site:telegram.me -site:telegram.org -site:pinterest.com -site:vimeo.com"
+        ],
+        "clicks": 0,
+        "impressions": 3,
+        "ctr": 0,
+        "position": 4.666666666666666
+      },
+      {
+        "keys": [
+          "\"unionamc.com\" -site:unionamc.com -site:unionmf.com -site:facebook.com -site:instagram.com -site:threads.com -site:threads.net -site:linkedin.com -site:x.com -site:twitter.com -site:tiktok.com -site:youtube.com -site:youtu.be -site:reddit.com -site:t.me -site:telegram.me -site:telegram.org -site:pinterest.com -site:vimeo.com"
+        ],
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 2
+      },
+      {
+        "keys": [
+          "%ss retail ipo september 2026 price band gmp subscription"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 3
+      },
+      {
+        "keys": [
+          "(\"cdsl\" or \"central depository services\") and (\"nsdl\" or \"national securities depository\")"
+        ],
+        "clicks": 0,
+        "impressions": 3,
+        "ctr": 0,
+        "position": 8.666666666666668
+      },
+      {
+        "keys": [
+          "(\"global commodity conclave\" or \"gcc\" ) and (\"mcx\")"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 2
+      },
+      {
+        "keys": [
+          "(\"nippon india mutual fund\" or \"nippon mf\" or \"nippon india mf\" or \"nippon india amc\" or \"sundeep sikka\")"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 5
+      },
+      {
+        "keys": [
+          "(\"nsdl\" or \"national depository services limited\" or \"vijay chandok\" or \"mr. vijay chandok\") and (\"competitor\" or \"competitors\" or \"competition\" or \"rival\" or \"rivals\")"
+        ],
+        "clicks": 0,
+        "impressions": 13,
+        "ctr": 0,
+        "position": 8.153846153846153
+      },
+      {
+        "keys": [
+          "+ss retail ipo september 2026 price band gmp subscription"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 3
+      },
+      {
+        "keys": [
+          "360 one mutual fund"
+        ],
+        "clicks": 0,
+        "impressions": 2,
+        "ctr": 0,
+        "position": 69
+      },
+      {
+        "keys": [
+          "a to z stock list in india"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 55
+      },
+      {
+        "keys": [
+          "a to z stock list with price"
+        ],
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 65.5
+      },
+      {
+        "keys": [
+          "a to z stock list with price nse"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 60
+      },
+      {
+        "keys": [
+          "aadhar housing finance ipo"
+        ],
+        "clicks": 0,
+        "impressions": 3,
+        "ctr": 0,
+        "position": 40.666666666666664
+      },
+      {
+        "keys": [
+          "aadhar housing finance ipo listing date"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 33
+      },
+      {
+        "keys": [
+          "aadhar housing finance ipo price"
+        ],
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 45.5
+      }
+    ]
+  },
+  "spot_checks": {
+    "https://www.brokerlens.in/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-09-23T00:03:07Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/brokers": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-09-12T05:19:54Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/sources": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/methodology": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-09-15T11:10:34Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/broker/zerodha/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/stock/20microns/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/etf/niftybees/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/calculators/sip-calculator/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/brokers-by/type/": {
+      "coverageState": "URL is unknown to Google",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/crypto/btc/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    }
+  }
+}
