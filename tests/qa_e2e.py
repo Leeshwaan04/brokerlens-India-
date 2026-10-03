@@ -571,6 +571,14 @@ def test_published():
                   and "aff-banner-zerodha" in aban_html and "aff-banner-5paisa" in aban_html)
         stock_chart_path = os.path.join(ROOT, "site", "assets", "js", "stock-chart.js")
         check("stock-chart.js exists", os.path.exists(stock_chart_path))
+        if os.path.exists(stock_chart_path):
+            stock_chart_src = open(stock_chart_path, encoding="utf-8").read()
+            check("stock-chart.js defines technical indicators (SMA, EMA, Bollinger)",
+                  "calcSMA" in stock_chart_src and "calcEMA" in stock_chart_src and "calcBollinger" in stock_chart_src)
+            check("stock-chart.js defines Smart Zones (Support/Resistance levels)",
+                  "calcSmartZones" in stock_chart_src and "createPriceLine" in stock_chart_src)
+            check("stock-chart.js defines interactive HUD legend",
+                  "chart-hud" in stock_chart_src and "subscribeCrosshairMove" in stock_chart_src)
         # Corporate actions are matched by an exact BSE-symbol-to-NSE-symbol
         # string match, never fuzzy - so this only proves the wiring fires
         # for at least one real, currently-disclosed action, not that every
@@ -1175,6 +1183,16 @@ def test_published():
         check("BTC page has a chart container wired to its symbol",
               "data-crypto-chart" in btc_html and 'data-symbol="BTC"' in btc_html)
 
+    crypto_chart_path = os.path.join(ROOT, "site", "assets", "js", "crypto-chart.js")
+    if os.path.exists(crypto_chart_path):
+        crypto_chart_src = open(crypto_chart_path, encoding="utf-8").read()
+        check("crypto-chart.js defines technical indicators (SMA, EMA, Bollinger)",
+              "calcSMA" in crypto_chart_src and "calcEMA" in crypto_chart_src and "calcBollinger" in crypto_chart_src)
+        check("crypto-chart.js defines Smart Zones (Support/Resistance levels)",
+              "calcSmartZones" in crypto_chart_src and "createPriceLine" in crypto_chart_src)
+        check("crypto-chart.js listens for live quote updates",
+              "brokerlens:crypto-quote" in crypto_chart_src)
+
     vendor_path = os.path.join(ROOT, "site", "assets", "js", "vendor",
                                 "lightweight-charts.standalone.production.js")
     check("lightweight-charts vendor file is self-hosted, not fetched from a CDN at runtime",
@@ -1325,6 +1343,11 @@ def test_published():
     publish_src = open(os.path.join(ROOT, "pipeline", "publish.py"), encoding="utf-8").read()
     check("pipeline/publish.py has no em or en dash in its own source",
           not any(d in publish_src for d in dash_chars))
+    run_src = open(os.path.join(ROOT, "pipeline", "run.py"), encoding="utf-8").read()
+    check("pipeline/run.py has no em or en dash in its own source",
+          not any(d in run_src for d in dash_chars))
+    check("pipeline/run.py exposes programmatic engine commands",
+          all(cmd in run_src for cmd in ('"branches"', '"ipo-apply"', '"targets"', '"trade-costs"', '"engines"')))
     js_dir_for_dash = os.path.join(ROOT, "site", "assets", "js")
     if os.path.isdir(js_dir_for_dash):
         for fname in sorted(os.listdir(js_dir_for_dash)):
