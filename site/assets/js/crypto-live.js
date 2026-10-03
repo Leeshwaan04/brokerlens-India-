@@ -5,7 +5,7 @@
  * JSON snapshot, never a live call to Binance itself - the browser never
  * calls a third-party market API directly, same rule as store.js's ticker.
  */
-import { esc, cls, pct } from './store.js?v=e83a0661a2';
+import { esc, cls, pct } from './store.js?v=3e1dd431fe';
 
 async function loadCryptoTicker() {
   const r = await fetch(`/data/crypto-ticker.json?t=${Date.now()}`, { cache: 'no-store' });
@@ -51,6 +51,9 @@ async function paintOne() {
         <span class="num ${cls(c.change_pct_24h)}" style="font-size:var(--fs-base);margin-left:8px">${pct(c.change_pct_24h)}</span></div>
       <div class="xs faint" style="margin-top:4px">24h range ${fmtUsd(c.low_24h)} to ${fmtUsd(c.high_24h)} &middot;
         as of ${esc(new Date(t.generated_at).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }))}</div>`;
+    window.dispatchEvent(new CustomEvent('brokerlens:crypto-quote', {
+      detail: { symbol: c.symbol, price: c.price_usd, high: c.high_24h, low: c.low_24h, chg: c.change_pct_24h }
+    }));
   } catch {
     el.innerHTML = '<div class="small faint">Live price unavailable - run <code>python3 -m pipeline.run ticker</code>.</div>';
   }

@@ -1,11 +1,20 @@
 """Pipeline CLI.
 
-  python3 -m pipeline.run seed      write clearly-labelled SAMPLE data
-  python3 -m pipeline.run fetch     pull NSE + BSE + MCX + SEBI into data/ (+ _ingest.json)
-  python3 -m pipeline.run build     recompute metrics and publish site/data/*
-  python3 -m pipeline.run all       fetch + build
-  python3 -m pipeline.run pulse     refresh market strip + live quotes, then full rebuild
-  python3 -m pipeline.run ticker    refresh ONLY live quotes -> ticker.json (cheapest; run every minute)
+  python3 -m pipeline.run seed             write clearly-labelled SAMPLE data
+  python3 -m pipeline.run fetch            pull NSE + BSE + MCX + SEBI into data/ (+ _ingest.json)
+  python3 -m pipeline.run build            recompute metrics and publish site/data/*
+  python3 -m pipeline.run all              fetch + build
+  python3 -m pipeline.run pulse            refresh market strip + live quotes, then full rebuild
+  python3 -m pipeline.run ticker           refresh ONLY live quotes -> ticker.json (cheapest; run every minute)
+  python3 -m pipeline.run branches         generate broker branch directory
+  python3 -m pipeline.run ipo-apply        generate IPO how-to-apply and allotment guides
+  python3 -m pipeline.run ipo-subscription generate IPO live bidding and subscription hubs
+  python3 -m pipeline.run targets          generate share price target forecast pages
+  python3 -m pipeline.run trade-costs      generate stock x broker transaction cost breakdown
+  python3 -m pipeline.run sip              generate SIP compounding calculator suites
+  python3 -m pipeline.run fund-compare     generate mutual fund 1v1 comparisons
+  python3 -m pipeline.run stock-compare    generate stock 1v1 comparisons
+  python3 -m pipeline.run engines          run all programmatic engines
 
 Exit code is non-zero if a source that was expected to return rows returned
 none, so cron can alert instead of silently publishing a hollow site.
@@ -231,6 +240,60 @@ def main(argv):
         log("done. %s" % ("with gaps: " + ", ".join(problems) if problems else "all sources ok"),
             "warn" if problems else "ok")
         return 1 if problems else 0
+    if cmd == "branches":
+        from . import broker_branch_engine
+        broker_branch_engine.generate_all()
+        return 0
+    if cmd == "ipo-apply":
+        from . import ipo_apply_engine
+        ipo_apply_engine.build_ipo_apply_suite()
+        return 0
+    if cmd == "ipo-subscription":
+        from . import ipo_subscription_engine
+        ipo_subscription_engine.build_ipo_subscription_suite()
+        return 0
+    if cmd == "targets":
+        from . import share_price_target_engine
+        share_price_target_engine.build_share_price_target_suite()
+        return 0
+    if cmd == "trade-costs":
+        from . import trade_cost_engine
+        trade_cost_engine.build_trade_cost_pages()
+        return 0
+    if cmd == "sip":
+        from . import sip_calculator_engine
+        sip_calculator_engine.build_sip_calculator_suite()
+        return 0
+    if cmd == "fund-compare":
+        from . import fund_compare_engine
+        fund_compare_engine.generate_all()
+        return 0
+    if cmd == "stock-compare":
+        from . import stock_compare_engine
+        stock_compare_engine.build_stock_compare_suite()
+        return 0
+    if cmd == "engines":
+        from . import (
+            broker_branch_engine,
+            fund_compare_engine,
+            ipo_apply_engine,
+            ipo_subscription_engine,
+            share_price_target_engine,
+            sip_calculator_engine,
+            stock_compare_engine,
+            trade_cost_engine,
+        )
+        log("running all programmatic engines...", "info")
+        broker_branch_engine.generate_all()
+        ipo_apply_engine.build_ipo_apply_suite()
+        ipo_subscription_engine.build_ipo_subscription_suite()
+        trade_cost_engine.build_trade_cost_pages()
+        sip_calculator_engine.build_sip_calculator_suite()
+        fund_compare_engine.generate_all()
+        stock_compare_engine.build_stock_compare_suite()
+        share_price_target_engine.build_share_price_target_suite()
+        log("all programmatic engines completed successfully", "ok")
+        return 0
 
     sys.stderr.write(__doc__)
     return 2

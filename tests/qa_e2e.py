@@ -724,7 +724,7 @@ def test_published():
     calc_dir = os.path.join(ROOT, "site", "calculators")
     check("site/calculators/ static pages exist on disk", os.path.isdir(calc_dir))
     if os.path.isdir(calc_dir):
-        calc_slugs = sorted(d for d in os.listdir(calc_dir) if os.path.isdir(os.path.join(calc_dir, d)))
+        calc_slugs = sorted(d for d in os.listdir(calc_dir) if os.path.isdir(os.path.join(calc_dir, d)) and d != "sip")
         check("all 13 calculator pages were written", len(calc_slugs) == 13, "found %d: %s" % (len(calc_slugs), calc_slugs))
         sip_path = os.path.join(calc_dir, "sip-calculator", "index.html")
         sip_html = open(sip_path, encoding="utf-8").read() if os.path.exists(sip_path) else ""
@@ -797,7 +797,7 @@ def test_published():
     funds_by_dir = os.path.join(ROOT, "site", "funds-by")
     check("fund AMC directory exists", os.path.isdir(funds_by_dir))
     if os.path.isdir(funds_by_dir):
-        amc_dirs = [d for d in os.listdir(funds_by_dir) if os.path.isdir(os.path.join(funds_by_dir, d))]
+        amc_dirs = [d for d in os.listdir(funds_by_dir) if os.path.isdir(os.path.join(funds_by_dir, d)) and d != "category"]
         check("fund AMC directory has more than one AMC page", len(amc_dirs) > 1, "found %d" % len(amc_dirs))
         overview_html = open(os.path.join(funds_by_dir, "index.html"), encoding="utf-8").read()
         check("fund AMC overview links every AMC page",
@@ -924,6 +924,7 @@ def test_published():
         "contact": "Contact BrokerLens",
         "privacy-policy": "Privacy Policy",
         "terms-of-service": "Terms of Service",
+        "editorial-policy": "Editorial Policy",
     }
     for slug, heading in company_pages.items():
         page_path = os.path.join(ROOT, "site", slug, "index.html")
@@ -940,6 +941,35 @@ def test_published():
         check("a static page footer links all four company pages and the contact address too",
               all(t in stock_html for t in company_targets) and CONTACT_EMAIL in stock_html,
               "missing: %s" % [t for t in company_targets if t not in stock_html])
+
+    # E-E-A-T compliance and editorial transparency checks
+    ed_path = os.path.join(ROOT, "site", "editorial-policy", "index.html")
+    check("editorial-policy page exists", os.path.exists(ed_path))
+    if os.path.exists(ed_path):
+        ed_html = open(ed_path, encoding="utf-8").read()
+        check("editorial policy page has no leaked 'None'",
+              ">None<" not in ed_html and "None</p>" not in ed_html)
+        check("editorial policy explicitly states Golden Source Standard",
+              "Golden Source" in ed_html or "Hierarchy of Data" in ed_html)
+        check("editorial policy articulates zero-payola guarantee",
+              "Zero-Payola" in ed_html or "Rankings Cannot Be Purchased" in ed_html)
+        check("editorial policy states 24-48h corrections SLA",
+              "24 to 48" in ed_html or "48 business hours" in ed_html)
+        check("editorial policy defines Organization Schema.org with publishing principles",
+              '"publishingPrinciples"' in ed_html and '"correctionsPolicy"' in ed_html)
+
+    # News E-E-A-T bylines
+    news_dir = os.path.join(ROOT, "site", "news")
+    if os.path.isdir(news_dir):
+        sample_news = [d for d in os.listdir(news_dir) if os.path.isdir(os.path.join(news_dir, d))]
+        if sample_news:
+            sample_art_path = os.path.join(news_dir, sample_news[0], "index.html")
+            if os.path.exists(sample_art_path):
+                art_html = open(sample_art_path, encoding="utf-8").read()
+                check("news articles carry BrokerLens Financial Research Desk byline",
+                      "BrokerLens Financial Research Desk" in art_html)
+                check("news articles carry fact-checking and editorial policy link",
+                      "/editorial-policy" in art_html)
 
     # Breadcrumbs: a shared helper builds both the visible trail and its
     # BreadcrumbList JSON-LD from the same data, so a page can never show one
@@ -1174,7 +1204,16 @@ def test_published():
         crypto_live_src = open(crypto_live_path, encoding="utf-8").read()
         check("crypto-live.js fetches the precomputed snapshot, not a live third-party API",
               "crypto-ticker.json" in crypto_live_src and "binance.com" not in crypto_live_src.lower())
-    check("sitemap includes /crypto/ pages", "/crypto/" in open(os.path.join(ROOT, "site", "sitemap.xml"), encoding="utf-8").read())
+    sitemap_main = open(os.path.join(ROOT, "site", "sitemap.xml"), encoding="utf-8").read()
+    sitemaps_dir = os.path.join(ROOT, "site", "sitemaps")
+    if os.path.isdir(sitemaps_dir):
+        all_sitemap_xml = sitemap_main + "".join(
+            open(os.path.join(sitemaps_dir, f), encoding="utf-8").read()
+            for f in os.listdir(sitemaps_dir) if f.endswith(".xml")
+        )
+    else:
+        all_sitemap_xml = sitemap_main
+    check("sitemap includes /crypto/ pages", "/crypto/" in all_sitemap_xml)
 
     # Every one of ~9,500 sitemap URLs used to get today's date stamped as
     # lastmod on every single build, regardless of whether anything about
@@ -1183,8 +1222,7 @@ def test_published():
     # real last date in their own price history (see nse.py's
     # equity_history()); a real, varied spread of dates is the only way to
     # confirm this wasn't silently reverted to the old fake-it constant.
-    sitemap_xml = open(os.path.join(ROOT, "site", "sitemap.xml"), encoding="utf-8").read()
-    stock_lastmods = re.findall(r"/stock/[^/]+/</loc><lastmod>([^<]+)</lastmod>", sitemap_xml)
+    stock_lastmods = re.findall(r"/stock/[^/]+/</loc><lastmod>([^<]+)</lastmod>", all_sitemap_xml)
     check("stock URLs in the sitemap have real, varied lastmod dates, not one fake constant",
           len(stock_lastmods) > 100 and len(set(stock_lastmods)) > 5,
           "found %d urls across %d distinct dates" % (len(stock_lastmods), len(set(stock_lastmods))))
@@ -1233,7 +1271,7 @@ def test_published():
         check("an IPO page carries both sponsored broker banners",
               "aff-banner-zerodha" in sample_ipo_html and "aff-banner-5paisa" in sample_ipo_html)
 
-    check("sitemap includes /ipo/ pages", "/ipo/" in open(os.path.join(ROOT, "site", "sitemap.xml"), encoding="utf-8").read())
+    check("sitemap includes /ipo/ pages", "/ipo/" in all_sitemap_xml)
     search_rows_ipo = [r for r in all_search_rows if r[2] == "ipo"]
     check("search index includes IPOs", len(search_rows_ipo) > 500, "found %d" % len(search_rows_ipo))
     check("nav has an IPO link", '<a href="/ipo/">IPO</a>' in home_html_for_dirs)
@@ -1609,6 +1647,9 @@ def test_server(base):
     # /calculators/:slug/ - static shell + calculators.js, not app.js.
     code, body, _ = http(base + "/calculators/sip-calculator/")
     check("GET /calculators/<slug>/ serves the static calculator page",
+          code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
+    code, body, _ = http(base + "/editorial-policy/")
+    check("GET /editorial-policy/ serves the static editorial policy page",
           code == 200 and b"<h1" in body and b'id="app"' not in body, "code=%s" % code)
     code, body, _ = http(base + "/assets/js/calculators.js")
     check("GET /assets/js/calculators.js is served", code == 200 and len(body) > 0, "code=%s" % code)

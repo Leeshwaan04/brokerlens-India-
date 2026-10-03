@@ -8,31 +8,25 @@ data/canonical/
 data/_ingest.json
 
 # Published payloads; regenerate with `make all`.
-site/data/
-site/sitemap.xml
-site/feed.xml
-site/sebi-registry/
-site/broker/
-site/brokers-by/
-site/stock/
-site/index/
-site/etf/
-site/fund/
-site/reports/
-site/calculators/
-site/stocks/
-site/funds-by/
-site/etfs/
-site/methodology/
-site/sources/
-site/brokers/
-site/compare/
-site/leaderboards/
-site/registry/
-site/algo/
-site/calculator/
-site/coming-soon/
-site/ipo/
+site/*
+!site/about/
+!site/contact/
+!site/editorial-policy/
+!site/assets/
+!site/privacy-policy/
+!site/terms-of-service/
+!site/news/
+!site/crypto/
+!site/index.html
+!site/manifest.json
+!site/robots.txt
+!site/favicon.ico
+!site/apple-touch-icon.png
+!site/icon-192.png
+!site/icon-512.png
+!site/_headers
+!site/_redirects
+!site/vercel.json
 
 # Personal data. Leads are DPDP-regulated and must never reach a repo.
 data/leads/

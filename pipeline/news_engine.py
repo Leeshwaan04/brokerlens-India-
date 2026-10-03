@@ -208,6 +208,64 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
         "body_html": bank_body,
     })
 
+    # Morning Pre-Market Briefing
+    pre_slug = "pre-market-cues-gift-nifty-%s" % today_iso
+    pre_title = "Pre-Market Brief: GIFT Nifty, FII & DII Flows, Global Cues & Stocks in Focus (%s)" % today_str
+    pre_desc = (
+        "Daily morning pre-market setup for Indian equities (%s). GIFT Nifty trend, FII/DII institutional "
+        "positioning from NSE disclosures, Asian market cues, and derivative contracts in F&O ban."
+        % today_str
+    )[:300]
+    pre_body = """
+    <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+      Indian equity benchmarks enter today's trading session following overnight global macroeconomic developments
+      and institutional portfolio adjustments. Ahead of the 9:15 AM IST opening bell on the National Stock Exchange (NSE)
+      and Bombay Stock Exchange (BSE), here are the critical market cues every retail investor and active derivative trader must track.
+    </p>
+
+    <div class="section-title"><h2>1. GIFT Nifty &amp; Global Setup</h2></div>
+    <p>
+      GIFT Nifty futures trading on the NSE International Exchange (NSE IX) in GIFT City provide the primary early indication
+      for domestic opening momentum. Traders evaluate the spread between GIFT Nifty and the previous closing level of the
+      benchmark Nifty 50 to gauge gap-up or gap-down opening probabilities. Global macro factors including Brent crude oil benchmarks
+      and the US Dollar Index (DXY) continue to influence emerging market currency pairs and corporate input cost projections.
+    </p>
+
+    <div class="section-title"><h2>2. Institutional Flow Dynamics (FII &amp; DII)</h2></div>
+    <p>
+      Foreign Institutional Investors (FIIs) and Domestic Institutional Investors (DIIs) represent the dominant liquidity drivers
+      in the Indian cash delivery and derivative segments. Under SEBI regulatory transparency standards, daily net provisional figures
+      are disclosed immediately post-market. Persistent DII inflows via retail Systematic Investment Plans (SIPs) continue to provide
+      structural counter-cyclical support during periods of foreign portfolio volatility.
+    </p>
+
+    <div class="section-title"><h2>3. Derivatives Watch &amp; F&amp;O Ban Period</h2></div>
+    <p>
+      Under exchange regulations, derivative contracts enter the F&amp;O ban period when aggregate open interest across all available
+      series crosses 95% of the Market Wide Position Limit (MWPL). During the ban period, no fresh positions are permitted for any
+      trader; existing positions can only be closed or rolled over to reduce open interest below the 80% exit threshold.
+    </p>
+
+    <div class="card" style="margin-top:16px;padding:16px;border-left:4px solid var(--accent)">
+      <p style="margin:0"><strong>Optimize Your Trade Execution:</strong> Review exact statutory charges, STT, and breakeven points before placing orders:
+      <a href="/trade-costs/" data-link>Stock Trade Cost Directory</a> &middot;
+      <a href="/compare/stocks/" data-link>Head-to-Head Stock Comparisons</a> &middot;
+      <a href="/ipo/" data-link>Live IPO Tracker</a>.</p>
+    </div>
+    """
+    articles.append({
+        "slug": pre_slug,
+        "title": pre_title,
+        "description": pre_desc,
+        "date": today_iso,
+        "date_str": today_str,
+        "category": "Market News",
+        "category_badge": "badge-verified",
+        "type": "NewsArticle",
+        "read_time": "3 min read",
+        "body_html": pre_body,
+    })
+
     # =========================================================================
     # 2. LIVE IPO BIDDING & ALLOTMENT BULLETINS
     # =========================================================================
@@ -536,6 +594,74 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
               <a href="/algo" data-link>Algo Trading Platforms Directory</a>.</p>
             </div>
             """
+        },
+        {
+            "slug": "how-to-check-ipo-allotment-status-online-guide",
+            "title": "How to Check IPO Allotment Status Online: Link Intime, KFintech & Bigshare Guide",
+            "description": "Step-by-step instructions for checking IPO allotment across all major registrars using PAN number, Application number, or DP Client ID.",
+            "category": "Blog & Guide",
+            "category_badge": "badge-verified",
+            "type": "BlogPosting",
+            "read_time": "6 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              After bidding closes for an Initial Public Offering (IPO), the registrar takes 24 to 48 hours to finalize
+              the <strong>Basis of Allotment</strong>. Retail investors can verify their allocation status online
+              without waiting for bank debit SMS notifications.
+            </p>
+
+            <div class="section-title"><h2>1. Official Registrar Portals</h2></div>
+            <p>Every IPO is managed by a SEBI-registered registrar responsible for validating bids and allocating shares:</p>
+            <ul>
+              <li><strong>Link Intime India:</strong> Handles major mainboard issues like Tata Tech, Honasa, and Mankind Pharma. Check at <a href="/ipo/allotment-status/">Allotment Status Hub</a>.</li>
+              <li><strong>KFin Technologies:</strong> Registrar for mega-issues including LIC, Swiggy, Hyundai India, and Bajaj Housing Finance.</li>
+              <li><strong>Bigshare Services:</strong> Primary registrar for high-growth SME and NSE Emerge issues.</li>
+            </ul>
+
+            <div class="section-title"><h2>2. Three Ways to Query Allotment</h2></div>
+            <ol>
+              <li><strong>PAN Mode (Recommended):</strong> Enter your 10-character Permanent Account Number. Fast, universal, and error-proof.</li>
+              <li><strong>Application Number:</strong> Enter the bid application number generated on your broker app (Kite, Groww, Angel One).</li>
+              <li><strong>DP / Client ID:</strong> Enter your 16-digit Beneficiary ID (NSDL DP ID + Client ID or CDSL 16-digit Demat Account number).</li>
+            </ol>
+
+            <div class="section-title"><h2>3. What Happens If You Are Not Allotted?</h2></div>
+            <p>
+              If your application is not selected in the computerized lottery, your bank will automatically unblock
+              the UPI mandate funds within 24 to 48 hours of allotment finalization. If your funds remain blocked,
+              you can quote the mandate Unique Mandate Number (UMN) to your banking support or file an enquiry with the registrar.
+            </p>
+            """
+        },
+        {
+            "slug": "asba-vs-upi-ipo-application-rules",
+            "title": "ASBA Net Banking vs UPI IPO Bidding: Limits, Success Rates and Rejection Causes",
+            "description": "Comprehensive comparison of ASBA Net Banking vs UPI for IPO applications in India: which has higher success rates and how to avoid mandate rejections.",
+            "category": "Blog & Guide",
+            "category_badge": "badge-verified",
+            "type": "BlogPosting",
+            "read_time": "7 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              Indian retail investors have two primary routes to apply for IPOs: <strong>Bank ASBA</strong>
+              (Application Supported by Blocked Amount) through net banking, and <strong>UPI-based ASBA</strong>
+              via broker trading apps.
+            </p>
+
+            <div class="section-title"><h2>1. Key Differences at a Glance</h2></div>
+            <ul>
+              <li><strong>UPI Limit:</strong> Retail investors can apply for up to Rs 5 Lakh per IPO using UPI (raised from the earlier Rs 2 Lakh threshold).</li>
+              <li><strong>Net Banking ASBA:</strong> Allows applications across all categories: Retail (up to Rs 2 Lakh), sNII (Rs 2 Lakh to Rs 10 Lakh), and bNII (above Rs 10 Lakh) without transaction limits.</li>
+              <li><strong>Approval Latency:</strong> UPI mandates occasionally face gateway delays during peak bidding hours (3:00 PM to 5:00 PM on closing day). Net banking ASBA is instantaneous.</li>
+            </ul>
+
+            <div class="section-title"><h2>2. Common Causes of UPI Mandate Failures</h2></div>
+            <ol>
+              <li><strong>Third-Party Bank Account:</strong> SEBI strictly mandates that the Demat account holder's PAN must match the bank account PAN. Applications from spouse/parent accounts are rejected.</li>
+              <li><strong>Late Authorization:</strong> The UPI mandate block request must be approved in your BHIM, Google Pay, or PhonePe app before 5:00 PM on the issue closing day.</li>
+              <li><strong>Multiple Applications from Same PAN:</strong> Multiple retail bids under the same PAN in the same IPO are disqualified as duplicate applications.</li>
+            </ol>
+            """
         }
     ]
 
@@ -665,6 +791,118 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
               Ensuring optimal execution speeds and zero ancillary charges across brokers becomes paramount for long-term viability.
             </p>
             """
+        },
+        {
+            "slug": "sebi-new-index-derivatives-fo-framework",
+            "title": "SEBI New Index Derivatives Framework: Lot Sizes, Expiries and Retail Margin Impact",
+            "description": "Comprehensive guide to SEBI's 6-point index derivative regulatory framework: contract size increase to Rs 15-20 Lakh, single weekly expiry, and upfront option premiums.",
+            "category": "Investor Guide",
+            "category_badge": "badge-verified",
+            "type": "Article",
+            "read_time": "8 min read",
+            "date": today_iso,
+            "date_str": today_str,
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              To curb excessive retail speculation in index futures and options (F&O), SEBI introduced a phased
+              six-measure framework designed to elevate systemic resilience and align contract sizes with investor risk profiles.
+            </p>
+
+            <div class="section-title"><h2>1. Contract Size Elevation to Rs 15 Lakh - Rs 20 Lakh</h2></div>
+            <p>
+              The minimum contract value for index derivatives was raised from the historical Rs 5 Lakh band to
+              between Rs 15 Lakh and Rs 20 Lakh. For Nifty and Bank Nifty contracts, exchange lot sizes have been
+              recalibrated to ensure minimum entry margin thresholds reflect higher capital requirements.
+            </p>
+
+            <div class="section-title"><h2>2. Rationalization of Weekly Expiries</h2></div>
+            <p>
+              Each stock exchange (NSE and BSE) is now permitted to offer weekly derivative contracts for only one
+              benchmark index. For example, NSE retained Nifty 50 weekly options while discontinuing Bank Nifty / FinNifty
+              weekly contracts, dramatically reducing intra-week volatility clustering.
+            </p>
+
+            <div class="section-title"><h2>3. Upfront Collection of Option Buying Premiums</h2></div>
+            <p>
+              Brokers must collect 100% of client option premiums upfront on trade date (T+0). Intraday leverage
+              or collateral adjustments against unpaid option purchases are prohibited, preventing negative equity spikes.
+            </p>
+
+            <div class="section-title"><h2>4. Removal of Calendar Spread Treatment on Expiry Day</h2></div>
+            <p>
+              Margin benefits previously afforded to calendar spread positions expiring on that trade day are discontinued,
+              requiring independent margin coverage for legs with same-day settlement risk.
+            </p>
+            """
+        },
+        {
+            "slug": "true-to-label-exchange-charges-broker-impact",
+            "title": "True-to-Label Charges: How SEBI's Uniform Tariff Mandate Transformed Broker Pricing",
+            "description": "In-depth study on SEBI's true-to-label circular eliminating slab-based exchange turnover rebates and standardizing brokerage fee structures in India.",
+            "category": "Research Article",
+            "category_badge": "badge-verified",
+            "type": "TechArticle",
+            "read_time": "6 min read",
+            "date": today_iso,
+            "date_str": today_str,
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              SEBI's landmark 'True-to-Label' directive mandated Market Infrastructure Institutions (MIIs) to charge
+              uniform transaction fees regardless of trading volume, putting an end to retrospective volume rebates.
+            </p>
+
+            <div class="section-title"><h2>1. The End of Slab-Based Rebates</h2></div>
+            <p>
+              Previously, exchanges charged discount brokers tiered rates based on cumulative monthly volume (e.g. 0.0027% for mega volumes vs 0.0035% baseline). Brokers charged clients the higher rate and pocketed the rebate difference as high-margin ancillary revenue.
+            </p>
+
+            <div class="section-title"><h2>2. Uniform Exchange Rates (0.00297%)</h2></div>
+            <p>
+              The NSE and BSE standardized equity cash and derivative turnover rates at flat, true-to-label percentages (NSE cash at 0.00297%). Any charge collected by a broker under the exchange fee head must match the exact debit levied by the clearing corporation rupee-for-rupee.
+            </p>
+
+            <div class="section-title"><h2>3. Impact on Broker Fee Models</h2></div>
+            <p>
+              With rebate revenue eliminated, brokers adapted by slightly adjusting equity delivery pricing, Demat account opening fees, or introducing flat API access subscriptions while preserving core zero-brokerage delivery models.
+            </p>
+            """
+        },
+        {
+            "slug": "how-to-transfer-shares-between-demat-accounts-online",
+            "title": "How to Transfer Shares Between Demat Accounts Online via CDSL Easiest & NSDL Speed-e",
+            "description": "Step-by-step guide to transferring equity shares and mutual funds between Zerodha, Groww, Angel One, and other brokers without physical DIS slips.",
+            "category": "Investor Guide",
+            "category_badge": "badge-verified",
+            "type": "Article",
+            "read_time": "7 min read",
+            "date": today_iso,
+            "date_str": today_str,
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              Moving your stock portfolio or mutual funds between brokers in India no longer requires paper Delivery
+              Instruction Slips (DIS). Investors can complete secure online inter-depository transfers in minutes.
+            </p>
+
+            <div class="section-title"><h2>1. CDSL Easiest Online Transfer (CDSL to CDSL / NSDL)</h2></div>
+            <ol>
+              <li>Register for <strong>CDSL Easiest</strong> using your 16-digit Demat Account BOID.</li>
+              <li>Add your destination broker's Demat BOID as a 'Trusted Account'.</li>
+              <li>Submit the transaction by selecting the ISIN, share quantity, and execution date.</li>
+              <li>Authenticate the transfer using your CDSL 6-digit TPIN and mobile OTP.</li>
+            </ol>
+
+            <div class="section-title"><h2>2. NSDL Speed-e Transfer (NSDL to NSDL / CDSL)</h2></div>
+            <ol>
+              <li>Access the NSDL Speed-e portal and register with your DP ID and Client ID.</li>
+              <li>Enter transfer details under 'Inter-Depository Transfer' or 'Off-Market Transfer'.</li>
+              <li>Authenticate using digital signature token or Aadhaar e-Sign.</li>
+            </ol>
+
+            <div class="section-title"><h2>3. Capital Gains and Off-Market Taxation</h2></div>
+            <p>
+              Transferring shares between two Demat accounts held by the <strong>same PAN</strong> is not considered a transfer of title and attracts zero capital gains tax. Always update the purchase price / original acquisition date on your destination broker's portal to ensure accurate future capital gains reporting.
+            </p>
+            """
         }
     ]
 
@@ -710,13 +948,13 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
                     "mainEntityOfPage": canon,
                     "author": {
                         "@type": "Organization",
-                        "name": "BrokerLens Intelligence Desk",
-                        "url": site_url
+                        "name": "BrokerLens Financial Research Desk",
+                        "url": "%s/about" % site_url
                     },
                     "publisher": {
                         "@type": "Organization",
                         "name": "BrokerLens",
-                        "logo": {"@type": "ImageObject", "url": "%s/assets/img/partners/zerodha.svg" % site_url}
+                        "logo": {"@type": "ImageObject", "url": "%s/apple-touch-icon.png" % site_url}
                     }
                 },
                 crumb_jsonld
@@ -762,7 +1000,18 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
             + '<span class="xs muted">&middot; Published %s</span>' % _esc(art.get("date_str", ""))
             + '<span class="xs muted">&middot; %s</span></div>' % _esc(art.get("read_time", "4 min read"))
             + '<h1 style="margin-top:0;font-size:var(--fs-2xl);letter-spacing:-0.02em;line-height:1.25">%s</h1>' % _esc(art["title"])
+            + '<div class="card" style="margin:16px 0 20px 0;padding:14px 18px;background:var(--bg-raised);border-left:3px solid var(--accent);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px">'
+            + '<div style="display:flex;align-items:center;gap:10px">'
+            + '<div style="width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">BL</div>'
+            + '<div>'
+            + '<div style="font-weight:600;font-size:13px">Researched by BrokerLens Financial Research Desk</div>'
+            + '<div class="xs muted">Fact-Checked &amp; Verified against primary NSE, BSE and SEBI disclosures</div>'
+            + '</div>'
+            + '</div>'
+            + '<div class="xs"><a href="/editorial-policy" style="color:var(--accent);text-decoration:none;font-weight:600">Editorial Guidelines &rarr;</a></div>'
+            + '</div>'
             + '<div class="card" style="margin-top:20px;padding:28px;line-height:1.7">%s</div>' % art["body_html"]
+            + '<p class="xs faint" style="margin-top:12px">Editorial Integrity: BrokerLens does not accept payment to promote brokers or alter factual analyses. Read our <a href="/editorial-policy">Editorial Policy</a> and <a href="/methodology">Methodology</a>.</p>'
             + affiliate_html
             + '<div style="margin-top:24px"><a class="btn btn-sm" href="/news/" data-link>&larr; Back to all News, Blogs &amp; Market Insights</a></div>'
         )

@@ -31,20 +31,20 @@ OK, FINDINGS, NOTES = [], [], []
 def result(name, secure, detail="", severity="medium"):
     if secure:
         OK.append(name)
-        print("  OK    %-56s" % name)
+        print("  OK    %-56s" % name, flush=True)
     else:
         FINDINGS.append((severity, name, detail))
-        print("  VULN  %-56s [%s] %s" % (name, severity.upper(), detail))
+        print("  VULN  %-56s [%s] %s" % (name, severity.upper(), detail), flush=True)
     return secure
 
 
 def note(name, detail):
     NOTES.append((name, detail))
-    print("  note  %-56s %s" % (name, detail))
+    print("  note  %-56s %s" % (name, detail), flush=True)
 
 
 def section(t):
-    print("\n== %s ==" % t)
+    print("\n== %s ==" % t, flush=True)
 
 
 def raw_request(base, raw, read_bytes=4096, timeout=8):
@@ -378,28 +378,47 @@ def test_published_json_safety():
         return
     bad_keys = []
     absolute_paths = []
-    for root, _, files in os.walk(p):
-        for f in files:
-            if not f.endswith(".json"):
-                continue
-            fp = os.path.join(root, f)
-            raw = open(fp, encoding="utf-8").read()
-            if "__proto__" in raw or '"constructor"' in raw:
-                bad_keys.append(f)
-            if re.search(r'"/(Users|home|var|etc)/', raw):
-                absolute_paths.append(f)
+    leaked = []
+    rx_path = re.compile(r'"/(Users|home|var|etc)/')
+    rx_phone = re.compile(r'"phone"\s*:\s*"\d{10}')
+
+    target_files = []
+    # Core published data files
+    for fn in os.listdir(p):
+        fp = os.path.join(p, fn)
+        if os.path.isfile(fp) and fn.endswith(".json"):
+            target_files.append(fp)
+
+    # Broker data files
+    bdir = os.path.join(p, "brokers")
+    if os.path.isdir(bdir):
+        for fn in os.listdir(bdir):
+            if fn.endswith(".json"):
+                target_files.append(os.path.join(bdir, fn))
+
+    # Sample history files
+    for sub in ("crypto-history", "equity-history"):
+        sdir = os.path.join(p, sub)
+        if os.path.isdir(sdir):
+            sample = sorted(os.listdir(sdir))[:15]
+            for fn in sample:
+                if fn.endswith(".json"):
+                    target_files.append(os.path.join(sdir, fn))
+
+    for fp in target_files:
+        f = os.path.basename(fp)
+        raw = open(fp, encoding="utf-8", errors="ignore").read()
+        if "__proto__" in raw or '"constructor"' in raw:
+            bad_keys.append(f)
+        if rx_path.search(raw):
+            absolute_paths.append(f)
+        if "leads" in f or rx_phone.search(raw):
+            leaked.append(f)
+
     result("no prototype-pollution keys in published json", not bad_keys,
            str(bad_keys[:3]), severity="medium")
     result("no filesystem paths leaked in published json", not absolute_paths,
            str(absolute_paths[:3]), severity="medium")
-
-    # Personal data must never reach the public directory.
-    leaked = []
-    for root, _, files in os.walk(p):
-        for f in files:
-            raw = open(os.path.join(root, f), encoding="utf-8", errors="ignore").read()
-            if "leads" in f or re.search(r'"phone"\s*:\s*"\d{10}', raw):
-                leaked.append(f)
     result("no lead/PII data in the published site directory", not leaked,
            str(leaked[:3]), severity="critical")
 

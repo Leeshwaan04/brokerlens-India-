@@ -6,7 +6,7 @@ import {
   cls, count, esc, full, initials, inr, loadAlgo, loadBroker, loadNews, loadOverview,
   loadRegistry, loadSources, markColor, month, pct, provDot, safeUrl,
   SEGMENT_LABEL, TYPE_LABEL,
-} from './store.js?v=e83a0661a2';
+} from './store.js?v=3e1dd431fe';
 import { barChart, donut, lineChart, registerRedraw, sparkline } from './chart.js?v=ec48a39b98';
 
 const after = [];
@@ -749,6 +749,7 @@ export async function broker(id) {
         ${safeUrl(p.website) ? `<a class="btn btn-sm" href="${safeUrl(p.website)}" rel="nofollow noopener external" target="_blank">Website ↗</a>` : ''}
         <a class="btn btn-sm" href="/compare?b=${esc(p.id)}" data-link>Compare</a>
         <a class="btn btn-sm" href="/calculator?b=${esc(p.id)}" data-link>Cost for my trades</a>
+        <a class="btn btn-sm" href="/broker/${esc(p.id)}/branches/">Branches</a>
       </div>
     </div>
     <div class="card" style="min-width:200px">
