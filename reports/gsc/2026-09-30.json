@@ -1,0 +1,324 @@
+{
+  "date": "2026-09-30",
+  "sitemaps": [
+    {
+      "path": "https://www.brokerlens.in/sitemap.xml",
+      "lastDownloaded": "2026-09-30T08:53:03.427Z",
+      "warnings": "0",
+      "errors": "0",
+      "submitted": "9518",
+      "indexed": "0"
+    }
+  ],
+  "performance_28d": {
+    "range": {
+      "start": "2026-08-30",
+      "end": "2026-09-27"
+    },
+    "totals": {
+      "clicks": 65,
+      "impressions": 20729,
+      "ctr": 0.0031357036036470643,
+      "position": 19.877225143518743
+    },
+    "top_queries": [
+      {
+        "keys": [
+          "brokerlens"
+        ],
+        "clicks": 2,
+        "impressions": 7,
+        "ctr": 0.2857142857142857,
+        "position": 1
+      },
+      {
+        "keys": [
+          "ashlar securities private limited"
+        ],
+        "clicks": 1,
+        "impressions": 2,
+        "ctr": 0.5,
+        "position": 16
+      },
+      {
+        "keys": [
+          "flourish fincap pvt ltd"
+        ],
+        "clicks": 1,
+        "impressions": 1,
+        "ctr": 1,
+        "position": 14
+      },
+      {
+        "keys": [
+          "gkn securities"
+        ],
+        "clicks": 1,
+        "impressions": 9,
+        "ctr": 0.1111111111111111,
+        "position": 8
+      },
+      {
+        "keys": [
+          "ipo premium"
+        ],
+        "clicks": 1,
+        "impressions": 28,
+        "ctr": 0.03571428571428571,
+        "position": 19.535714285714285
+      },
+      {
+        "keys": [
+          "kfin ipo"
+        ],
+        "clicks": 1,
+        "impressions": 78,
+        "ctr": 0.01282051282051282,
+        "position": 7.961538461538462
+      },
+      {
+        "keys": [
+          "kfin technologies ipo"
+        ],
+        "clicks": 1,
+        "impressions": 121,
+        "ctr": 0.008264462809917356,
+        "position": 8.016528925619834
+      },
+      {
+        "keys": [
+          "kfintech ipo"
+        ],
+        "clicks": 1,
+        "impressions": 98,
+        "ctr": 0.01020408163265306,
+        "position": 9.081632653061224
+      },
+      {
+        "keys": [
+          "kfintech share price ipo"
+        ],
+        "clicks": 1,
+        "impressions": 67,
+        "ctr": 0.014925373134328358,
+        "position": 10.537313432835822
+      },
+      {
+        "keys": [
+          "tradewings solutions limited"
+        ],
+        "clicks": 1,
+        "impressions": 1,
+        "ctr": 1,
+        "position": 11
+      },
+      {
+        "keys": [
+          "vijit global securities"
+        ],
+        "clicks": 1,
+        "impressions": 3,
+        "ctr": 0.3333333333333333,
+        "position": 10.666666666666666
+      },
+      {
+        "keys": [
+          "\"axisamc.com\" -site:axisamc.com -site:axisbank.com -site:facebook.com -site:instagram.com -site:threads.com -site:threads.net -site:linkedin.com -site:x.com -site:twitter.com -site:tiktok.com -site:youtube.com -site:youtu.be -site:reddit.com -site:t.me -site:telegram.me -site:telegram.org -site:pinterest.com -site:vimeo.com"
+        ],
+        "clicks": 0,
+        "impressions": 10,
+        "ctr": 0,
+        "position": 1.8
+      },
+      {
+        "keys": [
+          "\"axisamc.net\" -site:axisamc.net -site:axisbank.com -site:facebook.com -site:instagram.com -site:threads.com -site:threads.net -site:linkedin.com -site:x.com -site:twitter.com -site:tiktok.com -site:youtube.com -site:youtu.be -site:reddit.com -site:t.me -site:telegram.me -site:telegram.org -site:pinterest.com -site:vimeo.com"
+        ],
+        "clicks": 0,
+        "impressions": 3,
+        "ctr": 0,
+        "position": 2.333333333333333
+      },
+      {
+        "keys": [
+          "\"unionamc.co.in\" -site:unionamc.co.in -site:unionmf.com -site:facebook.com -site:instagram.com -site:threads.com -site:threads.net -site:linkedin.com -site:x.com -site:twitter.com -site:tiktok.com -site:youtube.com -site:youtu.be -site:reddit.com -site:t.me -site:telegram.me -site:telegram.org -site:pinterest.com -site:vimeo.com"
+        ],
+        "clicks": 0,
+        "impressions": 3,
+        "ctr": 0,
+        "position": 4.666666666666666
+      },
+      {
+        "keys": [
+          "\"unionamc.com\" -site:unionamc.com -site:unionmf.com -site:facebook.com -site:instagram.com -site:threads.com -site:threads.net -site:linkedin.com -site:x.com -site:twitter.com -site:tiktok.com -site:youtube.com -site:youtu.be -site:reddit.com -site:t.me -site:telegram.me -site:telegram.org -site:pinterest.com -site:vimeo.com"
+        ],
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 2
+      },
+      {
+        "keys": [
+          "%ss retail ipo september 2026 price band gmp subscription"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 3
+      },
+      {
+        "keys": [
+          "(\"cdsl\" or \"central depository services\") and (\"nsdl\" or \"national securities depository\")"
+        ],
+        "clicks": 0,
+        "impressions": 3,
+        "ctr": 0,
+        "position": 8.666666666666668
+      },
+      {
+        "keys": [
+          "(\"global commodity conclave\" or \"gcc\" ) and (\"mcx\")"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 2
+      },
+      {
+        "keys": [
+          "(\"nippon india mutual fund\" or \"nippon mf\" or \"nippon india mf\" or \"nippon india amc\" or \"sundeep sikka\")"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 5
+      },
+      {
+        "keys": [
+          "(\"nsdl\" or \"national depository services limited\" or \"vijay chandok\" or \"mr. vijay chandok\") and (\"competitor\" or \"competitors\" or \"competition\" or \"rival\" or \"rivals\")"
+        ],
+        "clicks": 0,
+        "impressions": 13,
+        "ctr": 0,
+        "position": 8.153846153846153
+      },
+      {
+        "keys": [
+          "+ss retail ipo september 2026 price band gmp subscription"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 3
+      },
+      {
+        "keys": [
+          "100 best small cap stocks companies"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 31
+      },
+      {
+        "keys": [
+          "360 one mutual fund"
+        ],
+        "clicks": 0,
+        "impressions": 6,
+        "ctr": 0,
+        "position": 68
+      },
+      {
+        "keys": [
+          "a to z stock list in india"
+        ],
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 55
+      },
+      {
+        "keys": [
+          "a to z stock list with price"
+        ],
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 65.5
+      }
+    ]
+  },
+  "spot_checks": {
+    "https://www.brokerlens.in/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-09-30T00:48:53Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/brokers": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-09-12T05:19:54Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/sources": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/methodology": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-09-15T11:10:34Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/broker/zerodha/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/stock/20microns/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/etf/niftybees/": {
+      "coverageState": "URL is unknown to Google",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/calculators/sip-calculator/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/brokers-by/type/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/crypto/btc/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    }
+  }
+}
