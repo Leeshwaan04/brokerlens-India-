@@ -538,9 +538,18 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
     perf = compute_listing_performance(symbol, r.get("issue_price") or cut_off, equity_history)
     dec = compute_decision_framework(symbol, company, fin, perf)
 
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    b_end = r.get("bidding_end") or ""
+    b_start = r.get("bidding_start") or ""
     status = r.get("status", "Closed")
-    if perf.get("has_listing_data"):
+    if perf.get("has_listing_data") or r.get("listing_date"):
         status = "Listed"
+    elif b_end and b_end < today_iso:
+        status = "Closed"
+    elif b_start and b_start > today_iso:
+        status = "Forthcoming"
+    elif b_start and b_end and b_start <= today_iso <= b_end:
+        status = "Active"
 
     sec_type_label = "SME Emerge" if is_sme else "Mainboard Equity"
 
@@ -677,11 +686,27 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
 def render_enhanced_ipo_hub(records, equity_history, head_template, foot_template,
                             breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in"):
     """Renders the enhanced /ipo/ hub with real-time active, upcoming, and listed returns."""
-    active = [r for r in records if r.get("status") == "Active"]
-    forthcoming = [r for r in records if r.get("status") == "Forthcoming"]
-    
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    active = []
+    forthcoming = []
+    listed_candidates = []
+
+    for r in records:
+        status = r.get("status")
+        b_start = r.get("bidding_start") or ""
+        b_end = r.get("bidding_end") or ""
+        l_date = r.get("listing_date") or ""
+
+        if status in ("Listed", "Closed") or l_date or (b_end and b_end < today_iso):
+            listed_candidates.append(r)
+        elif status == "Active" or (b_start and b_end and b_start <= today_iso <= b_end):
+            active.append(r)
+        elif status == "Forthcoming" or (b_start and b_start > today_iso):
+            forthcoming.append(r)
+        else:
+            listed_candidates.append(r)
+
     # Process recently listed with performance
-    listed_candidates = [r for r in records if r.get("status") in ("Listed", "Closed") or r.get("listing_date")]
     listed_with_perf = []
     for r in listed_candidates:
         sym = r.get("symbol", "").upper()

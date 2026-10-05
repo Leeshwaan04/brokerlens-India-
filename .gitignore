@@ -18,6 +18,7 @@ site/*
 !site/news/
 !site/crypto/
 !site/index.html
+!site/404.html
 !site/manifest.json
 !site/robots.txt
 !site/favicon.ico

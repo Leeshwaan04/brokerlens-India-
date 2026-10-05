@@ -4070,6 +4070,19 @@ def _ipo_merge(ipo_data):
             "status": "Listed" if r.get("listing_date") else "Closed",
         })
 
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    for row in by_symbol.values():
+        b_end = row.get("bidding_end") or ""
+        b_start = row.get("bidding_start") or ""
+        if row.get("listing_date") or row.get("status") == "Listed":
+            row["status"] = "Listed"
+        elif b_end and b_end < today_iso:
+            row["status"] = "Closed"
+        elif b_start and b_start > today_iso:
+            row["status"] = "Forthcoming"
+        elif b_start and b_end and b_start <= today_iso <= b_end:
+            row["status"] = "Active"
+
     # A symbol seen only via current/upcoming (never in past) has no
     # security_type at all - those two feeds are already IPO-scoped by NSE,
     # so that's fine; a symbol seen only via past that isn't EQ/SME was

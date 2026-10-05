@@ -1,0 +1,54 @@
+name: Daily Market Ingest & Build Pipeline
+
+on:
+  schedule:
+    # 18:00 IST (UTC+5:30) = 12:30 UTC, Monday through Friday
+    - cron: "30 12 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pipeline-run
+  cancel-in-progress: false
+
+jobs:
+  ingest-and-build:
+    name: Run Ingest, Compute & Publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Full Pipeline (Fetch + Build)
+        env:
+          SITE_URL: "https://www.brokerlens.in"
+          PUBLISH_MODE: "production"
+          SEBI_MAX_PAGES: "100"
+        run: |
+          echo "Starting daily pipeline ingest at $(date)..."
+          python3 -m pipeline.run all
+
+      - name: Commit and Push Updated Data & Static Builds
+        run: |
+          git config --global user.name "BrokerLens Pipeline Bot"
+          git config --global user.email "bot@brokerlens.in"
+          
+          git add data/ site/
+          if git diff --staged --quiet; then
+            echo "No data changes detected. Working tree clean."
+          else
+            git commit -m "chore(pipeline): automated daily market ingest $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
+            git push origin main
+            echo "Changes pushed to main. Vercel deployment triggered automatically."
+          fi

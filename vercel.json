@@ -2,9 +2,7 @@
   "buildCommand": "bash scripts/vercel-build.sh",
   "outputDirectory": "site",
   "framework": null,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
+  "cleanUrls": true,
   "headers": [
     {
       "source": "/data/(.*)",
