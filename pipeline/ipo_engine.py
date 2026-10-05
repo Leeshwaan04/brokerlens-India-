@@ -758,13 +758,23 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
             dates = f"{r.get('bidding_start') or ''} to {r.get('bidding_end') or ''}".strip(" to")
             sub_val = r.get("times_subscribed")
             sub_str = f"{float(sub_val):.2f}x" if sub_val is not None else "Bidding Open"
+            if sub_val is not None:
+                sv = float(sub_val)
+                if sv >= 1.0:
+                    prob = max(1.0, min(100.0, (1.0 / sv) * 100.0))
+                    chance_html = f'<div class="xs faint" style="margin-top:2px">Allotment chance: <strong style="color:var(--accent)">~{prob:.1f}%</strong></div>'
+                else:
+                    chance_html = '<div class="xs faint" style="margin-top:2px">Allotment chance: <strong style="color:var(--green)">~100%</strong></div>'
+            else:
+                chance_html = '<div class="xs faint" style="margin-top:2px">Bidding in progress</div>'
+
             out += f"""
             <tr>
               <td><strong><a href="/ipo/{slug}/">{_esc(co)}</a></strong> <span class="xs faint">{_esc(sym)}</span></td>
               <td><span class="badge badge-up">Active Now</span></td>
               <td class="right num">{_esc(p_str)}</td>
               <td class="right small">{_esc(dates)}</td>
-              <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="{_esc(sym)}">{_esc(sub_str)}</td>
+              <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="{_esc(sym)}">{_esc(sub_str)}{chance_html}</td>
               <td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">RHP & Bidding &rarr;</a></td>
             </tr>
             """

@@ -725,6 +725,31 @@ export async function broker(id) {
       })), { height: 150, fmt: (v) => v.toFixed(0), labelW: 100 });
       draw(); registerRedraw(draw);
     }
+
+    const bIntra = document.getElementById('broker-intra-slider');
+    const bDel = document.getElementById('broker-del-slider');
+    const bIntraVal = document.getElementById('broker-intra-val');
+    const bDelVal = document.getElementById('broker-del-val');
+    const bTotalVal = document.getElementById('broker-total-val');
+    const bBreakdownVal = document.getElementById('broker-breakdown-val');
+    if (bIntra && bDel) {
+      const calcCharges = () => {
+        const iOrders = Number(bIntra.value);
+        const dOrders = Number(bDel.value);
+        if (bIntraVal) bIntraVal.textContent = String(iOrders);
+        if (bDelVal) bDelVal.textContent = String(dOrders);
+        const intraRate = 20;
+        const delRate = (cost.delivery && cost.delivery > 0) ? Math.min(20, Math.round(cost.delivery / 4)) : 0;
+        const brokerage = (iOrders * intraRate) + (dOrders * delRate);
+        const dpCharges = Math.round(dOrders * 15.34);
+        const total = brokerage + dpCharges;
+        if (bTotalVal) bTotalVal.textContent = '₹' + total.toLocaleString('en-IN');
+        if (bBreakdownVal) bBreakdownVal.textContent = `₹${brokerage.toLocaleString('en-IN')} brokerage + ₹${dpCharges.toLocaleString('en-IN')} DP`;
+      };
+      bIntra.addEventListener('input', calcCharges);
+      bDel.addEventListener('input', calcCharges);
+      calcCharges();
+    }
   });
 
   const shareOfMkt = c.market_share_pct;
@@ -743,7 +768,7 @@ export async function broker(id) {
       </div>
       <p class="muted small" style="margin-top:6px">
         ${esc(p.legal_name || '')}${p.sebi_reg_no ? ` · SEBI ${esc(p.sebi_reg_no)}` : ''}
-        ${p.legal_name_verified ? '' : ' · <span class="badge badge-warn">entity not yet matched to SEBI register</span>'}
+        ${p.legal_name_verified ? ' · <span class="badge badge-verified">SEBI Registered Intermediary ✓</span>' : ' · <span class="badge badge-warn">entity not yet matched to SEBI register</span>'}
       </p>
       <div class="row-wrap" style="margin-top:10px">
         ${safeUrl(p.website) ? `<a class="btn btn-sm" href="${safeUrl(p.website)}" rel="nofollow noopener external" target="_blank">Website ↗</a>` : ''}
@@ -869,6 +894,28 @@ export async function broker(id) {
             identical at every broker. <a href="/methodology" data-link>Basket definition</a></div>`
           : `<p class="small muted" style="margin-top:8px">This broker has not published verified pricing here yet, so we
              show nothing rather than guess. Check the broker's own website for current charges.</p>`}
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Interactive Monthly Cost Estimator</div>
+        <p class="xs faint" style="margin-top:4px">Estimate your personalized monthly trading expense based on your trade volume.</p>
+        <div style="margin-top:12px">
+          <div class="row-between small">
+            <span>Intraday trades / mo:</span>
+            <strong><span id="broker-intra-val">20</span></strong>
+          </div>
+          <input type="range" id="broker-intra-slider" min="0" max="100" value="20" step="5" style="width:100%;margin-top:4px">
+        </div>
+        <div style="margin-top:12px">
+          <div class="row-between small">
+            <span>Delivery trades / mo:</span>
+            <strong><span id="broker-del-val">5</span></strong>
+          </div>
+          <input type="range" id="broker-del-slider" min="0" max="50" value="5" step="1" style="width:100%;margin-top:4px">
+        </div>
+        <div class="stat" style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border)">
+          <div class="stat-value" id="broker-total-val">&#8377;477</div>
+          <div class="stat-sub" id="broker-breakdown-val">Estimated monthly brokerage + DP charges</div>
+        </div>
       </div>
     </div>
   </div>
