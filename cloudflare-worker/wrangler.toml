@@ -1,0 +1,7 @@
+name = "brokerlens-edge-router"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+[vars]
+CLOUD_RUN_ORIGIN = "https://brokerlens-web-649203501892.asia-south1.run.app"
+SITE_ORIGIN = "https://www.brokerlens.in"

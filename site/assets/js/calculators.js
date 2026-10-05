@@ -18,9 +18,23 @@ function pct(n, digits = 2) {
   return n.toFixed(digits) + '%';
 }
 
+function brokerCta() {
+  return `
+    <div style="grid-column:1/-1;margin-top:16px;padding:14px 18px;background:var(--bg-sub);border:1px solid var(--accent);border-radius:var(--r);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-weight:700;font-size:var(--fs-sm)">Invest with Zero Brokerage on Equity Delivery</div>
+        <div class="xs muted" style="margin-top:2px">Compare charges and open a verified Demat account with India's top SEBI-registered brokers.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="https://zerodha.com/open-account?c=ZMPXEU" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-primary btn-xs">Open on Zerodha &rarr;</a>
+        <a href="/compare/zerodha-vs-groww" class="btn btn-outline btn-xs">Compare Brokers &rarr;</a>
+      </div>
+    </div>`;
+}
+
 function showResult(html) {
   const out = document.getElementById('calc-result');
-  if (out) { out.innerHTML = html; out.hidden = false; }
+  if (out) { out.innerHTML = html + brokerCta(); out.hidden = false; }
 }
 
 function donut(l1, v1, l2, v2) {
