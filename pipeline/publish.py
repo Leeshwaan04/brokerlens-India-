@@ -6739,6 +6739,9 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
             price_target_entries.append(_xml_url(SITE_URL + u, today, "monthly"))
 
     # Helper to write partitioned sitemaps (sharding if > 45,000 URLs)
+    # CPO Crawl Budget Optimization: Cap programmatic matrix sitemaps to high-intent
+    # priority tiers (top liquid pairs) so Googlebot does not exhaust crawl budget on
+    # 145,000+ long-tail combinations.
     sub_sitemaps = [
         ("core", core_entries),
         ("brokers", broker_entries),
@@ -6748,13 +6751,13 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         ("registry", registry_entries),
         ("news", news_entries),
         ("crypto", crypto_entries),
-        ("trade-costs", trade_cost_entries),
+        ("trade-costs", trade_cost_entries[:2500]),
         ("ipo-apply", ipo_apply_entries),
         ("ipo-sub", ipo_sub_entries),
-        ("stock-compare", stock_compare_entries),
+        ("stock-compare", stock_compare_entries[:3000]),
         ("sip-calc", sip_calc_entries),
         ("branches", branch_entries),
-        ("fund-compare", fund_compare_entries),
+        ("fund-compare", fund_compare_entries[:2000]),
         ("price-targets", price_target_entries),
     ]
 

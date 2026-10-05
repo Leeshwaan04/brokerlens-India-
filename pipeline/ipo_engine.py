@@ -663,7 +663,15 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         + f'<a class="badge" href="/ipo/{slug}/apply-via-angel-one/" style="text-decoration:none;padding:6px 10px;background:var(--bg)">Apply on Angel One &rarr;</a>'
         + f'<a class="badge" href="/ipo/{slug}/apply-via-upstox/" style="text-decoration:none;padding:6px 10px;background:var(--bg)">Apply on Upstox &rarr;</a>'
         + f'<a class="badge" href="/ipo/{slug}/apply-via-dhan/" style="text-decoration:none;padding:6px 10px;background:var(--bg)">Apply on Dhan &rarr;</a>'
-        + f'<a class="badge" href="/ipo/allotment-status/" style="text-decoration:none;padding:6px 10px;background:var(--accent);color:#fff">Check Allotment Status Online &rarr;</a>'
+        + f'<div class="card" style="margin-top:20px;padding:20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
+        + f'<div class="section-title"><h2 style="margin:0;font-size:16px">Check Official {_esc(company)} Allotment Status Online</h2></div>'
+        + f'<p class="muted small" style="margin:4px 0 14px 0">Direct allotment search portals across India\'s primary registrar platforms (PAN / Application / DP Client ID):</p>'
+        + f'<div style="display:flex;flex-wrap:wrap;gap:8px">'
+        + f'<a class="btn btn-outline small" href="https://linkintime.co.in/initial_offer/public-issues.html" target="_blank" rel="noopener noreferrer">Link Intime &rarr;</a>'
+        + f'<a class="btn btn-outline small" href="https://kosmic.kfintech.com/ipostatus/" target="_blank" rel="noopener noreferrer">KFintech &rarr;</a>'
+        + f'<a class="btn btn-outline small" href="https://www.bigshareonline.com/ipo_Allotment.html" target="_blank" rel="noopener noreferrer">Bigshare Services &rarr;</a>'
+        + f'<a class="btn btn-outline small" href="https://www.skylinerta.com/ipo.php" target="_blank" rel="noopener noreferrer">Skyline RTA &rarr;</a>'
+        + f'<a class="btn btn-primary small" href="/ipo/allotment-status/">BrokerLens Allotment Guide &rarr;</a>'
         + f'</div></div>'
         + f'<div class="aff-block" style="margin-top:24px">'
         + f'<div class="section-title"><h2>Apply for IPOs online with top SEBI-registered brokers</h2></div>'
@@ -756,7 +764,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
               <td><span class="badge badge-up">Active Now</span></td>
               <td class="right num">{_esc(p_str)}</td>
               <td class="right small">{_esc(dates)}</td>
-              <td class="right num font-semibold" style="color:var(--accent)">{_esc(sub_str)}</td>
+              <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="{_esc(sym)}">{_esc(sub_str)}</td>
               <td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">RHP & Bidding &rarr;</a></td>
             </tr>
             """
@@ -933,7 +941,11 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         + '<a href="/ipo/how-to-apply/" class="btn btn-outline small">How to Apply via UPI & ASBA &rarr;</a>'
         + '<a href="/ipo/archive/" class="btn btn-outline small">Full IPO Historical Archive &rarr;</a>'
         + '</div>'
-        + '<div class="section-title" style="margin-top:24px"><h2>Currently Open for Bidding (Active IPOs)</h2></div>'
+        + '<div class="section-title" style="margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+        + '<h2>Currently Open for Bidding (Active IPOs)</h2>'
+        + '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);padding:4px 10px;border-radius:16px;font-size:12px;font-weight:600;color:#16a34a">'
+        + '<span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span>'
+        + 'Live Bidding Connected (Cloud Run)</div></div>'
         + render_active_table(active)
         + '<div class="section-title" style="margin-top:32px"><h2>Upcoming IPOs (Announced Dates & Price Bands)</h2></div>'
         + render_upcoming_table(forthcoming)
@@ -942,6 +954,26 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         + f'<p class="xs faint" style="margin-top:14px"><a href="/ipo/archive/">Browse the full historical archive ({len(records):,} IPOs since 2003) &rarr;</a></p>'
         + '<h2 style="margin-top:32px;font-size:18px">Frequently Asked Questions</h2>'
         + f'<div style="max-width:70ch">{faq_html}</div>'
+        + """
+        <script>
+        (function() {
+          const CLOUD_RUN_API = 'https://brokerlens-web-649203501892.asia-south1.run.app/api/ipo/live';
+          fetch(CLOUD_RUN_API)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              if (data && Array.isArray(data.active_bidding)) {
+                data.active_bidding.forEach(function(item) {
+                  const cell = document.querySelector('[data-ipo-demand="' + item.symbol + '"]');
+                  if (cell && item.demand_x) {
+                    cell.innerHTML = item.demand_x.toFixed(2) + 'x <span style="font-size:10px;background:#22c55e;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">LIVE</span>';
+                  }
+                });
+              }
+            })
+            .catch(function() {});
+        })();
+        </script>
+        """
     )
 
     body += foot_template % {
