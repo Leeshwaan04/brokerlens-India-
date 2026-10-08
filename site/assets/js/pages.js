@@ -170,6 +170,30 @@ function fivepaisaBanner() {
   </div>`;
 }
 
+const JIRAAF_LOGO_DATA_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMzIiPjwvc3ZnPg==';
+
+function jiraafBanner() {
+  return `<div class="aff-banner aff-banner-jiraaf">
+    <button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>
+    <span class="aff-tag">Sponsored</span>
+    <div class="aff-art aff-art-jiraaf">
+      <img src="/assets/img/partners/jiraaf.svg" width="120" height="32" alt="Jiraaf" style="display:block">
+    </div>
+    <div class="aff-body">
+      <h4>Earn up to 12-14% with high-yield bonds</h4>
+      <p class="xs muted">Curated corporate bonds &amp; fixed-income opportunities on Jiraaf.</p>
+      <ul class="aff-features">
+        <li>Up to 14% p.a. fixed yields</li>
+        <li>SEBI-regulated Online Bond Platform (OBPP)</li>
+        <li>Low minimum investment starting ₹10,000</li>
+      </ul>
+      <a class="aff-cta" href="https://www.jiraaf.com/app/signup?usoc=EZ4168" target="_blank" rel="noopener sponsored">Explore bonds →</a>
+      <div class="aff-fine">*T&amp;C apply. Investments in debt securities / bonds are subject to market risks; read all
+        related documents carefully before investing. Regulated by SEBI.</div>
+    </div>
+  </div>`;
+}
+
 function popularComparisonsWidget() {
   const pairs = [
     ['zerodha', 'groww', 'Zerodha vs Groww', 'Discount leader vs #1 active clients'],
@@ -386,6 +410,7 @@ export async function home() {
       ${adSlot(o, 'homepage rail')}
       ${affiliateBanner()}
       ${fivepaisaBanner()}
+      ${jiraafBanner()}
       ${popularComparisonsWidget()}
     </div>
   </div>
@@ -632,6 +657,7 @@ export async function brokers(params) {
     <div class="stack">
       ${affiliateBanner()}
       ${fivepaisaBanner()}
+      ${jiraafBanner()}
     </div>
   </div>`;
 }
@@ -1852,7 +1878,7 @@ export async function news(query) {
       cards.forEach((card) => {
         const cCat = card.getAttribute('data-category');
         const text = card.textContent.toLowerCase();
-        const matchesCat = cat === 'All' || cCat === cat;
+        const matchesCat = cat === 'All' || cCat === cat || (cat === 'Blog & Guide' && (cCat === 'Blog & Guide' || cCat === 'Investor Guide'));
         const matchesTerm = !term || text.includes(term);
         card.style.display = matchesCat && matchesTerm ? 'flex' : 'none';
       });

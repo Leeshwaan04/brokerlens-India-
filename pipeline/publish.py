@@ -2222,16 +2222,16 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                 '<div class="grid g-main" style="margin-top:16px">'
                 '<div class="card"><div class="card-title">Price history</div>'
                 '<div data-stock-chart data-symbol="%s"></div></div>'
-                '<div class="stack">%s%s%s%s</div></div>'
+                '<div class="stack">%s%s%s%s%s</div></div>'
                 % (_esc(slug), _stock_price_html(history), listing_html,
-                   affiliateBanner_html(), fivepaisaBanner_html())
+                   affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html())
                 if history else
                 listing_html
                 + '<div class="aff-block" style="margin-top:24px">'
-                  '<div class="section-title"><h2>Trade Indian equities with top brokers</h2></div>'
-                  '<p class="muted small" style="margin-top:4px">Open an account with verified SEBI-registered brokers offering Rs 0 delivery and Rs 20 intraday.</p>'
-                  '<div class="grid g2 aff-pair" style="margin-top:14px">%s%s</div></div>'
-                % (affiliateBanner_html(), fivepaisaBanner_html())
+                  '<div class="section-title"><h2>Trade Indian equities &amp; invest in high-yield bonds</h2></div>'
+                  '<p class="muted small" style="margin-top:4px">Open an account with verified SEBI-registered brokers and fixed-income platforms.</p>'
+                  '<div class="grid g3 aff-pair" style="margin-top:14px">%s%s%s</div></div>'
+                % (affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html())
               )
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L)%s.</p>'
               % (" and NSE's daily bhavcopy for price history" if history else "; price history was not available "
@@ -2443,10 +2443,10 @@ def _write_etf_pages(etfs, indices):
               'Live price and trading data are not carried on this page.</p>'
             + index_html
             + '<div class="aff-block" style="margin-top:24px">'
-              '<div class="section-title"><h2>Invest in ETFs with zero delivery brokerage</h2></div>'
-              '<p class="muted small" style="margin-top:4px">Trade equity, gold, and index ETFs at Rs 0 delivery brokerage with top discount brokers.</p>'
-              '<div class="grid g2 aff-pair" style="margin-top:14px">%s%s</div></div>'
-              % (affiliateBanner_html(), fivepaisaBanner_html())
+              '<div class="section-title"><h2>Invest in ETFs &amp; high-yield corporate bonds</h2></div>'
+              '<p class="muted small" style="margin-top:4px">Trade equity, gold ETFs, and high-yield corporate bonds with verified SEBI-registered partners.</p>'
+              '<div class="grid g3 aff-pair" style="margin-top:14px">%s%s%s</div></div>'
+              % (affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html())
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + etf_faq_html + '</div>'
         )
@@ -2621,10 +2621,10 @@ def _write_mutual_fund_pages(schemes):
             + '<p class="xs faint" style="margin-top:16px">Source: AMFI daily NAV master file. '
               'Historical NAV, returns and portfolio holdings are not carried on this page.</p>'
             + '<div class="aff-block" style="margin-top:24px">'
-              '<div class="section-title"><h2>Invest in direct mutual funds at zero commission</h2></div>'
-              '<p class="muted small" style="margin-top:4px">Save up to 1-1.5 percent each year in distributor commissions by investing in direct mutual fund plans.</p>'
-              '<div class="grid g2 aff-pair" style="margin-top:14px">%s%s</div></div>'
-              % (affiliateBanner_html(), fivepaisaBanner_html())
+              '<div class="section-title"><h2>Invest in direct mutual funds &amp; high-yield bonds</h2></div>'
+              '<p class="muted small" style="margin-top:4px">Save up to 1-1.5 percent each year in distributor commissions by investing in direct mutual fund plans, and diversify with high-yield fixed income.</p>'
+              '<div class="grid g3 aff-pair" style="margin-top:14px">%s%s%s</div></div>'
+              % (affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html())
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
         )
@@ -3792,6 +3792,36 @@ def fivepaisaBanner_html():
     ) % _FIVEPAISA_LOGO_DATA_URI
 
 
+_JIRAAF_LOGO_DATA_URI = "/assets/img/partners/jiraaf.svg"
+
+
+def jiraafBanner_html():
+    """Python port of pages.js's jiraafBanner() - high-yield corporate bonds
+    and fixed income sponsored banner on Jiraaf (SEBI-regulated OBPP), kept
+    byte-for-byte in sync with the JS version (same logo, same copy, same
+    .aff-banner-jiraaf styling) stacked beside/below Zerodha and 5paisa."""
+    return (
+        '<div class="aff-banner aff-banner-jiraaf">'
+        '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
+        '<span class="aff-tag">Sponsored</span>'
+        '<div class="aff-art aff-art-jiraaf">'
+        '<img src="%s" width="120" height="32" alt="Jiraaf" style="display:block"></div>'
+        '<div class="aff-body">'
+        '<h4>Earn up to 12-14% with high-yield bonds</h4>'
+        '<p class="xs muted">Curated corporate bonds &amp; fixed-income opportunities on Jiraaf.</p>'
+        '<ul class="aff-features">'
+        '<li>Up to 14% p.a. fixed yields</li>'
+        '<li>SEBI-regulated Online Bond Platform (OBPP)</li>'
+        '<li>Low minimum investment starting &#8377;10,000</li>'
+        '</ul>'
+        '<a class="aff-cta" href="https://www.jiraaf.com/app/signup?usoc=EZ4168" '
+        'target="_blank" rel="noopener sponsored">Explore bonds &rarr;</a>'
+        '<div class="aff-fine">*T&amp;C apply. Investments in debt securities / bonds are subject to market risks; '
+        'read all offer documents carefully before investing. Regulated by SEBI.</div>'
+        '</div></div>'
+    ) % _JIRAAF_LOGO_DATA_URI
+
+
 def _crypto_banner_html():
     """The Binance CTA - only ever rendered on /crypto/ pages, never beside
     Indian broker content (explicit standing rule; see the pages.js
@@ -4107,6 +4137,7 @@ def _write_ipo_pages(records, equity_history=None):
     written = 0
     aff_b = affiliateBanner_html()
     five_b = fivepaisaBanner_html()
+    jiraaf_b = jiraafBanner_html()
     for r in records:
         slug = r["symbol"].lower()
         body = render_full_ipo_page(
@@ -4116,6 +4147,7 @@ def _write_ipo_pages(records, equity_history=None):
             foot_template=_REGISTRY_PAGE_FOOT,
             affiliate_banner_html=aff_b,
             fivepaisa_banner_html=five_b,
+            jiraaf_banner_html=jiraaf_b,
             breadcrumb_fn=_breadcrumb,
             source_note_fn=_source_note,
             site_url=SITE_URL,
@@ -4627,7 +4659,7 @@ def _write_editorial_policy_page():
         '<div class="card" style="line-height:1.7">'
         '<p class="small muted" style="margin-top:0">'
         'To sustain our research infrastructure, engineering pipelines, and continuous data ingestion without charging subscription paywalls to retail investors, '
-        'BrokerLens participates in verified referral and affiliate partnerships with leading SEBI-registered brokers (including Zerodha and 5paisa).'
+        'BrokerLens participates in verified referral and affiliate partnerships with leading SEBI-registered brokers and fixed-income platforms (including Zerodha, 5paisa, and Jiraaf).'
         '</p>'
         '<p class="small muted">'
         '<strong>Strict Separation of Commerce and Analysis:</strong> All affiliate partnership links are isolated into clearly demarcated banner blocks '
@@ -5958,7 +5990,7 @@ def _write_brokers_page(overview):
         ),
         " &middot; ".join('<a href="/brokers-by/type/%s/">%s</a>' % (k.replace("_", "-"), _esc(v)) for k, v in TYPE_LABEL.items()),
         " &middot; ".join('<a href="/brokers-by/segment/%s/">%s</a>' % (k.replace("_", "-"), _esc(v)) for k, v in SEGMENT_LABEL.items()),
-        affiliateBanner_html(), fivepaisaBanner_html(),
+        affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html(),
     )
     body += _APP_SHELL_FOOT
     dest_dir = os.path.join(ROOT, "site", "brokers")
@@ -6349,12 +6381,12 @@ def _prerender_home(overview):
         '<div><div style="font-size:14px;font-weight:650;color:var(--text)">Explore all %d tracked brokers</div>'
         '<div class="xs muted">Compare active clients, market share, complaints and trading fees</div></div>'
         '<a class="btn btn-sm btn-primary link-arrow" href="/brokers" data-link>View all %d &rarr;</a></div></div>'
-        '<div class="stack" style="gap:16px">%s%s%s%s</div></div>'
+        '<div class="stack" style="gap:16px">%s%s%s%s%s</div></div>'
     ) % (
         "Largest brokers by active clients" if has_clients else "Brokers on the SEBI register",
         meta.get("broker_count", 0), table_head, "".join(home_row(b) for b in top),
         meta.get("broker_count", 0), meta.get("broker_count", 0),
-        _ad_slot_html(overview, "homepage rail"), affiliateBanner_html(), fivepaisaBanner_html(),
+        _ad_slot_html(overview, "homepage rail"), affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html(),
         _popular_comparisons_widget_html(),
     )
 
@@ -6738,10 +6770,8 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         for u in share_price_target_urls:
             price_target_entries.append(_xml_url(SITE_URL + u, today, "monthly"))
 
-    # Helper to write partitioned sitemaps (sharding if > 45,000 URLs)
-    # CPO Crawl Budget Optimization: Cap programmatic matrix sitemaps to high-intent
-    # priority tiers (top liquid pairs) so Googlebot does not exhaust crawl budget on
-    # 145,000+ long-tail combinations.
+    # Partitioned sitemaps automatically shard at CHUNK_LIMIT (45,000 URLs) into
+    # sitemap-<name>-1.xml, sitemap-<name>-2.xml, etc.
     sub_sitemaps = [
         ("core", core_entries),
         ("brokers", broker_entries),
@@ -6751,13 +6781,13 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         ("registry", registry_entries),
         ("news", news_entries),
         ("crypto", crypto_entries),
-        ("trade-costs", trade_cost_entries[:2500]),
+        ("trade-costs", trade_cost_entries),
         ("ipo-apply", ipo_apply_entries),
         ("ipo-sub", ipo_sub_entries),
-        ("stock-compare", stock_compare_entries[:3000]),
+        ("stock-compare", stock_compare_entries),
         ("sip-calc", sip_calc_entries),
         ("branches", branch_entries),
-        ("fund-compare", fund_compare_entries[:2000]),
+        ("fund-compare", fund_compare_entries),
         ("price-targets", price_target_entries),
     ]
 
