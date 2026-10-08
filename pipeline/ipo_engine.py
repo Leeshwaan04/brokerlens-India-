@@ -524,7 +524,8 @@ def render_lot_size_table(lot, p_high):
 
 def render_full_ipo_page(r, equity_history, head_template, foot_template,
                          affiliate_banner_html, fivepaisa_banner_html,
-                         breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in"):
+                         breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in",
+                         jiraaf_banner_html=""):
     """Renders institutional-grade /ipo/[slug]/ page."""
     symbol = r["symbol"].upper()
     company = r.get("company") or symbol
@@ -674,9 +675,9 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         + f'<a class="btn btn-primary small" href="/ipo/allotment-status/">BrokerLens Allotment Guide &rarr;</a>'
         + f'</div></div>'
         + f'<div class="aff-block" style="margin-top:24px">'
-        + f'<div class="section-title"><h2>Apply for IPOs online with top SEBI-registered brokers</h2></div>'
-        + f'<p class="muted small" style="margin-top:4px">Open a free Demat account in 5 minutes with India\'s leading brokers and submit your IPO bid seamlessly via UPI.</p>'
-        + f'<div class="grid g2 aff-pair" style="margin-top:14px">{affiliate_banner_html}{fivepaisa_banner_html}</div></div>'
+        + f'<div class="section-title"><h2>Apply for IPOs online &amp; invest in high-yield bonds</h2></div>'
+        + f'<p class="muted small" style="margin-top:4px">Open an account in 5 minutes with India\'s leading brokers and high-yield fixed income platforms.</p>'
+        + f'<div class="grid g3 aff-pair" style="margin-top:14px">{affiliate_banner_html}{fivepaisa_banner_html}{jiraaf_banner_html}</div></div>'
         + f'<h2 style="margin-top:28px;font-size:18px">Frequently Asked Questions</h2>'
         + f'<div style="max-width:70ch">{faq_html}</div>'
     )
@@ -955,7 +956,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         + '<h2>Currently Open for Bidding (Active IPOs)</h2>'
         + '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);padding:4px 10px;border-radius:16px;font-size:12px;font-weight:600;color:#16a34a">'
         + '<span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span>'
-        + 'Live Bidding Connected (Cloud Run)</div></div>'
+        + 'Live Bidding Connected</div></div>'
         + render_active_table(active)
         + '<div class="section-title" style="margin-top:32px"><h2>Upcoming IPOs (Announced Dates & Price Bands)</h2></div>'
         + render_upcoming_table(forthcoming)

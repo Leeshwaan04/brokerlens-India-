@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/assets/js/theme-init.js?v=0dec48e1b2"></script>
+<title>IPO Tracker: Live Subscription, Listing Gains, Upcoming &amp; Open IPOs | BrokerLens</title>
+<meta name="description" content="5 IPOs open for bidding, 0 upcoming, and real-time post-listing returns tracked from NSE&#x27;s public disclosures. Comprehensive RHP metrics and listing day gain analysis.">
+<link rel="canonical" href="https://www.brokerlens.in/ipo/">
+<meta name="theme-color" content="#2f4a8f">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/assets/css/app.css?v=fb5c8db63e">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrokerLens">
+<meta property="og:locale" content="en_IN">
+<meta property="og:url" content="https://www.brokerlens.in/ipo/">
+<meta property="og:title" content="IPO Tracker: Live Subscription, Listing Gains, Upcoming &amp; Open IPOs | BrokerLens">
+<meta property="og:description" content="5 IPOs open for bidding, 0 upcoming, and real-time post-listing returns tracked from NSE&#x27;s public disclosures. Comprehensive RHP metrics and listing day gain analysis.">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does BrokerLens show IPO grey market premium (GMP)?", "acceptedAnswer": {"@type": "Answer", "text": "No. GMP is an unregulated, off-exchange informal estimate with no regulatory oversight. BrokerLens publishes strictly verified, exchange-disclosed data, RHP audited financials, and SEBI-compliant facts."}}, {"@type": "Question", "name": "How are IPO listing gains and total returns computed on this page?", "acceptedAnswer": {"@type": "Answer", "text": "Listing gains are calculated using the opening trade price on the official exchange listing day versus the final offer cut-off issue price. Total returns track current market price (CMP) derived from official NSE closing candles against the IPO issue price."}}, {"@type": "Question", "name": "What is the difference between Mainboard and SME IPOs?", "acceptedAnswer": {"@type": "Answer", "text": "Mainboard IPOs list on the main exchange with larger issue sizes and retail application minimums around Rs 14,000 to Rs 15,000. SME IPOs list on NSE Emerge or BSE SME with minimum lot sizes calibrated to approximately Rs 1,00,000 to Rs 1,40,000."}}, {"@type": "Question", "name": "Does BrokerLens recommend applying to any IPO?", "acceptedAnswer": {"@type": "Answer", "text": "No. BrokerLens does not recommend any IPO, stock or broker. This page states public facts only; it is not investment advice, and BrokerLens is not a SEBI-registered investment adviser or research analyst."}}]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "BrokerLens", "item": "https://www.brokerlens.in/"}, {"@type": "ListItem", "position": 2, "name": "IPO"}]}]}</script>
+</head>
+<body>
+<header class="site"><div class="wrap nav">
+  <a class="brand" href="/">
+    <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" role="img" aria-label="BrokerLens">
+      <defs><clipPath id="bl-lens-reg"><circle cx="256" cy="256" r="143"/></clipPath></defs>
+      <g fill="none" stroke="var(--accent)" stroke-width="30" stroke-linecap="round">
+        <path d="M50 369 L84 359" opacity=".38"/><path d="M18 379 L30 375" opacity=".18"/>
+        <path d="M438 161 L470 149" opacity=".38"/><path d="M486 143 L496 140" opacity=".18"/>
+      </g>
+      <circle cx="256" cy="256" r="166" fill="none" stroke="var(--accent)" stroke-width="46"/>
+      <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="var(--up)"
+            stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-reg)"/>
+    </svg>
+    <span>BrokerLens</span>
+  </a>
+  <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
+          aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
+  <nav class="nav-links" id="navlinks">
+    <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
+    <a href="/compare">Compare</a>
+    <a href="/leaderboards">Movers</a>
+    <a href="/calculators/">Calculators</a>
+    <a href="/registry">SEBI registry</a>
+    <a href="/algo">Algo platforms</a>
+    <a href="/ipo/">IPO</a>
+    <a href="/news/">News &amp; Blogs</a>
+    <a href="/reports/state-of-indian-broking-2026/">Reports</a>
+    <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
+  </nav>
+  <button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+  <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
+</div>
+<div class="mega" id="mega-timings" hidden>
+  <div class="wrap">
+    <div id="mega-timings-body" class="mega-grid"><div class="small faint" style="padding:16px 0">Loading timings...</div></div>
+  </div>
+</div>
+<div class="mega" id="mega-markets" hidden>
+  <div class="wrap">
+    <div class="markets-list">
+      <a href="/brokers"><span>India</span><span class="badge badge-up">Live</span></a>
+      <a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>
+      <a href="/coming-soon/us"><span>US</span><span class="badge badge-warn">Coming soon</span></a>
+      <a href="/coming-soon/gcc"><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
+    </div>
+  </div>
+</div>
+</header>
+<div class="search-overlay" id="search-overlay" hidden>
+  <div class="search-modal" role="dialog" aria-modal="true" aria-label="Search BrokerLens">
+    <div class="search-input-row">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
+      <kbd class="search-esc">Esc</kbd>
+    </div>
+    <div id="search-results" class="search-results"></div>
+  </div>
+</div>
+<main class="wrap" style="padding-top:24px;padding-bottom:24px">
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">BrokerLens</a><span class="sep"> &rsaquo; </span><span aria-current="page">IPO</span></nav><h1 style="margin-top:0">IPO Tracker & Performance Hub</h1><p class="muted" style="max-width:75ch">Mainboard and SME IPOs tracked directly from official NSE disclosures and SEBI prospectuses: price bands, retail lot sizing, live bidding subscription, and verified post-listing gains. No grey market premium, no speculative recommendations &bull; <a href="/methodology" data-link>see methodology</a>.</p><div class="grid g4" style="margin:20px 0 24px 0;gap:12px"><div class="card" style="padding:14px;background:var(--bg-raised);border-left:3px solid var(--accent)"><div class="xs muted">Active for Bidding</div><div style="font-size:22px;font-weight:700;color:var(--accent);margin-top:4px">5 Issues Open</div><div class="xs faint">Live exchange bidding</div></div><div class="card" style="padding:14px;background:var(--bg-raised);border-left:3px solid var(--text-bright)"><div class="xs muted">Upcoming IPOs</div><div style="font-size:22px;font-weight:700;margin-top:4px">0 Forthcoming</div><div class="xs faint">Announced issue dates</div></div><div class="card" style="padding:14px;background:var(--bg-raised);border-left:3px solid var(--green)"><div class="xs muted">Tracked Listings</div><div style="font-size:22px;font-weight:700;color:var(--green);margin-top:4px">1,254 Total</div><div class="xs faint">Historical issues since 2003</div></div><div class="card" style="padding:14px;background:var(--bg-raised);border-left:3px solid var(--blue, #3b82f6)"><div class="xs muted">Allotment Tools</div><div style="font-size:16px;font-weight:700;margin-top:6px"><a href="/ipo/allotment-status/" style="text-decoration:none">Online Checker &rarr;</a></div><div class="xs faint">Registrar PAN lookup</div></div></div><div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px"><a href="/ipo/allotment-status/" class="btn btn-primary small">Check Allotment Status Online &rarr;</a><a href="/ipo/how-to-apply/" class="btn btn-outline small">How to Apply via UPI & ASBA &rarr;</a><a href="/ipo/archive/" class="btn btn-outline small">Full IPO Historical Archive &rarr;</a></div><div class="section-title" style="margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px"><h2>Currently Open for Bidding (Active IPOs)</h2><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);padding:4px 10px;border-radius:16px;font-size:12px;font-weight:600;color:#16a34a"><span style="width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block"></span>Live Bidding Connected</div></div>
+        <div class="table-scroll"><table class="data">
+          <thead>
+            <tr>
+              <th>Company & Symbol</th>
+              <th>Status</th>
+              <th class="right">Price Band</th>
+              <th class="right">Bidding Window</th>
+              <th class="right">Live Demand</th>
+              <th class="center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+        
+            <tr>
+              <td><strong><a href="/ipo/smcg04/">SMC Global Securities Limited</a></strong> <span class="xs faint">SMCG04</span></td>
+              <td><span class="badge badge-up">Active Now</span></td>
+              <td class="right num">Rs.1000</td>
+              <td class="right small">2026-10-05 to 2026-10-16</td>
+              <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="SMCG04">Bidding Open<div class="xs faint" style="margin-top:2px">Bidding in progress</div></td>
+              <td class="center"><a href="/ipo/smcg04/" class="btn btn-xs">RHP & Bidding &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/rkfal/">R.K. Fashion Accessories Limited</a></strong> <span class="xs faint">RKFAL</span></td>
+              <td><span class="badge badge-up">Active Now</span></td>
+              <td class="right num">Rs.77 to Rs.82</td>
+              <td class="right small">2026-10-05 to 2026-10-07</td>
+              <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="RKFAL">Bidding Open<div class="xs faint" style="margin-top:2px">Bidding in progress</div></td>
+              <td class="center"><a href="/ipo/rkfal/" class="btn btn-xs">RHP & Bidding &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/vnl/">Vishal Nirmiti Limited</a></strong> <span class="xs faint">VNL</span></td>
+              <td><span class="badge badge-up">Active Now</span></td>
+              <td class="right num">Rs.208 to Rs.220</td>
+              <td class="right small">2026-09-30 to 2026-10-05</td>
+              <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="VNL">0.44x<div class="xs faint" style="margin-top:2px">Allotment chance: <strong style="color:var(--green)">~100%</strong></div></td>
+              <td class="center"><a href="/ipo/vnl/" class="btn btn-xs">RHP & Bidding &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/nityas/">Nityas Gems and Jewellery Limited</a></strong> <span class="xs faint">NITYAS</span></td>
+              <td><span class="badge badge-up">Active Now</span></td>
+              <td class="right num">Rs.70 to Rs.75</td>
+              <td class="right small">2026-09-30 to 2026-10-05</td>
+              <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="NITYAS">0.43x<div class="xs faint" style="margin-top:2px">Allotment chance: <strong style="color:var(--green)">~100%</strong></div></td>
+              <td class="center"><a href="/ipo/nityas/" class="btn btn-xs">RHP & Bidding &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/eventions/">Eventions Limited</a></strong> <span class="xs faint">EVENTIONS</span></td>
+              <td><span class="badge badge-up">Active Now</span></td>
+              <td class="right num">Disclosed</td>
+              <td class="right small">2026-09-30 to 2026-10-05</td>
+              <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="EVENTIONS">1.75x<div class="xs faint" style="margin-top:2px">Allotment chance: <strong style="color:var(--accent)">~57.1%</strong></div></td>
+              <td class="center"><a href="/ipo/eventions/" class="btn btn-xs">RHP & Bidding &rarr;</a></td>
+            </tr>
+            </tbody></table></div><div class="section-title" style="margin-top:32px"><h2>Upcoming IPOs (Announced Dates & Price Bands)</h2></div><p class="small faint">No forthcoming IPOs are announced right now.</p><div class="section-title" style="margin-top:32px"><h2>Recently Listed IPOs: Listing Day Gains & Current Performance</h2></div>
+        <div class="table-scroll"><table class="data">
+          <thead>
+            <tr>
+              <th>Company & Symbol</th>
+              <th>Listing Date</th>
+              <th class="right">Issue Price</th>
+              <th class="right">Listing Day Open</th>
+              <th class="right">Listing Gain</th>
+              <th class="right">Current Price (CMP)</th>
+              <th class="right">Total Return</th>
+              <th class="center">Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+        
+            <tr>
+              <td><strong><a href="/ipo/aonesteels/">A-One Steels India Limited</a></strong> <span class="xs faint">AONESTEELS</span></td>
+              <td class="small">01 Oct 2026</td>
+              <td class="right num">Rs 405</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/aonesteels/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/moneyview/">Moneyview Limited</a></strong> <span class="xs faint">MONEYVIEW</span></td>
+              <td class="small">01 Oct 2026</td>
+              <td class="right num">Rs 34</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/moneyview/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/elevate/">Elevate Campuses Limited</a></strong> <span class="xs faint">ELEVATE</span></td>
+              <td class="small">30 Sep 2026</td>
+              <td class="right num">Rs 362</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/elevate/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/armee/">ArMee Infotech Limited</a></strong> <span class="xs faint">ARMEE</span></td>
+              <td class="small">30 Sep 2026</td>
+              <td class="right num">Rs 375</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/armee/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/corein/">Coreintegra Consulting Services Limited</a></strong> <span class="xs faint">COREIN</span></td>
+              <td class="small">30 Sep 2026</td>
+              <td class="right num">Rs 78</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/corein/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/poojalogis/">Pooja Logistics Limited</a></strong> <span class="xs faint">POOJALOGIS</span></td>
+              <td class="small">30 Sep 2026</td>
+              <td class="right num">Rs 115</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/poojalogis/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/varmora/">Varmora Granito Limited</a></strong> <span class="xs faint">VARMORA</span></td>
+              <td class="small">29 Sep 2026</td>
+              <td class="right num">Rs 148</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/varmora/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/shahinvest/">Shah Investor&#x27;s Home Limited</a></strong> <span class="xs faint">SHAHINVEST</span></td>
+              <td class="small">-</td>
+              <td class="right num">Rs.159 to Rs.167</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/shahinvest/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/srit/">Srit India Limited</a></strong> <span class="xs faint">SRIT</span></td>
+              <td class="small">-</td>
+              <td class="right num">Rs.123 to Rs.130</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/srit/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/orientcabl/">Orient Cables (India) Limited</a></strong> <span class="xs faint">ORIENTCABL</span></td>
+              <td class="small">-</td>
+              <td class="right num">Rs.258 to Rs.272</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/orientcabl/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/runwalentr/">Runwal Enterprises Limited</a></strong> <span class="xs faint">RUNWALENTR</span></td>
+              <td class="small">-</td>
+              <td class="right num">Rs.290 to Rs.302</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/runwalentr/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/german/">German Green Steel and Power Limited</a></strong> <span class="xs faint">GERMAN</span></td>
+              <td class="small">-</td>
+              <td class="right num">Rs.132 to Rs.139</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/german/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/acevector/">AceVector Limited</a></strong> <span class="xs faint">ACEVECTOR</span></td>
+              <td class="small">-</td>
+              <td class="right num">Rs.30 to Rs.32</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/acevector/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/himalayan/">Himalayan Solar Limited</a></strong> <span class="xs faint">HIMALAYAN</span></td>
+              <td class="small">-</td>
+              <td class="right num">Rs.98 to Rs.103</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/himalayan/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/bmisl/">Bench Mark Infotech Services Limited</a></strong> <span class="xs faint">BMISL</span></td>
+              <td class="small">-</td>
+              <td class="right num">Rs.104 to Rs.110</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/bmisl/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/axiomgas/">Axiom Gas Engineering Limited</a></strong> <span class="xs faint">AXIOMGAS</span></td>
+              <td class="small">25 Sep 2026</td>
+              <td class="right num">Rs 54</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/axiomgas/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/kheriaauto/">Kheria Autocomp Limited</a></strong> <span class="xs faint">KHERIAAUTO</span></td>
+              <td class="small">24 Sep 2026</td>
+              <td class="right num">Rs 101</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/kheriaauto/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/spectraa/">SpectraA Technology Solutions Limited</a></strong> <span class="xs faint">SPECTRAA</span></td>
+              <td class="small">24 Sep 2026</td>
+              <td class="right num">Rs 118</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/spectraa/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/heromotors/">Hero Motors Limited</a></strong> <span class="xs faint">HEROMOTORS</span></td>
+              <td class="small">23 Sep 2026</td>
+              <td class="right num">Rs 84</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/heromotors/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/ssretail/">SS Retail Limited</a></strong> <span class="xs faint">SSRETAIL</span></td>
+              <td class="small">23 Sep 2026</td>
+              <td class="right num">Rs 424</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/ssretail/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/nse/">National Stock Exchange of India Limited</a></strong> <span class="xs faint">NSE</span></td>
+              <td class="small">-</td>
+              <td class="right num">Rs.1700 to Rs.1785</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/nse/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/mpimanipal/">Manipal Payment and Identity Solutions Limited</a></strong> <span class="xs faint">MPIMANIPAL</span></td>
+              <td class="small">17 Sep 2026</td>
+              <td class="right num">Rs 339</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/mpimanipal/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/karamtara/">Karamtara Engineering Limited</a></strong> <span class="xs faint">KARAMTARA</span></td>
+              <td class="small">17 Sep 2026</td>
+              <td class="right num">Rs 254</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/karamtara/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/lccproject/">LCC Projects Limited</a></strong> <span class="xs faint">LCCPROJECT</span></td>
+              <td class="small">17 Sep 2026</td>
+              <td class="right num">Rs 146</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/lccproject/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/rentomojo/">Rentomojo Limited</a></strong> <span class="xs faint">RENTOMOJO</span></td>
+              <td class="small">17 Sep 2026</td>
+              <td class="right num">Rs 404</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/rentomojo/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/steamhouse/">Steamhouse India Limited</a></strong> <span class="xs faint">STEAMHOUSE</span></td>
+              <td class="small">17 Sep 2026</td>
+              <td class="right num">Rs 81</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/steamhouse/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/arcil/">Asset Reconstruction Company (India) Limited</a></strong> <span class="xs faint">ARCIL</span></td>
+              <td class="small">17 Sep 2026</td>
+              <td class="right num">Rs 139</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/arcil/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/vinod/">Vinod Texworld Limited</a></strong> <span class="xs faint">VINOD</span></td>
+              <td class="small">17 Sep 2026</td>
+              <td class="right num">Rs 94</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/vinod/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/glasswall/">Glass Wall Systems (India) Limited</a></strong> <span class="xs faint">GLASSWALL</span></td>
+              <td class="small">16 Sep 2026</td>
+              <td class="right num">Rs 182</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/glasswall/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/kanohar/">Kanohar Electricals Limited</a></strong> <span class="xs faint">KANOHAR</span></td>
+              <td class="small">16 Sep 2026</td>
+              <td class="right num">Rs 632</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/kanohar/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/prasolchem/">Prasol Chemicals Limited</a></strong> <span class="xs faint">PRASOLCHEM</span></td>
+              <td class="small">16 Sep 2026</td>
+              <td class="right num">Rs 676</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/prasolchem/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/pranav/">Pranav Constructions Limited</a></strong> <span class="xs faint">PRANAV</span></td>
+              <td class="small">15 Sep 2026</td>
+              <td class="right num">Rs 124</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/pranav/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/qualiance/">Qualiance International Limited</a></strong> <span class="xs faint">QUALIANCE</span></td>
+              <td class="small">11 Sep 2026</td>
+              <td class="right num">Rs 127</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/qualiance/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/dollex/">Dollex Agrotech Limited</a></strong> <span class="xs faint">DOLLEX</span></td>
+              <td class="small">11 Sep 2026</td>
+              <td class="right num">Rs 38</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/dollex/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/deepa/">Deepa Jewellers Limited</a></strong> <span class="xs faint">DEEPA</span></td>
+              <td class="small">08 Sep 2026</td>
+              <td class="right num">Rs 177</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/deepa/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/perniaspop/">Purple Style Labs Limited</a></strong> <span class="xs faint">PERNIASPOP</span></td>
+              <td class="small">07 Sep 2026</td>
+              <td class="right num">Rs 575</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/perniaspop/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/ashutosh/">Ashutosh Fibre Limited</a></strong> <span class="xs faint">ASHUTOSH</span></td>
+              <td class="small">07 Sep 2026</td>
+              <td class="right num">Rs 92</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/ashutosh/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/shantiinor/">Shanti Inorganics Limited</a></strong> <span class="xs faint">SHANTIINOR</span></td>
+              <td class="small">07 Sep 2026</td>
+              <td class="right num">Rs 83</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/shantiinor/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/esds/">ESDS Software Solution Limited</a></strong> <span class="xs faint">ESDS</span></td>
+              <td class="small">04 Sep 2026</td>
+              <td class="right num">Rs 429</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/esds/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            
+            <tr>
+              <td><strong><a href="/ipo/lumino/">Lumino Industries Limited</a></strong> <span class="xs faint">LUMINO</span></td>
+              <td class="small">03 Sep 2026</td>
+              <td class="right num">Rs 82</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="right num">-</td>
+              <td class="center"><a href="/ipo/lumino/" class="btn btn-xs">View &rarr;</a></td>
+            </tr>
+            </tbody></table></div><p class="xs faint" style="margin-top:14px"><a href="/ipo/archive/">Browse the full historical archive (1,254 IPOs since 2003) &rarr;</a></p><h2 style="margin-top:32px;font-size:18px">Frequently Asked Questions</h2><div style="max-width:70ch"><details class="faq-item"><summary>Does BrokerLens show IPO grey market premium (GMP)?</summary><p>No. GMP is an unregulated, off-exchange informal estimate with no regulatory oversight. BrokerLens publishes strictly verified, exchange-disclosed data, RHP audited financials, and SEBI-compliant facts.</p></details><details class="faq-item"><summary>How are IPO listing gains and total returns computed on this page?</summary><p>Listing gains are calculated using the opening trade price on the official exchange listing day versus the final offer cut-off issue price. Total returns track current market price (CMP) derived from official NSE closing candles against the IPO issue price.</p></details><details class="faq-item"><summary>What is the difference between Mainboard and SME IPOs?</summary><p>Mainboard IPOs list on the main exchange with larger issue sizes and retail application minimums around Rs 14,000 to Rs 15,000. SME IPOs list on NSE Emerge or BSE SME with minimum lot sizes calibrated to approximately Rs 1,00,000 to Rs 1,40,000.</p></details><details class="faq-item"><summary>Does BrokerLens recommend applying to any IPO?</summary><p>No. BrokerLens does not recommend any IPO, stock or broker. This page states public facts only; it is not investment advice, and BrokerLens is not a SEBI-registered investment adviser or research analyst.</p></details></div>
+        <script>
+        (function() {
+          const CLOUD_RUN_API = 'https://brokerlens-web-649203501892.asia-south1.run.app/api/ipo/live';
+          fetch(CLOUD_RUN_API)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              if (data && Array.isArray(data.active_bidding)) {
+                data.active_bidding.forEach(function(item) {
+                  const cell = document.querySelector('[data-ipo-demand="' + item.symbol + '"]');
+                  if (cell && item.demand_x) {
+                    cell.innerHTML = item.demand_x.toFixed(2) + 'x <span style="font-size:10px;background:#22c55e;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;vertical-align:middle">LIVE</span>';
+                  }
+                });
+              }
+            })
+            .catch(function() {});
+        })();
+        </script>
+        </main>
+<footer class="site"><div class="wrap">
+  <p class="small muted" style="max-width:70ch">This page's price bands, dates, subscription figures, and listing performance facts are NSE's own public-issue disclosures. It is not curated, scored or ranked, and nothing on it is investment advice. BrokerLens is not a SEBI-registered investment adviser or research analyst.</p>
+  <p class="small"><a href="/news/">Market News, Blogs &amp; Research →</a> ·
+  <a href="/registry">Search the full SEBI registry →</a> ·
+  <a href="/brokers">Brokers tracked in depth →</a> ·
+  <a href="/brokers-by/type/">Brokers by type →</a> ·
+  <a href="/brokers-by/segment/">Brokers by segment →</a> ·
+  <a href="/brokers-by/city/">Brokers by city →</a> ·
+  <a href="/stocks/">Browse stocks A-Z →</a> ·
+  <a href="/funds-by/">Browse mutual funds by AMC →</a> ·
+  <a href="/etfs/">Browse ETFs →</a> · <a href="/ipo/">IPO tracker →</a> · <a href="/">BrokerLens home →</a></p>
+  <p class="small"><a href="/about">About</a> · <a href="/editorial-policy">Editorial policy</a> · <a href="/contact">Contact</a> ·
+  <a href="mailto:letmeknow@brokerlens.in">letmeknow@brokerlens.in</a> · <a href="/privacy-policy">Privacy policy</a> ·
+  <a href="/terms-of-service">Terms of service</a></p>
+</div></footer>
+<script type="module" src="/assets/js/nav-widgets.js?v=7a44d55fb7"></script>
+<script type="module" src="/assets/js/search.js?v=e132f83c08"></script>
+</body>
+</html>

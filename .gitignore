@@ -28,6 +28,8 @@ site/*
 !site/_headers
 !site/_redirects
 !site/vercel.json
+!site/sitemap.xml
+!site/sitemaps/
 
 # Personal data. Leads are DPDP-regulated and must never reach a repo.
 data/leads/

@@ -1,0 +1,5 @@
+{
+  "git.autorefresh": false,
+  "git.untrackedChanges": "hidden",
+  "git.statusLimit": 1000
+}
