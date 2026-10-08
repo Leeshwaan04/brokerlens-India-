@@ -3805,7 +3805,7 @@ def jiraafBanner_html():
         '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
         '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-jiraaf">'
-        '<img src="%s" width="120" height="32" alt="Jiraaf" style="display:block"></div>'
+        f'<img src="{_JIRAAF_LOGO_DATA_URI}" width="120" height="32" alt="Jiraaf" style="display:block"></div>'
         '<div class="aff-body">'
         '<h4>Earn up to 12-14% with high-yield bonds</h4>'
         '<p class="xs muted">Curated corporate bonds &amp; fixed-income opportunities on Jiraaf.</p>'
@@ -3819,7 +3819,7 @@ def jiraafBanner_html():
         '<div class="aff-fine">*T&amp;C apply. Investments in debt securities / bonds are subject to market risks; '
         'read all offer documents carefully before investing. Regulated by SEBI.</div>'
         '</div></div>'
-    ) % _JIRAAF_LOGO_DATA_URI
+    )
 
 
 def _crypto_banner_html():
