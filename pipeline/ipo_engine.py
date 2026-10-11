@@ -524,7 +524,8 @@ def render_lot_size_table(lot, p_high):
 
 def render_full_ipo_page(r, equity_history, head_template, foot_template,
                          affiliate_banner_html, fivepaisa_banner_html,
-                         breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in"):
+                         breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in",
+                         jiraaf_banner_html=""):
     """Renders institutional-grade /ipo/[slug]/ page."""
     symbol = r["symbol"].upper()
     company = r.get("company") or symbol
@@ -676,7 +677,7 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         + f'<div class="aff-block" style="margin-top:24px">'
         + f'<div class="section-title"><h2>Apply for IPOs online with top SEBI-registered brokers</h2></div>'
         + f'<p class="muted small" style="margin-top:4px">Open a free Demat account in 5 minutes with India\'s leading brokers and submit your IPO bid seamlessly via UPI.</p>'
-        + f'<div class="grid g2 aff-pair" style="margin-top:14px">{affiliate_banner_html}{fivepaisa_banner_html}</div></div>'
+        + f'<div class="grid g3 aff-pair" style="margin-top:14px">{affiliate_banner_html}{fivepaisa_banner_html}{jiraaf_banner_html}</div></div>'
         + f'<h2 style="margin-top:28px;font-size:18px">Frequently Asked Questions</h2>'
         + f'<div style="max-width:70ch">{faq_html}</div>'
     )
