@@ -5954,7 +5954,7 @@ def _write_brokers_page(overview):
         '<thead><tr>%s</tr></thead><tbody id="dir-body">%s</tbody></table></div>'
         '<p class="xs faint" style="margin-top:10px">%s</p>'
         '<p class="xs faint" style="margin-top:6px">Dedicated category pages: %s &nbsp;|&nbsp; %s</p>'
-        '</div><div class="stack">%s%s</div></div>'
+        '</div><div class="stack">%s%s%s</div></div>'
     ) % (
         meta.get("broker_count", 0), _full_html(overview.get("registry_count")),
         "".join('<button class="chip" data-filter="type:%s">%s</button>' % (_esc(k), _esc(v)) for k, v in TYPE_LABEL.items()),
