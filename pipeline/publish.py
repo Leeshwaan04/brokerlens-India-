@@ -6854,6 +6854,15 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
                 % (SITE_URL, filename, today)
             )
 
+    # Drop sitemap shards this run did not write. An engine that now emits zero
+    # URLs (e.g. retired share-price-target pages) would otherwise leave last
+    # run's file on disk and tracked in git, still advertising URLs that
+    # redirect or are noindex.
+    written = {e.split("/sitemaps/")[1].split("<")[0] for e in sitemap_index_entries}
+    for fn in os.listdir(sitemaps_dir):
+        if fn.startswith("sitemap-") and fn.endswith(".xml") and fn not in written:
+            os.remove(os.path.join(sitemaps_dir, fn))
+
     # Write root sitemap.xml as standard <sitemapindex>
     index_xml = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
