@@ -178,15 +178,27 @@ def calculate_stock_metrics(history, default_name=""):
         "return_1y": round(ret_1y, 2),
         "volatility_30d": round(vol_annual, 2),
         "avg_volume": int(avg_vol),
-        "range_pct": round(range_pct, 1)
+        "range_pct": round(range_pct, 1),
+        "window_days": len(closes),
     }
+
+
+def _range_window_label(window_days):
+    """52-Week is only accurate with >= 1 year of daily closes; below that,
+    label the actual window so the figure isn't claimed to cover a year of
+    trading it doesn't have."""
+    return "52-Week" if window_days >= 252 else f"{window_days}-Day"
+
+
+def _return_window_label(window_days):
+    return "1-Year" if window_days >= 252 else f"{window_days}-Day"
 
 
 def render_comparison_hub(all_pairs, site_url="https://www.brokerlens.in"):
     """Renders /compare/stocks/ master hub."""
     canonical = f"{site_url}/compare/stocks/"
     title = "Compare Indian Stocks Side by Side: Head-to-Head Peer Comparison | BrokerLens"
-    desc = "Compare top NSE stocks head to head on price, 52-week range, 1-year returns, 30-day volatility, delivery liquidity, and statutory trading costs across top sectors."
+    desc = "Compare top NSE stocks head to head on price, historical high/low range, period returns, 30-day volatility, delivery liquidity, and statutory trading costs across top sectors."
 
     sector_sections = []
     for sector_name, pairs in all_pairs.items():
@@ -241,7 +253,7 @@ def render_comparison_hub(all_pairs, site_url="https://www.brokerlens.in"):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>
 </head>
 <body>
@@ -262,7 +274,7 @@ def render_comparison_hub(all_pairs, site_url="https://www.brokerlens.in"):
 
 <h1 style="margin:20px 0 8px 0;font-size:28px">Compare Indian Stocks Side by Side</h1>
 <p class="muted" style="max-width:75ch;margin:0 0 32px 0;line-height:1.6">
-  Direct head-to-head peer comparisons of top NSE-listed companies. Evaluate price performance, 52-week high/low boundaries, annual returns, trading volatility, and statutory brokerage costs across key industry sectors.
+  Direct head-to-head peer comparisons of top NSE-listed companies. Evaluate price performance, historical high/low boundaries, period returns, trading volatility, and statutory brokerage costs across key industry sectors.
 </p>
 
 {''.join(sector_sections)}
@@ -276,21 +288,31 @@ def render_comparison_hub(all_pairs, site_url="https://www.brokerlens.in"):
 </html>"""
 
 
-def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://www.brokerlens.in"):
-    """Renders /compare/stocks/[sym1]-vs-[sym2]/."""
+def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://www.brokerlens.in", noindex=False):
+    """Renders /compare/stocks/[sym1]-vs-[sym2]/.
+
+    noindex=True marks the random "all-pairs" universe combinations (no
+    curated sector relationship) as noindex,follow: the page still exists
+    and works for a direct visit, but is excluded from search results
+    rather than being submitted at scale as near-duplicate thin content."""
     sym1, sym2 = s1["symbol"], s2["symbol"]
     name1, name2 = s1["name"], s2["name"]
     slug = f"{_stock_slug(sym1)}-vs-{_stock_slug(sym2)}"
 
+    window_days = min(m1["window_days"], m2["window_days"])
+    range_label = _range_window_label(window_days)
+    return_label = _return_window_label(window_days)
+    return_period = "the past 12 months" if window_days >= 252 else f"the last {window_days} trading days"
+
     canonical = f"{site_url}/compare/stocks/{slug}/"
     title = f"{sym1} vs {sym2}: Stock Comparison, Price, Returns & Volatility | BrokerLens"
-    desc = f"Compare {sym1} ({name1}) vs {sym2} ({name2}) head to head. 52-week range, 1-year returns ({m1['return_1y']}% vs {m2['return_1y']}%), volatility, volume, and brokerage costs."
+    desc = f"Compare {sym1} ({name1}) vs {sym2} ({name2}) head to head. {range_label} range, {return_label.lower()} returns ({m1['return_1y']}% vs {m2['return_1y']}%), volatility, volume, and brokerage costs."
 
-    # Compare 1y returns winner
+    # Compare returns winner
     if m1["return_1y"] > m2["return_1y"]:
-        ret_verdict = f"{sym1} has outperformed {sym2} over the past 12 months with a gain of {m1['return_1y']}% compared to {m2['return_1y']}%."
+        ret_verdict = f"{sym1} has outperformed {sym2} over {return_period} with a gain of {m1['return_1y']}% compared to {m2['return_1y']}%."
     else:
-        ret_verdict = f"{sym2} has outperformed {sym1} over the past 12 months with a gain of {m2['return_1y']}% compared to {m1['return_1y']}%."
+        ret_verdict = f"{sym2} has outperformed {sym1} over {return_period} with a gain of {m2['return_1y']}% compared to {m1['return_1y']}%."
 
     # Compare volatility
     if m1["volatility_30d"] < m2["volatility_30d"]:
@@ -300,15 +322,23 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 
     crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/compare">Compare</a></li><li class="muted">/</li><li><a href="/compare/stocks/">Stocks</a></li><li class="muted">/</li><li class="muted">{sym1} vs {sym2}</li></ol></nav>'
 
+    is_real_sector_pair = sector_name != "Cross-Sector Peers"
+    sector_faq = (
+        (f"Are {sym1} and {sym2} direct sector competitors?",
+         f"Yes, both companies operate within the {sector_name} sector in India.")
+        if is_real_sector_pair else
+        (f"Are {sym1} and {sym2} direct sector competitors?",
+         f"Not necessarily. This is a broad cross-sector comparison between two of NSE's higher-volume stocks, not a curated sector-peer pairing; check each company's own sector/industry classification on its stock profile before treating them as direct competitors.")
+    )
+
     faqs = [
-        (f"Between {sym1} and {sym2}, which stock gave better returns over the last year?",
+        (f"Between {sym1} and {sym2}, which stock gave better returns over {return_period}?",
          f"{ret_verdict}"),
         (f"Which stock is less volatile: {sym1} or {sym2}?",
          f"{vol_verdict} Lower volatility generally indicates steadier price action during market downturns."),
         (f"What is the statutory cost to buy ₹1,00,000 of {sym1} vs {sym2}?",
          f"Statutory exchange and government charges (STT, NSE turnover fees, SEBI fee, Stamp duty, and GST) are identical for delivery purchases of equal rupee value across both stocks, totaling approximately ₹118.50 on discount brokers offering zero delivery brokerage (like Zerodha or Dhan)."),
-        (f"Are {sym1} and {sym2} direct sector competitors?",
-         f"Yes, both companies operate within the {sector_name} sector in India and are actively tracked as sector peers by institutional and retail market participants.")
+        sector_faq,
     ]
 
     faq_html = "".join(f'<details class="faq-item"><summary>{_esc(q)}</summary><p>{_esc(a)}</p></details>' for q, a in faqs)
@@ -348,8 +378,9 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
+{'<meta name="robots" content="noindex, follow">' if noindex else ''}
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>
 </head>
 <body>
@@ -370,7 +401,7 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 
 <h1 style="margin:20px 0 8px 0;font-size:26px">{sym1} vs {sym2}: Stock Comparison</h1>
 <p class="muted" style="max-width:75ch;margin:0 0 28px 0;line-height:1.6">
-  Head-to-head financial and trading comparison between <strong>{name1}</strong> ({sym1}) and <strong>{name2}</strong> ({sym2}) in the {sector_name} sector.
+  Head-to-head financial and trading comparison between <strong>{name1}</strong> ({sym1}) and <strong>{name2}</strong> ({sym2}){f" in the {sector_name} sector" if is_real_sector_pair else ""}.
 </p>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px">
@@ -382,11 +413,11 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
     <div class="xs muted" style="margin-bottom:14px">{_esc(name1)}</div>
     <div style="font-size:24px;font-weight:700;margin-bottom:6px">₹{m1['cmp']:,.2f}</div>
     <div class="xs" style="color:{'var(--green)' if m1['return_1y'] >= 0 else 'var(--red)'};margin-bottom:16px">
-      1Y Return: <strong>{'+' if m1['return_1y'] > 0 else ''}{m1['return_1y']}%</strong>
+      {return_label} Return: <strong>{'+' if m1['return_1y'] > 0 else ''}{m1['return_1y']}%</strong>
     </div>
     <div style="font-size:13px;line-height:1.6">
-      <div>52W High: <strong>₹{m1['high_52w']:,.2f}</strong></div>
-      <div>52W Low: <strong>₹{m1['low_52w']:,.2f}</strong></div>
+      <div>{range_label} High: <strong>₹{m1['high_52w']:,.2f}</strong></div>
+      <div>{range_label} Low: <strong>₹{m1['low_52w']:,.2f}</strong></div>
       <div>Annual Volatility: <strong>{m1['volatility_30d']}%</strong></div>
     </div>
     <a href="/broker/zerodha/trade/{sym1.lower()}/" class="btn btn-outline small" style="margin-top:14px;width:100%;text-align:center">Check {sym1} Trade Fees &rarr;</a>
@@ -400,11 +431,11 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
     <div class="xs muted" style="margin-bottom:14px">{_esc(name2)}</div>
     <div style="font-size:24px;font-weight:700;margin-bottom:6px">₹{m2['cmp']:,.2f}</div>
     <div class="xs" style="color:{'var(--green)' if m2['return_1y'] >= 0 else 'var(--red)'};margin-bottom:16px">
-      1Y Return: <strong>{'+' if m2['return_1y'] > 0 else ''}{m2['return_1y']}%</strong>
+      {return_label} Return: <strong>{'+' if m2['return_1y'] > 0 else ''}{m2['return_1y']}%</strong>
     </div>
     <div style="font-size:13px;line-height:1.6">
-      <div>52W High: <strong>₹{m2['high_52w']:,.2f}</strong></div>
-      <div>52W Low: <strong>₹{m2['low_52w']:,.2f}</strong></div>
+      <div>{range_label} High: <strong>₹{m2['high_52w']:,.2f}</strong></div>
+      <div>{range_label} Low: <strong>₹{m2['low_52w']:,.2f}</strong></div>
       <div>Annual Volatility: <strong>{m2['volatility_30d']}%</strong></div>
     </div>
     <a href="/broker/zerodha/trade/{sym2.lower()}/" class="btn btn-outline small" style="margin-top:14px;width:100%;text-align:center">Check {sym2} Trade Fees &rarr;</a>
@@ -423,25 +454,25 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
           <td><strong>Current Market Price (CMP)</strong></td>
           <td class="right num">₹{m1['cmp']:,.2f}</td>
           <td class="right num">₹{m2['cmp']:,.2f}</td>
-          <td class="muted">&mdash;</td>
+          <td class="muted">N/A</td>
         </tr>
         <tr>
-          <td><strong>1-Year Price Return</strong></td>
+          <td><strong>{return_label} Price Return</strong></td>
           <td class="right num" style="color:{'var(--green)' if m1['return_1y'] >= 0 else 'var(--red)'}">{'+' if m1['return_1y'] > 0 else ''}{m1['return_1y']}%</td>
           <td class="right num" style="color:{'var(--green)' if m2['return_1y'] >= 0 else 'var(--red)'}">{'+' if m2['return_1y'] > 0 else ''}{m2['return_1y']}%</td>
           <td><strong>{sym1 if m1['return_1y'] > m2['return_1y'] else sym2}</strong> ({abs(m1['return_1y'] - m2['return_1y']):.2f}% higher)</td>
         </tr>
         <tr>
-          <td><strong>52-Week High</strong></td>
+          <td><strong>{range_label} High</strong></td>
           <td class="right num">₹{m1['high_52w']:,.2f}</td>
           <td class="right num">₹{m2['high_52w']:,.2f}</td>
-          <td class="muted">&mdash;</td>
+          <td class="muted">N/A</td>
         </tr>
         <tr>
-          <td><strong>52-Week Low</strong></td>
+          <td><strong>{range_label} Low</strong></td>
           <td class="right num">₹{m1['low_52w']:,.2f}</td>
           <td class="right num">₹{m2['low_52w']:,.2f}</td>
-          <td class="muted">&mdash;</td>
+          <td class="muted">N/A</td>
         </tr>
         <tr>
           <td><strong>30-Day Annualized Volatility</strong></td>
@@ -504,6 +535,7 @@ def build_stock_compare_suite(site_url="https://www.brokerlens.in", universe_top
 
     all_pairs_by_sector = {}
     generated_urls = []
+    search_entries = []  # curated (real sector-peer) pairs only - never the noindex all-pairs
     emitted_slugs = set()  # track slugs to avoid duplicates across phases
 
     out_base_dir = os.path.join(SITE_DIR, "compare", "stocks")
@@ -547,6 +579,7 @@ def build_stock_compare_suite(site_url="https://www.brokerlens.in", universe_top
                 url_path = f"/compare/stocks/{slug}/"
                 generated_urls.append(url_path)
                 sector_pairs.append({"sym1": sym1, "sym2": sym2, "url": url_path})
+                search_entries.append([f"{sym1} vs {sym2}", url_path, sector_name])
                 sector_pairs_count += 1
 
         all_pairs_by_sector[sector_name] = sector_pairs
@@ -599,12 +632,15 @@ def build_stock_compare_suite(site_url="https://www.brokerlens.in", universe_top
             page_dir = os.path.join(out_base_dir, slug)
             os.makedirs(page_dir, exist_ok=True)
 
-            page_html = render_stock_comparison_page(c1, m1, c2, m2, cross_sector_label, site_url=site_url)
+            page_html = render_stock_comparison_page(c1, m1, c2, m2, cross_sector_label, site_url=site_url, noindex=True)
             with open(os.path.join(page_dir, "index.html"), "w", encoding="utf-8") as out:
                 out.write(page_html)
 
-            url_path = f"/compare/stocks/{slug}/"
-            generated_urls.append(url_path)
+            # Random (non-curated) all-pairs combinations are written to disk and
+            # remain reachable, but are noindex (see render_stock_comparison_page)
+            # and deliberately left out of generated_urls/the sitemap: submitting
+            # ~125K near-duplicate-template pages is the "scaled content abuse"
+            # pattern Google's spam policy targets, regardless of data accuracy.
             universe_pairs_count += 1
 
         # Progress log every 50 symbols
@@ -621,11 +657,16 @@ def build_stock_compare_suite(site_url="https://www.brokerlens.in", universe_top
         out.write(hub_html)
     generated_urls.append("/compare/stocks/")
 
-    total = sector_pairs_count + universe_pairs_count
-    print(f"[stock_compare_engine] TOTAL: {len(generated_urls)} pages ({sector_pairs_count} sector + {universe_pairs_count} universe + 1 hub)")
-    return generated_urls
+    total = sector_pairs_count + universe_pairs_count + 1
+    print(
+        f"[stock_compare_engine] TOTAL: {total} pages written "
+        f"({sector_pairs_count} sector + {universe_pairs_count} universe + 1 hub); "
+        f"{len(generated_urls)} submitted to the sitemap (universe all-pairs are noindex, "
+        f"written to disk but not submitted)"
+    )
+    return generated_urls, search_entries
 
 
 if __name__ == "__main__":
-    urls = build_stock_compare_suite()
+    urls, _search_entries = build_stock_compare_suite()
     print(f"Generated {len(urls)} pages.")

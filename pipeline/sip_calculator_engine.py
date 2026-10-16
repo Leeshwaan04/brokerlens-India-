@@ -149,7 +149,7 @@ def render_sip_scenario_page(amount: int, years: int, site_url="https://www.brok
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>
 </head>
 <body>
@@ -354,7 +354,7 @@ def render_sip_hub(all_scenarios, site_url="https://www.brokerlens.in"):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>
 </head>
 <body>

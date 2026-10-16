@@ -552,7 +552,7 @@ def build():
     _write_ipo_hub(ipo_records, equity_history=equity_history)
     _write_ipo_archive(ipo_records, equity_history=equity_history)
     from .news_engine import write_news_suite
-    write_news_suite(ingest, SITE_URL)
+    _news_count, news_articles = write_news_suite(ingest, SITE_URL)
     from .trade_cost_engine import build_trade_cost_pages
     trade_cost_urls = build_trade_cost_pages(limit_stocks=2500, site_url=SITE_URL)
     from .ipo_apply_engine import build_ipo_apply_suite
@@ -560,13 +560,13 @@ def build():
     from .ipo_subscription_engine import build_ipo_subscription_suite
     ipo_sub_urls = build_ipo_subscription_suite(site_url=SITE_URL)
     from .stock_compare_engine import build_stock_compare_suite
-    stock_compare_urls = build_stock_compare_suite(site_url=SITE_URL)
+    stock_compare_urls, stock_compare_search = build_stock_compare_suite(site_url=SITE_URL)
     from .sip_calculator_engine import build_sip_calculator_suite
     sip_calc_urls = build_sip_calculator_suite(site_url=SITE_URL)
     from .broker_branch_engine import generate_all as build_branch_suite
     branch_urls = build_branch_suite(site_url=SITE_URL)
     from .fund_compare_engine import generate_all as build_fund_compare_suite
-    fund_compare_urls, fund_category_urls = build_fund_compare_suite(site_url=SITE_URL)
+    fund_compare_urls, fund_category_urls, fund_compare_search = build_fund_compare_suite(site_url=SITE_URL)
     from .share_price_target_engine import build_share_price_target_suite
     share_price_target_urls = build_share_price_target_suite(limit_stocks=2500, site_url=SITE_URL)
     _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
@@ -578,7 +578,9 @@ def build():
                     fund_category_urls=fund_category_urls, ipo_sub_urls=ipo_sub_urls,
                     share_price_target_urls=share_price_target_urls)
     _write_search_index(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
-                         fund_slugs, report_slugs, amc_slugs, crypto_coins, ipo_records, comparison_pairs=comparison_pairs)
+                         fund_slugs, report_slugs, amc_slugs, crypto_coins, ipo_records, comparison_pairs=comparison_pairs,
+                         news_articles=news_articles, stock_compare_search=stock_compare_search,
+                         fund_compare_search=fund_compare_search)
     _write_feed(built, aggregates)
     build_ticker()
     build_crypto_ticker()
@@ -1942,6 +1944,45 @@ def _stock_price_html(history):
     ) % (_inr_html(last["close"]), _cls_class(chg_pct), _pct_html(chg_pct), _iso_to_long_date(last["date"]))
 
 
+def _stock_ohlc_html(history):
+    """Today's Open/High/Low/Prev Close/Volume plus the real N-day high-low
+    range, all read directly from NSE's own daily bhavcopy candles that are
+    already fetched for the chart above this. Sits inside the chart card so
+    that card isn't just a short canvas floating over empty space next to a
+    much taller affiliate-banner sidebar - and because these numbers are
+    read from the same history as the chart, they can never drift from what
+    the chart itself shows. The N-day window is labelled by the real number
+    of sessions on file (same discipline as stock_compare_engine.py's
+    _range_window_label) rather than claimed as a "52-week" range when the
+    cache holds far fewer days than that."""
+    if not history or len(history) < 2:
+        return ""
+    last, prev = history[-1], history[-2]
+    if last.get("close") is None or prev.get("close") is None:
+        return ""
+    highs = [row["high"] for row in history if isinstance(row.get("high"), (int, float))]
+    lows = [row["low"] for row in history if isinstance(row.get("low"), (int, float))]
+    window_days = len(history)
+    range_label = "52-Week Range" if window_days >= 252 else "%d-Day Range" % window_days
+    tiles = [
+        ("Open", _inr_html(last.get("open"))),
+        ("Day High", _inr_html(last.get("high"))),
+        ("Day Low", _inr_html(last.get("low"))),
+        ("Previous Close", _inr_html(prev.get("close"))),
+        ("Volume", _indian_grouping(last["volume"]) if isinstance(last.get("volume"), (int, float)) else "-"),
+        (range_label, ("%s - %s" % (_inr_html(min(lows)), _inr_html(max(highs)))) if lows and highs else "-"),
+    ]
+    return (
+        '<div class="grid g3" style="margin-top:14px">'
+        + "".join(
+            '<div class="mega-seg"><div class="mega-seg-label">%s</div>'
+            '<div style="margin-top:2px;font-weight:600">%s</div></div>' % (label, value)
+            for label, value in tiles
+        )
+        + '</div>'
+    )
+
+
 def _listing_details_html(symbol, c, sector):
     """Static reference facts (ISIN, series, face value, market lot) as a
     compact key-value list, not a grid of boxy tiles - these matter far less
@@ -2221,9 +2262,9 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             + (
                 '<div class="grid g-main" style="margin-top:16px">'
                 '<div class="card"><div class="card-title">Price history</div>'
-                '<div data-stock-chart data-symbol="%s"></div></div>'
+                '<div data-stock-chart data-symbol="%s"></div>%s%s</div>'
                 '<div class="stack">%s%s%s%s%s</div></div>'
-                % (_esc(slug), _stock_price_html(history), listing_html,
+                % (_esc(slug), _stock_ohlc_html(history), trade_cta_html, _stock_price_html(history), listing_html,
                    affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html())
                 if history else
                 listing_html
@@ -2237,7 +2278,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
               % (" and NSE's daily bhavcopy for price history" if history else "; price history was not available "
                  "for this symbol in the latest data refresh")
             + index_html
-            + trade_cta_html
+            + ("" if history else trade_cta_html)
             + actions_html
             + peers_html
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
@@ -3807,10 +3848,10 @@ def jiraafBanner_html():
         '<div class="aff-art aff-art-jiraaf">'
         '<img src="%s" width="120" height="32" alt="Jiraaf" style="display:block"></div>'
         '<div class="aff-body">'
-        '<h4>Earn up to 12&ndash;14% with high-yield bonds</h4>'
+        '<h4>Earn up to 12 to 14%% with high-yield bonds</h4>'
         '<p class="xs muted">Curated corporate bonds &amp; fixed-income opportunities on Jiraaf.</p>'
         '<ul class="aff-features">'
-        '<li>Up to 14% p.a. fixed yields</li>'
+        '<li>Up to 14%% p.a. fixed yields</li>'
         '<li>SEBI-regulated Online Bond Platform (OBPP)</li>'
         '<li>Low minimum investment starting &#8377;10,000</li>'
         '</ul>'
@@ -4178,7 +4219,7 @@ def _write_ipo_hub(records, equity_history=None):
     dest_dir = os.path.join(ROOT, "site", "ipo")
     os.makedirs(dest_dir, exist_ok=True)
     _write_text(os.path.join(dest_dir, "index.html"), body)
-    log("IPO hub: written with RHP analytics & real-time performance", "ok")
+    log("IPO hub: written with lot size, subscription & real-time listing performance", "ok")
 
 
 def _write_ipo_archive(records, equity_history=None):
@@ -5954,7 +5995,7 @@ def _write_brokers_page(overview):
         '<thead><tr>%s</tr></thead><tbody id="dir-body">%s</tbody></table></div>'
         '<p class="xs faint" style="margin-top:10px">%s</p>'
         '<p class="xs faint" style="margin-top:6px">Dedicated category pages: %s &nbsp;|&nbsp; %s</p>'
-        '</div><div class="stack">%s%s</div></div>'
+        '</div><div class="stack">%s%s%s</div></div>'
     ) % (
         meta.get("broker_count", 0), _full_html(overview.get("registry_count")),
         "".join('<button class="chip" data-filter="type:%s">%s</button>' % (_esc(k), _esc(v)) for k, v in TYPE_LABEL.items()),
@@ -6855,7 +6896,8 @@ _CORE_PAGES = [
 
 
 def _write_search_index(built, reg_rows, hub_groups, companies, indices, etfs, fund_slugs, report_slugs,
-                         amc_slugs=None, crypto_coins=None, ipo_records=None, comparison_pairs=None):
+                         amc_slugs=None, crypto_coins=None, ipo_records=None, comparison_pairs=None,
+                         news_articles=None, stock_compare_search=None, fund_compare_search=None):
     """One flat, client-side search index covering every page family this
     pipeline writes, not just the 48 tracked brokers the original search.json
     carried (which had no reader anywhere in the codebase - confirmed by
@@ -6932,6 +6974,19 @@ def _write_search_index(built, reg_rows, hub_groups, companies, indices, etfs, f
 
     for name, url, sub in _CORE_PAGES:
         rows.append([name, url, "page", sub])
+
+    for art in (news_articles or []):
+        rows.append([art["title"], "/news/%s/" % art["slug"], "news", art.get("category") or ""])
+
+    # Only the curated (real sector-peer / same-category) comparison pairs -
+    # the random noindex all-pairs are deliberately excluded from search the
+    # same way they're excluded from the sitemap (see stock_compare_engine.py
+    # and fund_compare_engine.py).
+    for name, url, sub in (stock_compare_search or []):
+        rows.append([name, url, "compare", sub])
+
+    for name, url, sub in (fund_compare_search or []):
+        rows.append([name, url, "compare", sub])
 
     write_json(os.path.join(SITE_DATA, "search.json"), rows, compact=True)
     log("search.json: %d entries indexed" % len(rows), "ok")

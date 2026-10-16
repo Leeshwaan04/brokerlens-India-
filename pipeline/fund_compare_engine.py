@@ -149,8 +149,16 @@ def _calculate_sip_corpus(monthly_amt, annual_rate, years):
     return principal, fv, gain
 
 
-def _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url):
-    """Renders /compare/mutual-funds/[fund-a]-vs-[fund-b]/index.html."""
+def _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url, same_category=True, noindex=False, cat_meta2=None):
+    """Renders /compare/mutual-funds/[fund-a]-vs-[fund-b]/index.html.
+
+    same_category=False marks a cross-category "all-pairs" universe pairing
+    (f2's real category is cat_meta2, not cat_meta) so copy and the table
+    don't falsely claim both funds share a category. noindex=True marks that
+    same random-pairing case as noindex,follow: the page still exists and
+    works for a direct visit, but is excluded from search results rather
+    than being submitted at scale as near-duplicate thin content."""
+    cat_meta2 = cat_meta2 if cat_meta2 is not None else cat_meta
     n1, n2 = f1["name"], f2["name"]
     amc1, amc2 = f1["amc"], f2["amc"]
     slug1, slug2 = f1["slug"], f2["slug"]
@@ -185,10 +193,16 @@ def _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url):
     _, fv_reg, _ = _calculate_sip_corpus(5000, 0.11, 15)
     diff_reg = fv_dir - fv_reg
 
+    category_claim = (
+        f"Both {n1} (managed by {amc1}) and {n2} (managed by {amc2}) operate within the {cat_meta['title']} category following {cat_meta['benchmark']}. Selection depends on your risk tolerance: examine portfolio concentration, fund manager tenure, cash allocation, and tracking difference. Always opt for the Direct-Growth plan to eliminate distributor trail commissions."
+        if same_category else
+        f"{n1} (managed by {amc1}) is classified under the {cat_meta['title']} category; {n2} (managed by {amc2}) may fall under a different category, so check each fund's own category and benchmark before comparing them directly. Selection depends on your risk tolerance: examine portfolio concentration, fund manager tenure, cash allocation, and tracking difference. Always opt for the Direct-Growth plan to eliminate distributor trail commissions."
+    )
+
     faq_items = [
         (
             f"Which fund is better between {n1} and {n2}?",
-            f"Both {n1} (managed by {amc1}) and {n2} (managed by {amc2}) operate within the {cat_meta['title']} category following {cat_meta['benchmark']}. Selection depends on your risk tolerance: examine portfolio concentration, fund manager tenure, cash allocation, and tracking difference. Always opt for the Direct-Growth plan to eliminate distributor trail commissions."
+            category_claim
         ),
         (
             f"How much extra corpus do I earn by choosing Direct Plan over Regular Plan?",
@@ -252,8 +266,9 @@ def _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url):
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
+{'<meta name="robots" content="noindex, follow">' if noindex else ''}
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -284,7 +299,7 @@ def _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url):
   <header style="margin-bottom:28px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
       <h1 style="font-size:28px;line-height:1.2;margin:0;">{n1} vs {n2}</h1>
-      <span class="badge" style="background:var(--surface-raised);border:1px solid var(--border);padding:4px 10px;border-radius:16px;font-size:12px;">{cat_meta["title"]}</span>
+      <span class="badge" style="background:var(--surface-raised);border:1px solid var(--border);padding:4px 10px;border-radius:16px;font-size:12px;">{cat_meta["title"] if same_category else f'{cat_meta["title"]} vs {cat_meta2["title"]}'}</span>
     </div>
     <p class="lead muted" style="font-size:15px;line-height:1.6;max-width:76ch;">
       Detailed head-to-head comparison of {n1} ({amc1}) versus {n2} ({amc2}). Sourced from official AMFI daily NAV disclosures with statutory taxation and SIP compounding schedule.
@@ -311,7 +326,7 @@ def _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url):
           <tr>
             <td><strong>Category & Benchmark</strong></td>
             <td>{cat_meta["title"]}<br><span class="muted xs">{cat_meta["benchmark"]}</span></td>
-            <td>{cat_meta["title"]}<br><span class="muted xs">{cat_meta["benchmark"]}</span></td>
+            <td>{cat_meta2["title"]}<br><span class="muted xs">{cat_meta2["benchmark"]}</span></td>
           </tr>
           <tr>
             <td><strong>Latest NAV (Direct Growth)</strong></td>
@@ -476,7 +491,7 @@ def _render_category_hub(cat_key, cat_meta, funds, site_url):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -595,7 +610,7 @@ def _render_master_compare_hub(comparisons_by_cat, site_url):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -691,6 +706,7 @@ def generate_all(site_url="https://www.brokerlens.in", universe_top_n=200):
     comparison_urls = []
     category_urls = []
     comparisons_by_cat = {}
+    search_entries = []  # curated (real same-category) pairs only - never the noindex cross-category all-pairs
     emitted_pair_slugs = set()  # track to avoid duplicates across phases
 
     # ------------------------------------------------------------------
@@ -727,6 +743,7 @@ def generate_all(site_url="https://www.brokerlens.in", universe_top_n=200):
                 url_path = f"/compare/mutual-funds/{pair_slug}/"
                 comparison_urls.append(url_path)
                 cat_pairs.append((pair_slug, f1["name"][:32], f2["name"][:32]))
+                search_entries.append([f"{f1['name']} vs {f2['name']}", url_path, meta["title"]])
                 phase1_count += 1
 
         comparisons_by_cat[cat_key] = cat_pairs
@@ -770,16 +787,25 @@ def generate_all(site_url="https://www.brokerlens.in", universe_top_n=200):
                 continue
             emitted_pair_slugs.add(pair_slug)
 
-            # Use the category of fund 1 as the comparison context
+            # Use fund 1's category as the comparison context, but look up
+            # fund 2's own real category too, since cross-category pairs are
+            # common here and the page must not claim they share a category
+            # when they don't.
             cat_key, cat_meta = _fund_category(f1)
+            cat2_key, cat2_meta = _fund_category(f2)
+            same_category = cat_key == cat2_key
 
             comp_dir = os.path.join(SITE_DIR, "compare", "mutual-funds", pair_slug)
             os.makedirs(comp_dir, exist_ok=True)
-            comp_html = _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url)
+            comp_html = _render_fund_comparison_page(
+                f1, f2, cat_key, cat_meta, site_url,
+                same_category=same_category, noindex=True, cat_meta2=cat2_meta,
+            )
             with open(os.path.join(comp_dir, "index.html"), "w", encoding="utf-8") as f:
                 f.write(comp_html)
-            url_path = f"/compare/mutual-funds/{pair_slug}/"
-            comparison_urls.append(url_path)
+            # Random all-pairs combinations are written to disk and remain
+            # reachable, but are noindex and deliberately left out of
+            # comparison_urls/the sitemap (same reasoning as stock_compare_engine).
             phase2_count += 1
 
         # Progress log every 25 funds
@@ -797,10 +823,16 @@ def generate_all(site_url="https://www.brokerlens.in", universe_top_n=200):
         f.write(_render_master_compare_hub(comparisons_by_cat, site_url))
     comparison_urls.append("/compare/mutual-funds/")
 
-    print(f"[fund_compare_engine] TOTAL: {len(comparison_urls)} comparison pages ({phase1_count} category + {phase2_count} cross-category + 1 hub)")
-    return comparison_urls, category_urls
+    total = phase1_count + phase2_count + 1
+    print(
+        f"[fund_compare_engine] TOTAL: {total} comparison pages written "
+        f"({phase1_count} category + {phase2_count} cross-category + 1 hub); "
+        f"{len(comparison_urls)} submitted to the sitemap (cross-category all-pairs are noindex, "
+        f"written to disk but not submitted)"
+    )
+    return comparison_urls, category_urls, search_entries
 
 
 if __name__ == "__main__":
-    c_urls, cat_urls = generate_all()
+    c_urls, cat_urls, _search_entries = generate_all()
     print(f"Generated {len(c_urls)} comparison pages and {len(cat_urls)} category hubs.")

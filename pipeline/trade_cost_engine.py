@@ -933,7 +933,7 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>
 </head>
 <body>
@@ -1029,7 +1029,7 @@ def render_broker_trade_index(broker_id, broker_info, stocks, site_url="https://
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 </head>
 <body>
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">

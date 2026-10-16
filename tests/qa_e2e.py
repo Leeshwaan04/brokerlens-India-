@@ -14,16 +14,27 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.request
+from datetime import datetime, timedelta
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from pipeline import feeds as feedmod          # noqa: E402
+from pipeline import ipo_engine                 # noqa: E402
 from pipeline import metrics                    # noqa: E402
 from pipeline.identity import Resolver          # noqa: E402
 from pipeline.publish import CONTACT_EMAIL      # noqa: E402
+from pipeline import share_price_target_engine as target_engine  # noqa: E402
+from pipeline.share_price_target_engine import (  # noqa: E402
+    MIN_HISTORY_SESSIONS,
+    _has_three_year_history,
+    _scenario_prices,
+    _target_years,
+    render_target_page,
+)
 
 PASS, FAIL, SKIP = [], [], []
 
@@ -555,6 +566,22 @@ def test_published():
                   and "data-stock-chart" in itc_html)
             check("stock page has a trade-this-stock CTA linking to /compare",
                   "Trade ITC" in itc_html and 'href="/compare"' in itc_html)
+            # Regression guard: the chart card used to be a short, fixed-height
+            # canvas sitting next to a much taller sidebar stack (last-close +
+            # listing details + 3 affiliate banners), with align-items:start
+            # leaving a large empty gap under the chart on desktop. Real OHLCV
+            # data (already fetched for the chart) and the trade CTA now live
+            # inside the chart card itself, so both columns fill with content
+            # instead of blank space.
+            chart_card_end = itc_html.find('<div class="stack">')
+            check("stock page shows real OHLCV stats (Open/High/Low/Volume) inside the chart card, "
+                  "not leaving it empty next to a much taller sidebar",
+                  chart_card_end > 0
+                  and "Day High" in itc_html[:chart_card_end]
+                  and "Day Low" in itc_html[:chart_card_end]
+                  and "Volume" in itc_html[:chart_card_end])
+            check("stock page's trade CTA now sits inside the chart card (filling space), not only below the grid",
+                  chart_card_end > 0 and "Trade ITC" in itc_html[:chart_card_end])
             check("stock page lists peer stocks in the same sector index",
                   "Other Nifty FMCG stocks" in itc_html and "/stock/hindunilvr/" in itc_html)
             check("stock page carries both sponsored broker banners",
@@ -1232,6 +1259,118 @@ def test_published():
     else:
         all_sitemap_xml = sitemap_main
     check("sitemap includes /crypto/ pages", "/crypto/" in all_sitemap_xml)
+    check("share-price projections reject six months of history",
+          not _has_three_year_history([100.0] * 120))
+    check("share-price projections accept three years of daily history",
+          _has_three_year_history([100.0] * MIN_HISTORY_SESSIONS))
+    try:
+        _scenario_prices(100.0, -99.0, -90.0, 4)
+        invalid_scenario_rejected = False
+    except ValueError:
+        invalid_scenario_rejected = True
+    check("share-price projections reject zero or invalid scenarios",
+          invalid_scenario_rejected)
+    # Regression guard: bear/bull scenarios were previously computed with
+    # sign-unaware multipliers (hist_cagr_3y * 0.4 floored at -5.0 for bear;
+    # hist_cagr_1y * 1.3 for bull), which inverted the ordering whenever
+    # historical CAGR was negative (e.g. RELIANCE showed Bear +5%/-5.0% vs
+    # Bull -21.2%, worse than bear). Bear must always be <= Base <= Bull.
+    for cagr_1y, cagr_3y in ((12.0, 8.0), (-18.0, -14.0), (-30.0, 6.0), (0.0, 0.0)):
+        bear_cagr, base_cagr, bull_cagr = _scenario_prices(100.0, cagr_1y, cagr_3y, 3)[0]
+        check("share-price scenarios stay ordered bear<=base<=bull for cagr_1y=%s cagr_3y=%s"
+              % (cagr_1y, cagr_3y),
+              bear_cagr <= base_cagr <= bull_cagr,
+              "got bear=%.2f base=%.2f bull=%.2f" % (bear_cagr, base_cagr, bull_cagr))
+    target_years = _target_years()
+    try:
+        render_target_page(
+            "TEST", "Test Company", 100, 120, 80, 10, 10,
+            max(target_years) + 1, MIN_HISTORY_SESSIONS, "2026-10-01",
+        )
+        unsupported_target_year_rejected = False
+    except ValueError:
+        unsupported_target_year_rejected = True
+    check("share-price projections reject unsupported target years",
+          unsupported_target_year_rejected)
+    try:
+        render_target_page(
+            "TEST", "Test Company", 100, 120, 80, 10, 10,
+            target_years[0], 120, "2026-10-01",
+        )
+        short_history_rejected = False
+    except ValueError:
+        short_history_rejected = True
+    check("share-price pages cannot render without three years of history",
+          short_history_rejected)
+    target_sitemap_years = [
+        int(year) for year in re.findall(
+            r"/stock/[^/]+/share-price-target-(\d{4})/", all_sitemap_xml
+        )
+    ]
+    check("share-price sitemap excludes long-range target years",
+          all(year in target_years for year in target_sitemap_years),
+          "unsupported years: %s" % sorted(set(target_sitemap_years) - set(target_years)))
+    redirects = (load("vercel.json") or {}).get("redirects", [])
+    check("retired share-price target URLs redirect to stock profiles",
+          any(
+              rule.get("source") == "/stock/:symbol/share-price-target-:year"
+              and rule.get("destination") == "/stock/:symbol/"
+              and rule.get("permanent") is True
+              for rule in redirects
+          ))
+
+    # Keep source dates attached to their own symbol through ranking and page generation.
+    with tempfile.TemporaryDirectory() as temp_root:
+        temp_data_dir = os.path.join(temp_root, "data")
+        temp_site_dir = os.path.join(temp_root, "site")
+        os.makedirs(temp_data_dir)
+        companies = []
+        histories = {}
+        expected_dates = {}
+        for symbol, start_day in (("ALPHA", 2), ("BETA", 3)):
+            companies.append({"symbol": symbol, "name": symbol.title() + " Ltd"})
+            session_date = datetime(2023, 1, start_day)
+            history = []
+            while len(history) < MIN_HISTORY_SESSIONS:
+                if session_date.weekday() < 5:
+                    history.append({
+                        "date": session_date.strftime("%Y-%m-%d"),
+                        "close": 100.0,
+                        "volume": 1000,
+                    })
+                session_date += timedelta(days=1)
+            histories[symbol] = history
+            expected_dates[symbol] = history[-1]["date"]
+        with open(os.path.join(temp_data_dir, "_ingest.json"), "w", encoding="utf-8") as out:
+            json.dump({
+                "nse": {
+                    "universe": {"companies": companies},
+                    "equity_history": histories,
+                },
+            }, out)
+
+        original_data_dir, original_site_dir = target_engine.DATA_DIR, target_engine.SITE_DIR
+        try:
+            target_engine.DATA_DIR, target_engine.SITE_DIR = temp_data_dir, temp_site_dir
+            target_urls = target_engine.build_share_price_target_suite(limit_stocks=2)
+            symbol_dates_match = len(target_urls) == 2 * len(target_years)
+            for symbol, expected_date in expected_dates.items():
+                page_path = os.path.join(
+                    temp_site_dir, "stock", symbol.lower(),
+                    "share-price-target-%d" % target_years[0], "index.html",
+                )
+                try:
+                    with open(page_path, encoding="utf-8") as page_file:
+                        symbol_dates_match = symbol_dates_match and (
+                            "NSE price history through %s" % expected_date
+                            in page_file.read()
+                        )
+                except OSError:
+                    symbol_dates_match = False
+        finally:
+            target_engine.DATA_DIR, target_engine.SITE_DIR = original_data_dir, original_site_dir
+    check("share-price pages retain each symbol's own source-data date",
+          symbol_dates_match)
 
     # Every one of ~9,500 sitemap URLs used to get today's date stamped as
     # lastmod on every single build, regardless of whether anything about
@@ -1247,6 +1386,17 @@ def test_published():
     all_search_rows = json.loads(open(search_json_path, encoding="utf-8").read()) if os.path.exists(search_json_path) else []
     search_rows_crypto = [r for r in all_search_rows if r[2] == "crypto"]
     check("search index includes crypto coins", len(search_rows_crypto) >= 20, "found %d" % len(search_rows_crypto))
+    search_rows_news = [r for r in all_search_rows if r[2] == "news"]
+    check("search index includes news articles", len(search_rows_news) > 0,
+          "found %d" % len(search_rows_news))
+    search_rows_stock_cmp = [r for r in all_search_rows if r[2] == "compare" and "/compare/stocks/" in r[1]]
+    search_rows_fund_cmp = [r for r in all_search_rows if r[2] == "compare" and "/compare/mutual-funds/" in r[1]]
+    check("search index includes curated stock-compare pairs, not the noindex all-pairs",
+          0 < len(search_rows_stock_cmp) < 5000,
+          "found %d (expected hundreds, not the ~125K all-pairs total)" % len(search_rows_stock_cmp))
+    check("search index includes curated fund-compare pairs, not the noindex all-pairs",
+          0 < len(search_rows_fund_cmp) < 10000,
+          "found %d (expected thousands, not the ~20K all-pairs total)" % len(search_rows_fund_cmp))
     check("markets dropdown marks Crypto as Live, not Coming soon",
           '<a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>' in home_html_for_dirs)
 
@@ -1288,6 +1438,24 @@ def test_published():
               ">None<" not in sample_ipo_html and "None</p>" not in sample_ipo_html)
         check("an IPO page carries both sponsored broker banners",
               "aff-banner-zerodha" in sample_ipo_html and "aff-banner-5paisa" in sample_ipo_html)
+        fabricated_rhp_markers = (
+            "RHP Financials", "RHP audited financials", "Industry Median",
+            "industry peer benchmark", "industry_pe", "Business Strengths",
+            "Risk Factors",
+        )
+        check("an IPO page carries no fabricated RHP financial claims",
+              not any(marker in sample_ipo_html for marker in fabricated_rhp_markers),
+              "found: %s" % [m for m in fabricated_rhp_markers if m in sample_ipo_html])
+
+    # The "RHP Financials" / business-strengths / risk-factors section used to be
+    # generated by hashing the company name into plausible-looking numbers
+    # (seed = sum(ord(c) for c in symbol+company)) -- not real SEBI filings.
+    # Guard against that fabrication machinery ever coming back.
+    ipo_engine_src = open(ipo_engine.__file__, encoding="utf-8").read()
+    check("ipo_engine has no hash-derived fabricated-financials generator",
+          "compute_rhp_financials" not in ipo_engine_src
+          and "compute_decision_framework" not in ipo_engine_src
+          and "render_rhp_decision_section" not in ipo_engine_src)
 
     check("sitemap includes /ipo/ pages", "/ipo/" in all_sitemap_xml)
     search_rows_ipo = [r for r in all_search_rows if r[2] == "ipo"]

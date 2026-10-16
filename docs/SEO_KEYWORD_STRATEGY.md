@@ -72,6 +72,15 @@ to fix it).
 - "market holidays [year] nse bse"
 - "muhurat trading time [year]"
 
+### Forecast-page quality gate
+Share-price-target pages are withheld from the sitemap until the source contains
+at least 756 valid daily closes per stock. The current NSE feed retains 120
+trading days, which is not enough evidence to label returns as 1-year or
+3-year CAGR. When the pages are eligible again, only the current year and
+near-term target years (up to four years ahead) are generated; invalid or
+zero-valued scenarios are skipped. Do not expand the forecast horizon to
+capture more keywords without improving the underlying historical data.
+
 ### 6. Regional-language long tail (large, currently untouched)
 Hindi, Tamil, Telugu, Marathi and Gujarati versions of clusters 1-3 are a
 huge, almost entirely uncontested surface — most competitors (Chittorgarh,

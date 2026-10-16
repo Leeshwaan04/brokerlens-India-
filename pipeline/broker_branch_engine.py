@@ -1126,7 +1126,7 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -1334,7 +1334,7 @@ def _render_broker_branches_hub(b_id, meta, site_url):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -1456,7 +1456,7 @@ def _render_city_registry_hub(city_key, city_data, local_entities, site_url):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -1623,7 +1623,7 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -1821,7 +1821,7 @@ def _render_master_branches_hub(site_url):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>

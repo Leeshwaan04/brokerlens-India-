@@ -3,6 +3,13 @@
   "outputDirectory": "site",
   "framework": null,
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/stock/:symbol/share-price-target-:year",
+      "destination": "/stock/:symbol/",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/data/(.*)",

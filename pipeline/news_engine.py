@@ -1230,7 +1230,7 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
 </rss>""" % (site_url, items_xml)
     _write_text(os.path.join(ROOT, "site", "feed.xml"), rss_xml)
 
-    return written_count
+    return written_count, articles
 
 
 def run_live_generation(site_url="https://www.brokerlens.in"):
@@ -1300,7 +1300,7 @@ def run_live_generation(site_url="https://www.brokerlens.in"):
     except Exception as ex:
         print("[news_engine] Live fetch skipped or encountered: %s" % ex)
 
-    count = write_news_suite(ingest_data, site_url)
+    count, _articles = write_news_suite(ingest_data, site_url)
     print("[news_engine] Successfully published %d news articles, blogs, and research guides." % count)
     return count
 
@@ -1319,5 +1319,5 @@ if __name__ == "__main__":
         if os.path.exists(ingest_path):
             with open(ingest_path, "r", encoding="utf-8") as f:
                 ingest_data = json.load(f)
-        count = write_news_suite(ingest_data, args.site_url)
+        count, _articles = write_news_suite(ingest_data, args.site_url)
         print("[news_engine] Compiled %d news articles, blogs & guides." % count)

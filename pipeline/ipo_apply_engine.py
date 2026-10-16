@@ -357,7 +357,7 @@ def render_allotment_status_hub(site_url="https://www.brokerlens.in"):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>
 </head>
 <body>
@@ -446,7 +446,7 @@ def render_how_to_apply_master(site_url="https://www.brokerlens.in"):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 </head>
 <body>
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
@@ -538,7 +538,7 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
         (f"Can I apply for {company} IPO using UPI on {b_brand}?",
          f"Yes, {b_brand} supports 100% digital IPO applications via NPCI UPI 2.0 mandate up to ₹5,00,000 per application."),
         (f"What is the minimum investment for {company} IPO?",
-         f"The minimum bid is 1 lot ({lot_size} shares) at the cutoff price of ₹{eff_price:,.2f}, requiring a blocked amount of approximately ₹{min_invest:,.2f}." if min_invest > 0 else f"Check the published price band on BrokerLens to verify the minimum investment."),
+         f"The minimum bid is 1 lot (an estimated {lot_size} shares) at the cutoff price of ₹{eff_price:,.2f}, requiring a blocked amount of approximately ₹{min_invest:,.2f}; confirm the exact lot size on your application form." if min_invest > 0 else f"Check the published price band on BrokerLens to verify the minimum investment."),
         (f"What happens if my UPI mandate for {company} is delayed?",
          f"UPI mandates are usually delivered within 15 to 45 minutes of submitting the bid on {b_brand}. If you do not receive the notification, open your UPI app and check the 'Pending Mandates / Autopay' section."),
         (f"Can I cancel or modify my {company} IPO application on {b_brand}?",
@@ -591,7 +591,7 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>
 </head>
 <body>
@@ -625,7 +625,7 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
     <div style="font-weight:600;font-size:16px">{lot_size} Shares</div>
   </div>
   <div>
-    <div class="xs muted">Min Investment (Retail)</div>
+    <div class="xs muted">Min Investment (Retail, Estimated)</div>
     <div style="font-weight:600;font-size:16px;color:var(--accent)">₹{min_invest:,.2f}</div>
   </div>
   <div>
@@ -723,7 +723,7 @@ def render_registrars_master_hub(site_url: str = "https://www.brokerlens.in") ->
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -844,7 +844,7 @@ def render_registrar_hub(reg_slug: str, info: dict, site_url: str = "https://www
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -931,7 +931,9 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
     price_band = ipo_record.get("price_band") or "Disclosed on bid"
     b_start = ipo_record.get("bidding_start") or "Announced"
     b_end = ipo_record.get("bidding_end") or "Announced"
-    lot_size = ipo_record.get("lot_size") or 1
+    low_p, high_p = parse_price_band(ipo_record.get("price_band"))
+    eff_p = high_p if high_p > 0 else (ipo_record.get("issue_price") or 0.0)
+    lot_size = max(1, round(14500.0 / eff_p)) if eff_p > 0 else None
 
     canonical = f"{site_url}/ipo/{ipo_slug}/allotment-status/"
     title = f"{company} IPO Allotment Status: Check Online via Registrar, BSE & NSE Link"
@@ -940,14 +942,16 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
         f"BSE India application query, NSE bid verification, and bank mandate refund timeline."
     )[:295]
 
-    # Assign default registrar or detect from name
-    assigned_reg_key = "link-intime-india-pvt-ltd" if hash(sym) % 2 == 0 else "kfin-technologies-limited"
-    assigned_reg = REGISTRARS[assigned_reg_key]
+    # BrokerLens does not have access to a per-IPO registrar field from NSE's
+    # public-issue disclosures, so we never guess which of the real registrars
+    # below handled this specific issue (the registrar is printed on your own
+    # application acknowledgment and the RHP cover page).
+    registrar_list = list(REGISTRARS.values())
 
     faq_items = [
         (
             f"How do I check {company} IPO allotment status?",
-            f"You can verify {company} IPO allotment status in three ways: (1) On the Registrar portal ({assigned_reg['name']}) by selecting '{company}' and entering your PAN; (2) On the BSE India allotment status page (bseindia.com/investors/appli_check.aspx) under 'Equity'; or (3) In your bank account statement by checking if the blocked funds under UPI mandate were debited or released."
+            f"You can verify {company} IPO allotment status in three ways: (1) On the registrar's portal named on your application acknowledgment or the RHP cover page, by selecting '{company}' and entering your PAN; (2) On the BSE India allotment status page (bseindia.com/investors/appli_check.aspx) under 'Equity'; or (3) In your bank account statement by checking if the blocked funds under UPI mandate were debited or released."
         ),
         (
             f"When will {company} IPO allotment be announced?",
@@ -978,8 +982,8 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
                     {
                         "@type": "HowToStep",
                         "position": 1,
-                        "name": "Open Registrar Allotment Portal",
-                        "text": f"Visit the official {assigned_reg['brand']} portal at {assigned_reg['portal_url']}."
+                        "name": "Open Your Registrar's Allotment Portal",
+                        "text": "Find the registrar named on your application acknowledgment or the RHP cover page, then open that registrar's allotment portal."
                     },
                     {
                         "@type": "HowToStep",
@@ -1022,7 +1026,7 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -1061,32 +1065,34 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
       <div style="font-weight:600;font-size:16px">{_esc(price_band)}</div>
     </div>
     <div>
-      <div class="xs muted">Lot Size</div>
-      <div style="font-weight:600;font-size:16px">{lot_size} Shares</div>
+      <div class="xs muted">Lot Size (estimated)</div>
+      <div style="font-weight:600;font-size:16px">{f"{lot_size} Shares" if lot_size else "Not disclosed"}</div>
     </div>
     <div>
       <div class="xs muted">Bidding Closed</div>
       <div style="font-weight:600;font-size:15px">{_esc(b_end)}</div>
     </div>
     <div>
-      <div class="xs muted">Official Registrar</div>
-      <div style="font-weight:600;font-size:15px"><a href="/ipo/registrar/{assigned_reg_key}/" class="link">{assigned_reg["brand"]}</a></div>
+      <div class="xs muted">Registrar</div>
+      <div style="font-weight:600;font-size:15px"><a href="/ipo/registrars/" class="link">See all registrars &rarr;</a></div>
     </div>
   </div>
 
   <div class="grid g2" style="gap:20px;margin-bottom:28px;">
     <div class="card" style="padding:24px;background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;">
-      <h2 style="font-size:18px;margin-top:0;margin-bottom:12px;">Method 1: Official Registrar Portal</h2>
+      <h2 style="font-size:18px;margin-top:0;margin-bottom:12px;">Method 1: Registrar Portal</h2>
       <p style="font-size:14px;line-height:1.6;margin-bottom:14px;">
-        Fastest allotment updates are posted directly on the {assigned_reg["brand"]} server:
+        BrokerLens does not receive a per-IPO registrar field from NSE's public-issue disclosures, so check your
+        application acknowledgment or the RHP cover page for which registrar handled <strong>{company}</strong>,
+        then open that registrar's portal below:
       </p>
       <ol style="font-size:14px;line-height:1.7;padding-left:20px;margin-bottom:18px;">
-        <li>Open {assigned_reg["brand"]} portal: <a href="{assigned_reg['portal_url']}" target="_blank" rel="noopener nofollow" class="link">{assigned_reg["portal_url"]}</a></li>
-        <li>Select <strong>{company}</strong> from issue dropdown.</li>
-        <li>Select <strong>PAN</strong> and enter your 10-digit PAN number.</li>
-        <li>Submit captcha to view allotted share count.</li>
+        {"".join(f'<li>{_esc(reg["brand"])}: <a href="{reg["portal_url"]}" target="_blank" rel="noopener nofollow" class="link">{reg["portal_url"]}</a></li>' for reg in registrar_list)}
       </ol>
-      <a href="{assigned_reg['portal_url']}" target="_blank" rel="noopener nofollow" class="btn btn-primary small">Check on {assigned_reg["brand"]} Server &rarr;</a>
+      <p style="font-size:14px;line-height:1.6;margin-bottom:0;">
+        Once on the right portal: select <strong>{company}</strong> from the issue dropdown, choose <strong>PAN</strong>
+        as query type, enter your 10-digit PAN number, and submit the captcha to view your allotted share count.
+      </p>
     </div>
 
     <div class="card" style="padding:24px;background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;">
@@ -1107,7 +1113,7 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
   <section class="card" style="padding:24px;background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;margin-bottom:28px;">
     <h2 style="font-size:18px;margin-top:0;margin-bottom:12px;">Bank Mandate Unblocking & Refund Timeline</h2>
     <p style="font-size:14px;line-height:1.6;margin-bottom:12px;">
-      Under SEBI T+3 listing norms, if you receive zero shares or partial allotment, your bank automatically unblocks the lien on your UPI funds within 24 to 48 hours following allotment finalization. If your funds remain blocked past the mandate expiry date, contact your bank or email {assigned_reg["brand"]} at <a href="mailto:{assigned_reg['email']}">{assigned_reg["email"]}</a> with your Application Number.
+      Under SEBI T+3 listing norms, if you receive zero shares or partial allotment, your bank automatically unblocks the lien on your UPI funds within 24 to 48 hours following allotment finalization. If your funds remain blocked past the mandate expiry date, contact your bank or the registrar named on your application acknowledgment, quoting your Application Number.
     </p>
   </section>
 

@@ -1,15 +1,10 @@
-"""IPO Research, RHP Decision & Performance Analytics Engine.
+"""IPO Lot Size, Listing Performance & Subscription Analytics Engine.
 
-Provides deep, institutional-grade IPO analysis:
-  - Full Red Herring Prospectus (RHP) & Draft RHP (DRHP) key disclosures.
+Provides NSE-sourced IPO analysis:
   - Retail & HNI lot sizing and application limits per SEBI ICDR guidelines.
-  - Issue structure: Fresh Issue vs Offer for Sale (OFS) capital allocation.
-  - Key financial performance snapshot: Revenue, EBITDA, PAT, Net Worth, Borrowings.
-  - Financial ratios: RoNW/ROE, ROCE, Debt-to-Equity, P/E multiple vs Industry Average.
   - Real-time post-listing returns: Issue Price vs Listing Day Open vs Current Market Price (CMP).
   - Listing Day Gains/Losses (% and Rs) + Total Return Since Listing.
   - Live subscription tracking across QIB, NII, and Retail quotas.
-  - SWOT decision framework: Business strengths, RHP risk factors, BrokerLens quantitative verdict.
   - Registrar details with direct online allotment checking links.
   - Zero external npm/pip dependencies; stdlib Python.
   - Zero em dashes or en dashes anywhere.
@@ -172,100 +167,6 @@ def compute_listing_performance(symbol, effective_issue_price, equity_history):
     }
 
 
-def compute_rhp_financials(symbol, company, upper_price, issue_size_shares):
-    """Generates realistic, deterministic RHP financial disclosures and metrics."""
-    seed = sum(ord(c) for c in (symbol + company))
-
-    if issue_size_shares and upper_price > 0:
-        issue_size_cr = (float(issue_size_shares) * float(upper_price)) / 10000000.0
-        base_rev = max(50.0, issue_size_cr * (1.2 + (seed % 20) / 10.0))
-    else:
-        base_rev = 150.0 + (seed % 400)
-        issue_size_cr = base_rev * 0.35
-
-    ebitda_margin = 12.0 + (seed % 16)
-    ebitda_cr = base_rev * (ebitda_margin / 100.0)
-
-    pat_margin = 6.0 + (seed % 10)
-    pat_cr = base_rev * (pat_margin / 100.0)
-
-    net_worth_cr = base_rev * (0.45 + (seed % 30) / 100.0)
-    total_debt_cr = net_worth_cr * (0.2 + (seed % 60) / 100.0)
-
-    ronw_pct = min(35.0, max(8.0, (pat_cr / net_worth_cr) * 100.0))
-    roce_pct = min(38.0, max(10.0, (ebitda_cr / (net_worth_cr + total_debt_cr)) * 100.0))
-    debt_equity = round(total_debt_cr / net_worth_cr, 2)
-
-    pe_ratio = round(16.0 + (seed % 28) + ((seed % 10) / 10.0), 1)
-    industry_pe = round(22.0 + ((seed * 3) % 18), 1)
-
-    fresh_pct = 65 + (seed % 35)
-    ofs_pct = 100 - fresh_pct
-    fresh_cr = issue_size_cr * (fresh_pct / 100.0)
-    ofs_cr = issue_size_cr * (ofs_pct / 100.0)
-
-    pre_promoter = min(92.0, max(58.0, 78.0 + (seed % 15) - 5))
-    dilution = min(28.0, max(12.0, 20.0 + (seed % 8)))
-    post_promoter = round(pre_promoter * (1.0 - dilution / 100.0), 1)
-
-    return {
-        "issue_size_cr": issue_size_cr,
-        "fresh_pct": fresh_pct,
-        "ofs_pct": ofs_pct,
-        "fresh_cr": fresh_cr,
-        "ofs_cr": ofs_cr,
-        "revenue_cr": round(base_rev, 1),
-        "revenue_cagr": round(14.0 + (seed % 18), 1),
-        "ebitda_cr": round(ebitda_cr, 1),
-        "ebitda_margin": round(ebitda_margin, 1),
-        "pat_cr": round(pat_cr, 1),
-        "pat_margin": round(pat_margin, 1),
-        "net_worth_cr": round(net_worth_cr, 1),
-        "total_debt_cr": round(total_debt_cr, 1),
-        "ronw_pct": round(ronw_pct, 1),
-        "roce_pct": round(roce_pct, 1),
-        "debt_equity": debt_equity,
-        "pe_ratio": pe_ratio,
-        "industry_pe": industry_pe,
-        "pre_promoter": round(pre_promoter, 1),
-        "post_promoter": post_promoter,
-    }
-
-
-def compute_decision_framework(symbol, company, fin, perf):
-    """Provides strengths, RHP risk disclosures, and quantitative evaluation."""
-    strengths = [
-        f"Consistent revenue expansion with a 3-year historical CAGR of {fin['revenue_cagr']}%.",
-        f"Robust operating efficiency with EBITDA margins maintained at {fin['ebitda_margin']}%.",
-        f"Disciplined balance sheet with a manageable debt-to-equity ratio of {fin['debt_equity']}x.",
-        f"Strong return ratios with Return on Net Worth (RoNW) standing at {fin['ronw_pct']}%.",
-    ]
-
-    risks = [
-        "Working capital intensity: Timely cash flows depend on customer collection cycles.",
-        "Revenue concentration: Significant portion of revenues originates from top client engagements.",
-        "Raw material and operational cost sensitivity due to prevailing inflation dynamics.",
-        "Contingent liabilities and legal proceedings as disclosed in Chapter 3 of the RHP.",
-    ]
-
-    if fin["pe_ratio"] < fin["industry_pe"] * 0.9:
-        val_verdict = f"Priced at {fin['pe_ratio']}x P/E, offering an attractive discount compared to the industry peer median of {fin['industry_pe']}x."
-        verdict_badge = '<span class="badge badge-up">Attractive Valuation</span>'
-    elif fin["pe_ratio"] > fin["industry_pe"] * 1.25:
-        val_verdict = f"Demands a premium valuation of {fin['pe_ratio']}x P/E versus the industry median of {fin['industry_pe']}x, leaving limited safety margin for retail investors."
-        verdict_badge = '<span class="badge badge-warn">Fully Valued</span>'
-    else:
-        val_verdict = f"Priced in line with established listed peers at {fin['pe_ratio']}x P/E against the industry benchmark of {fin['industry_pe']}x."
-        verdict_badge = '<span class="badge">Fairly Valued</span>'
-
-    return {
-        "strengths": strengths[:3],
-        "risks": risks[:3],
-        "val_verdict": val_verdict,
-        "verdict_badge": verdict_badge,
-    }
-
-
 def render_performance_card(perf, sym_slug):
     """Renders real-time post-listing returns card."""
     if not perf or not perf.get("has_listing_data"):
@@ -340,17 +241,13 @@ def render_subscription_card(r):
     shares_offered = float(r.get("shares_offered") or 0.0)
     shares_bid = float(r.get("shares_bid") or 0.0)
 
-    qib_sub = round(sub_flt * 1.15, 2)
-    nii_sub = round(sub_flt * 1.35, 2)
-    retail_sub = round(sub_flt * 0.85, 2)
-
     return f"""
     <div class="card" style="margin-top:24px;padding:22px;background:var(--bg-raised);border-left:4px solid var(--accent)">
       <div class="row-between" style="align-items:center;flex-wrap:wrap;gap:10px">
         <div>
           <span class="badge badge-up">Live Bidding Demand</span>
           <h2 style="margin:8px 0 2px 0;font-size:18px">Official Exchange Subscription Figures</h2>
-          <p class="muted small" style="margin:0">Exchange-published bidding data updated directly from NSE public-issue feeds.</p>
+          <p class="muted small" style="margin:0">Exchange-published bidding data updated directly from NSE public-issue feeds. BrokerLens does not receive a QIB/NII/Retail category breakdown and does not estimate one.</p>
         </div>
         <div class="right">
           <div class="xs muted">Total Subscribed</div>
@@ -358,111 +255,15 @@ def render_subscription_card(r):
         </div>
       </div>
 
-      <div class="grid g4" style="margin-top:18px;gap:12px">
-        <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Qualified Institutional (QIB)</div>
-          <div style="font-size:18px;font-weight:700;color:var(--accent);margin-top:4px">{qib_sub:.2f}x</div>
-          <div class="xs faint">Anchor & mutual funds</div>
-        </div>
-        <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Non-Institutional (NII/HNI)</div>
-          <div style="font-size:18px;font-weight:700;color:var(--accent);margin-top:4px">{nii_sub:.2f}x</div>
-          <div class="xs faint">High net-worth quota</div>
-        </div>
-        <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Retail Individual (RII)</div>
-          <div style="font-size:18px;font-weight:700;color:var(--accent);margin-top:4px">{retail_sub:.2f}x</div>
-          <div class="xs faint">Bids up to Rs 2 Lakh</div>
-        </div>
+      <div class="grid g2" style="margin-top:18px;gap:12px">
         <div style="padding:12px;background:var(--bg);border-radius:6px">
           <div class="xs muted">Total Shares Bid</div>
           <div style="font-size:18px;font-weight:700;margin-top:4px">{shares_bid:,.0f}</div>
-          <div class="xs faint">Offered: {shares_offered:,.0f}</div>
-        </div>
-      </div>
-    </div>
-    """
-
-
-def render_rhp_decision_section(fin, dec, lot):
-    """Renders RHP financials, issue structure, SWOT, and valuation verdict."""
-    return f"""
-    <div class="card" style="margin-top:24px;padding:22px;background:var(--bg-raised)">
-      <div class="row-between" style="align-items:center;flex-wrap:wrap;gap:10px">
-        <div>
-          <span class="badge">RHP & DRHP Analysis</span>
-          <h2 style="margin:8px 0 2px 0;font-size:18px">Red Herring Prospectus (RHP) Key Financials & Valuation</h2>
-          <p class="muted small" style="margin:0">Audited financial indicators, issue sizing, and capital allocation as disclosed to SEBI.</p>
-        </div>
-        <div>
-          {dec['verdict_badge']}
-        </div>
-      </div>
-
-      <div class="grid g4" style="margin-top:18px;gap:12px">
-        <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Total Issue Size</div>
-          <div style="font-size:18px;font-weight:700;margin-top:4px">Rs {fin['issue_size_cr']:,.1f} Cr</div>
-          <div class="xs faint">Fresh: {fin['fresh_pct']}% | OFS: {fin['ofs_pct']}%</div>
         </div>
         <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Revenue from Operations</div>
-          <div style="font-size:18px;font-weight:700;margin-top:4px">Rs {fin['revenue_cr']:,.1f} Cr</div>
-          <div class="xs" style="color:var(--green)">+{fin['revenue_cagr']}% 3Y CAGR</div>
+          <div class="xs muted">Total Shares Offered</div>
+          <div style="font-size:18px;font-weight:700;margin-top:4px">{shares_offered:,.0f}</div>
         </div>
-        <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">EBITDA & Margin</div>
-          <div style="font-size:18px;font-weight:700;margin-top:4px">Rs {fin['ebitda_cr']:,.1f} Cr</div>
-          <div class="xs faint">{fin['ebitda_margin']}% operating margin</div>
-        </div>
-        <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Profit After Tax (PAT)</div>
-          <div style="font-size:18px;font-weight:700;margin-top:4px">Rs {fin['pat_cr']:,.1f} Cr</div>
-          <div class="xs faint">{fin['pat_margin']}% net margin</div>
-        </div>
-      </div>
-
-      <div class="grid g4" style="margin-top:12px;gap:12px">
-        <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">P/E Multiple (Upper Price)</div>
-          <div style="font-size:18px;font-weight:700;margin-top:4px">{fin['pe_ratio']}x</div>
-          <div class="xs faint">Industry Median: {fin['industry_pe']}x</div>
-        </div>
-        <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Return on Net Worth (RoNW)</div>
-          <div style="font-size:18px;font-weight:700;color:var(--green);margin-top:4px">{fin['ronw_pct']}%</div>
-          <div class="xs faint">ROCE: {fin['roce_pct']}%</div>
-        </div>
-        <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Debt to Equity Ratio</div>
-          <div style="font-size:18px;font-weight:700;margin-top:4px">{fin['debt_equity']}x</div>
-          <div class="xs faint">Borrowings: Rs {fin['total_debt_cr']:,.1f} Cr</div>
-        </div>
-        <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Promoter Holding</div>
-          <div style="font-size:18px;font-weight:700;margin-top:4px">{fin['post_promoter']}%</div>
-          <div class="xs faint">Pre-issue: {fin['pre_promoter']}%</div>
-        </div>
-      </div>
-
-      <div class="grid g2" style="margin-top:20px;gap:16px">
-        <div style="padding:14px;background:var(--bg);border-radius:6px;border-left:3px solid var(--green)">
-          <h3 style="font-size:14px;margin:0 0 8px 0;color:var(--text-bright)">Key Business Strengths (Why to Apply)</h3>
-          <ul class="clean" style="padding-left:16px;margin:0;font-size:13px;line-height:1.6">
-            {"".join(f"<li>{_esc(s)}</li>" for s in dec['strengths'])}
-          </ul>
-        </div>
-        <div style="padding:14px;background:var(--bg);border-radius:6px;border-left:3px solid var(--red)">
-          <h3 style="font-size:14px;margin:0 0 8px 0;color:var(--text-bright)">RHP Risk Factors & Red Flags</h3>
-          <ul class="clean" style="padding-left:16px;margin:0;font-size:13px;line-height:1.6">
-            {"".join(f"<li>{_esc(r)}</li>" for r in dec['risks'])}
-          </ul>
-        </div>
-      </div>
-
-      <div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:6px">
-        <div class="xs muted" style="font-weight:600;text-transform:uppercase">BrokerLens Quantitative Assessment</div>
-        <p class="small" style="margin:4px 0 0 0;line-height:1.6">{_esc(dec['val_verdict'])}</p>
       </div>
     </div>
     """
@@ -472,8 +273,8 @@ def render_lot_size_table(lot, p_high):
     """Renders retail, sNII, and bNII application slabs."""
     return f"""
     <div class="card" style="margin-top:24px;padding:22px;background:var(--bg-raised)">
-      <h2 style="margin:0 0 6px 0;font-size:18px">IPO Lot Size & Investment Sizing (SEBI Categories)</h2>
-      <p class="muted small" style="margin:0 0 16px 0">Application categories, lot quantities, and required UPI mandate allocation amounts:</p>
+      <h2 style="margin:0 0 6px 0;font-size:18px">IPO Lot Size & Investment Sizing (SEBI Categories, Estimated)</h2>
+      <p class="muted small" style="margin:0 0 16px 0">Lot size is a BrokerLens estimate (SEBI issuers typically target a retail lot value in the Rs 14,000 to 15,000 range), not the exact RHP-disclosed figure; confirm on your application form before bidding. Application categories, lot quantities, and required UPI mandate allocation amounts:</p>
       
       <div class="table-scroll">
         <table class="data">
@@ -535,9 +336,7 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
     p_low, p_high, cut_off = parse_price_band(r.get("price_band"), r.get("issue_price"))
     is_sme = (r.get("security_type") == "SME")
     lot = compute_lot_metrics(p_high, is_sme)
-    fin = compute_rhp_financials(symbol, company, p_high, r.get("issue_size_shares"))
     perf = compute_listing_performance(symbol, r.get("issue_price") or cut_off, equity_history)
-    dec = compute_decision_framework(symbol, company, fin, perf)
 
     today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     b_end = r.get("bidding_end") or ""
@@ -554,17 +353,17 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
 
     sec_type_label = "SME Emerge" if is_sme else "Mainboard Equity"
 
-    title = f"{company} IPO: RHP Financials, Lot Size, Bidding & Decision | BrokerLens"
+    title = f"{company} IPO: Price Band, Lot Size, Dates & Subscription | BrokerLens"
     desc_extra = f", Listed at Rs {perf['listing_open']:,.0f} ({perf['listing_gain_pct']:+.1f}% listing gain)" if perf.get("has_listing_data") else ""
-    description = f"{company} ({symbol}) IPO analysis: RHP financials, price band Rs {p_low:g}-{p_high:g}, retail lot size {lot['lot_size']} shares{desc_extra}, subscription figures and allotment process."[:295]
+    description = f"{company} ({symbol}) IPO details: price band Rs {p_low:g}-{p_high:g}, retail lot size {lot['lot_size']} shares{desc_extra}, subscription figures and allotment process."[:295]
 
     # Quick overview facts
     facts = [
         ("Status", f'<span class="badge {"badge-up" if status == "Active" else ("badge-verified" if status == "Listed" else "")}">{_esc(status)}</span>'),
         ("Issue Type", _esc(sec_type_label)),
         ("Price Band", f"Rs {p_low:g} to Rs {p_high:g}" if p_high > 0 else (r.get("price_band") or "Not disclosed")),
-        ("Issue Size", f"Rs {fin['issue_size_cr']:,.1f} Cr ({format(int(r['issue_size_shares']), ',')} shares)" if r.get("issue_size_shares") else f"Rs {fin['issue_size_cr']:,.1f} Cr"),
-        ("Retail Lot Size", f"{lot['lot_size']} shares (Rs {lot['min_retail_inv']:,.0f})"),
+        ("Issue Size", (f"Rs {(int(r['issue_size_shares']) * p_high / 1e7):,.1f} Cr ({format(int(r['issue_size_shares']), ',')} shares)" if p_high > 0 else f"{format(int(r['issue_size_shares']), ',')} shares") if r.get("issue_size_shares") else "Not disclosed"),
+        ("Retail Lot Size (estimated)", f"{lot['lot_size']} shares (Rs {lot['min_retail_inv']:,.0f})"),
         ("Bidding Opens", _long_date(r.get("bidding_start")) if r.get("bidding_start") else "Announced soon"),
         ("Bidding Closes", _long_date(r.get("bidding_end")) if r.get("bidding_end") else "Announced soon"),
         ("Listing Date", _long_date(r.get("listing_date") or perf.get("listing_date")) if (r.get("listing_date") or perf.get("listing_date")) else "Not yet listed"),
@@ -579,21 +378,12 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
 
     perf_html = render_performance_card(perf, slug)
     sub_html = render_subscription_card(r)
-    rhp_html = render_rhp_decision_section(fin, dec, lot)
     lot_html = render_lot_size_table(lot, p_high)
 
     faqs = [
         (
             f"What is the retail lot size and minimum investment for {company} IPO?",
-            f"The retail lot size for {company} IPO is {lot['lot_size']} shares. At the cut-off price of Rs {p_high:,.0f} per share, the minimum retail investment is Rs {lot['min_retail_inv']:,.0f}. Retail investors can apply for up to {lot['max_retail_lots']} lots (Rs {lot['max_retail_inv']:,.0f}) within the SEBI Rs 2 Lakh ceiling."
-        ),
-        (
-            f"What are the key financial metrics disclosed in the {company} RHP?",
-            f"According to the Red Herring Prospectus (RHP) filed with SEBI, {company} reported operating revenue of Rs {fin['revenue_cr']:,.1f} Crores with a 3-year CAGR of {fin['revenue_cagr']}%. The company generated an EBITDA of Rs {fin['ebitda_cr']:,.1f} Crores ({fin['ebitda_margin']}% margin) and net profit (PAT) of Rs {fin['pat_cr']:,.1f} Crores ({fin['pat_margin']}% margin)."
-        ),
-        (
-            f"What is the valuation and P/E ratio of {company} IPO?",
-            f"At the upper price band of Rs {p_high:,.0f}, {company} is valued at a Price-to-Earnings (P/E) multiple of {fin['pe_ratio']}x based on trailing earnings. This compares with an industry peer benchmark average of {fin['industry_pe']}x."
+            f"BrokerLens estimates a retail lot size of {lot['lot_size']} shares for {company} IPO (SEBI issuers typically target a retail lot value in the Rs 14,000 to 15,000 range); confirm the exact figure on your application form. At the cut-off price of Rs {p_high:,.0f} per share, the estimated minimum retail investment is Rs {lot['min_retail_inv']:,.0f}. Retail investors can apply for up to {lot['max_retail_lots']} lots (Rs {lot['max_retail_inv']:,.0f}) within the SEBI Rs 2 Lakh ceiling."
         ),
         (
             f"How did {company} perform on its listing day?",
@@ -603,11 +393,11 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         ),
         (
             f"Does BrokerLens display grey market premium (GMP) for {company}?",
-            "No. Grey Market Premium (GMP) is an unregulated, off-exchange informal estimate that operates without regulatory oversight. BrokerLens publishes strictly verified, exchange-disclosed data, RHP audited financials, and SEBI-compliant facts."
+            "No. Grey Market Premium (GMP) is an unregulated, off-exchange informal estimate that operates without regulatory oversight. BrokerLens publishes strictly verified, exchange-disclosed data only."
         ),
         (
             f"Is investing in {company} IPO recommended by BrokerLens?",
-            f"No. BrokerLens does not provide investment advice or stock recommendations. Our platform provides unbiased, quantitative analysis of RHP disclosures, valuation multiples, and exchange subscription numbers to help investors evaluate risk objectively."
+            f"No. BrokerLens does not provide investment advice or stock recommendations. Our platform publishes NSE's own public-issue disclosures (price band, dates, lot size, subscription figures and listing performance) to help investors do their own research."
         ),
     ]
 
@@ -648,12 +438,11 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         crumb_html
         + f'<div style="margin-top:10px">'
         + f'<h1 style="margin:0 0 6px 0;font-size:26px">{_esc(company)} IPO <span class="muted" style="font-size:18px">({_esc(symbol)})</span></h1>'
-        + f'<p class="muted small" style="margin:0 0 16px 0">{sec_type_label} &bull; Sourced directly from official NSE public-issue disclosures & SEBI Red Herring Prospectus (RHP).</p>'
+        + f'<p class="muted small" style="margin:0 0 16px 0">{sec_type_label} &bull; Sourced directly from official NSE public-issue disclosures.</p>'
         + f'</div>'
         + f'<div class="grid g3" style="margin-top:16px">{facts_html}</div>'
         + perf_html
         + sub_html
-        + rhp_html
         + lot_html
         + f'<div class="card" style="margin-top:24px;padding:20px;background:var(--bg-raised)">'
         + f'<div class="section-title"><h2 style="margin:0;font-size:16px">How to Apply for {_esc(company)} IPO Online via UPI</h2></div>'
@@ -684,7 +473,7 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
 
     body += foot_template % {
         "source_note": source_note_fn(
-            "This page's facts are NSE's own public-issue disclosures and Red Herring Prospectus (RHP) filings. "
+            "This page's facts are NSE's own public-issue disclosures. "
             "BrokerLens does not publish grey market premium (GMP) and this page is not investment advice."
         )
     }
@@ -731,7 +520,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
     title = "IPO Tracker: Live Subscription, Listing Gains, Upcoming & Open IPOs | BrokerLens"
     description = (
         f"{len(active)} IPOs open for bidding, {len(forthcoming)} upcoming, and real-time post-listing returns "
-        f"tracked from NSE's public disclosures. Comprehensive RHP metrics and listing day gain analysis."
+        f"tracked from NSE's public disclosures: price band, lot size, subscription and listing day gain analysis."
     )[:295]
 
     def render_active_table(rows):
@@ -776,7 +565,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
               <td class="right num">{_esc(p_str)}</td>
               <td class="right small">{_esc(dates)}</td>
               <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="{_esc(sym)}">{_esc(sub_str)}{chance_html}</td>
-              <td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">RHP & Bidding &rarr;</a></td>
+              <td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">Details & Bidding &rarr;</a></td>
             </tr>
             """
         out += "</tbody></table></div>"
@@ -885,7 +674,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
 
     faqs = [
         ("Does BrokerLens show IPO grey market premium (GMP)?",
-         "No. GMP is an unregulated, off-exchange informal estimate with no regulatory oversight. BrokerLens publishes strictly verified, exchange-disclosed data, RHP audited financials, and SEBI-compliant facts."),
+         "No. GMP is an unregulated, off-exchange informal estimate with no regulatory oversight. BrokerLens publishes strictly verified, exchange-disclosed data only."),
         ("How are IPO listing gains and total returns computed on this page?",
          "Listing gains are calculated using the opening trade price on the official exchange listing day versus the final offer cut-off issue price. Total returns track current market price (CMP) derived from official NSE closing candles against the IPO issue price."),
         ("What is the difference between Mainboard and SME IPOs?",

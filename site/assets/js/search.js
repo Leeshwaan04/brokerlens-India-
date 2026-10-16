@@ -17,7 +17,7 @@ const resultsEl = document.getElementById('search-results');
 const TYPE_LABEL = {
   broker: 'Broker', stock: 'Stock', etf: 'ETF', fund: 'Mutual fund',
   sebi: 'SEBI registry', index: 'Index', hub: 'Browse', report: 'Report',
-  calc: 'Calculator', page: 'Page', crypto: 'Crypto',
+  calc: 'Calculator', page: 'Page', crypto: 'Crypto', news: 'News', compare: 'Comparison',
 };
 
 let index = null;
@@ -41,6 +41,20 @@ function score(row, q) {
   if (sub.startsWith(q)) return 60;
   if (name.includes(q)) return 40;
   if (sub.includes(q)) return 20;
+
+  // Multi-word fallback: the checks above only match when the query is one
+  // contiguous phrase, so "zerodha fees" would never match a "Zerodha"
+  // broker row or a "Brokerage Fee Calculator" row even though both are
+  // exactly what that search means. Require every word to appear somewhere
+  // across name+subtitle (order-independent), scored below every exact/
+  // phrase match above so it only surfaces when nothing better exists.
+  const tokens = q.split(/\s+/).filter(Boolean);
+  if (tokens.length > 1) {
+    const haystack = name + ' ' + sub;
+    if (tokens.every((t) => haystack.includes(t))) {
+      return 10 + tokens.filter((t) => name.includes(t)).length;
+    }
+  }
   return 0;
 }
 

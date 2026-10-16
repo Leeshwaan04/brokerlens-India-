@@ -127,7 +127,7 @@ def render_subscription_hub(all_ipos, site_url="https://www.brokerlens.in"):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {{
   "@context": "https://schema.org",
@@ -255,7 +255,7 @@ def render_allotment_hub(all_ipos, site_url="https://www.brokerlens.in"):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {{
   "@context": "https://schema.org",
@@ -336,35 +336,24 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
     sub_num = float(sub_val) if sub_val is not None else 1.0
     sub_str = f"{sub_num:.2f}x" if sub_val is not None else "Disclosed"
 
-    shares_offered = float(ipo_row.get("issue_size_shares") or ipo_row.get("shares_offered") or 10000000)
-    shares_bid = float(ipo_row.get("shares_bid") or (shares_offered * sub_num))
-
-    # Realistic category modeling following SEBI quota allocation
-    qib_offered = shares_offered * 0.50
-    nii_offered = shares_offered * 0.15
-    retail_offered = shares_offered * 0.35
-
-    qib_mult = max(1.0, sub_num * 1.15) if sub_num > 1.0 else sub_num * 0.8
-    nii_mult = max(1.0, sub_num * 1.30) if sub_num > 1.0 else sub_num * 0.9
-    retail_mult = max(1.0, sub_num * 0.85) if sub_num > 1.0 else sub_num * 1.1
-
-    qib_bid = qib_offered * qib_mult
-    nii_bid = nii_offered * nii_mult
-    retail_bid = retail_offered * retail_mult
+    shares_offered_val = ipo_row.get("issue_size_shares") or ipo_row.get("shares_offered")
+    shares_offered = float(shares_offered_val) if shares_offered_val else None
+    shares_bid_val = ipo_row.get("shares_bid")
+    shares_bid = float(shares_bid_val) if shares_bid_val else None
 
     start_date = ipo_row.get("bidding_start") or "Announced"
     end_date = ipo_row.get("bidding_end") or "Announced"
 
     title = f"{co} ({sym}) IPO Subscription Status Live & Bidding Demand | BrokerLens"
-    desc = f"Check live category-wise subscription status for {co} ({sym}) IPO. Monitor QIB ({qib_mult:.2f}x), NII ({nii_mult:.2f}x), and Retail ({retail_mult:.2f}x) demand multiple on NSE/BSE."
+    desc = f"Check {co} ({sym}) IPO's overall subscription multiple ({sub_str}), price band and bidding window, sourced from NSE's public-issue feed."
 
     crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/ipo/">IPOs</a></li><li class="muted">/</li><li><a href="/ipo/{slug}/">{_esc(sym)}</a></li><li class="muted">/</li><li class="muted">Subscription Status</li></ol></nav>'
 
     faqs = [
         (f"What is the total subscription of {co} IPO?",
-         f"The public issue has recorded a total subscription of approximately {sub_str} across all investor categories based on official exchange disclosures."),
-        (f"How is the retail category performing for {co} IPO?",
-         f"The Retail Individual Investor (RII) portion, which carries a 35% reservation of the net offer under standard book building, has been subscribed approximately {retail_mult:.2f} times."),
+         f"The public issue has recorded a total subscription of approximately {sub_str} based on official exchange disclosures."),
+        (f"Does BrokerLens show a QIB/NII/Retail category breakdown for {co} IPO?",
+         f"No. NSE's public-issue feed that BrokerLens ingests reports only the overall subscription multiple, not a category-wise (QIB/NII/Retail) breakdown. Check NSE's or BSE's own bidding portal directly for live category-wise figures rather than a third-party estimate."),
         (f"When does bidding close for {co} IPO?",
          f"Official exchange bidding closes at 5:00 PM on {end_date}. UPI mandate approvals must typically be confirmed before the mandate cut-off time on the issue closing day."),
         (f"Where can I verify official bidding figures for {sym}?",
@@ -391,7 +380,7 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(jsonld, indent=2)}
 </script>
@@ -430,14 +419,12 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
     <div class="xs muted" style="margin-top:2px">Total Public Issue</div>
   </div>
   <div class="card" style="padding:16px">
-    <div class="xs muted">Retail Quota (RII)</div>
-    <div class="font-bold" style="font-size:24px;color:var(--green);margin-top:4px">{retail_mult:.2f}x</div>
-    <div class="xs muted" style="margin-top:2px">35% Net Reservation</div>
+    <div class="xs muted">Shares Offered</div>
+    <div class="font-bold" style="font-size:20px;color:var(--text);margin-top:6px">{f"{shares_offered:,.0f}" if shares_offered else "Not disclosed"}</div>
   </div>
   <div class="card" style="padding:16px">
-    <div class="xs muted">Institutional (QIB)</div>
-    <div class="font-bold" style="font-size:24px;color:var(--text);margin-top:4px">{qib_mult:.2f}x</div>
-    <div class="xs muted" style="margin-top:2px">50% Net Reservation</div>
+    <div class="xs muted">Shares Bid</div>
+    <div class="font-bold" style="font-size:20px;color:var(--text);margin-top:6px">{f"{shares_bid:,.0f}" if shares_bid else "Not disclosed"}</div>
   </div>
   <div class="card" style="padding:16px">
     <div class="xs muted">Price Band</div>
@@ -447,50 +434,14 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
 </div>
 
 <section class="card" style="padding:24px;margin-bottom:28px">
-  <h2 style="font-size:19px;margin-top:0;margin-bottom:14px">Category-Wise Subscription Breakdown</h2>
-  <div class="table-scroll">
-    <table class="data">
-      <thead>
-        <tr><th>Investor Category</th><th>Allocation %</th><th class="right">Shares Offered</th><th class="right">Shares Bid</th><th class="right">Times Subscribed</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Qualified Institutional Buyers (QIB)</strong></td>
-          <td>50%</td>
-          <td class="right num">{qib_offered:,.0f}</td>
-          <td class="right num">{qib_bid:,.0f}</td>
-          <td class="right num font-semibold">{qib_mult:.2f}x</td>
-        </tr>
-        <tr>
-          <td><strong>Non-Institutional Investors (NII / HNI)</strong></td>
-          <td>15%</td>
-          <td class="right num">{nii_offered:,.0f}</td>
-          <td class="right num">{nii_bid:,.0f}</td>
-          <td class="right num font-semibold">{nii_mult:.2f}x</td>
-        </tr>
-        <tr>
-          <td><strong>Retail Individual Investors (RII)</strong></td>
-          <td>35%</td>
-          <td class="right num">{retail_offered:,.0f}</td>
-          <td class="right num">{retail_bid:,.0f}</td>
-          <td class="right num font-semibold" style="color:var(--green)">{retail_mult:.2f}x</td>
-        </tr>
-        <tr style="background:var(--bg-raised);font-weight:700">
-          <td><strong>Total Public Issue</strong></td>
-          <td>100%</td>
-          <td class="right num">{shares_offered:,.0f}</td>
-          <td class="right num">{shares_bid:,.0f}</td>
-          <td class="right num" style="color:var(--accent)">{_esc(sub_str)}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section class="card" style="padding:24px;margin-bottom:28px">
   <h2 style="font-size:19px;margin-top:0;margin-bottom:12px">Regulatory Bidding Guidelines & SEBI Compliance</h2>
   <p class="muted" style="font-size:14px;line-height:1.6;margin:0 0 12px 0">
     Under Securities and Exchange Board of India (SEBI) ICDR regulations, retail investors applying with UPI 2.0 can bid up to a maximum limit of Rs 5,00,000 per application. Bids must be placed at the cutoff price or within the declared price band.
+  </p>
+  <p class="muted" style="font-size:14px;line-height:1.6;margin:0 0 12px 0">
+    NSE's public-issue feed that BrokerLens ingests reports only the overall subscription multiple shown above, not a category-wise (QIB/NII/Retail) breakdown. For live category-wise bidding, check
+    <a href="https://www.nseindia.com/market-data/issue-information" target="_blank" rel="noopener nofollow" class="link">NSE's own bidding portal</a> or
+    <a href="https://www.bseindia.com/investors/appli_check.aspx" target="_blank" rel="noopener nofollow" class="link">BSE's public-issue portal</a> directly.
   </p>
   <p class="muted" style="font-size:14px;line-height:1.6;margin:0">
     BrokerLens does not publish unofficial or speculative Grey Market Premiums (GMP). Subscription levels indicate past demand during the public issue window and do not guarantee future listing price appreciation or trading gains.
@@ -525,31 +476,28 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
     lot = _estimate_lot_size(eff_price)
     min_invest = lot * eff_price
 
-    shares_offered = float(ipo_row.get("issue_size_shares") or ipo_row.get("shares_offered") or 10000000)
-    retail_shares = shares_offered * 0.35
-    total_retail_lots = max(1, int(round(retail_shares / lot)))
-
-    sub_val = ipo_row.get("times_subscribed")
-    sub_num = float(sub_val) if sub_val is not None else 1.0
-    retail_mult = max(1.0, sub_num * 0.85) if sub_num > 1.0 else 1.0
-    est_retail_apps = int(round(total_retail_lots * retail_mult))
-
-    allot_prob = min(100.0, (1.0 / retail_mult) * 100.0)
-    lottery_ratio = f"1 in {int(round(retail_mult))}" if retail_mult >= 1.5 else "1 in 1 (Full Allotment)"
+    shares_offered_val = ipo_row.get("issue_size_shares") or ipo_row.get("shares_offered")
+    shares_offered = float(shares_offered_val) if shares_offered_val else None
+    if shares_offered:
+        retail_shares = shares_offered * 0.35
+        total_retail_lots = max(1, int(round(retail_shares / lot)))
+    else:
+        retail_shares = None
+        total_retail_lots = None
 
     b_end = ipo_row.get("bidding_end") or "Day T"
     list_date = ipo_row.get("listing_date") or "Day T+3"
 
-    title = f"{co} ({sym}) IPO Basis of Allotment & Lottery Odds Calculation | BrokerLens"
-    desc = f"Detailed Basis of Allotment for {co} ({sym}) IPO: Lot size of {lot} shares (₹{min_invest:,.0f}), retail lottery odds ({lottery_ratio}), and ASBA unblocking schedule."
+    title = f"{co} ({sym}) IPO Basis of Allotment: Lot Size & Lottery Process | BrokerLens"
+    desc = f"Basis of Allotment for {co} ({sym}) IPO: estimated lot size of {lot} shares (approx Rs {min_invest:,.0f}), how the SEBI retail lottery works, and the ASBA unblocking schedule."
 
     crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/ipo/">IPOs</a></li><li class="muted">/</li><li><a href="/ipo/{slug}/">{_esc(sym)}</a></li><li class="muted">/</li><li class="muted">Basis of Allotment</li></ol></nav>'
 
     faqs = [
         (f"How is the Basis of Allotment calculated for {co} IPO?",
-         f"Under SEBI rules, the Retail portion ({total_retail_lots:,} lots of {lot} shares each) is distributed by a computerized lottery when oversubscribed. Each valid applicant has equal odds of receiving 1 minimum lot."),
+         f"Under SEBI rules, when the retail category is oversubscribed, each valid applicant is guaranteed equal odds of receiving at most 1 minimum lot ({lot} shares, estimated) through a computerized lottery run by the registrar; applicants beyond what the retail quota can cover receive zero shares."),
         (f"What are my allotment chances for {co} IPO?",
-         f"With retail oversubscription at approximately {retail_mult:.2f} times, the lottery ratio is approximately {lottery_ratio} (approx {allot_prob:.1f}% probability per PAN card application)."),
+         f"Your exact odds depend on the retail category's own subscription multiple, which NSE's public feed does not break out by category (BrokerLens does not estimate this number). Check NSE's or BSE's bidding portal for the live retail-category multiple during bidding, or the registrar's published Basis of Allotment PDF once {co}'s allotment is finalized, for your exact odds."),
         (f"When will my blocked funds be released if not allotted?",
          f"Bank ASBA holds and UPI autopay mandates are typically released within 24 to 48 hours following the finalization of the Basis of Allotment."),
         (f"Can I apply multiple times using the same PAN?",
@@ -576,7 +524,7 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(jsonld, indent=2)}
 </script>
@@ -608,29 +556,32 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
 
 <div class="grid g4" style="gap:12px;margin-bottom:24px">
   <div class="card" style="padding:16px">
-    <div class="xs muted">Lottery Odds</div>
-    <div class="font-bold" style="font-size:24px;color:var(--accent);margin-top:4px">{lottery_ratio}</div>
-    <div class="xs muted" style="margin-top:2px">{allot_prob:.1f}% Probability</div>
+    <div class="xs muted">Allotment Method</div>
+    <div class="font-bold" style="font-size:20px;color:var(--accent);margin-top:4px">Computerized Lottery</div>
+    <div class="xs muted" style="margin-top:2px">If retail is oversubscribed</div>
   </div>
   <div class="card" style="padding:16px">
-    <div class="xs muted">Retail Lot Size</div>
+    <div class="xs muted">Retail Lot Size (estimated)</div>
     <div class="font-bold" style="font-size:24px;color:var(--text);margin-top:4px">{lot} Shares</div>
-    <div class="xs muted" style="margin-top:2px">₹{min_invest:,.0f} per Lot</div>
+    <div class="xs muted" style="margin-top:2px">approx Rs {min_invest:,.0f} per lot</div>
   </div>
   <div class="card" style="padding:16px">
-    <div class="xs muted">Retail Lots Offered</div>
-    <div class="font-bold" style="font-size:24px;color:var(--text);margin-top:4px">{total_retail_lots:,}</div>
-    <div class="xs muted" style="margin-top:2px">35% Net Allocation</div>
+    <div class="xs muted">Retail Lots Offered (estimated)</div>
+    <div class="font-bold" style="font-size:24px;color:var(--text);margin-top:4px">{f"{total_retail_lots:,}" if total_retail_lots else "Not disclosed"}</div>
+    <div class="xs muted" style="margin-top:2px">35% net allocation</div>
   </div>
   <div class="card" style="padding:16px">
-    <div class="xs muted">Retail Bids Received</div>
-    <div class="font-bold" style="font-size:24px;color:var(--green);margin-top:4px">~{est_retail_apps:,}</div>
-    <div class="xs muted" style="margin-top:2px">{retail_mult:.2f}x Oversubscribed</div>
+    <div class="xs muted">Retail-Category Odds</div>
+    <div class="font-bold" style="font-size:16px;color:var(--text);margin-top:6px">Check registrar PDF</div>
+    <div class="xs muted" style="margin-top:2px">Not estimated by BrokerLens</div>
   </div>
 </div>
 
 <section class="card" style="padding:24px;margin-bottom:28px">
-  <h2 style="font-size:19px;margin-top:0;margin-bottom:14px">Retail Allotment Mathematical Summary</h2>
+  <h2 style="font-size:19px;margin-top:0;margin-bottom:14px">Retail Lot Sizing Reference</h2>
+  <p class="muted" style="font-size:13px;line-height:1.6;margin:0 0 14px 0">
+    Lot size below is a BrokerLens estimate (SEBI issuers typically target a retail lot value in the Rs 14,000 to 15,000 range), not the exact RHP-disclosed figure. Confirm the exact lot size on your application form before bidding.
+  </p>
   <div class="table-scroll">
     <table class="data">
       <thead>
@@ -638,12 +589,10 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
       </thead>
       <tbody>
         <tr><td><strong>Cutoff Issue Price</strong></td><td class="num">₹{eff_price:,.2f}</td><td>Final discovered pricing</td></tr>
-        <tr><td><strong>Minimum Bid Lot Size</strong></td><td class="num">{lot} Shares</td><td>Minimum allowable retail application</td></tr>
-        <tr><td><strong>Minimum Investment Required</strong></td><td class="num font-semibold">₹{min_invest:,.2f}</td><td>Blocked in bank account via ASBA / UPI</td></tr>
-        <tr><td><strong>Retail Quota Shares</strong></td><td class="num">{retail_shares:,.0f}</td><td>35% of total public offer</td></tr>
-        <tr><td><strong>Total Retail Allottees Possible</strong></td><td class="num font-bold">{total_retail_lots:,} Applicants</td><td>Maximum successful retail beneficiaries</td></tr>
-        <tr><td><strong>Retail Application Multiplier</strong></td><td class="num font-semibold" style="color:var(--accent)">{retail_mult:.2f}x</td><td>Bids relative to available lots</td></tr>
-        <tr><td><strong>Retail Lottery Odds</strong></td><td class="num font-bold" style="color:var(--green)">{lottery_ratio}</td><td>Computerized lottery execution odds</td></tr>
+        <tr><td><strong>Minimum Bid Lot Size (estimated)</strong></td><td class="num">{lot} Shares</td><td>Minimum allowable retail application</td></tr>
+        <tr><td><strong>Minimum Investment Required (estimated)</strong></td><td class="num font-semibold">₹{min_invest:,.2f}</td><td>Blocked in bank account via ASBA / UPI</td></tr>
+        <tr><td><strong>Retail Quota Shares (estimated)</strong></td><td class="num">{f"{retail_shares:,.0f}" if retail_shares else "Not disclosed"}</td><td>35% of total public offer</td></tr>
+        <tr><td><strong>Total Retail Allottees Possible (estimated)</strong></td><td class="num font-bold">{f"{total_retail_lots:,} Applicants" if total_retail_lots else "Not disclosed"}</td><td>Maximum successful retail beneficiaries if every lot is allotted once</td></tr>
       </tbody>
     </table>
   </div>

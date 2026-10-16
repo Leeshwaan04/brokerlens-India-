@@ -180,7 +180,7 @@ function jiraafBanner() {
       <img src="/assets/img/partners/jiraaf.svg" width="120" height="32" alt="Jiraaf" style="display:block">
     </div>
     <div class="aff-body">
-      <h4>Earn up to 12–14% with high-yield bonds</h4>
+      <h4>Earn up to 12 to 14% with high-yield bonds</h4>
       <p class="xs muted">Curated corporate bonds &amp; fixed-income opportunities on Jiraaf.</p>
       <ul class="aff-features">
         <li>Up to 14% p.a. fixed yields</li>
