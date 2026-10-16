@@ -1,0 +1,324 @@
+{
+  "date": "2026-10-16",
+  "sitemaps": [
+    {
+      "path": "https://www.brokerlens.in/sitemap.xml",
+      "lastDownloaded": "2026-10-12T21:12:40.943Z",
+      "warnings": "0",
+      "errors": "0",
+      "submitted": "254775",
+      "indexed": "0"
+    }
+  ],
+  "performance_28d": {
+    "range": {
+      "start": "2026-09-15",
+      "end": "2026-10-13"
+    },
+    "totals": {
+      "clicks": 257,
+      "impressions": 49283,
+      "ctr": 0.005214779944402735,
+      "position": 18.811862102550574
+    },
+    "top_queries": [
+      {
+        "keys": [
+          "brokerlens"
+        ],
+        "clicks": 5,
+        "impressions": 8,
+        "ctr": 0.625,
+        "position": 1
+      },
+      {
+        "keys": [
+          "cupid share price target 2026"
+        ],
+        "clicks": 3,
+        "impressions": 202,
+        "ctr": 0.01485148514851485,
+        "position": 6.905940594059406
+      },
+      {
+        "keys": [
+          "jaykay enterprises share price target 2030"
+        ],
+        "clicks": 3,
+        "impressions": 16,
+        "ctr": 0.1875,
+        "position": 3.5625
+      },
+      {
+        "keys": [
+          "pankaj mangaldas securities pvt. ltd"
+        ],
+        "clicks": 3,
+        "impressions": 112,
+        "ctr": 0.026785714285714284,
+        "position": 6.339285714285714
+      },
+      {
+        "keys": [
+          "pashupati cotspin share price target 2030"
+        ],
+        "clicks": 3,
+        "impressions": 67,
+        "ctr": 0.04477611940298507,
+        "position": 3.970149253731343
+      },
+      {
+        "keys": [
+          "broker lens"
+        ],
+        "clicks": 2,
+        "impressions": 6,
+        "ctr": 0.3333333333333333,
+        "position": 2.333333333333333
+      },
+      {
+        "keys": [
+          "kfintech share price ipo"
+        ],
+        "clicks": 2,
+        "impressions": 125,
+        "ctr": 0.016,
+        "position": 10.072
+      },
+      {
+        "keys": [
+          "onix solar share price target 2030"
+        ],
+        "clicks": 2,
+        "impressions": 6,
+        "ctr": 0.3333333333333333,
+        "position": 2.333333333333333
+      },
+      {
+        "keys": [
+          "oswal greentech share price target 2030"
+        ],
+        "clicks": 2,
+        "impressions": 4,
+        "ctr": 0.5,
+        "position": 2.25
+      },
+      {
+        "keys": [
+          "ved power share price target 2027"
+        ],
+        "clicks": 2,
+        "impressions": 6,
+        "ctr": 0.3333333333333333,
+        "position": 1.8333333333333335
+      },
+      {
+        "keys": [
+          "alkyl amines share price target 2030"
+        ],
+        "clicks": 1,
+        "impressions": 3,
+        "ctr": 0.3333333333333333,
+        "position": 3.3333333333333335
+      },
+      {
+        "keys": [
+          "anush shares and securities pvt ltd"
+        ],
+        "clicks": 1,
+        "impressions": 15,
+        "ctr": 0.06666666666666667,
+        "position": 6.4
+      },
+      {
+        "keys": [
+          "ardee industries share price 2030"
+        ],
+        "clicks": 1,
+        "impressions": 5,
+        "ctr": 0.2,
+        "position": 1.6
+      },
+      {
+        "keys": [
+          "ashlar securities private limited"
+        ],
+        "clicks": 1,
+        "impressions": 2,
+        "ctr": 0.5,
+        "position": 16
+      },
+      {
+        "keys": [
+          "ather energy share"
+        ],
+        "clicks": 1,
+        "impressions": 1,
+        "ctr": 1,
+        "position": 139
+      },
+      {
+        "keys": [
+          "avance technologies share price target 2027"
+        ],
+        "clicks": 1,
+        "impressions": 11,
+        "ctr": 0.09090909090909091,
+        "position": 4.909090909090909
+      },
+      {
+        "keys": [
+          "avantel share price target 2026"
+        ],
+        "clicks": 1,
+        "impressions": 3,
+        "ctr": 0.3333333333333333,
+        "position": 6
+      },
+      {
+        "keys": [
+          "azad india mobility share price target 2030"
+        ],
+        "clicks": 1,
+        "impressions": 25,
+        "ctr": 0.04,
+        "position": 6.52
+      },
+      {
+        "keys": [
+          "bajaj housing finance share price target 2027"
+        ],
+        "clicks": 1,
+        "impressions": 29,
+        "ctr": 0.034482758620689655,
+        "position": 5.482758620689655
+      },
+      {
+        "keys": [
+          "campus share price target"
+        ],
+        "clicks": 1,
+        "impressions": 7,
+        "ctr": 0.14285714285714285,
+        "position": 10.571428571428571
+      },
+      {
+        "keys": [
+          "cochin shipyard share price target 2027"
+        ],
+        "clicks": 1,
+        "impressions": 30,
+        "ctr": 0.03333333333333333,
+        "position": 7.066666666666666
+      },
+      {
+        "keys": [
+          "exclusive securities limited"
+        ],
+        "clicks": 1,
+        "impressions": 19,
+        "ctr": 0.05263157894736842,
+        "position": 10.947368421052632
+      },
+      {
+        "keys": [
+          "filatex broker"
+        ],
+        "clicks": 1,
+        "impressions": 3,
+        "ctr": 0.3333333333333333,
+        "position": 5
+      },
+      {
+        "keys": [
+          "flourish fincap pvt ltd"
+        ],
+        "clicks": 1,
+        "impressions": 2,
+        "ctr": 0.5,
+        "position": 14
+      },
+      {
+        "keys": [
+          "gkn securities"
+        ],
+        "clicks": 1,
+        "impressions": 30,
+        "ctr": 0.03333333333333333,
+        "position": 8.466666666666667
+      }
+    ]
+  },
+  "spot_checks": {
+    "https://www.brokerlens.in/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-12T00:26:44Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/brokers": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-08T07:38:33Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/sources": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/methodology": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-09-15T11:10:34Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/broker/zerodha/": {
+      "coverageState": "Soft 404",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": "2026-10-13T04:36:46Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/stock/20microns/": {
+      "coverageState": "URL is unknown to Google",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/etf/niftybees/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/calculators/sip-calculator/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-15T03:02:11Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/brokers-by/type/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/crypto/btc/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-14T17:57:07Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    }
+  }
+}
