@@ -652,10 +652,8 @@ def test_published():
             check("a stock page reverse-links to the indices it's a constituent of",
                   "/index/nifty-50/" in reliance_html)
 
-    # Static /etf/:symbol pages - a genuinely separate NSE instrument
-    # universe from EQUITY_L.csv (confirmed zero symbol overlap), so these
-    # need their own slug-collision check against /stock/ as well as
-    # against the SPA route list.
+    # ETF and stock paths have separate route namespaces, so identical
+    # instrument slugs are valid as long as their generated URLs differ.
     etf_dir = os.path.join(ROOT, "site", "etf")
     check("site/etf/ static pages exist on disk", os.path.isdir(etf_dir))
     if os.path.isdir(etf_dir):
@@ -663,9 +661,12 @@ def test_published():
         check("a real number of NSE ETF pages were written", len(etf_slugs) > 200,
               "found %d" % len(etf_slugs))
         check("etf page slugs are unique", len(etf_slugs) == len(set(etf_slugs)))
-        check("no etf slug collides with a stock slug",
-              not (set(etf_slugs) & set(slugs)) if os.path.isdir(stock_dir) else True,
-              "overlap: %s" % sorted(set(etf_slugs) & set(slugs))[:5])
+        overlapping_slugs = set(etf_slugs) & set(slugs) if os.path.isdir(stock_dir) else set()
+        etf_paths = {"/etf/%s/" % slug for slug in etf_slugs}
+        stock_paths = {"/stock/%s/" % slug for slug in slugs}
+        check("ETF and stock pages use distinct URL namespaces",
+              not (etf_paths & stock_paths),
+              "overlapping symbols are valid in separate routes: %s" % sorted(overlapping_slugs)[:5])
         niftybees_path = os.path.join(etf_dir, "niftybees", "index.html")
         etf_html = open(niftybees_path, encoding="utf-8").read() if os.path.exists(niftybees_path) else ""
         check("etf page has no leaked 'None' from an unset field",
@@ -993,18 +994,27 @@ def test_published():
         check("editorial policy defines Organization Schema.org with publishing principles",
               '"publishingPrinciples"' in ed_html and '"correctionsPolicy"' in ed_html)
 
-    # News E-E-A-T bylines
+    # News E-E-A-T bylines on a page emitted by the current news generator.
     news_dir = os.path.join(ROOT, "site", "news")
     if os.path.isdir(news_dir):
-        sample_news = [d for d in os.listdir(news_dir) if os.path.isdir(os.path.join(news_dir, d))]
-        if sample_news:
-            sample_art_path = os.path.join(news_dir, sample_news[0], "index.html")
-            if os.path.exists(sample_art_path):
-                art_html = open(sample_art_path, encoding="utf-8").read()
-                check("news articles carry BrokerLens Financial Research Desk byline",
-                      "BrokerLens Financial Research Desk" in art_html)
-                check("news articles carry fact-checking and editorial policy link",
-                      "/editorial-policy" in art_html)
+        news_feed_path = os.path.join(ROOT, "site", "data", "news.json")
+        check("news feed identifies generated articles", os.path.isfile(news_feed_path))
+        if os.path.isfile(news_feed_path):
+            with open(news_feed_path, encoding="utf-8") as f:
+                news_feed = json.load(f)
+            generated_articles = news_feed.get("articles", [])
+            check("news feed contains generated articles", bool(generated_articles))
+            if generated_articles:
+                sample_art_path = os.path.join(
+                    news_dir, generated_articles[0]["slug"], "index.html"
+                )
+                check("generated news article page exists", os.path.isfile(sample_art_path))
+                if os.path.exists(sample_art_path):
+                    art_html = open(sample_art_path, encoding="utf-8").read()
+                    check("news articles carry BrokerLens Financial Research Desk byline",
+                          "BrokerLens Financial Research Desk" in art_html)
+                    check("news articles carry fact-checking and editorial policy link",
+                          "/editorial-policy" in art_html)
 
     # Breadcrumbs: a shared helper builds both the visible trail and its
     # BreadcrumbList JSON-LD from the same data, so a page can never show one

@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-12",
+  "manual_data_gaps": [
+    {
+      "dataset": "active_clients",
+      "status": "sample/placeholder",
+      "note": "SAMPLE DATA - replace with NSE member-wise UCC ingest."
+    },
+    {
+      "dataset": "charges",
+      "status": "sample/placeholder",
+      "note": "SAMPLE pricing for a handful of demo brokers. Others stay null by design."
+    }
+  ],
+  "coverage": [
+    {
+      "check": "SEBI registry size",
+      "live_site": 1703,
+      "live_generated_at": "2026-10-12T00:19:59+00:00"
+    }
+  ],
+  "gsc_opportunities": {
+    "ready": true,
+    "days_tracked": 29,
+    "candidates": [
+      {
+        "query": "kfintech ipo",
+        "page": "https://www.brokerlens.in/ipo/kfintech/",
+        "position": 8.3,
+        "impressions": 500,
+        "clicks": 1
+      },
+      {
+        "query": "rlp securities",
+        "page": "https://www.brokerlens.in/sebi-registry/r-l-p-securities-pvt-ltd-442006/",
+        "position": 7.3,
+        "impressions": 293,
+        "clicks": 1
+      },
+      {
+        "query": "qe securities llp",
+        "page": "https://www.brokerlens.in/sebi-registry/qe-securities-llp/",
+        "position": 7.1,
+        "impressions": 255,
+        "clicks": 1
+      },
+      {
+        "query": "kfin ipo",
+        "page": "https://www.brokerlens.in/ipo/kfintech/",
+        "position": 7.8,
+        "impressions": 154,
+        "clicks": 1
+      },
+      {
+        "query": "kfin technologies ipo",
+        "page": "https://www.brokerlens.in/ipo/kfintech/",
+        "position": 8.2,
+        "impressions": 148,
+        "clicks": 1
+      },
+      {
+        "query": "kfintech share price ipo",
+        "page": "https://www.brokerlens.in/ipo/kfintech/",
+        "position": 10.1,
+        "impressions": 125,
+        "clicks": 2
+      },
+      {
+        "query": "cupid share price target 2026",
+        "page": "https://www.brokerlens.in/stock/cupid/share-price-target-2026/",
+        "position": 6.5,
+        "impressions": 68,
+        "clicks": 1
+      },
+      {
+        "query": "adani ipo date",
+        "page": "https://www.brokerlens.in/ipo/adanienpp1/",
+        "position": 14.5,
+        "impressions": 35,
+        "clicks": 0
+      },
+      {
+        "query": "gkn securities",
+        "page": "https://www.brokerlens.in/sebi-registry/gkn-securities/",
+        "position": 8.5,
+        "impressions": 30,
+        "clicks": 1
+      },
+      {
+        "query": "absolute broking",
+        "page": "https://www.brokerlens.in/sebi-registry/absolute-broking-private-limited-892024/",
+        "position": 7.6,
+        "impressions": 22,
+        "clicks": 0
+      },
+      {
+        "query": "exclusive securities limited",
+        "page": "https://www.brokerlens.in/sebi-registry/exclusive-securities-limited-422006/",
+        "position": 10.9,
+        "impressions": 18,
+        "clicks": 1
+      },
+      {
+        "query": "anush shares and securities pvt ltd",
+        "page": "https://www.brokerlens.in/sebi-registry/anush-shares-securities-pvt-ltd/",
+        "position": 6.4,
+        "impressions": 15,
+        "clicks": 1
+      },
+      {
+        "query": "adani enterprises ipo price",
+        "page": "https://www.brokerlens.in/ipo/adanienpp1/",
+        "position": 9.8,
+        "impressions": 15,
+        "clicks": 0
+      },
+      {
+        "query": "adani enterprises listing date",
+        "page": "https://www.brokerlens.in/ipo/adanienpp1/",
+        "position": 7.1,
+        "impressions": 15,
+        "clicks": 0
+      },
+      {
+        "query": "sushil registry",
+        "page": "https://www.brokerlens.in/sebi-registry/sushil-financial-services-pvt-ltd/",
+        "position": 4.3,
+        "impressions": 14,
+        "clicks": 1
+      },
+      {
+        "query": "gopocket invest tech private limited",
+        "page": "https://www.brokerlens.in/sebi-registry/gopocket-invest-tech-private-limited-882021/",
+        "position": 6,
+        "impressions": 13,
+        "clicks": 1
+      },
+      {
+        "query": "(\"nsdl\" or \"national depository services limited\" or \"vijay chandok\" or \"mr. vijay chandok\") and (\"competitor\" or \"competitors\" or \"competition\" or \"rival\" or \"rivals\")",
+        "page": "https://www.brokerlens.in/methodology",
+        "position": 8.2,
+        "impressions": 13,
+        "clicks": 0
+      },
+      {
+        "query": "aaritya broking private limited",
+        "page": "https://www.brokerlens.in/sebi-registry/aaritya-broking-private-limited-802024/",
+        "position": 10.2,
+        "impressions": 13,
+        "clicks": 0
+      },
+      {
+        "query": "adani enterprises ipo date",
+        "page": "https://www.brokerlens.in/ipo/adanienpp1/",
+        "position": 8.6,
+        "impressions": 12,
+        "clicks": 0
+      },
+      {
+        "query": "adani enterprises ipo listing date",
+        "page": "https://www.brokerlens.in/ipo/adanienpp1/",
+        "position": 8.4,
+        "impressions": 10,
+        "clicks": 0
+      }
+    ]
+  }
+}
