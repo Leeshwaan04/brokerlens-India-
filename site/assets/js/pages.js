@@ -269,7 +269,7 @@ export async function home() {
   ${sampleBanner(meta)}
 
   <section class="pitch" style="margin-top:16px">
-    <div class="pitch-media" aria-hidden="true"><video class="pitch-video" muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="/assets/video/hero-bull-bear-poster.jpg" data-src="/assets/video/hero-bull-bear.mp4"></video></div>
+    <div class="pitch-media" aria-hidden="true"><video class="pitch-video" muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="/assets/video/hero-bull-bear-poster.jpg?v=7f050a4e83" data-src="/assets/video/hero-bull-bear.mp4?v=f824f289ac"></video></div>
     <div class="pill-tag accent" style="margin-bottom:12px"><span>✦</span> Verified Regulatory &amp; Market Intelligence</div>
     <h1 style="max-width:24ch">Every Indian stock broker, measured the same way.</h1>
     <p class="muted" style="max-width:64ch;margin-top:12px">

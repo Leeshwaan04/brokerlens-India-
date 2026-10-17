@@ -41,6 +41,7 @@ if (btn) {
   }
 
   function play(from) {
+    window.dispatchEvent(new CustomEvent('bl:media', { detail: 'music' }));
     const a = ensureAudio();
     if (from > 0) { try { a.currentTime = from; } catch (e) { /* not seekable yet */ } }
     const p = a.play();
@@ -53,6 +54,9 @@ if (btn) {
     paint(false);
     store.set({ on: false, t: 0 });
   }
+
+  // The footer film announces itself too: one soundtrack at a time.
+  window.addEventListener('bl:media', (e) => { if (e.detail !== 'music' && btn.getAttribute('aria-pressed') === 'true') stop(); });
 
   btn.addEventListener('click', () => {
     if (btn.getAttribute('aria-pressed') === 'true') stop(); else play(0);

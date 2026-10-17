@@ -79,7 +79,7 @@ def _stamp_asset_versions(html):
         except OSError:
             return m.group(0)
         return '%s="/assets/%s?v=%s"' % (attr, rel, digest)
-    return re.sub(r'(href|src)="/assets/([^"]+)"', repl, html)
+    return re.sub(r'(href|src|poster|data-src)="/assets/([^"]+)"', repl, html)
 
 
 def _require_site_url():
@@ -587,6 +587,7 @@ def build():
     build_crypto_ticker()
     build_crypto_history()
     build_market_movers()
+    _restamp_js_media()
     _restamp_js_imports()
     _restamp_index_html_assets()
     return overview
@@ -604,6 +605,35 @@ def _restamp_index_html_assets():
     stamped = _stamp_asset_versions(html)
     if stamped != html:
         _write_text(path, stamped)
+
+
+def _restamp_js_media():
+    """Same content-hash cache busting as _restamp_js_imports(), for media URLs
+    written as string literals inside JS (the home-hero video markup in
+    pages.js, the footer film's SRC/POSTER in footer-film.js). /assets/* is
+    immutable for a year, so a replaced mp4/jpg at the same URL would otherwise
+    never reach a returning visitor. Runs before _restamp_js_imports() so the
+    JS files' own hashes reflect the stamped URLs."""
+    js_dir = os.path.join(ROOT, "site", "assets", "js")
+    media_re = re.compile(r"(/assets/video/[\w.-]+\.(?:mp4|jpg))(?:\?v=[0-9a-f]+)?")
+
+    def repl(m):
+        path = os.path.join(ROOT, "site", m.group(1).lstrip("/"))
+        try:
+            digest = hashlib.sha256(open(path, "rb").read()).hexdigest()[:10]
+        except OSError:
+            return m.group(0)
+        return "%s?v=%s" % (m.group(1), digest)
+    try:
+        names = sorted(f for f in os.listdir(js_dir) if f.endswith(".js"))
+    except OSError:
+        return
+    for name in names:
+        fp = os.path.join(js_dir, name)
+        content = open(fp, encoding="utf-8").read()
+        new_content = media_re.sub(repl, content)
+        if new_content != content:
+            _write_text(fp, new_content)
 
 
 def _restamp_js_imports():

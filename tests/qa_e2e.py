@@ -2138,7 +2138,8 @@ def test_instrument_pages():
     home = read("index.html") or ""
     check("home hero carries the video: muted, looping, lazy (preload none), poster, aria-hidden",
           all(s in home for s in ('class="pitch-media" aria-hidden="true"', 'class="pitch-video"', "muted", "loop",
-                                  'preload="none"', 'poster="/assets/video/hero-bull-bear-poster.jpg"')))
+                                  'preload="none"'))
+          and re.search(r'poster="/assets/video/hero-bull-bear-poster\.jpg(\?v=[0-9a-f]+)?"', home) is not None)
     pj = open(os.path.join(site, "assets", "js", "pages.js"), encoding="utf-8").read()
     check("the client-side home renderer carries the same hero video markup",
           "pitch-media" in pj and "hero-bull-bear.mp4" in pj)
@@ -2157,6 +2158,40 @@ def test_instrument_pages():
           and ".ao-logo .ao-text { fill: var(--text); }" in css_all)
     ao_svg = open(os.path.join(site, "assets", "img", "partners", "angelone.svg"), encoding="utf-8").read()
     check("standalone angelone.svg no longer hides its wordmark via prefers-color-scheme", "prefers-color-scheme" not in ao_svg)
+
+    # Footer film (25 s bull-vs-bear): click-to-play, light, disclosed, accessible
+    ff = os.path.join(site, "assets", "js", "footer-film.js")
+    ffs = open(ff, encoding="utf-8").read() if os.path.exists(ff) else ""
+    film_mp4 = os.path.join(site, "assets", "video", "bull-bear-film.mp4")
+    check("footer film ships its video + poster and stays web-sized (<5 MB)",
+          os.path.exists(film_mp4) and os.path.getsize(film_mp4) < 5 * 1024 * 1024
+          and os.path.exists(os.path.join(site, "assets", "video", "bull-bear-film-poster.jpg")))
+    check("footer film never autoplays and fetches nothing but the poster until played (preload none)",
+          'preload="none"' in ffs and not re.search(r"\.autoplay\s*=|autoplay\s*:|\sautoplay[\s>]", ffs))
+    check("footer film pauses off-screen / when hidden and yields to the header music button",
+          "IntersectionObserver" in ffs and "visibilitychange" in ffs and "bl:media" in ffs
+          and "bl:media" in open(os.path.join(site, "assets", "js", "theme-audio.js"), encoding="utf-8").read())
+    check("footer film discloses AI-generated visuals, carries the film's risk disclaimer and a transcript",
+          "Visuals are AI-generated" in ffs and "subject to market risks" in ffs and "film-transcript" in ffs)
+    ch = re.findall(r"\{ t: ([0-9.]+),\s+name:", ffs)
+    ts = [float(x) for x in ch]
+    check("footer film chapters start at 0, ascend, and stay inside the 25 s runtime",
+          len(ts) >= 5 and ts[0] == 0 and ts == sorted(ts) and ts[-1] < 25)
+    check("footer film shortcuts ignore Ctrl/Cmd/Alt (no hijacking of find or site search)",
+          "e.ctrlKey || e.metaKey || e.altKey" in ffs)
+    check("footer film: chapter clicks never wait on metadata, errors do not delete the film, status is announced",
+          "loadedmetadata" not in ffs and 'role="status"' in ffs and "could not be loaded" in ffs
+          and "video.preload = 'auto'" in ffs)
+    check("footer film: mute keeps one ARIA pattern (constant label + aria-pressed)",
+          "'Unmute'" not in ffs and "aria-pressed" in ffs)
+    check("media URLs in JS and HTML are content-hash versioned (immutable cache safe)",
+          re.search(r"bull-bear-film\.mp4\?v=[0-9a-f]{10}", ffs) is not None
+          and re.search(r"hero-bull-bear\.mp4\?v=[0-9a-f]{10}", pj) is not None
+          and re.search(r'data-src="/assets/video/hero-bull-bear\.mp4\?v=[0-9a-f]{10}"', home) is not None)
+    check("search.js (present on every footer page) loads footer-film.js",
+          "footer-film.js" in open(os.path.join(site, "assets", "js", "search.js"), encoding="utf-8").read())
+    check("footer film has a seek slider, keyboard shortcuts and a reduced-motion guard",
+          'type="range"' in ffs and "keydown" in ffs and "prefers-reduced-motion" in ffs)
 
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])

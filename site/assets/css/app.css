@@ -1528,3 +1528,152 @@ table.data tr:hover td {
 .ao-logo .ao-text { fill: var(--text); }
 .ao-logo .ao-blue { fill: #0052FE; }
 .ao-logo .ao-orange { fill: #FF5A00; }
+
+/* ------------------------------------------------------------ footer film */
+/* The last block of every footer: a dark "cinema" panel that stays dark in
+   both site themes (it is a film, not page chrome). The glow behind the frame
+   takes its colours from the video's own edges (see footer-film.js). */
+.film {
+  --film-ink: #0a0b0e; --film-text: #f1ede3; --film-dim: #a9a79f;
+  --film-gold: #d8b46a; --film-green: #3ddc97; --film-red: #ff5a4d;
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  /* near-black on purpose: the film carries its own black letterbox bars, so the
+     frame melts into the panel instead of reading as a boxed-in rectangle */
+  background: radial-gradient(70% 60% at 12% 0%, #11141a 0%, transparent 70%), #030405;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xl, 18px);
+  color: var(--film-text);
+  overflow: hidden;
+}
+.film-head { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 4px; margin-bottom: var(--space-4); }
+.film-eyebrow { font-size: var(--fs-xs); letter-spacing: 0.14em; text-transform: uppercase; color: var(--film-gold); }
+.film h2 { margin: 0; font-size: clamp(1.15rem, 2.2vw, 1.55rem); letter-spacing: -0.02em; color: var(--film-text); font-weight: 700; }
+.film-grid { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: var(--space-5); align-items: start; }
+.film-left { min-width: 0; }
+
+.film-stage { position: relative; }
+.film-glow {
+  position: absolute; inset: -6% -4%; z-index: 0; pointer-events: none; opacity: 0; filter: blur(34px);
+  --g-l: #1d4d3a; --g-r: #5a2420; --g-t: #1d3a30; --g-b: #3a2a1a;
+  background:
+    radial-gradient(60% 80% at 0% 50%, var(--g-l), transparent 70%),
+    radial-gradient(60% 80% at 100% 50%, var(--g-r), transparent 70%),
+    radial-gradient(90% 60% at 50% 0%, var(--g-t), transparent 70%),
+    radial-gradient(90% 60% at 50% 100%, var(--g-b), transparent 70%);
+  transition: opacity 0.8s ease;
+}
+.film-stage:not([data-state="idle"]) .film-glow { opacity: 0.85; }
+.film-frame {
+  position: relative; z-index: 1; aspect-ratio: 16 / 9; background: #000;
+  border-radius: var(--radius-lg, 14px); overflow: hidden;
+}
+.film-video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; cursor: pointer; }
+
+/* idle: poster + one clear call to action */
+.film-play {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 14px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.1) 55%);
+  border: 0; color: var(--film-text); cursor: pointer; font: inherit;
+  transition: opacity 0.25s ease, background 0.25s ease;
+}
+.film-play:hover { background: linear-gradient(to top, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0)); }
+.film-play-disc {
+  width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(216, 180, 106, 0.95); color: #17120a;
+  box-shadow: 0 0 0 8px rgba(216, 180, 106, 0.22); transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.film-play:hover .film-play-disc, .film-play:focus-visible .film-play-disc { transform: scale(1.07); box-shadow: 0 0 0 12px rgba(216, 180, 106, 0.2); }
+.film-play-disc svg { width: 26px; height: 26px; margin-left: 3px; }
+.film-play-text { display: flex; flex-direction: column; align-items: flex-start; font-weight: 650; font-size: var(--fs-md); text-align: left; }
+.film-play-text em { font-style: normal; font-weight: 500; font-size: var(--fs-xs); color: var(--film-dim); letter-spacing: 0.06em; text-transform: uppercase; }
+.film-stage:not([data-state="idle"]) .film-play { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.25s ease, visibility 0s linear 0.25s; }
+
+/* end card: the film fades to black on its last frame, so the tagline and the
+   risk line are restated here (the same words the film itself carries) */
+.film-end {
+  position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: var(--space-4); text-align: center; background: radial-gradient(70% 70% at 50% 45%, rgba(26, 20, 8, 0.55), #000 75%);
+}
+.film-stage[data-state="ended"] .film-end { display: flex; }
+.film-end-line { margin: 0; font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif; letter-spacing: 0.08em; text-transform: uppercase; font-size: clamp(1.1rem, 2.8vw, 1.9rem); line-height: 1.5; }
+.film-end-line span { color: var(--film-gold); }
+.film-end-risk { margin: 0; max-width: 56ch; font-size: 11px; line-height: 1.5; color: var(--film-dim); }
+.film-end-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.film-replay, .film-link {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; font-size: var(--fs-sm); font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.06); color: var(--film-text); cursor: pointer; text-decoration: none;
+}
+.film-replay { background: var(--film-gold); border-color: var(--film-gold); color: #17120a; }
+.film-replay:hover, .film-link:hover { filter: brightness(1.12); }
+
+/* controls */
+.film-controls {
+  position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 10px; padding: 26px 12px 10px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent); opacity: 0; transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.film-stage[data-state="idle"] .film-controls { display: none; }
+.film-frame:hover .film-controls, .film-frame:focus-within .film-controls, .film-stage[data-state="paused"] .film-controls { opacity: 1; transform: none; }
+.film-stage[data-state="ended"] .film-controls { display: none; }
+@media (hover: none) { .film-stage:not([data-state="idle"]) .film-controls { opacity: 1; transform: none; } }
+.film-btn { background: none; border: 0; color: var(--film-text); width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; cursor: pointer; flex: none; }
+.film-btn:hover { background: rgba(255, 255, 255, 0.12); }
+.film-time { font-family: var(--font-mono); font-size: 12px; color: var(--film-dim); white-space: nowrap; flex: none; }
+.film-track { position: relative; flex: 1; height: 22px; display: flex; align-items: center; min-width: 60px; }
+.film-segs { position: absolute; left: 0; right: 0; height: 5px; display: flex; gap: 3px; }
+.film-seg { position: relative; height: 100%; background: rgba(255, 255, 255, 0.22); border-radius: 3px; overflow: hidden; }
+.film-seg i { position: absolute; inset: 0; background: var(--film-gold); transform: scaleX(0); transform-origin: left; }
+.film-seg:nth-child(2) i { background: var(--film-green); }
+.film-seg:nth-child(3) i { background: var(--film-red); }
+.film-seek { position: absolute; inset: 0; width: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.film-track:focus-within .film-segs { outline: 2px solid var(--film-gold); outline-offset: 4px; border-radius: 3px; }
+
+/* chapters: the film's own scenes as a playlist */
+.film-chapters { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.film-chap {
+  position: relative; width: 100%; display: flex; gap: 12px; align-items: flex-start; text-align: left; overflow: hidden;
+  padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.03);
+  color: var(--film-text); font: inherit; cursor: pointer; transition: background 0.2s ease, border-color 0.2s ease;
+}
+.film-chap:hover { background: rgba(255, 255, 255, 0.07); }
+.film-chap[aria-current="true"] { border-color: rgba(216, 180, 106, 0.55); background: rgba(216, 180, 106, 0.09); }
+.film-chap-time { font-family: var(--font-mono); font-size: 12px; color: var(--film-gold); padding-top: 2px; flex: none; }
+.film-chap-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.film-chap-body strong { font-size: var(--fs-sm); font-weight: 650; }
+.film-chap-body span { font-size: var(--fs-xs); color: var(--film-dim); }
+.film-chap-fill { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--film-gold); }
+.film-chap[aria-current="true"] .film-chap-fill { width: var(--fill, 0%); }
+
+.film-transcript { position: relative; z-index: 2; margin-top: var(--space-3); font-size: var(--fs-xs); color: var(--film-dim); }
+.film-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.film-transcript summary { cursor: pointer; width: fit-content; }
+/* higher specificity than the footer's own ul/li reset */
+.film .film-transcript ul { margin: 8px 0 0; padding-left: 18px; list-style: disc; }
+.film .film-transcript li { margin: 0 0 2px; }
+.film .film-chapters { margin: 0; padding: 0; }
+.film .film-chapters li { margin: 0; }
+.film-note { margin: var(--space-4) 0 0; font-size: var(--fs-xs); color: var(--film-dim); max-width: 78ch; }
+.film button:focus-visible, .film summary:focus-visible, .film a:focus-visible { outline: 2px solid var(--film-gold); outline-offset: 2px; }
+
+.film.is-fs .film-frame { border-radius: 0; }
+@media (max-width: 900px) {
+  .film { padding: var(--space-4); }
+  .film-grid { grid-template-columns: 1fr; }
+  .film-chapters { flex-direction: row; overflow-x: auto; gap: 8px; padding-bottom: 6px; scroll-snap-type: x proximity; }
+  .film-chapters li { flex: 0 0 auto; width: 210px; scroll-snap-align: start; }
+  .film-play-text em { display: none; }
+  .film-play-disc { width: 54px; height: 54px; }
+}
+@media (max-width: 420px) {
+  .film-controls { gap: 4px; padding: 22px 6px 6px; }
+  .film-btn { width: 28px; height: 28px; }
+  .film-time { font-size: 11px; min-width: 0; }
+  .film-track { min-width: 36px; }
+  .film-end { gap: 10px; padding: var(--space-2); }
+  .film-end-risk { font-size: 10px; }
+  .film-replay, .film-link { padding: 6px 10px; font-size: var(--fs-xs); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .film-glow, .film-play, .film-play-disc, .film-controls, .film-chap { transition: none; }
+}
