@@ -7,7 +7,7 @@
  * not fetched until then (preload none).
  */
 const btn = document.getElementById('audio-toggle');
-const SRC = '/assets/audio/scam-1992-theme.mp3';
+const SRC = '/assets/audio/scam-1992-theme.mp3?v=db2925e341';
 const KEY = 'bl-audio';
 
 if (btn) {

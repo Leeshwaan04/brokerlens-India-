@@ -615,7 +615,7 @@ def _restamp_js_media():
     never reach a returning visitor. Runs before _restamp_js_imports() so the
     JS files' own hashes reflect the stamped URLs."""
     js_dir = os.path.join(ROOT, "site", "assets", "js")
-    media_re = re.compile(r"(/assets/video/[\w.-]+\.(?:mp4|jpg))(?:\?v=[0-9a-f]+)?")
+    media_re = re.compile(r"(/assets/(?:video|audio)/[\w.-]+\.(?:mp4|jpg|mp3))(?:\?v=[0-9a-f]+)?")
 
     def repl(m):
         path = os.path.join(ROOT, "site", m.group(1).lstrip("/"))
