@@ -8,6 +8,11 @@
       "source": "/stock/:symbol/share-price-target-:year",
       "destination": "/stock/:symbol/",
       "permanent": true
+    },
+    {
+      "source": "/stock/:symbol/share-price-target-:year/",
+      "destination": "/stock/:symbol/",
+      "permanent": true
     }
   ],
   "headers": [

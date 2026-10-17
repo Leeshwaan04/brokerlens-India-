@@ -520,9 +520,10 @@ def build():
                         index_universe, equity_history, bse_d.get("corporate_actions") or [])
     _write_index_pages(index_universe, equity_companies)
     etf_universe = nse_d.get("etfs") or []
-    _write_etf_pages(etf_universe, index_universe)
     mf_schemes = amfi_d.get("schemes") or []
     _funds, fund_slugs, fund_nav_dates = _write_mutual_fund_pages(mf_schemes)
+    _enrich_etfs(etf_universe, mf_schemes, {key: slug for slug, key in fund_slugs.items()})
+    _write_etf_pages(etf_universe, index_universe)
     report_slugs = _write_reports(built, reg_rows, equity_companies, index_universe, etf_universe,
                                    _funds, len(sebi_d.get("defaulters") or []))
     calc_slugs = _write_calculator_pages()
@@ -544,7 +545,7 @@ def build():
     _write_calculator_tool_page(built)
     _prerender_home(overview)
     stock_letters = _write_stock_directory(equity_companies)
-    amc_slugs = _write_fund_amc_pages(fund_slugs)
+    amc_slugs = _write_fund_amc_pages(fund_slugs, _funds)
     _write_etf_directory(etf_universe)
     crypto_slugs = _write_crypto_pages(crypto_coins)
     _write_crypto_hub(crypto_coins)
@@ -2048,6 +2049,12 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
     two prior collisions (site/registry/, site/brokers/).
     """
     by_symbol = {s["symbol"].upper(): s for s in (brokers_cfg or [])}
+    try:
+        from .stock_compare_engine import curated_peer_index
+        compare_index = curated_peer_index(equity_history or {})
+    except Exception as exc:  # never let an enrichment block the page set
+        log("stock compare links skipped: %s" % exc, "warn")
+        compare_index = {}
     # A peer link must only ever point at a symbol this same run is actually
     # about to write a /stock/ page for - an index file can lag EQUITY_L.csv
     # by a day (a recent delisting, a symbol change), and a dead link is
@@ -2196,6 +2203,17 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                     + '</p>'
                 ) % _esc(sector_label)
 
+        compare_html = ""
+        cmp_links = compare_index.get(symbol.upper()) or []
+        if cmp_links:
+            compare_html = (
+                '<div class="section-title"><h2>Compare %s with sector peers</h2></div>'
+                '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">%s</div>'
+                '<p class="xs faint" style="margin-top:6px">Side-by-side price range, return and volume from NSE daily data.</p>'
+                % (_esc(symbol), "".join(
+                    '<a class="badge" href="%s" style="text-decoration:none;padding:5px 9px">%s vs %s &rarr;</a>'
+                    % (_esc(url), _esc(symbol.upper()), _esc(other)) for other, url, _sec in cmp_links[:8])))
+
         if slug in trade_cost_slugs:
             trade_badges = (
                 '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">'
@@ -2281,6 +2299,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             + ("" if history else trade_cta_html)
             + actions_html
             + peers_html
+            + compare_html
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
         )
@@ -2370,6 +2389,52 @@ def _write_index_pages(indices, companies):
     return written
 
 
+_KEEP_UPPER = {"ETF", "ETFS", "HDFC", "ICICI", "SBI", "DSP", "BSE", "NSE", "PSU", "CPSE", "IT", "MSCI", "CRISIL",
+               "ESG", "UTI", "FOF", "LIC", "IDFC", "G", "AMC", "NV", "US", "USA", "BEES", "IBX", "SDL", "TRI"}
+
+
+def _tidy_scheme_name(name):
+    """AMFI types some scheme names in ALL CAPS (26 of the 349 ETFs). Only
+    those get re-cased; mixed-case names are left exactly as AMFI wrote them.
+    Display only: the match key and URL slugs still use the original name."""
+    if not name or name != name.upper():
+        return name
+    def fix(m):
+        tok = m.group(0)
+        if tok in _KEEP_UPPER or (tok[0].isdigit() and tok[-1].isalpha() and len(tok) <= 3):
+            return tok
+        return re.sub(r"[A-Z]+", lambda x: x.group(0).capitalize(), re.sub(r"(?<=[A-Z])(?=\d)", " ", tok))
+    return re.sub(r"[A-Z0-9&]+", fix, name)
+
+
+def _enrich_etfs(etfs, schemes, fund_slug_by_key):
+    """Match each NSE-listed ETF to its AMFI scheme by ISIN (the same
+    identifier on both registers, so a match is exact, never fuzzy). A match
+    replaces NSE's raw register label (e.g. 'NIPINDETFNIFTYBEES') with the
+    scheme's real name and adds its AMC and AMFI-published NAV. Unmatched ETFs
+    keep NSE's own label and get no NAV; nothing is guessed."""
+    by_isin = {}
+    for s in schemes or []:
+        for k in ("isin_growth", "isin_div_reinvest"):
+            v = s.get(k)
+            if v and v.startswith("INF"):
+                by_isin.setdefault(v, s)
+    matched = 0
+    for e in etfs or []:
+        s = by_isin.get(e.get("isin") or "")
+        if not s:
+            continue
+        e.setdefault("nse_name", e.get("name"))
+        e["name"] = _tidy_scheme_name(s["name"])
+        e["amc"] = s.get("amc")
+        e["amfi_category"] = s.get("category")
+        if isinstance(s.get("nav"), (int, float)) and s["nav"] > 0:
+            e["nav"], e["nav_date"] = s["nav"], s.get("nav_date")
+        e["fund_slug"] = fund_slug_by_key.get((s.get("amc"), s.get("name")))
+        matched += 1
+    log("etf enrichment: %d of %d NSE ETFs matched to an AMFI scheme by ISIN" % (matched, len(etfs or [])), "ok")
+
+
 def _write_etf_pages(etfs, indices):
     """One static page per NSE-listed ETF - a separate instrument universe
     from EQUITY_L.csv (confirmed zero symbol overlap), so this needed its own
@@ -2394,13 +2459,19 @@ def _write_etf_pages(etfs, indices):
             continue
         name = e.get("name") or symbol
         canonical = "%s/etf/%s/" % (SITE_URL, slug)
-        title = "%s (%s): ETF Listing Details | BrokerLens" % (_esc(name), _esc(symbol))
+        has_nav = isinstance(e.get("nav"), (int, float))
+        title = "%s (%s): %s | BrokerLens" % (
+            _esc(name), _esc(symbol), "ETF Details, NAV & Benchmark" if has_nav else "ETF Listing Details")
         description = _esc(
-            "%s (NSE: %s): the ETF's underlying benchmark, ISIN, listing date and market lot, "
-            "sourced directly from NSE's own listed-ETF register." % (name, symbol)
+            "%s (NSE: %s): the ETF's underlying benchmark, ISIN, listing date and market lot%s, "
+            "sourced from NSE's listed-ETF register%s." % (
+                name, symbol, ", plus its latest AMFI-published NAV" if has_nav else "",
+                " and AMFI's NAV file" if has_nav else "")
         )[:300]
 
         etf_jsonld = {"@type": "FinancialProduct", "name": name, "url": canonical}
+        if e.get("amc"):
+            etf_jsonld["provider"] = {"@type": "Organization", "name": e["amc"]}
         if e.get("isin"):
             etf_jsonld["identifier"] = e["isin"]
         if e.get("underlying_key"):
@@ -2419,8 +2490,17 @@ def _write_etf_pages(etfs, indices):
                 ("Listed on NSE since", fact(_long_date(e["listing_date"]) if e.get("listing_date") else None)),
                 ("Face value", fact(("Rs %s" % e["face_value"]) if e.get("face_value") else None)),
                 ("Market lot", fact(e.get("market_lot"))),
-            ]
+            ] + ([
+                ("Fund house", '<a href="/funds-by/%s/">%s</a>' % (_esc(slugify(e["amc"])), _esc(e["amc"]))),
+                ("Latest NAV (AMFI)", ("Rs %.4f as of %s" % (e["nav"], _esc(_long_date(e.get("nav_date")))))
+                 if has_nav else "Not disclosed"),
+            ] if e.get("amc") else [])
         )
+        scheme_link = ""
+        if e.get("fund_slug"):
+            scheme_link = (
+                '<p class="small" style="margin-top:12px">Mutual fund scheme page with plan and ISIN details: '
+                '<a href="/fund/%s/">%s &rarr;</a></p>' % (_esc(e["fund_slug"]), _esc(name)))
 
         index_slug = by_label.get((e.get("underlying_key") or "").strip().lower())
         index_html = ""
@@ -2448,10 +2528,18 @@ def _write_etf_pages(etfs, indices):
             ("Is %s an equity, debt or gold ETF?" % name,
              ("%s is categorised as %s." % (name, e["category"])) if e.get("category")
              else "This ETF's category is not disclosed in NSE's listed-ETF register."),
-            ("Does this page show %s's live price or NAV?" % name,
-             "No. This page carries NSE's own listing facts only; live price and trading data are not "
-             "carried here."),
+            ("Does this page show %s's live price?" % name,
+             "No. Live exchange price and trading data are not carried here. "
+             + ("The NAV shown is AMFI's published net asset value for the scheme; an ETF trades on NSE at a market "
+                "price that can differ from its NAV." if has_nav else
+                "This page carries NSE's own listing facts only.")),
         ]
+        if e.get("amc"):
+            etf_faqs.insert(0, ("Which AMC runs %s?" % name, "%s is run by %s." % (name, e["amc"])))
+        if has_nav:
+            etf_faqs.append(("What is the latest NAV of %s?" % name,
+                             "As of %s, the NAV of %s published by AMFI was Rs %.4f." % (
+                                 _long_date(e.get("nav_date")), name, e["nav"])))
         etf_faq_html = "".join(
             '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
             for q, a in etf_faqs
@@ -2480,19 +2568,21 @@ def _write_etf_pages(etfs, indices):
             + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
             + '<p class="muted">NSE: %s</p>' % _esc(symbol)
             + '<div class="grid g3" style="margin-top:16px">' + facts_html + '</div>'
-            + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-ETF register. '
+            + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-ETF register%s. '
               'Live price and trading data are not carried on this page.</p>'
+              % (" and AMFI's daily NAV master file (matched by ISIN)" if has_nav else "")
             + index_html
+            + scheme_link
             + '<div class="aff-block" style="margin-top:24px">'
-              '<div class="section-title"><h2>Invest in ETFs &amp; high-yield corporate bonds</h2></div>'
-              '<p class="muted small" style="margin-top:4px">Trade equity, gold ETFs, and high-yield corporate bonds with verified SEBI-registered partners.</p>'
-              '<div class="grid g3 aff-pair" style="margin-top:14px">%s%s%s</div></div>'
-              % (affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html())
+              '<div class="section-title"><h2>Trade ETFs</h2></div>'
+              '<p class="muted small" style="margin-top:4px">ETFs trade on the exchange through any SEBI-registered broker.</p>'
+              '<div class="grid g2 aff-pair" style="margin-top:14px">%s%s</div></div>'
+              % (affiliateBanner_html(), jiraafBanner_html())
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + etf_faq_html + '</div>'
         )
         body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
-            "This page is generated directly from NSE's own listed-ETF register.")}
+            "This page is generated from NSE's own listed-ETF register, joined to AMFI's daily NAV master file by ISIN.")}
 
         dest_dir = os.path.join(ROOT, "site", "etf", slug)
         os.makedirs(dest_dir, exist_ok=True)
@@ -2531,6 +2621,62 @@ def _group_mutual_funds(schemes):
     return [groups[k] for k in order]
 
 
+def _parse_amfi_category(raw):
+    """'Open Ended Schemes(Equity Scheme - Sectoral/ Thematic)' ->
+    {structure, family, sub, label}. None when the string is not one of AMFI's
+    own category banners, so a scheme with no real category says so instead of
+    showing a guess."""
+    raw = re.sub(r"\s+", " ", (raw or "").replace("\u2019", "'")).strip()
+    m = re.match(r"^(Open Ended|Close Ended|Interval Fund) Schemes?\s*\((.*)\)$", raw)
+    if not m:
+        return None
+    structure = {"Open Ended": "Open ended", "Close Ended": "Close ended",
+                 "Interval Fund": "Interval"}[m.group(1)]
+    inner = re.sub(r"/\s+", "/", m.group(2).strip())
+    family, _sep, sub = inner.partition(" - ")
+    family, sub = family.strip(), (sub.strip() or family.strip())
+    return {"structure": structure, "family": family, "sub": sub,
+            "label": family if sub == family else "%s: %s" % (family, sub)}
+
+
+def _fund_category_info(fund):
+    for c in fund.get("categories") or []:
+        info = _parse_amfi_category(c)
+        if info:
+            return info
+    return None
+
+
+def _latest_nav_date(variants):
+    best = None
+    for v in variants:
+        try:
+            d = datetime.strptime(v.get("nav_date") or "", "%d-%b-%Y")
+        except ValueError:
+            continue
+        if best is None or d > best:
+            best = d
+    return best
+
+
+def _direct_regular_gap(variants):
+    """Direct vs Regular Growth NAV for one scheme, only when both plans
+    publish a NAV for the same date. A plain ratio of two published numbers:
+    nothing here is estimated."""
+    def pick(prefix):
+        for v in variants:
+            if ((v.get("plan") or "").lower().startswith(prefix)
+                    and "growth" in (v.get("option") or "").lower()
+                    and isinstance(v.get("nav"), (int, float)) and v["nav"] > 0):
+                return v
+        return None
+    d, r = pick("direct"), pick("regular")
+    if not d or not r or d.get("nav_date") != r.get("nav_date"):
+        return None
+    return {"direct": d["nav"], "regular": r["nav"], "date": d["nav_date"],
+            "gap_pct": (d["nav"] / r["nav"] - 1) * 100}
+
+
 def _write_mutual_fund_pages(schemes):
     """One static page per mutual fund scheme, sourced from AMFI's own daily
     NAV master file - the biggest single lever in docs/SCALE_TO_60K_PLAN.md.
@@ -2545,23 +2691,42 @@ def _write_mutual_fund_pages(schemes):
     used_slugs = {}
     nav_dates = {}
     written = 0
+
+    # Pre-pass: every fund's slug up front, so a page can link to its siblings
+    # and to the comparison pages fund_compare_engine writes later in the build.
+    slug_by_key = {}
     for fund in funds:
-        amc, name = fund["amc"], fund["name"]
-        base_slug = slugify("%s %s" % (amc, name))
+        base_slug = slugify("%s %s" % (fund["amc"], fund["name"]))
         if not base_slug:
             continue
-        slug = base_slug
-        n = 2
-        while slug in used_slugs and used_slugs[slug] != (amc, name):
+        slug, n = base_slug, 2
+        while slug in slug_by_key.values():
             slug = "%s-%d" % (base_slug, n)
             n += 1
+        slug_by_key[(fund["amc"], fund["name"])] = slug
+    siblings = {}
+    for fund in funds:
+        info = _fund_category_info(fund)
+        key = (fund["amc"], fund["name"])
+        if info and key in slug_by_key:
+            siblings.setdefault((fund["amc"], info["family"]), []).append((fund["name"], slug_by_key[key]))
+    from .fund_compare_engine import curated_pair_index, CATEGORIES as _FUND_CATS
+    pair_index = curated_pair_index(_group_mutual_funds(schemes))
+
+    for fund in funds:
+        amc, name = fund["amc"], fund["name"]
+        slug = slug_by_key.get((amc, name))
+        if not slug:
+            continue
         used_slugs[slug] = (amc, name)
 
         canonical = "%s/fund/%s/" % (SITE_URL, slug)
         title = "%s: Mutual Fund Scheme Details | BrokerLens" % _esc(name)
+        cat_info = _fund_category_info(fund)
         description = _esc(
-            "%s from %s: NAV, ISIN and plan/option details for every variant of this scheme, "
-            "sourced directly from AMFI's own daily NAV master file." % (name, amc)
+            "%s from %s%s: latest NAV, Direct vs Regular plan NAV, ISIN and plan/option details, "
+            "sourced directly from AMFI's own daily NAV master file." % (
+                name, amc, (" (%s)" % cat_info["label"]) if cat_info else "")
         )[:300]
 
         fund_jsonld = {"@type": "FinancialProduct", "name": name,
@@ -2624,10 +2789,81 @@ def _write_mutual_fund_pages(schemes):
              "No. This page carries AMFI's own current NAV, ISIN and plan/option data only; historical "
              "returns and portfolio holdings are not carried here."),
         ]
+        gap = _direct_regular_gap(variants_sorted)
+        if has_direct and has_regular:
+            fund_faqs.append((
+                "What is the difference between the Direct and Regular plan of %s?" % name,
+                "Both plans invest in the same portfolio. The Regular plan pays a distributor commission out of the "
+                "scheme's expenses and the Direct plan does not, so the Direct plan has a lower expense ratio "
+                "(SEBI requires each plan's expense ratio to be disclosed separately)."))
+        if gap:
+            fund_faqs.append((
+                "How does the Direct plan NAV of %s compare with the Regular plan NAV?" % name,
+                "On %s the Direct Growth NAV was Rs %.4f and the Regular Growth NAV was Rs %.4f, so the Direct NAV "
+                "was %.2f%% %s. This compares two published NAVs; it is not a return figure." % (
+                    gap["date"], gap["direct"], gap["regular"], abs(gap["gap_pct"]),
+                    "higher" if gap["gap_pct"] >= 0 else "lower")))
         faq_html = "".join(
             '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
             for q, a in fund_faqs
         )
+        latest_nav = _latest_nav_date(variants_sorted)
+        plans_txt = ("Direct and Regular" if (has_direct and has_regular)
+                     else "Direct only" if has_direct else "Regular only" if has_regular else "Not disclosed")
+        opts_txt = ("Growth and IDCW" if (has_growth and has_idcw)
+                    else "Growth only" if has_growth else "IDCW only" if has_idcw else "Not disclosed")
+        fund_tiles = "".join(
+            '<div class="mega-seg"><div class="mega-seg-label">%s</div><div style="margin-top:2px">%s</div></div>'
+            % (label, value) for label, value in [
+                ("Fund house", '<a href="/funds-by/%s/">%s</a>' % (_esc(slugify(amc)), _esc(amc))),
+                ("Scheme structure", _esc(cat_info["structure"]) if cat_info else "Not disclosed"),
+                ("Category", _esc(cat_info["label"]) if cat_info else "Not disclosed"),
+                ("Plans", plans_txt),
+                ("Options", opts_txt),
+                ("Latest NAV date", _esc(latest_nav.strftime("%-d %B %Y")) if latest_nav else "Not disclosed"),
+            ]
+        )
+        gap_html = ""
+        if gap:
+            gap_html = (
+                '<div class="card" style="margin-top:20px"><div class="card-title">Direct vs Regular plan (Growth option)</div>'
+                '<div class="grid g3" style="margin-top:10px">'
+                '<div class="mega-seg"><div class="mega-seg-label">Direct NAV</div><div style="margin-top:2px">Rs %.4f</div></div>'
+                '<div class="mega-seg"><div class="mega-seg-label">Regular NAV</div><div style="margin-top:2px">Rs %.4f</div></div>'
+                '<div class="mega-seg"><div class="mega-seg-label">Direct vs Regular</div><div style="margin-top:2px">%s%.2f%%</div></div>'
+                '</div>'
+                '<p class="xs faint" style="margin-top:10px;max-width:70ch">Both NAVs are as published by AMFI for %s. '
+                'Both plans hold the same portfolio; the Direct plan pays no distributor commission, so its ongoing '
+                'expenses are lower. This is a comparison of two published NAVs, not a return figure, and the exact gap '
+                'also depends on when each plan launched.</p></div>'
+                % (gap["direct"], gap["regular"], "+" if gap["gap_pct"] >= 0 else "-", abs(gap["gap_pct"]),
+                   _esc(_long_date(gap["date"])))
+            )
+        pinfo = pair_index.get((amc, name))
+        related_parts = []
+        if pinfo and pinfo["partners"]:
+            related_parts.append(
+                '<h3 style="font-size:14px;margin-top:18px">Compare %s with other %s</h3>'
+                '<div class="link-columns" style="margin-top:8px">%s</div>' % (
+                    _esc(name), _esc(pinfo["title"]),
+                    "".join('<a href="/compare/mutual-funds/%s/">vs %s</a>' % (_esc(ps), _esc(g["name"]))
+                            for ps, g in pinfo["partners"][:6])))
+        if pinfo:
+            related_parts.append(
+                '<p class="small" style="margin-top:14px"><a href="/funds-by/category/%s/">Browse all %s &rarr;</a></p>'
+                % (_esc(pinfo["cat"]), _esc(pinfo["title"])))
+        sib = [(n_, s_) for n_, s_ in siblings.get((amc, cat_info["family"]), []) if s_ != slug][:8] if cat_info else []
+        if sib:
+            related_parts.append(
+                '<h3 style="font-size:14px;margin-top:18px">More %s from %s</h3>'
+                '<div class="link-columns" style="margin-top:8px">%s</div>' % (
+                    _esc(cat_info["family"]), _esc(amc),
+                    "".join('<a href="/fund/%s/">%s</a>' % (_esc(s_), _esc(n_)) for n_, s_ in sib)))
+        related_parts.append(
+            '<p class="small" style="margin-top:14px"><a href="/funds-by/%s/">All %s schemes &rarr;</a></p>'
+            % (_esc(slugify(amc)), _esc(amc)))
+        related_html = ('<div class="section-title" style="margin-top:28px"><h2>Related schemes</h2></div>'
+                        + "".join(related_parts))
         crumb_html, crumb_jsonld = _breadcrumb([
             ("BrokerLens", "/"), ("Mutual funds by AMC", "/funds-by/"),
             (amc, "/funds-by/%s/" % slugify(amc)), (name, None),
@@ -2652,8 +2888,8 @@ def _write_mutual_fund_pages(schemes):
             crumb_html
             + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
             + '<p class="muted">%s</p>' % _esc(amc)
-            + (('<p class="xs faint">%s</p>' % _esc(" / ".join(fund["categories"])))
-               if fund["categories"] else "")
+            + '<div class="grid g3" style="margin-top:16px">' + fund_tiles + '</div>'
+            + gap_html
             + '<div class="table-scroll" style="margin-top:16px">'
               '<table class="data"><thead><tr>'
               '<th>Plan</th><th>Option</th><th class="right">NAV (Rs)</th><th>As of</th>'
@@ -2661,11 +2897,14 @@ def _write_mutual_fund_pages(schemes):
               '</tr></thead><tbody>' + rows_html + '</tbody></table></div>'
             + '<p class="xs faint" style="margin-top:16px">Source: AMFI daily NAV master file. '
               'Historical NAV, returns and portfolio holdings are not carried on this page.</p>'
+            + related_html
             + '<div class="aff-block" style="margin-top:24px">'
-              '<div class="section-title"><h2>Invest in direct mutual funds &amp; high-yield bonds</h2></div>'
-              '<p class="muted small" style="margin-top:4px">Save up to 1-1.5 percent each year in distributor commissions by investing in direct mutual fund plans, and diversify with high-yield fixed income.</p>'
-              '<div class="grid g3 aff-pair" style="margin-top:14px">%s%s%s</div></div>'
-              % (affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html())
+              '<div class="section-title"><h2>Invest in direct mutual funds</h2></div>'
+              '<p class="muted small" style="margin-top:4px">Direct plans carry no distributor commission, so their '
+              'ongoing expenses are lower than the Regular plan of the same scheme. Open an account with a '
+              'SEBI-registered platform to invest in direct plans.</p>'
+              '<div class="grid g2 aff-pair" style="margin-top:14px">%s%s</div></div>'
+              % (affiliateBanner_html(), jiraafBanner_html())
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
         )
@@ -3587,7 +3826,7 @@ def _write_stock_directory(companies):
     return letters
 
 
-def _write_fund_amc_pages(fund_slugs):
+def _write_fund_amc_pages(fund_slugs, funds=None):
     """One hub page per AMC (/funds-by/<amc-slug>/), linking every scheme
     that AMC publishes on AMFI's daily NAV master file. Before this, none of
     the 3,365 fund pages had an inbound link anywhere on the site except a
@@ -3610,6 +3849,8 @@ def _write_fund_amc_pages(fund_slugs):
             n += 1
         amc_slugs[amc] = slug
 
+    groups_by_key = {(g["amc"], g["name"]): g for g in (funds or [])}
+    top_amcs = sorted(by_amc, key=lambda a: (-len(by_amc[a]), a))
     written = 0
     for amc, rows in by_amc.items():
         amc_slug = amc_slugs.get(amc)
@@ -3617,20 +3858,86 @@ def _write_fund_amc_pages(fund_slugs):
             continue
         rows_sorted = sorted(rows, key=lambda r: r[0])
         canonical = "%s/funds-by/%s/" % (SITE_URL, amc_slug)
-        title = "%s Mutual Fund Schemes | BrokerLens" % amc
+        title = "%s: All Mutual Fund Schemes & NAV | BrokerLens" % amc
+        n_schemes = len(rows_sorted)
+
+        # Facts derived only from AMFI's own rows for this fund house.
+        by_family, n_direct, n_regular, latest = {}, 0, 0, None
+        for name, slug in rows_sorted:
+            g = groups_by_key.get((amc, name))
+            if not g:
+                continue
+            info = _fund_category_info(g)
+            fam = "%s: %s" % (info["structure"], info["family"]) if info else "Category not disclosed"
+            by_family.setdefault(fam, []).append((name, slug, info["sub"] if info and info["sub"] != info["family"] else ""))
+            plans = [(v.get("plan") or "").lower() for v in g["variants"]]
+            n_direct += any(pl.startswith("direct") for pl in plans)
+            n_regular += any(pl.startswith("regular") for pl in plans)
+            d = _latest_nav_date(g["variants"])
+            if d and (latest is None or d > latest):
+                latest = d
+        family_order = sorted(by_family, key=lambda f: (f == "Category not disclosed", -len(by_family[f]), f))
         description = _esc(
-            "Every %s mutual fund scheme on AMFI's daily NAV master file (%d schemes), with NAV, ISIN and "
-            "plan/option details on each scheme's own page." % (amc, len(rows_sorted))
+            "All %d %s schemes on AMFI's daily NAV master file%s, grouped by category, with latest NAV, "
+            "Direct and Regular plans and ISIN on each scheme's own page." % (
+                n_schemes, amc,
+                (" (%d categories)" % len([f for f in by_family if f != "Category not disclosed"]))
+                if len(by_family) > 1 else "")
         )[:300]
-        list_html = "".join(
-            '<a href="/fund/%s/">%s</a>' % (_esc(slug), _esc(name)) for name, slug in rows_sorted
+        tiles_html = "".join(
+            '<div class="mega-seg"><div class="mega-seg-label">%s</div><div style="margin-top:2px">%s</div></div>'
+            % (label, value) for label, value in [
+                ("Schemes", "{:,}".format(n_schemes)),
+                ("Categories", str(len([f for f in by_family if f != "Category not disclosed"])) or "0"),
+                ("With a Direct plan", "{:,}".format(n_direct)),
+                ("With a Regular plan", "{:,}".format(n_regular)),
+                ("Latest NAV date", _esc(latest.strftime("%-d %B %Y")) if latest else "Not disclosed"),
+                ("Source", "AMFI daily NAV file"),
+            ]
         )
+        sections_html = "".join(
+            '<div class="section-title" style="margin-top:24px"><h2>%s <span class="xs faint">(%d)</span></h2></div>'
+            '<div class="link-columns" style="margin-top:8px">%s</div>' % (
+                _esc(fam), len(by_family[fam]),
+                "".join('<a href="/fund/%s/">%s%s</a>' % (
+                    _esc(slug), _esc(name), (' <span class="xs faint">(%s)</span>' % _esc(sub)) if sub else "")
+                    for name, slug, sub in sorted(by_family[fam], key=lambda r: r[0])))
+            for fam in family_order
+        )
+        others = [a for a in top_amcs if a != amc and a in amc_slugs][:8]
+        others_html = (
+            '<div class="section-title" style="margin-top:28px"><h2>Other fund houses</h2></div>'
+            '<div class="link-columns" style="margin-top:8px">%s</div>'
+            '<p class="small" style="margin-top:10px"><a href="/funds-by/">All fund houses &rarr;</a></p>'
+            % "".join('<a href="/funds-by/%s/">%s</a>' % (_esc(amc_slugs[a]), _esc(a)) for a in others)
+        )
+        amc_faqs = [
+            ("How many mutual fund schemes does %s have?" % amc,
+             "AMFI's daily NAV master file lists %d scheme%s for %s." % (n_schemes, "" if n_schemes == 1 else "s", amc)),
+            ("How many of %s's schemes have a Direct plan?" % amc,
+             "%d of %d schemes list a Direct plan and %d list a Regular plan." % (n_direct, n_schemes, n_regular)),
+        ]
+        shown_fams = [f for f in family_order if f != "Category not disclosed"][:4]
+        if shown_fams:
+            amc_faqs.append(("Which categories does %s offer?" % amc,
+                             "The largest categories by scheme count are: %s." % "; ".join(
+                                 "%s (%d)" % (f, len(by_family[f])) for f in shown_fams)))
+        if latest:
+            amc_faqs.append(("How recent is the NAV data for %s?" % amc,
+                             "The most recent NAV date on AMFI's file for %s is %s." % (amc, latest.strftime("%-d %B %Y"))))
+        amc_faqs.append(("Does this page show %s's returns, AUM or holdings?" % amc,
+                         "No. BrokerLens carries AMFI's published NAV, ISIN and plan/option data only; returns, "
+                         "assets under management and portfolio holdings are not shown."))
+        faq_html = "".join(
+            '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+            for q, a in amc_faqs)
         crumb_html, crumb_jsonld = _breadcrumb([
             ("BrokerLens", "/"), ("Mutual funds by AMC", "/funds-by/"), (amc, None),
         ])
         jsonld = {
             "@context": "https://schema.org",
             "@graph": [
+                {"@type": "Organization", "name": amc, "url": canonical},
                 {
                     "@type": "ItemList", "name": title, "url": canonical,
                     "itemListElement": [
@@ -3638,6 +3945,9 @@ def _write_fund_amc_pages(fund_slugs):
                         for i, (name, slug) in enumerate(rows_sorted)
                     ],
                 },
+                {"@type": "FAQPage", "mainEntity": [
+                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in amc_faqs]},
                 crumb_jsonld,
             ],
         }
@@ -3647,10 +3957,14 @@ def _write_fund_amc_pages(fund_slugs):
         }
         body += (
             crumb_html
-            + '<h1 style="margin-top:0">%s mutual fund schemes</h1>' % _esc(amc)
-            + '<p class="muted" style="max-width:70ch">%d scheme%s from %s, sourced from AMFI\'s own daily '
-              'NAV master file.</p>' % (len(rows_sorted), "" if len(rows_sorted) == 1 else "s", _esc(amc))
-            + '<div class="link-columns" style="margin-top:16px">' + list_html + '</div>'
+            + '<h1 style="margin-top:0">%s schemes</h1>' % _esc(amc)
+            + '<p class="muted" style="max-width:70ch">%d scheme%s listed on AMFI\'s daily NAV master file, '
+              'grouped by SEBI category.</p>' % (n_schemes, "" if n_schemes == 1 else "s")
+            + '<div class="grid g3" style="margin-top:16px">' + tiles_html + '</div>'
+            + sections_html
+            + others_html
+            + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
+            + '<div style="max-width:68ch">' + faq_html + '</div>'
         )
         body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
             "This page groups AMFI's own daily NAV master file by fund house (AMC).")}

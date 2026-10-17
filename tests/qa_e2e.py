@@ -715,8 +715,8 @@ def test_published():
               bool(re.search(r"had a NAV of Rs \d+\.\d{4}\.", fund_html)) and "Growth Option variant" in fund_html)
         check("fund page shows real NAV figures, not placeholders",
               bool(re.search(r"Rs \d+\.\d{4}", fund_html)))
-        check("fund page carries both sponsored broker banners",
-              "aff-banner-zerodha" in fund_html and "aff-banner-5paisa" in fund_html)
+        check("fund page carries the Zerodha and Jiraaf sponsored banners (two, not three, on thin pages)",
+              "aff-banner-zerodha" in fund_html and "aff-banner-jiraaf" in fund_html)
 
     # The single hand-written data report. Its defaulter-count claim was
     # caught overstating a relationship the raw data didn't support (only 2
@@ -851,8 +851,8 @@ def test_published():
         etf_slugs = sorted(d for d in os.listdir(etf_dir)) if os.path.isdir(etf_dir) else []
         if etf_slugs:
             etf_html = open(os.path.join(etf_dir, etf_slugs[0], "index.html"), encoding="utf-8").read()
-            check("ETF page carries both sponsored broker banners",
-                  "aff-banner-zerodha" in etf_html and "aff-banner-5paisa" in etf_html)
+            check("ETF page carries the Zerodha and Jiraaf sponsored banners (two, not three, on thin pages)",
+                  "aff-banner-zerodha" in etf_html and "aff-banner-jiraaf" in etf_html)
 
     # The SEBI registry was the one directory family that shipped without
     # this fix: /registry only ever hard-linked the first 60 of ~1,691
@@ -1971,6 +1971,153 @@ def test_sse(base):
         check("snapshot frame is valid JSON", False, str(exc)[:60])
 
 
+def test_instrument_pages():
+    """Instrument detail pages (stock / ETF / fund / AMC): real-data
+    enrichment, no duplicated wording, no unsourced claims, no dead links."""
+    section("instrument detail pages")
+    site = os.path.join(ROOT, "site")
+
+    def read(*parts):
+        path = os.path.join(site, *parts)
+        return open(path, encoding="utf-8").read() if os.path.exists(path) else None
+
+    # AMFI parser: a banner like "IL&FS Mutual Fund (IDF)" is a fund house, not
+    # a category (it used to overwrite the running category for ~2,500 rows).
+    sys.path.insert(0, ROOT)
+    from pipeline.sources import amfi as amfi_src
+
+    class _F:
+        def get_text(self, url, ttl=0):
+            return (
+                "Scheme Code;ISIN Div Payout/ISIN Growth;ISIN Div Reinvestment;Scheme Name;"
+                "Net Asset Value;Date\n\n"
+                "Close Ended Schemes(Income)\n\nICICI Prudential Mutual Fund\n\n"
+                "1;INF1;-;ICICI Plan A;;;10.1;01-Jun-2017\n\nIL&FS Mutual Fund (IDF)\n\n"
+                "2;INF2;-;IL&FS Debt Series 1;;;11.0;31-Dec-2018\n\nKotak Mahindra Mutual Fund\n\n"
+                "3;INF3;-;Kotak FMP;;;12.0;01-Jun-2017\n")
+    rows = amfi_src.nav_master(_F()) or []
+    by_code = {r["scheme_code"]: r for r in rows}
+    check("AMFI parser files IL&FS (IDF) schemes under their own fund house",
+          by_code.get("2", {}).get("amc") == "IL&FS Mutual Fund (IDF)")
+    check("AMFI parser keeps the real category across an IL&FS-style AMC banner",
+          all(r["category"] == "Close Ended Schemes(Income)" for r in rows) and len(rows) == 3)
+
+    from pipeline import publish as pub
+    info = pub._parse_amfi_category("Open Ended Schemes(Equity Scheme - Sectoral/ Thematic)")
+    check("AMFI category parsing splits structure / family / sub",
+          info == {"structure": "Open ended", "family": "Equity Scheme", "sub": "Sectoral/Thematic",
+                   "label": "Equity Scheme: Sectoral/Thematic"})
+    check("a non-category string parses to None (never a guess)",
+          pub._parse_amfi_category("IL&FS Mutual Fund (IDF)") is None)
+    gap = pub._direct_regular_gap([
+        {"plan": "Direct Plan", "option": "Growth Option", "nav": 110.0, "nav_date": "01-Oct-2026"},
+        {"plan": "Regular Plan", "option": "Growth Option", "nav": 100.0, "nav_date": "01-Oct-2026"}])
+    check("Direct vs Regular gap is a plain ratio of two published NAVs",
+          gap and abs(gap["gap_pct"] - 10.0) < 1e-9)
+    check("no Direct vs Regular gap when the two NAV dates differ",
+          pub._direct_regular_gap([
+              {"plan": "Direct Plan", "option": "Growth Option", "nav": 110.0, "nav_date": "01-Oct-2026"},
+              {"plan": "Regular Plan", "option": "Growth Option", "nav": 100.0, "nav_date": "30-Sep-2026"}]) is None)
+    check("all-caps scheme names are re-cased for display, acronyms kept",
+          pub._tidy_scheme_name("ADITYA BIRLA SUN LIFE NIFTY BANK ETF") == "Aditya Birla Sun Life Nifty Bank ETF"
+          and pub._tidy_scheme_name("HDFC NIFTY 50 ETF") == "HDFC Nifty 50 ETF"
+          and pub._tidy_scheme_name("Nippon India ETF Nifty 50 BeES") == "Nippon India ETF Nifty 50 BeES")
+
+    src = open(os.path.join(ROOT, "pipeline", "publish.py"), encoding="utf-8").read()
+    check("no unsourced '1-1.5 percent' distributor-commission claim anywhere in the page generator",
+          "1-1.5 percent" not in src)
+
+    # AMC hub pages
+    amc_dir = os.path.join(site, "funds-by")
+    amc_slugs = [d for d in os.listdir(amc_dir)
+                 if d != "category" and os.path.isfile(os.path.join(amc_dir, d, "index.html"))] \
+        if os.path.isdir(amc_dir) else []
+    if amc_slugs:
+        doubled = []
+        no_faq = []
+        no_tiles = []
+        for s in amc_slugs:
+            h = read("funds-by", s, "index.html")
+            m = re.search(r"<title>(.*?)</title>", h, re.S)
+            if m and re.search(r"mutual fund\s+mutual fund", m.group(1), re.I):
+                doubled.append(s)
+            h1 = re.search(r"<h1[^>]*>(.*?)</h1>", h, re.S)
+            if h1 and re.search(r"mutual fund\s+mutual fund", h1.group(1), re.I):
+                doubled.append(s)
+            if '"FAQPage"' not in h or '"Organization"' not in h:
+                no_faq.append(s)
+            if "With a Direct plan" not in h or "Latest NAV date" not in h:
+                no_tiles.append(s)
+        check("no AMC page repeats 'Mutual Fund Mutual Fund' in its title or H1", not doubled, str(doubled[:3]))
+        check("every AMC page carries Organization + FAQPage JSON-LD", not no_faq, str(no_faq[:3]))
+        check("every AMC page shows scheme/category/plan/NAV-date tiles", not no_tiles, str(no_tiles[:3]))
+    else:
+        skip("AMC page checks", "no built AMC pages")
+
+    # ETF pages
+    etf_dir = os.path.join(site, "etf")
+    if os.path.isdir(etf_dir):
+        raw = []
+        for s in os.listdir(etf_dir):
+            h = read("etf", s, "index.html")
+            if h:
+                m = re.search(r"<title>(.*?)</title>", h, re.S)
+                if m and re.match(r"[A-Z0-9_ ]+-\s?[A-Z0-9_]+ \(", m.group(1)):
+                    raw.append(s)
+        check("ETF titles no longer show NSE's raw register label (<=2 unmatched)", len(raw) <= 2, str(raw[:5]))
+        h = read("etf", "abslbanetf", "index.html")
+        if h:
+            check("an ETF matched by ISIN shows its AMFI scheme name, AMC and NAV",
+                  "Aditya Birla Sun Life Nifty Bank ETF" in h and "Latest NAV (AMFI)" in h and "Fund house" in h)
+        check("thin ETF/fund pages carry at most two sponsored banners",
+              all((read("etf", s, "index.html") or "").count('class="aff-banner ') <= 2
+                  for s in list(os.listdir(etf_dir))[:60]))
+
+    # Fund pages
+    fund_page = read("fund", "360-one-mutual-fund-360-one-balanced-hybrid-fund", "index.html")
+    if fund_page:
+        check("fund page shows structure/category/plans tiles and a Direct vs Regular NAV card",
+              "Scheme structure" in fund_page and "Direct vs Regular plan" in fund_page
+              and "not a return figure" in fund_page)
+        check("fund page links to its AMC and related schemes",
+              "/funds-by/360-one-mutual-fund/" in fund_page and "Related schemes" in fund_page)
+    fund_dir = os.path.join(site, "fund")
+    if os.path.isdir(fund_dir):
+        dead = []
+        for s in list(os.listdir(fund_dir))[:3500]:
+            h = read("fund", s, "index.html")
+            for link in re.findall(r'href="(/(?:compare/mutual-funds|fund|funds-by(?:/category)?)/[^"]+)"', h or ""):
+                if not os.path.exists(os.path.join(site, link.strip("/"), "index.html")):
+                    dead.append((s, link))
+        check("every compare / sibling / category / AMC link on a fund page lands on a built page",
+              not dead, str(dead[:3]))
+
+    # Stock pages: compare links must resolve
+    stock_dir = os.path.join(site, "stock")
+    if os.path.isdir(stock_dir):
+        dead, with_links = [], 0
+        for s in os.listdir(stock_dir):
+            h = read("stock", s, "index.html")
+            if not h or "with sector peers" not in h:
+                continue
+            with_links += 1
+            for link in re.findall(r'href="(/compare/stocks/[^"]+)"', h):
+                if not os.path.exists(os.path.join(site, link.strip("/"), "index.html")):
+                    dead.append((s, link))
+        check("stock pages link to sector-peer comparisons", with_links > 100, str(with_links))
+        check("every stock-page comparison link lands on a built, indexable page", not dead, str(dead[:3]))
+        itc = read("stock", "itc", "index.html") or ""
+        check("ITC links to its real sector peers' comparison pages",
+              "ITC vs HINDUNILVR" in itc and "/compare/stocks/itc-vs-hindunilvr/" in itc)
+
+    # Redirects for retired price-target URLs must cover the trailing-slash form
+    rules = (load("vercel.json") or {}).get("redirects", [])
+    sources = {r.get("source") for r in rules}
+    check("retired share-price-target URLs redirect with and without a trailing slash",
+          "/stock/:symbol/share-price-target-:year" in sources
+          and "/stock/:symbol/share-price-target-:year/" in sources)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--url", help="base URL of a running server, e.g. http://127.0.0.1:8000")
@@ -1985,6 +2132,7 @@ def main():
     test_ticker()
     test_leaderboards_market_movers()
     test_hub()
+    test_instrument_pages()
     if args.url:
         test_server(args.url.rstrip("/"))
         test_sse(args.url.rstrip("/"))

@@ -511,6 +511,39 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 </html>"""
 
 
+def curated_peer_index(eq_hist):
+    """symbol -> [(other_symbol, url_path, sector_name)] for exactly the
+    sector-peer comparison pages build_stock_compare_suite() writes in Phase 1
+    (same eligibility: real history on both sides and computable metrics, same
+    dedupe by slug). Stock pages use this to link only to pages that exist; the
+    noindex all-pairs are never included."""
+    index = {}
+    emitted = set()
+    metrics = {}
+
+    def ok(sym):
+        if sym not in metrics:
+            hist = eq_hist.get(sym)
+            metrics[sym] = bool(hist) and calculate_stock_metrics(hist, sym) is not None
+        return metrics[sym]
+
+    for sector_name, sym_list in SECTOR_PEER_GROUPS.items():
+        valid = [s for s in sym_list if s in eq_hist and len(eq_hist[s]) > 0]
+        for i in range(len(valid)):
+            for j in range(i + 1, len(valid)):
+                s1, s2 = valid[i], valid[j]
+                if not (ok(s1) and ok(s2)):
+                    continue
+                slug = f"{_stock_slug(s1)}-vs-{_stock_slug(s2)}"
+                if slug in emitted:
+                    continue
+                emitted.add(slug)
+                url = f"/compare/stocks/{slug}/"
+                index.setdefault(s1, []).append((s2, url, sector_name))
+                index.setdefault(s2, []).append((s1, url, sector_name))
+    return index
+
+
 def build_stock_compare_suite(site_url="https://www.brokerlens.in", universe_top_n=500):
     """Generates stock peer comparisons across sector groups AND the full
     top-N universe (all C(N,2) pairs), producing 100K+ high-intent pages.

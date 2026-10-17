@@ -658,6 +658,59 @@ def _render_master_compare_hub(comparisons_by_cat, site_url):
 </html>"""
 
 
+CURATED_TOP_N = 20  # funds per category that get indexed 1v1 comparison pages
+
+
+def assign_fund_slugs(funds):
+    """Stable URL slug per fund group, in place. Shared with publish.py so a
+    fund page can link to the exact comparison pages this engine writes."""
+    used_slugs = {}
+    for f in funds:
+        base = _slugify(f"{f['amc']} {f['name']}")
+        slug, n = base, 2
+        while slug in used_slugs:
+            slug = f"{base}-{n}"
+            n += 1
+        used_slugs[slug] = True
+        f["slug"] = slug
+
+
+def categorize_funds(funds):
+    """Bucket funds into the keyword categories above (first match wins)."""
+    categorized = {k: [] for k in CATEGORIES}
+    for f in funds:
+        n_low = f["name"].lower()
+        for cat_key, meta in CATEGORIES.items():
+            if any(kw in n_low for kw in meta["keywords"]):
+                categorized[cat_key].append(f)
+                break
+    return categorized
+
+
+def curated_pair_index(funds):
+    """Per-fund view of the curated (indexed) comparison set, keyed by
+    (amc, name): its category and the exact comparison page slugs that
+    generate_all() writes for it. Only same-category pairs among the first
+    CURATED_TOP_N funds of a category are real pages; the noindex cross-category
+    all-pairs are deliberately never returned, so nothing links to them."""
+    assign_fund_slugs(funds)
+    index = {}
+    for cat_key, cat_funds in categorize_funds(funds).items():
+        meta = CATEGORIES[cat_key]
+        top = cat_funds[:CURATED_TOP_N]
+        for i, f in enumerate(top):
+            partners = []
+            for j, g in enumerate(top):
+                if i == j:
+                    continue
+                a, b = (f, g) if i < j else (g, f)
+                partners.append((f"{a['slug']}-vs-{b['slug']}", g))
+            index[(f["amc"], f["name"])] = {"cat": cat_key, "title": meta["title"], "partners": partners}
+        for f in cat_funds[CURATED_TOP_N:]:
+            index[(f["amc"], f["name"])] = {"cat": cat_key, "title": meta["title"], "partners": []}
+    return index
+
+
 def generate_all(site_url="https://www.brokerlens.in", universe_top_n=200):
     """Extracts mutual funds from ingest, categorizes them, and builds comparisons and hubs.
 
@@ -683,25 +736,8 @@ def generate_all(site_url="https://www.brokerlens.in", universe_top_n=200):
 
     funds = _group_mutual_funds(schemes)
 
-    # Assign slugs to funds
-    used_slugs = {}
-    for f in funds:
-        base = _slugify(f"{f['amc']} {f['name']}")
-        slug, n = base, 2
-        while slug in used_slugs:
-            slug = f"{base}-{n}"
-            n += 1
-        used_slugs[slug] = True
-        f["slug"] = slug
-
-    # Bucket funds into categories
-    categorized = {k: [] for k in CATEGORIES}
-    for f in funds:
-        n_low = f["name"].lower()
-        for cat_key, meta in CATEGORIES.items():
-            if any(kw in n_low for kw in meta["keywords"]):
-                categorized[cat_key].append(f)
-                break
+    assign_fund_slugs(funds)
+    categorized = categorize_funds(funds)
 
     comparison_urls = []
     category_urls = []
@@ -725,7 +761,7 @@ def generate_all(site_url="https://www.brokerlens.in", universe_top_n=200):
         category_urls.append(f"/funds-by/category/{cat_key}/")
 
         # Select top 20 funds for 1v1 comparisons (up to 190 comparisons per category)
-        top_funds = cat_funds[:20]
+        top_funds = cat_funds[:CURATED_TOP_N]
         cat_pairs = []
         for i in range(len(top_funds)):
             for j in range(i + 1, len(top_funds)):

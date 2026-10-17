@@ -45,10 +45,16 @@ def nav_master(f):
         if not line:
             continue
         if ";" not in line:
-            # A bare line is either a category banner or an AMC name banner -
-            # AMFI's own convention is that every AMC section header ends
-            # with the literal words "Mutual Fund".
-            if line.lower().endswith("mutual fund"):
+            # A bare line is either a category banner or an AMC name banner.
+            # Category banners always read "<Open|Close> Ended Schemes(...)" or
+            # "Interval Fund Schemes(...)"; every AMC banner carries the
+            # words "Mutual Fund". Matching "ends with Mutual Fund" missed
+            # AMFI's "IL&FS Mutual Fund (IDF)" banner (trailing "(IDF)"), which
+            # then overwrote the running category for ~2,500 following rows
+            # and left IL&FS's own schemes filed under the previous AMC.
+            low = line.lower()
+            is_category = bool(re.match(r"^(open ended|close ended|interval fund)\b", low))
+            if "mutual fund" in low and not is_category:
                 amc = line
             else:
                 category = line
