@@ -2193,6 +2193,37 @@ def test_instrument_pages():
     check("footer film has a seek slider, keyboard shortcuts and a reduced-motion guard",
           'type="range"' in ffs and "keydown" in ffs and "prefers-reduced-motion" in ffs)
 
+    # Broker profile depth (the thin pages Google flagged as Soft 404)
+    zp = read("broker", "zerodha", "index.html") or ""
+    if zp:
+        body = zp[zp.find("</main>"):] if "</main>" in zp else ""
+        words = len(re.sub(r"<[^>]+>", " ", re.sub(r"<script.*?</script>|<style.*?</style>", "", zp, flags=re.S)).split())
+        check("broker profile has real depth (regulatory table, verify/complain steps, FAQ) outside the SPA's <main>",
+              "data-static-only" in body and "Regulatory profile of" in body and "How to verify" in body
+              and "scores.sebi.gov.in" in body and "smartodr.in" in body and "Frequently asked questions about" in body)
+        check("broker profile carries FAQPage JSON-LD and clears 450 visible words", '"FAQPage"' in zp and words > 450, str(words))
+        check("broker profile depth shows only register-sourced fields (SEBI no., exchanges, DP registrations)",
+              "INZ000031633" in zp and "IN-DP-431-2019" in zp)
+        tdead = [l for l in re.findall(r'href="(/broker/zerodha/(?:trade|branches)/[^"]*)"', zp)
+                 if not os.path.exists(os.path.join(site, l.strip("/"), "index.html"))]
+        check("broker profile links to cost and branch pages that exist", not tdead, str(tdead[:3]))
+    appjs = open(os.path.join(site, "assets", "js", "app.js"), encoding="utf-8").read()
+    check("app.js drops server-rendered depth blocks on client-side navigation", "data-static-only" in appjs)
+    itc2 = read("stock", "itc", "index.html") or ""
+    if itc2:
+        check("stock page shows a real performance snapshot labelled by the sessions on file",
+              "Performance snapshot" in itc2 and "no 1-year or 52-week figure is shown" in itc2
+              and re.search(r"From \d+-session high", itc2) is not None)
+        check("stock page answers the 'share price target' query honestly (no forecast number)",
+              "does not publish price targets or forecasts" in itc2 and "for 2026, 2027 or 2030" in itc2)
+
+    kf = read("ipo", "kfintech", "index.html") or ""
+    if kf:
+        mt = re.search(r"<title>(.*?)</title>", kf, re.S)
+        check("a listed IPO's title leads with its real listing outcome (issue price, listing gain), not the pre-issue checklist",
+              mt is not None and "Issue Price Rs" in mt.group(1) and "Listing Gain" in mt.group(1), mt.group(1) if mt else "")
+        check("a fixed-price IPO shows one price, not 'Rs 366 to Rs 366'", "Rs 366 to Rs 366" not in kf)
+
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])
     sources = {r.get("source") for r in rules}

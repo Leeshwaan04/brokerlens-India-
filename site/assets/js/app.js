@@ -9,7 +9,7 @@ import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=3e1dd431fe
 import * as pages from './pages.js?v=69bed6fffc';
 import { clearRedraws } from './chart.js?v=ec48a39b98';
 import './nav-widgets.js?v=7a44d55fb7';
-import './search.js?v=d99a8e84a1';
+import './search.js?v=0278326948';
 import './hero-video.js?v=9e658a1fa5';
 
 const app = document.getElementById('app');
@@ -85,7 +85,13 @@ const ALIAS_OF = {
   '/algo-platforms': '/algo',
 };
 
+let firstRender = true;
+
 async function render() {
+  // Server-rendered depth blocks (data-static-only) belong to the page that was
+  // loaded; once the visitor navigates client-side they would be stale, so drop them.
+  if (!firstRender) document.querySelectorAll('[data-static-only]').forEach((n) => n.remove());
+  firstRender = false;
   const path = location.pathname.replace(/\/{2,}/g, '/');
   const query = new URLSearchParams(location.search);
   clearRedraws();

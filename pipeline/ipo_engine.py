@@ -353,15 +353,25 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
 
     sec_type_label = "SME Emerge" if is_sme else "Mainboard Equity"
 
-    title = f"{company} IPO: Price Band, Lot Size, Dates & Subscription | BrokerLens"
-    desc_extra = f", Listed at Rs {perf['listing_open']:,.0f} ({perf['listing_gain_pct']:+.1f}% listing gain)" if perf.get("has_listing_data") else ""
-    description = f"{company} ({symbol}) IPO details: price band Rs {p_low:g}-{p_high:g}, retail lot size {lot['lot_size']} shares{desc_extra}, subscription figures and allotment process."[:295]
+    band_txt = f"Rs {p_low:g}" if p_low == p_high else f"Rs {p_low:g}-{p_high:g}"
+    if perf.get("has_listing_data"):
+        # Listed IPOs are searched for their outcome ("kfintech ipo", "bandhan bank ipo price"),
+        # so lead with the real listing result instead of the pre-issue checklist. All three
+        # numbers come from NSE's own candles in perf; nothing is estimated.
+        title = (f"{company} IPO: Issue Price Rs {perf['issue_price']:,.0f}, Listing Gain "
+                 f"{perf['listing_gain_pct']:+.1f}% & Current Price | BrokerLens")
+        description = (f"{company} ({symbol}) IPO: issued at Rs {perf['issue_price']:,.0f}, listed at Rs {perf['listing_open']:,.0f} "
+                       f"({perf['listing_gain_pct']:+.1f}% listing gain), last close Rs {perf['cmp']:,.2f} "
+                       f"({perf['current_gain_pct']:+.1f}% since issue). Price band, lot size, dates and subscription.")[:295]
+    else:
+        title = f"{company} IPO: Price Band, Lot Size, Dates & Subscription | BrokerLens"
+        description = f"{company} ({symbol}) IPO details: price band {band_txt}, retail lot size {lot['lot_size']} shares, subscription figures and allotment process."[:295]
 
     # Quick overview facts
     facts = [
         ("Status", f'<span class="badge {"badge-up" if status == "Active" else ("badge-verified" if status == "Listed" else "")}">{_esc(status)}</span>'),
         ("Issue Type", _esc(sec_type_label)),
-        ("Price Band", f"Rs {p_low:g} to Rs {p_high:g}" if p_high > 0 else (r.get("price_band") or "Not disclosed")),
+        ("Price Band", (f"Rs {p_low:g}" if p_low == p_high else f"Rs {p_low:g} to Rs {p_high:g}") if p_high > 0 else (r.get("price_band") or "Not disclosed")),
         ("Issue Size", (f"Rs {(int(r['issue_size_shares']) * p_high / 1e7):,.1f} Cr ({format(int(r['issue_size_shares']), ',')} shares)" if p_high > 0 else f"{format(int(r['issue_size_shares']), ',')} shares") if r.get("issue_size_shares") else "Not disclosed"),
         ("Retail Lot Size (estimated)", f"{lot['lot_size']} shares (Rs {lot['min_retail_inv']:,.0f})"),
         ("Bidding Opens", _long_date(r.get("bidding_start")) if r.get("bidding_start") else "Announced soon"),

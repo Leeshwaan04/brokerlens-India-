@@ -1691,6 +1691,143 @@ def _broker_facts_html(b, built=None):
     )
 
 
+_BROKER_TYPE_BLURB = {
+    "discount": "A discount broker charges low, usually flat, brokerage and offers a self-directed platform without bundled research or advisory.",
+    "full_service": "A full-service broker bundles research, advisory and relationship support with trading, usually at higher brokerage.",
+    "bank": "A bank-led broker offers trading and demat linked to a savings account at the parent bank.",
+    "hybrid": "A hybrid broker combines low-cost self-directed trading with optional advisory or research products.",
+}
+
+
+def _broker_depth(b, built):
+    """Real, sourced depth for a broker profile page: regulatory facts from the
+    SEBI register, how to verify and complain through official channels, links
+    into the cost-calculator pages, and an FAQ answered only from this page's own
+    data. Returns (html, faq_pairs). Written outside the interactive <main> (see
+    _write_broker_pages) so it survives client-side hydration and crawlers see it;
+    nothing here is estimated and no field is shown unless the register has it."""
+    p = b["profile"]
+    brand = p.get("brand") or b["id"]
+    bid = b["id"]
+    rows = []
+
+    def row(label, value):
+        if value:
+            rows.append('<tr><th scope="row">%s</th><td>%s</td></tr>' % (label, value))
+
+    row("Legal name", _esc(p.get("legal_name")) if p.get("legal_name") else "")
+    row("SEBI registration number", _esc(p.get("sebi_reg_no")) if p.get("sebi_reg_no") else "")
+    cats = [CATEGORY_LABELS.get(c, c) for c in (p.get("sebi_categories") or [])]
+    row("Registered as", _esc(", ".join(cats)) if cats else "")
+    exch = p.get("sebi_exchanges") or []
+    row("Exchanges and clearing corporations",
+        "<br>".join(_esc(e.title() if e.isupper() else e) for e in exch) if exch else "")
+    dps = p.get("dp_registrations") or []
+    row("Depository participant registrations",
+        "<br>".join("%s: %s" % (_esc(d.get("depository")), _esc(d.get("reg_no"))) for d in dps) if dps else "")
+    row("Registration validity", _esc(p.get("sebi_validity")) if p.get("sebi_validity") else "")
+    row("City (as on the register)", _esc(p.get("sebi_city")) if p.get("sebi_city") else "")
+    reg_html = (
+        '<div class="section-title"><h2>Regulatory profile of %s</h2></div>'
+        '<div class="table-scroll"><table class="data"><tbody>%s</tbody></table></div>'
+        '<p class="xs faint" style="margin-top:6px">Source: SEBI recognised-intermediary register, as of BrokerLens\'s latest data refresh.</p>'
+        % (_esc(brand), "".join(rows))
+    ) if rows else ""
+
+    verify_html = (
+        '<div class="section-title"><h2>How to verify %s yourself</h2></div>'
+        '<ol class="small" style="max-width:72ch;line-height:1.6">'
+        '<li>Open the SEBI website (<a href="https://www.sebi.gov.in/" rel="noopener" target="_blank">sebi.gov.in</a>) and look up '
+        'recognised intermediaries to confirm the registration number above is active.</li>'
+        '<li>Check the same registration on the exchange you trade on: a stock broker must be a member of that exchange.</li>'
+        '<li>Make sure the demat account is with a registered depository participant, and compare the depository (CDSL or NSDL) '
+        'with the participant registrations listed above.</li>'
+        '<li>Never pay a broker into a personal account. Brokers collect funds only through their registered bank accounts.</li>'
+        '</ol>' % _esc(brand)
+    )
+    complain_html = (
+        '<div class="section-title"><h2>How to raise a complaint about %s</h2></div>'
+        '<p class="small" style="max-width:72ch;line-height:1.6">Write to the broker\'s own grievance cell first and keep the reference '
+        'number. If it is not resolved, register the complaint on <a href="https://scores.sebi.gov.in/" rel="noopener" target="_blank">SEBI SCORES</a>. '
+        'SEBI also runs an online dispute-resolution portal, <a href="https://smartodr.in/" rel="noopener" target="_blank">SMART ODR</a>, '
+        'for unresolved disputes with market intermediaries.</p>' % _esc(brand)
+    )
+
+    # Links into pages this build writes later (trade costs, branches).
+    extra = []
+    try:
+        from .trade_cost_engine import BROKER_RATES, get_trade_cost_stocks
+        if bid in BROKER_RATES:
+            stocks = get_trade_cost_stocks(limit_stocks=12)
+            if stocks:
+                extra.append(
+                    '<div class="section-title"><h2>%s charges on a trade</h2></div>'
+                    '<p class="small" style="max-width:72ch">BrokerLens works out brokerage, STT, exchange charges, stamp duty, SEBI fee and GST for '
+                    'a trade in each liquid stock under %s\'s rate card. Start with a popular one, or use the '
+                    '<a href="/calculator">cost calculator</a>:</p>'
+                    '<div class="row-wrap" style="gap:8px;margin-top:10px">%s</div>'
+                    % (_esc(brand), _esc(brand), "".join(
+                        '<a class="chip" href="/broker/%s/trade/%s/">%s &rarr;</a>'
+                        % (_esc(bid), _esc(_stock_slug(s["symbol"])), _esc(s["symbol"])) for s in stocks)))
+    except Exception:
+        pass
+    try:
+        from .broker_branch_engine import BROKER_BRANCH_METADATA
+        if bid in BROKER_BRANCH_METADATA:
+            extra.append('<p class="small" style="margin-top:14px"><a href="/broker/%s/branches/">%s branch and city coverage &rarr;</a></p>'
+                         % (_esc(bid), _esc(brand)))
+    except Exception:
+        pass
+
+    faqs = []
+    if p.get("sebi_reg_no"):
+        faqs.append(("Is %s registered with SEBI?" % brand,
+                     "Yes. %s appears on SEBI's recognised-intermediary register under registration number %s%s." % (
+                         p.get("legal_name") or brand, p["sebi_reg_no"],
+                         (" (valid %s)" % p["sebi_validity"]) if p.get("sebi_validity") else "")))
+        faqs.append(("What is the SEBI registration number of %s?" % brand,
+                     "%s's SEBI registration number is %s." % (brand, p["sebi_reg_no"])))
+    else:
+        faqs.append(("Is %s registered with SEBI?" % brand,
+                     "BrokerLens has not yet matched %s to an entry on SEBI's register, so no registration number is shown. "
+                     "Check SEBI's own register before opening an account." % brand))
+    if p.get("segments"):
+        faqs.append(("Which segments does %s offer?" % brand,
+                     "%s offers: %s." % (brand, ", ".join(SEGMENT_LABEL.get(s, s) for s in p["segments"]))))
+    if p.get("type"):
+        faqs.append(("Is %s a discount or a full-service broker?" % brand,
+                     "BrokerLens classifies %s as a %s broker. %s" % (
+                         brand, TYPE_LABEL.get(p["type"], p["type"]).lower(), _BROKER_TYPE_BLURB.get(p["type"], ""))))
+    if p.get("hq") or p.get("founded"):
+        faqs.append(("Where is %s headquartered and when was it founded?" % brand,
+                     "%s%s%s." % (brand, (" is headquartered in %s" % p["hq"]) if p.get("hq") else "",
+                                  ((" and was founded in %s" % p["founded"]) if p.get("hq") else (" was founded in %s" % p["founded"]))
+                                  if p.get("founded") else "")))
+    if dps:
+        faqs.append(("Is %s a depository participant?" % brand,
+                     "Yes. The register lists: %s." % "; ".join("%s registration %s" % (d.get("depository"), d.get("reg_no")) for d in dps)))
+    faqs.append(("How do I complain about %s?" % brand,
+                 "Raise it with %s's grievance cell first, then register it on SEBI SCORES (scores.sebi.gov.in) or use SMART ODR (smartodr.in) "
+                 "if it is not resolved." % brand))
+    if p.get("listed_company"):
+        faqs.append(("Is %s a listed company?" % brand, "%s is the brand of a company listed on the stock exchanges." % brand))
+    faq_html = (
+        '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions about %s</h2>'
+        '<div style="max-width:68ch">%s</div>' % (
+            _esc(brand), "".join('<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
+                                 for q, a in faqs))
+    )
+    body = (
+        '<div class="wrap" data-static-only style="padding-top:0;padding-bottom:24px">'
+        + reg_html + verify_html + complain_html + "".join(extra) + faq_html
+        + '<p class="xs faint" style="margin-top:20px">BrokerLens is an information service, not a SEBI-registered investment '
+          'adviser. Nothing here is a recommendation to open an account with, or avoid, any broker. '
+          '<a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources</a></p>'
+        + '</div>'
+    )
+    return body, faqs
+
+
 def _write_broker_pages(built):
     """Static, server-rendered pages at the SAME /broker/:id URL the SPA already
     uses - not a sibling path like the registry pages needed.
@@ -1735,7 +1872,13 @@ def _write_broker_pages(built):
         if b["profile"].get("hq"):
             entity_jsonld["address"] = {"@type": "PostalAddress", "addressLocality": b["profile"]["hq"], "addressCountry": "IN"}
         entity_jsonld["areaServed"] = "IN"
-        jsonld = {"@context": "https://schema.org", "@graph": [entity_jsonld, crumb_jsonld]}
+        depth_html, depth_faqs = _broker_depth(b, built)
+        jsonld = {"@context": "https://schema.org", "@graph": [
+            entity_jsonld, crumb_jsonld,
+            {"@type": "FAQPage", "mainEntity": [
+                {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                for q, a in depth_faqs]},
+        ]}
 
         page = _APP_SHELL_HEAD % {
             "title": _esc(title), "description": _esc(description),
@@ -1743,7 +1886,9 @@ def _write_broker_pages(built):
         }
         page += crumb_html
         page += _broker_facts_html(b, built)
-        page += _APP_SHELL_FOOT
+        # The depth block goes right after </main>, outside the element the SPA
+        # re-renders, so hydration cannot wipe it (see data-static-only in app.js).
+        page += _APP_SHELL_FOOT.replace("</main>", "</main>" + depth_html, 1)
 
         dest_dir = os.path.join(ROOT, "site", "broker", bid)
         os.makedirs(dest_dir, exist_ok=True)
@@ -2014,6 +2159,54 @@ def _stock_ohlc_html(history):
     )
 
 
+def _stock_perf(history):
+    """Real performance measures computed only from the daily closes already on
+    file (NSE bhavcopy). Every window is labelled by the sessions actually
+    available, never as 1-year/52-week when the cache is shorter, and nothing
+    is extrapolated. Returns (html, facts) or ("", None) when too short."""
+    rows = [(r.get("date"), r.get("close")) for r in (history or [])
+            if isinstance(r.get("close"), (int, float)) and r["close"] > 0 and r.get("date")]
+    n = len(rows)
+    if n < 6:
+        return "", None
+    last_date, last = rows[-1]
+    first_date, first = rows[0]
+    closes = [c for _d, c in rows]
+    hi, lo = max(closes), min(closes)
+    peak, mdd = closes[0], 0.0
+    for c in closes:
+        peak = max(peak, c)
+        mdd = min(mdd, (c / peak - 1) * 100)
+    wins = [(label, (last / closes[-1 - k] - 1) * 100) for label, k in (("1 week", 5), ("1 month", 21), ("3 months", 63)) if n > k]
+    since = (last / first - 1) * 100
+    vols = [r.get("volume") for r in history if isinstance(r.get("volume"), (int, float))]
+    vratio = None
+    if len(vols) > 5 and sum(vols[:-1]) > 0:
+        vratio = vols[-1] / (sum(vols[:-1]) / len(vols[:-1]))
+    facts = {"n": n, "first_date": first_date, "last_date": last_date, "last": last, "hi": hi, "lo": lo,
+             "from_high": (last / hi - 1) * 100, "from_low": (last / lo - 1) * 100, "since": since, "mdd": mdd, "wins": wins}
+
+    def tile(label, value_html):
+        return ('<div class="mega-seg"><div class="mega-seg-label">%s</div>'
+                '<div style="margin-top:2px;font-weight:600">%s</div></div>' % (label, value_html))
+    tiles = [tile("Return, %s" % lab, _pct_html(v)) for lab, v in wins]
+    tiles.append(tile("Return since %s" % _esc(_iso_to_long_date(first_date)), _pct_html(since)))
+    tiles.append(tile("From %d-session high" % n, _pct_html(facts["from_high"])))
+    tiles.append(tile("From %d-session low" % n, _pct_html(facts["from_low"])))
+    tiles.append(tile("Deepest fall from a peak", _pct_html(mdd)))
+    if vratio is not None:
+        tiles.append(tile("Latest volume vs average", "%.1fx" % vratio))
+    html = (
+        '<div class="section-title"><h2>Performance snapshot</h2></div>'
+        '<div class="grid g3">%s</div>'
+        '<p class="xs faint" style="margin-top:8px;max-width:78ch">Computed from %d daily closes in NSE\'s bhavcopy, %s to %s. '
+        'This is the history BrokerLens holds, not a full year, so no 1-year or 52-week figure is shown. '
+        'Past performance does not indicate future results.</p>'
+        % ("".join(tiles), n, _esc(_iso_to_long_date(first_date)), _esc(_iso_to_long_date(last_date)))
+    )
+    return html, facts
+
+
 def _listing_details_html(symbol, c, sector):
     """Static reference facts (ISIN, series, face value, market lot) as a
     compact key-value list, not a grid of boxy tiles - these matter far less
@@ -2091,7 +2284,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
     valid_symbols = {(c.get("symbol") or "").strip().upper() for c in companies} - {""}
     try:
         from .trade_cost_engine import get_trade_cost_stocks
-        trade_cost_slugs = {s["symbol"].lower().replace("_", "-") for s in get_trade_cost_stocks(limit_stocks=1000)}
+        trade_cost_slugs = {_stock_slug(s["symbol"]) for s in get_trade_cost_stocks(limit_stocks=1000)}
     except Exception:
         trade_cost_slugs = set()
     membership, industry_by_symbol, sector_members = {}, {}, {}
@@ -2117,7 +2310,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
         if sym:
             actions_by_symbol.setdefault(sym, []).append(a)
 
-    def stock_faqs(name, symbol, c, member_of, match, price_row):
+    def stock_faqs(name, symbol, c, member_of, match, price_row, perf=None):
         """Every question is answered from a fact already on this page -
         varying genuinely with real data (an absent ISIN, index membership,
         a broker link) rather than a fixed list reworded per symbol, which
@@ -2149,6 +2342,21 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             faqs.append(("Is %s a listed stock broker?" % name,
                          "Yes, %s is the listed parent of a BrokerLens-tracked broker; see its broker profile "
                          "for regulatory and cost details." % name))
+        if perf:
+            faqs.append((
+                "What is the share price target of %s for 2026, 2027 or 2030?" % name,
+                "BrokerLens does not publish price targets or forecasts, and nothing here is investment advice. Targets come from "
+                "SEBI-registered research analysts and brokerages; read their reports and the company's own disclosures. What the "
+                "data shows: %s last closed at %s on %s. Over the %d sessions on file it traded between %s and %s and was %.1f%% "
+                "%s its high on the last close." % (
+                    name, _inr_html(perf["last"]), _iso_to_long_date(perf["last_date"]), perf["n"],
+                    _inr_html(perf["lo"]), _inr_html(perf["hi"]), abs(perf["from_high"]),
+                    "below" if perf["from_high"] < 0 else "at")))
+            faqs.append((
+                "How has %s performed recently?" % name,
+                "From %s to %s, %s moved %+.1f%% (%d sessions on file). %s Past performance does not indicate future results." % (
+                    _iso_to_long_date(perf["first_date"]), _iso_to_long_date(perf["last_date"]), name, perf["since"], perf["n"],
+                    ("Over the last month it moved %+.1f%%." % dict(perf["wins"])["1 month"]) if "1 month" in dict(perf["wins"]) else "")))
         faqs.append(("What was %s's last closing price?" % name,
                      "%s closed at %s on %s, from NSE's own daily bhavcopy." % (name, _inr_html(price_row["close"]), price_row["date"])
                      if price_row else
@@ -2271,7 +2479,8 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             '</div>'
         ) % (_esc(symbol), _esc(name))
 
-        faqs = stock_faqs(name, symbol, c, member_of, match, price_row)
+        perf_html, perf = _stock_perf(history)
+        faqs = stock_faqs(name, symbol, c, member_of, match, price_row, perf)
         faq_html = "".join(
             '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
             for q, a in faqs
@@ -2325,6 +2534,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L)%s.</p>'
               % (" and NSE's daily bhavcopy for price history" if history else "; price history was not available "
                  "for this symbol in the latest data refresh")
+            + perf_html
             + index_html
             + ("" if history else trade_cta_html)
             + actions_html
