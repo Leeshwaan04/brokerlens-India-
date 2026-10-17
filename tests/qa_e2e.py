@@ -2110,6 +2110,25 @@ def test_instrument_pages():
         check("ITC links to its real sector peers' comparison pages",
               "ITC vs HINDUNILVR" in itc and "/compare/stocks/itc-vs-hindunilvr/" in itc)
 
+    # Header speaker button: ships hidden, never autoplays, sits next to search
+    js_path = os.path.join(site, "assets", "js", "theme-audio.js")
+    check("theme-audio.js exists and never autoplays",
+          os.path.exists(js_path)
+          and not re.search(r"\.autoplay\s*=|autoplay\s*:", open(js_path, encoding="utf-8").read().lower()))
+    check("search.js (loaded on every page with a search button) pulls in theme-audio.js",
+          "theme-audio.js" in open(os.path.join(site, "assets", "js", "search.js"), encoding="utf-8").read())
+    pages_with_search = [("stock", "itc"), ("etf", "abslbanetf"), ("brokers",), ("compare",), ("news",)]
+    bad = []
+    for parts in pages_with_search:
+        h = read(*parts, "index.html")
+        if not h or "id=\"search-toggle\"" not in h:
+            continue
+        i, j = h.find("id=\"search-toggle\""), h.find("id=\"audio-toggle\"")
+        if j < 0 or j < i or " hidden" not in h[j:j + 220] or j - i > 900:
+            bad.append("/".join(parts))
+    check("every header with a search button has a hidden-until-ready speaker button right after it",
+          not bad, str(bad))
+
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])
     sources = {r.get("source") for r in rules}

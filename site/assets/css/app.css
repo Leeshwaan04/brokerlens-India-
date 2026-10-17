@@ -239,6 +239,8 @@ th[data-tip]:not(.sortable) { cursor: help; }
   display: grid; place-items: center; font-size: 14px; transition: all var(--dur) var(--ease);
 }
 .icon-btn:hover { color: var(--text); border-color: var(--border-strong); }
+.icon-btn[hidden] { display: none; }
+#audio-toggle[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
 
 /* Global search: a centered modal overlay, not a mega-menu-style dropdown -
    this is the one nav widget that needs the visitor's full attention rather

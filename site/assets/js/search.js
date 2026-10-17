@@ -8,6 +8,7 @@
  * weight to a page a visitor doesn't search from.
  */
 import { esc, loadSearchIndex } from './store.js?v=3e1dd431fe';
+import './theme-audio.js?v=3dbfda0590';
 
 const toggle = document.getElementById('search-toggle');
 const overlay = document.getElementById('search-overlay');

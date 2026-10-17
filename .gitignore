@@ -48,3 +48,8 @@ dist/
 *.zip
 .vercel
 .env*
+
+# Theme music: not committed until the track's licence is confirmed. theme-audio.js hides the
+# speaker button when the file is absent, so the site works without it.
+site/assets/audio/*.mp3
+*.mp3
