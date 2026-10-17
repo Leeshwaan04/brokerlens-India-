@@ -158,70 +158,62 @@ def compute_lot_metrics(upper_price, is_sme=False):
     }
 
 
-def compute_listing_performance(symbol, effective_issue_price, equity_history):
-    """Computes listing day gains and total current returns using equity candles."""
+def compute_listing_performance(symbol, effective_issue_price, equity_history, listing_date=None):
+    """Returns since issue (latest close vs issue price) and, only when the real
+    listing-day candle is on file, the listing-day gain.
+
+    BrokerLens holds a short price history (about 120 sessions), so for most
+    listed IPOs the listing day lies before the first candle. The old code treated
+    candles[0] as the listing day and, with no issue price, defaulted the issue
+    price to that same candle's open, which printed a made-up "listing gain" on
+    most listed IPO pages. Now: the listing-day candle must match the record's
+    listing_date exactly, and the issue price is never guessed from a candle."""
+    out = {"has_listing_data": False, "has_current_data": False}
     if not equity_history or not symbol:
-        return {"has_listing_data": False}
+        return out
+    candles = equity_history.get(str(symbol).upper().strip())
+    if not candles or not isinstance(candles, list):
+        return out
 
-    sym = str(symbol).upper().strip()
-    candles = equity_history.get(sym)
-    if not candles or not isinstance(candles, list) or len(candles) == 0:
-        return {"has_listing_data": False}
-
-    first = candles[0]
     latest = candles[-1]
-
-    listing_date = first.get("date") or ""
-    listing_open = float(first.get("open") or 0.0)
-    listing_close = float(first.get("close") or 0.0)
     cmp = float(latest.get("close") or 0.0)
     cmp_date = latest.get("date") or ""
-
-    if listing_open <= 0:
-        listing_open = listing_close
-
     ip = float(effective_issue_price or 0.0)
-    if ip <= 0:
-        ip = listing_open
-
-    if ip <= 0:
-        return {"has_listing_data": False}
-
-    listing_gain_inr = listing_open - ip
-    listing_gain_pct = (listing_gain_inr / ip) * 100.0
-
-    current_gain_inr = cmp - ip
-    current_gain_pct = (current_gain_inr / ip) * 100.0
-
     all_highs = [float(c.get("high") or 0.0) for c in candles if c.get("high")]
     all_lows = [float(c.get("low") or 0.0) for c in candles if c.get("low")]
-    high_52w = max(all_highs[-252:]) if len(all_highs) >= 252 else (max(all_highs) if all_highs else cmp)
-    low_52w = min(all_lows[-252:]) if len(all_lows) >= 252 else (min(all_lows) if all_lows else cmp)
+    out.update({
+        "n_sessions": len(candles),
+        "cmp": cmp, "cmp_date": cmp_date,
+        "high_52w": max(all_highs[-252:]) if all_highs else cmp,
+        "low_52w": min(all_lows[-252:]) if all_lows else cmp,
+    })
+    if ip > 0 and cmp > 0:
+        out.update({
+            "has_current_data": True, "issue_price": ip,
+            "current_gain_inr": cmp - ip, "current_gain_pct": (cmp - ip) / ip * 100.0,
+            "gain_multiple": cmp / ip,
+        })
 
-    return {
-        "has_listing_data": True,
-        "issue_price": ip,
-        "listing_date": listing_date,
-        "listing_open": listing_open,
-        "listing_close": listing_close,
-        "listing_gain_inr": listing_gain_inr,
-        "listing_gain_pct": listing_gain_pct,
-        "cmp": cmp,
-        "cmp_date": cmp_date,
-        "current_gain_inr": current_gain_inr,
-        "current_gain_pct": current_gain_pct,
-        "gain_multiple": cmp / ip if ip > 0 else 1.0,
-        "high_52w": high_52w,
-        "low_52w": low_52w,
-    }
+    ld = (listing_date or "")[:10]
+    lc = next((c for c in candles if c.get("date") == ld), None) if ld else None
+    if lc and ip > 0:
+        lo = float(lc.get("open") or 0.0) or float(lc.get("close") or 0.0)
+        if lo > 0:
+            out.update({
+                "has_listing_data": True, "listing_date": ld, "listing_open": lo,
+                "listing_close": float(lc.get("close") or 0.0),
+                "listing_gain_inr": lo - ip, "listing_gain_pct": (lo - ip) / ip * 100.0,
+            })
+    return out
 
 
 def render_performance_card(perf, sym_slug):
     """Renders real-time post-listing returns card."""
-    if not perf or not perf.get("has_listing_data"):
+    if not perf or not perf.get("has_current_data"):
         return ""
+    has_ld = bool(perf.get("has_listing_data"))
 
-    lg_pct = perf["listing_gain_pct"]
+    lg_pct = perf["listing_gain_pct"] if has_ld else 0.0
     lg_cls = "var(--green)" if lg_pct >= 0 else "var(--red)"
     lg_sign = "+" if lg_pct >= 0 else ""
 
@@ -229,8 +221,22 @@ def render_performance_card(perf, sym_slug):
     cg_cls = "var(--green)" if cg_pct >= 0 else "var(--red)"
     cg_sign = "+" if cg_pct >= 0 else ""
 
-    badge_label = "Listing Day Gainer" if lg_pct >= 0 else "Listing Discount"
-    badge_cls = "badge-up" if lg_pct >= 0 else "badge-warn"
+    if has_ld:
+        badge_label = "Listing Day Gainer" if lg_pct >= 0 else "Listing Discount"
+        badge_cls = "badge-up" if lg_pct >= 0 else "badge-warn"
+        sub_note = "Verified exchange performance tracked from official NSE listing day open to current market close."
+        listing_cell = (f'<div class="xs muted">Listing Day Open</div>'
+                        f'<div style="font-size:18px;font-weight:700;margin-top:4px">Rs {perf["listing_open"]:,.2f}</div>'
+                        f'<div class="xs" style="color:{lg_cls};font-weight:600">{lg_sign}{lg_pct:.1f}% ({lg_sign}Rs {perf["listing_gain_inr"]:,.2f})</div>')
+    else:
+        badge_label, badge_cls = "Since Issue", ""
+        sub_note = ("Latest close versus the issue price. The listing-day candle is before the price history BrokerLens holds, "
+                    "so no listing-day gain is shown rather than a guessed one.")
+        listing_cell = ('<div class="xs muted">Listing Day Open</div>'
+                        '<div style="font-size:14px;font-weight:600;margin-top:6px">Not on file</div>'
+                        '<div class="xs faint">before our price history</div>')
+    n_s = perf.get("n_sessions") or 0
+    range_label = "52-Week Range" if n_s >= 252 else f"{n_s}-Session Range"
 
     return f"""
     <div class="card" style="margin-top:24px;padding:22px;background:var(--bg-raised);border-left:4px solid {cg_cls}">
@@ -238,7 +244,7 @@ def render_performance_card(perf, sym_slug):
         <div>
           <span class="badge {badge_cls}">{badge_label}</span>
           <h2 style="margin:8px 0 2px 0;font-size:18px">Post-Listing Performance Track Record</h2>
-          <p class="muted small" style="margin:0">Verified exchange performance tracked from official NSE listing day open to current market close.</p>
+          <p class="muted small" style="margin:0">{sub_note}</p>
         </div>
         <div class="right">
           <div class="xs muted">Return Multiple</div>
@@ -250,12 +256,10 @@ def render_performance_card(perf, sym_slug):
         <div style="padding:12px;background:var(--bg);border-radius:6px">
           <div class="xs muted">Issue Price</div>
           <div style="font-size:18px;font-weight:700;margin-top:4px">Rs {perf['issue_price']:,.2f}</div>
-          <div class="xs faint">Offer cut-off</div>
+          <div class="xs faint">Per issue record</div>
         </div>
         <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Listing Day Open</div>
-          <div style="font-size:18px;font-weight:700;margin-top:4px">Rs {perf['listing_open']:,.2f}</div>
-          <div class="xs" style="color:{lg_cls};font-weight:600">{lg_sign}{lg_pct:.1f}% ({lg_sign}Rs {perf['listing_gain_inr']:,.2f})</div>
+          {listing_cell}
         </div>
         <div style="padding:12px;background:var(--bg);border-radius:6px">
           <div class="xs muted">Current Market Price (CMP)</div>
@@ -263,7 +267,7 @@ def render_performance_card(perf, sym_slug):
           <div class="xs" style="color:{cg_cls};font-weight:600">{cg_sign}{cg_pct:.1f}% ({cg_sign}Rs {perf['current_gain_inr']:,.2f})</div>
         </div>
         <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">52-Week Range</div>
+          <div class="xs muted">{range_label}</div>
           <div style="font-size:15px;font-weight:600;margin-top:4px">Rs {perf['low_52w']:,.0f} - {perf['high_52w']:,.0f}</div>
           <div class="xs faint">As of {perf['cmp_date']}</div>
         </div>
@@ -385,7 +389,7 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
     p_low, p_high, cut_off = parse_price_band(r.get("price_band"), r.get("issue_price"))
     is_sme = (r.get("security_type") == "SME")
     lot = compute_lot_metrics(p_high, is_sme)
-    perf = compute_listing_performance(symbol, r.get("issue_price") or cut_off, equity_history)
+    perf = compute_listing_performance(symbol, r.get("issue_price") or cut_off, equity_history, r.get("listing_date"))
 
     today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     b_end = r.get("bidding_end") or ""
@@ -412,6 +416,11 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         description = (f"{company} ({symbol}) IPO: issued at Rs {perf['issue_price']:,.0f}, listed at Rs {perf['listing_open']:,.0f} "
                        f"({perf['listing_gain_pct']:+.1f}% listing gain), last close Rs {perf['cmp']:,.2f} "
                        f"({perf['current_gain_pct']:+.1f}% since issue). Price band, lot size, dates and subscription.")[:295]
+    elif status == "Listed" and perf.get("has_current_data"):
+        title = (f"{company} IPO: Issue Price Rs {perf['issue_price']:,.0f}, Latest Close Rs {perf['cmp']:,.0f} "
+                 f"({perf['current_gain_pct']:+.1f}% Since Issue) | BrokerLens")
+        description = (f"{company} ({symbol}) IPO: issued at Rs {perf['issue_price']:,.0f}, last close Rs {perf['cmp']:,.2f} on "
+                       f"{_long_date(perf['cmp_date'])} ({perf['current_gain_pct']:+.1f}% since issue). Price band, lot size, dates and subscription.")[:295]
     elif status == "Active":
         title = f"{company} IPO Open: Dates, Price Band, Lot Size & Subscription Status | BrokerLens"
         description = (f"{company} ({symbol}) IPO is open for bidding" + (f" until {_long_date(b_end)}" if b_end else "")
@@ -578,7 +587,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
     for r in listed_candidates:
         sym = r.get("symbol", "").upper()
         p_low, p_high, cut_off = parse_price_band(r.get("price_band"), r.get("issue_price"))
-        perf = compute_listing_performance(sym, r.get("issue_price") or cut_off, equity_history)
+        perf = compute_listing_performance(sym, r.get("issue_price") or cut_off, equity_history, r.get("listing_date"))
         row_dict = dict(r)
         row_dict["perf"] = perf
         listed_with_perf.append(row_dict)
@@ -704,26 +713,22 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
             perf = r.get("perf") or {}
             d_list = _long_date(r.get("listing_date") or perf.get("listing_date")) or "-"
             
+            ip_val = r.get("issue_price")
+            ip_str = (f"Rs {perf['issue_price']:,.2f}" if perf.get("has_current_data")
+                      else (f"Rs {ip_val}" if ip_val else (r.get("price_band") or "-")))
+            lo_str = lg_str = cmp_str = cg_str = "-"
             if perf.get("has_listing_data"):
-                ip_str = f"Rs {perf['issue_price']:,.2f}"
                 lo_str = f"Rs {perf['listing_open']:,.2f}"
                 lg_pct = perf["listing_gain_pct"]
                 lg_cls = "var(--green)" if lg_pct >= 0 else "var(--red)"
                 lg_str = f"<span style='color:{lg_cls};font-weight:600'>{lg_pct:+.1f}%</span>"
-
+            if perf.get("has_current_data"):
                 cmp_str = f"Rs {perf['cmp']:,.2f}"
                 cg_pct = perf["current_gain_pct"]
                 cg_cls = "var(--green)" if cg_pct >= 0 else "var(--red)"
                 cg_str = f"<span style='color:{cg_cls};font-weight:600'>{cg_pct:+.1f}%</span>"
-                stock_link = f'<a href="/stock/{slug}/" class="btn btn-xs">Live &rarr;</a>'
-            else:
-                ip_val = r.get("issue_price")
-                ip_str = f"Rs {ip_val}" if ip_val else (r.get("price_band") or "-")
-                lo_str = "-"
-                lg_str = "-"
-                cmp_str = "-"
-                cg_str = "-"
-                stock_link = f'<a href="/ipo/{slug}/" class="btn btn-xs">View &rarr;</a>'
+            stock_link = (f'<a href="/stock/{slug}/" class="btn btn-xs">Live &rarr;</a>' if perf.get("has_current_data")
+                          else f'<a href="/ipo/{slug}/" class="btn btn-xs">View &rarr;</a>')
 
             out += f"""
             <tr>
@@ -924,20 +929,19 @@ def render_enhanced_ipo_archive(records, equity_history, head_template, foot_tem
         co = r.get("company") or sym
         status = r.get("status", "Closed")
         p_low, p_high, cut_off = parse_price_band(r.get("price_band"), r.get("issue_price"))
-        perf = compute_listing_performance(sym, r.get("issue_price") or cut_off, equity_history)
+        perf = compute_listing_performance(sym, r.get("issue_price") or cut_off, equity_history, r.get("listing_date"))
 
         d_str = _long_date(r.get("listing_date") or r.get("bidding_end") or perf.get("listing_date")) or "-"
         ip_val = r.get("issue_price") or cut_off
         ip_str = f"Rs {ip_val:,.0f}" if ip_val > 0 else (r.get("price_band") or "-")
 
+        gain_str = cmp_str = "-"
         if perf.get("has_listing_data"):
             lg_pct = perf["listing_gain_pct"]
             lg_cls = "var(--green)" if lg_pct >= 0 else "var(--red)"
             gain_str = f"<span style='color:{lg_cls};font-weight:600'>{lg_pct:+.1f}%</span>"
+        if perf.get("has_current_data"):
             cmp_str = f"Rs {perf['cmp']:,.1f}"
-        else:
-            gain_str = "-"
-            cmp_str = "-"
 
         sub_val = r.get("times_subscribed")
         sub_str = f"{float(sub_val):.2f}x" if sub_val is not None else "-"

@@ -2220,8 +2220,8 @@ def test_instrument_pages():
     kf = read("ipo", "kfintech", "index.html") or ""
     if kf:
         mt = re.search(r"<title>(.*?)</title>", kf, re.S)
-        check("a listed IPO's title leads with its real listing outcome (issue price, listing gain), not the pre-issue checklist",
-              mt is not None and "Issue Price Rs" in mt.group(1) and "Listing Gain" in mt.group(1), mt.group(1) if mt else "")
+        check("a listed IPO's title leads with its real outcome (issue price plus listing gain or return since issue), not the pre-issue checklist",
+              mt is not None and "Issue Price Rs" in mt.group(1) and ("Listing Gain" in mt.group(1) or "Since Issue" in mt.group(1)), mt.group(1) if mt else "")
         check("a fixed-price IPO shows one price, not 'Rs 366 to Rs 366'", "Rs 366 to Rs 366" not in kf)
 
     # Tiered sitemap, IPO lifecycle, email alerts
@@ -2255,6 +2255,25 @@ def test_instrument_pages():
           "cfg.enabled" in aj and "startsWith('/ipo')" in aj and "consent" in aj and "no tips" in aj)
     priv = read("privacy-policy", "index.html") or ""
     check("privacy policy discloses the alert signup (data, purpose, withdrawal)", "IPO email alerts" in priv and "withdraw consent" in priv)
+
+    # Listing-day gain must come from the real listing-day candle, never from candles[0]
+    from pipeline.ipo_engine import compute_listing_performance as clp
+    hist = {"AAA": [{"date": "2026-06-01", "open": 900, "high": 950, "low": 880, "close": 940},
+                    {"date": "2026-10-01", "open": 960, "high": 970, "low": 950, "close": 965}]}
+    old_ipo = clp("AAA", 366, hist, "2022-12-29")
+    check("an IPO whose listing day is before our price history shows no listing-day gain (only return since issue)",
+          not old_ipo["has_listing_data"] and old_ipo["has_current_data"] and abs(old_ipo["current_gain_pct"] - (965 / 366 - 1) * 100) < 1e-9)
+    fresh = clp("AAA", 900, hist, "2026-06-01")
+    check("an IPO whose listing-day candle is on file gets the exact listing-day open and gain",
+          fresh["has_listing_data"] and fresh["listing_open"] == 900 and abs(fresh["listing_gain_pct"]) < 1e-9)
+    noprice = clp("AAA", 0, hist, "2026-06-01")
+    check("with no issue price on record, no gain is invented from a candle", not noprice["has_listing_data"] and not noprice["has_current_data"])
+    ao = read("ipo", "aonesteels", "index.html") or ""
+    if ao:
+        check("an IPO with its listing-day candle on file still shows the listing-day gain", "Listing Day Open" in ao and "Not on file" not in ao)
+    if kf:
+        check("an IPO listed before our price history says so instead of showing a listing-day gain",
+              "Not on file" in kf and "Listing Day Gainer" not in kf and "Listing Discount" not in kf)
 
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])
