@@ -53,3 +53,6 @@ dist/
 # speaker button when the file is absent, so the site works without it.
 site/assets/audio/*.mp3
 *.mp3
+
+# Raw source videos at the repo root (the optimised hero clip lives in site/assets/video/)
+/*.mp4

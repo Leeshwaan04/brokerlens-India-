@@ -2129,6 +2129,35 @@ def test_instrument_pages():
     check("every header with a search button has a hidden-until-ready speaker button right after it",
           not bad, str(bad))
 
+    # Home-hero background video: light, lazy, decorative, present in both renderers
+    vid_dir = os.path.join(site, "assets", "video")
+    mp4 = os.path.join(vid_dir, "hero-bull-bear.mp4")
+    check("hero video + poster ship under site/assets/video and stay light (<4 MB)",
+          os.path.exists(mp4) and os.path.getsize(mp4) < 4 * 1024 * 1024
+          and os.path.exists(os.path.join(vid_dir, "hero-bull-bear-poster.jpg")))
+    home = read("index.html") or ""
+    check("home hero carries the video: muted, looping, lazy (preload none), poster, aria-hidden",
+          all(s in home for s in ('class="pitch-media" aria-hidden="true"', 'class="pitch-video"', "muted", "loop",
+                                  'preload="none"', 'poster="/assets/video/hero-bull-bear-poster.jpg"')))
+    pj = open(os.path.join(site, "assets", "js", "pages.js"), encoding="utf-8").read()
+    check("the client-side home renderer carries the same hero video markup",
+          "pitch-media" in pj and "hero-bull-bear.mp4" in pj)
+    hv = os.path.join(site, "assets", "js", "hero-video.js")
+    hvs = open(hv, encoding="utf-8").read() if os.path.exists(hv) else ""
+    check("hero-video.js honours reduced motion / Data Saver and pauses off-screen",
+          "prefers-reduced-motion" in hvs and "saveData" in hvs and "IntersectionObserver" in hvs
+          and "visibilitychange" in hvs)
+    check("app.js loads hero-video.js", "hero-video.js" in open(os.path.join(site, "assets", "js", "app.js"), encoding="utf-8").read())
+
+    # Angel One logo: wordmark must follow the SITE theme, not the OS setting
+    ne = open(os.path.join(ROOT, "pipeline", "news_engine.py"), encoding="utf-8").read()
+    css_all = open(os.path.join(site, "assets", "css", "app.css"), encoding="utf-8").read()
+    check("Angel One logo is inlined so its wordmark follows the site theme (not an <img> with an OS-only media query)",
+          'class="ao-logo"' in ne and "partners/angelone.svg" not in ne
+          and ".ao-logo .ao-text { fill: var(--text); }" in css_all)
+    ao_svg = open(os.path.join(site, "assets", "img", "partners", "angelone.svg"), encoding="utf-8").read()
+    check("standalone angelone.svg no longer hides its wordmark via prefers-color-scheme", "prefers-color-scheme" not in ao_svg)
+
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])
     sources = {r.get("source") for r in rules}

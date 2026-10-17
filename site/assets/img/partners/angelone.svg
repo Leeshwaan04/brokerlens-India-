@@ -3,9 +3,6 @@
     .ao-text { fill: #0B1B3D; }
     .ao-blue { fill: #0052FE; }
     .ao-orange { fill: #FF5A00; }
-    @media (prefers-color-scheme: dark) {
-      .ao-text { fill: #FFFFFF; }
-    }
   </style>
   <!-- Angel One Emblem -->
   <g transform="translate(2, 3)">

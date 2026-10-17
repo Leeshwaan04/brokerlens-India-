@@ -1491,3 +1491,40 @@ table.data tr:hover td {
 }
 
 
+
+
+/* ------------------------------------------------------------ hero video */
+/* Decorative bull-vs-bear clip behind the right side of the home hero. The
+   card keeps its own background; one radial mask feathers the video into it on
+   every side (a single layer, so no seam at the edge), and text stays above. */
+.pitch > *:not(.pitch-media) { position: relative; z-index: 1; }
+.pitch-media {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 54%;
+  z-index: 0; pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 66% 80% at 70% 50%, #000 40%, rgba(0,0,0,0.55) 64%, transparent 100%);
+  mask-image: radial-gradient(ellipse 66% 80% at 70% 50%, #000 40%, rgba(0,0,0,0.55) 64%, transparent 100%);
+}
+.pitch-video {
+  width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%;
+  display: block; opacity: 0.92;
+  /* The footage is near-black: "screen" lifts only its lit parts (gold, green,
+     red) and lets the card show through everywhere else. */
+  mix-blend-mode: screen;
+}
+:root[data-theme="light"] .pitch-video { mix-blend-mode: normal; opacity: 0.88; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .pitch-video { mix-blend-mode: normal; opacity: 0.88; }
+}
+@media (max-width: 860px) {
+  .pitch-media { width: 100%; opacity: 0.3;
+    -webkit-mask-image: radial-gradient(ellipse 80% 90% at 60% 50%, #000 30%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 90% at 60% 50%, #000 30%, transparent 100%); }
+}
+
+/* Angel One logo, inlined (not an <img>) so the "Angel" wordmark takes the
+   site's own theme colour. As an <img> it could only follow the OS dark-mode
+   setting, which left it white-on-white whenever the OS and site themes differed. */
+.ao-logo { width: auto; height: 26px; display: block; }
+.ao-logo .ao-text { fill: var(--text); }
+.ao-logo .ao-blue { fill: #0052FE; }
+.ao-logo .ao-orange { fill: #FF5A00; }

@@ -6598,6 +6598,7 @@ def _prerender_home(overview):
     html = _sample_banner_html(meta)
     html += (
         '<section class="pitch" style="margin-top:16px">'
+        '%s'
         '<div class="pill-tag accent" style="margin-bottom:12px"><span>✦</span> Verified Regulatory &amp; Market Intelligence</div>'
         '<h1 style="max-width:24ch">Every Indian stock broker, measured the same way.</h1>'
         '<p class="muted" style="max-width:64ch;margin-top:12px">%d brokers tracked in depth and %s '
@@ -6606,6 +6607,7 @@ def _prerender_home(overview):
         '<a class="btn btn-primary" href="/brokers" data-link>Browse brokers</a>'
         '<a class="btn" href="/compare" data-link>Compare side by side</a>%s</div></section>'
     ) % (
+        '<div class="pitch-media" aria-hidden="true"><video class="pitch-video" muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="/assets/video/hero-bull-bear-poster.jpg" data-src="/assets/video/hero-bull-bear.mp4"></video></div>',
         meta.get("broker_count", 0), _full_html(overview.get("registry_count")),
         ("Active clients, market share, investor-complaint records, regulatory registrations and real cost, "
          "assembled from NSE, BSE and SEBI primary disclosures, not from marketing pages." if has_clients else
