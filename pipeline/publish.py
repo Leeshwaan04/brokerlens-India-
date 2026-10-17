@@ -552,6 +552,7 @@ def build():
     _write_ipo_pages(ipo_records, equity_history=equity_history)
     _write_ipo_hub(ipo_records, equity_history=equity_history)
     _write_ipo_archive(ipo_records, equity_history=equity_history)
+    _write_ipo_upcoming(ipo_records, equity_history=equity_history)
     from .news_engine import write_news_suite
     _news_count, news_articles = write_news_suite(ingest, SITE_URL)
     from .trade_cost_engine import build_trade_cost_pages
@@ -4751,7 +4752,7 @@ def _write_ipo_pages(records, equity_history=None):
         os.makedirs(dest_dir, exist_ok=True)
         _write_text(os.path.join(dest_dir, "index.html"), body)
         written += 1
-    keep_ipo_slugs = {r["symbol"].lower() for r in records} | {"archive", "allotment-status", "how-to-apply", "registrars", "registrar", "subscription", "allotment"}
+    keep_ipo_slugs = {r["symbol"].lower() for r in records} | {"archive", "upcoming", "allotment-status", "how-to-apply", "registrars", "registrar", "subscription", "allotment"}
     pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "ipo"), keep_ipo_slugs)
     log("IPO pages: %d written%s" % (written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
 
@@ -4774,6 +4775,21 @@ def _write_ipo_hub(records, equity_history=None):
     os.makedirs(dest_dir, exist_ok=True)
     _write_text(os.path.join(dest_dir, "index.html"), body)
     log("IPO hub: written with lot size, subscription & real-time listing performance", "ok")
+
+
+def _write_ipo_upcoming(records, equity_history=None):
+    """/ipo/upcoming/ - the 'upcoming IPO' head-term page: what is open now, what opens
+    next and what closed but has not listed yet, with the SEBI listing timeline."""
+    from .ipo_engine import render_enhanced_ipo_hub
+    body = render_enhanced_ipo_hub(
+        records=records, equity_history=equity_history,
+        head_template=_REGISTRY_PAGE_HEAD, foot_template=_REGISTRY_PAGE_FOOT,
+        breadcrumb_fn=_breadcrumb, source_note_fn=_source_note, site_url=SITE_URL, upcoming=True,
+    )
+    dest_dir = os.path.join(ROOT, "site", "ipo", "upcoming")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("IPO upcoming page: written", "ok")
 
 
 def _write_ipo_archive(records, equity_history=None):
@@ -5438,6 +5454,15 @@ def _write_privacy_page():
         'Clearing your browser data removes them. If you write to us by email, we hold that message and your '
         'email address only for as long as needed to answer it.</p></div>'
 
+        '<div class="section-title"><h2>IPO email alerts (optional)</h2></div>'
+        '<div class="card"><p class="small muted">If you sign up for IPO alerts, we collect only your email address, '
+        'the page you signed up from, and the time you gave consent. We use it only to send factual IPO event emails '
+        '(when an issue opens or closes and when allotment and listing dates are due), never to send tips or '
+        'recommendations, and we do not sell it or share it for marketing. An email service provider processes the '
+        'address on our behalf to send the messages. We email you once to confirm before sending anything else. You can '
+        'withdraw consent at any time with the unsubscribe link in every email, or by writing to <a href="mailto:%s">%s</a>, '
+        'and we will delete your address. We keep it until you unsubscribe.</p></div>'
+
         '<div class="section-title"><h2>Affiliate and sponsored links</h2></div>'
         '<div class="card"><p class="small muted">Some pages carry a clearly marked sponsored banner linking to '
         'a broker\'s own account-opening page. Once you follow that link, you are on the broker\'s own site and '
@@ -5463,7 +5488,7 @@ def _write_privacy_page():
         '<div class="section-title"><h2>Changes to this policy</h2></div>'
         '<div class="card"><p class="small muted">If this policy changes, the updated date at the top of this '
         'page will change too. Material changes will be reflected here before they take effect.</p></div>'
-    ) % (_month_html(now_iso()[:7]), CONTACT_EMAIL, CONTACT_EMAIL)
+    ) % (_month_html(now_iso()[:7]), CONTACT_EMAIL, CONTACT_EMAIL, CONTACT_EMAIL, CONTACT_EMAIL)
     body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
         "This page states BrokerLens's own data-handling practices.")}
     dest_dir = os.path.join(ROOT, "site", "privacy-policy")
@@ -7161,6 +7186,17 @@ def _write_calculator_hub():
     log("calculator hub: written", "ok")
 
 
+# Which sitemap files are submitted at each stage. 1 = core, brokers, IPO pages, the SEBI
+# registry (best performer), news, crypto and the ~500 most-traded stocks; 2 = fund/ETF/AMC,
+# comparison permutations, long-tail stocks, per-IPO apply/subscription pages, SIP scenarios;
+# 3 = the 70K+ per-stock trade-cost pages and branch pages. Unknown names default to wave 2.
+SITEMAP_WAVES = {
+    "core": 1, "brokers": 1, "ipos": 1, "registry": 1, "news": 1, "crypto": 1, "stocks-top": 1,
+    "stocks": 2, "funds": 2, "stock-compare": 2, "fund-compare": 2, "ipo-apply": 2, "ipo-sub": 2, "sip-calc": 2,
+    "trade-costs": 3, "branches": 3, "price-targets": 3,
+}
+
+
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
                     fund_slugs=None, report_slugs=None, calc_slugs=None, stock_letters=None, amc_slugs=None,
                     crypto_slugs=None, ipo_records=None, registry_letters=None, equity_history=None,
@@ -7182,7 +7218,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     core_urls = [
         "/", "/brokers", "/leaderboards", "/compare", "/calculator", "/calculators",
         "/registry", "/algo", "/methodology", "/sources", "/stocks", "/funds-by", "/etfs", "/crypto",
-        "/ipo", "/ipo/archive", "/ipo/allotment-status/", "/ipo/how-to-apply/", "/ipo/registrars/",
+        "/ipo", "/ipo/upcoming/", "/ipo/archive", "/ipo/allotment-status/", "/ipo/how-to-apply/", "/ipo/registrars/",
         "/ipo/subscription/", "/ipo/allotment/",
         "/trade-costs/", "/compare/stocks/", "/compare/mutual-funds/", "/calculators/sip/",
         "/branches/", "/news", "/about", "/editorial-policy", "/contact",
@@ -7228,25 +7264,32 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
             % (SITE_URL, r["symbol"].lower(), today, freq)
         )
 
-    # 4. STOCKS SITEMAP
-    stock_entries = []
+    # 4. STOCKS SITEMAP. The ~500 most-traded names (by average daily volume in the
+    # history on file) form wave 1; the long tail waits in wave 2 (see SITEMAP_WAVES).
+    stock_entries, stock_top_entries = [], []
     eq_hist = equity_history or {}
+
+    def _avg_vol(sym):
+        h = eq_hist.get((sym or "").upper()) or []
+        vs = [r["volume"] for r in h if isinstance(r.get("volume"), (int, float))]
+        return sum(vs) / len(vs) if vs else 0
+    top_syms = {(c.get("symbol") or "").upper() for c in sorted(companies or [], key=lambda c: -_avg_vol(c.get("symbol")))[:500]
+                if _avg_vol(c.get("symbol")) > 0}
     for c in (companies or []):
         slug = _stock_slug(c.get("symbol"))
         if slug:
             hist = eq_hist.get((c.get("symbol") or "").upper()) or []
             lastmod = hist[-1]["date"] if hist else today
-            stock_entries.append(
-                "<url><loc>%s/stock/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
-                % (SITE_URL, slug, lastmod)
-            )
+            entry = ("<url><loc>%s/stock/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
+                     % (SITE_URL, slug, lastmod))
+            (stock_top_entries if (c.get("symbol") or "").upper() in top_syms else stock_entries).append(entry)
     for slug in (indices or {}):
-        stock_entries.append(
+        stock_top_entries.append(
             "<url><loc>%s/index/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
             % (SITE_URL, slug, today)
         )
     for letter in (stock_letters or []):
-        stock_entries.append(
+        stock_top_entries.append(
             "<url><loc>%s/stocks/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
             % (SITE_URL, slugify(letter), today)
         )
@@ -7373,6 +7416,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         ("core", core_entries),
         ("brokers", broker_entries),
         ("ipos", ipo_entries),
+        ("stocks-top", stock_top_entries),
         ("stocks", stock_entries),
         ("funds", fund_entries),
         ("registry", registry_entries),
@@ -7391,9 +7435,26 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     sitemap_index_entries = []
     CHUNK_LIMIT = 45000
 
+    # Tiered submission. A new domain with no authority is judged on the quality of what
+    # it asks Google to index, so only wave 1 (the page types that already earn clicks
+    # or are core to the product) is listed in the sitemap index. Later waves are still
+    # linked on the site and fully crawlable; they are promoted by raising SITEMAP_WAVE
+    # once the previous wave is indexing well. Nothing is noindexed by this.
+    current_wave = int(os.environ.get("SITEMAP_WAVE", "1") or 1)
+    held_back = {}
+    # lastmod/changefreq only when real: a lastmod equal to the build date on every URL
+    # of every build is noise Google learns to ignore, so it is omitted unless it came
+    # from real data (a trading date, an NAV date).
+    _fake_lastmod = "<lastmod>%s</lastmod>" % today
+    _changefreq = re.compile(r"<changefreq>[^<]*</changefreq>")
+
     for name, entries in sub_sitemaps:
         if not entries:
             continue
+        if SITEMAP_WAVES.get(name, 2) > current_wave:
+            held_back[name] = len(entries)
+            continue
+        entries = [_changefreq.sub("", e).replace(_fake_lastmod, "") for e in entries]
         total_chunks = math.ceil(len(entries) / CHUNK_LIMIT) or 1
         for i in range(total_chunks):
             chunk = entries[i * CHUNK_LIMIT : (i + 1) * CHUNK_LIMIT]
@@ -7406,8 +7467,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
             )
             _write_text(os.path.join(sitemaps_dir, filename), xml)
             sitemap_index_entries.append(
-                "<sitemap><loc>%s/sitemaps/%s</loc><lastmod>%s</lastmod></sitemap>"
-                % (SITE_URL, filename, today)
+                "<sitemap><loc>%s/sitemaps/%s</loc></sitemap>" % (SITE_URL, filename)
             )
 
     # Drop sitemap shards this run did not write. An engine that now emits zero
@@ -7427,7 +7487,10 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         + "\n</sitemapindex>"
     )
     _write_text(os.path.join(SITE_DATA, "..", "sitemap.xml"), index_xml)
-    log("sitemap index: written %d sub-sitemaps (%d total URLs)" % (len(sitemap_index_entries), sum(len(e) for _, e in sub_sitemaps)), "ok")
+    submitted = sum(len(e) for n, e in sub_sitemaps if SITEMAP_WAVES.get(n, 2) <= current_wave)
+    log("sitemap index: %d sub-sitemaps, %d URLs submitted (wave %d); %d URLs held back in %s" % (
+        len(sitemap_index_entries), submitted, current_wave, sum(held_back.values()),
+        ", ".join("%s=%d" % kv for kv in sorted(held_back.items())) or "none"), "ok")
 
 
 _REPORT_TITLES = {

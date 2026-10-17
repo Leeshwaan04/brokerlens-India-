@@ -2224,6 +2224,38 @@ def test_instrument_pages():
               mt is not None and "Issue Price Rs" in mt.group(1) and "Listing Gain" in mt.group(1), mt.group(1) if mt else "")
         check("a fixed-price IPO shows one price, not 'Rs 366 to Rs 366'", "Rs 366 to Rs 366" not in kf)
 
+    # Tiered sitemap, IPO lifecycle, email alerts
+    smx = open(os.path.join(site, "sitemap.xml"), encoding="utf-8").read()
+    listed = re.findall(r"/sitemaps/sitemap-([a-z0-9-]+?)(?:-\d+)?\.xml", smx)
+    check("sitemap index lists only wave-1 files (core, brokers, ipos, registry, news, crypto, top stocks)",
+          set(listed) <= {"core", "brokers", "ipos", "registry", "news", "crypto", "stocks-top"} and len(listed) >= 5, str(sorted(set(listed))))
+    heldback = [n for n in ("trade-costs", "branches", "fund-compare", "stock-compare", "funds") if os.path.exists(os.path.join(site, "sitemaps", "sitemap-%s.xml" % n))]
+    check("held-back waves are not written to the sitemaps folder (nothing stale left to submit)", not heldback, str(heldback))
+    all_loc = "".join(open(os.path.join(site, "sitemaps", f), encoding="utf-8").read() for f in os.listdir(os.path.join(site, "sitemaps")) if f.endswith(".xml"))
+    check("wave-1 sitemaps stay small (under 10,000 URLs)", all_loc.count("<loc>") < 10000, str(all_loc.count("<loc>")))
+    check("sitemaps carry no changefreq and no build-date lastmod stamped on every URL",
+          "<changefreq>" not in all_loc and all_loc.count("<lastmod>%s</lastmod>" % datetime.utcnow().strftime("%Y-%m-%d")) < 0.3 * max(1, all_loc.count("<loc>")))
+    check("the upcoming-IPO page is in the sitemap", "/ipo/upcoming/" in all_loc)
+    up = read("ipo", "upcoming", "index.html") or ""
+    check("/ipo/upcoming/ exists with open / opening-soon sections, FAQ data and the SEBI timeline wording",
+          "Upcoming IPOs in India" in up and "Open for bidding now" in up and "Opening soon" in up and '"FAQPage"' in up)
+    hub = read("ipo", "index.html") or ""
+    check("IPO hub no longer shows a made-up 'allotment chance' percentage or a fake 'live bidding connected' badge",
+          "Allotment chance" not in hub and "Live Bidding Connected" not in hub and "<script>" not in hub.split("</footer>")[0].replace("<script src", ""))
+    check("IPO hub lists closed-but-unlisted issues under their own heading, never as 'Recently Listed'",
+          "Closed, Awaiting Listing" in hub or "no recent" in hub.lower() or "Closed, Awaiting" not in hub)
+    kf2 = read("ipo", "kfintech", "index.html") or ""
+    check("IPO page carries a status banner with an 'as of' date", "Page data as of" in kf2)
+    sub_js = os.path.join(ROOT, "api", "subscribe.js")
+    sj = open(sub_js, encoding="utf-8").read() if os.path.exists(sub_js) else ""
+    check("signup endpoint: same-site origin check, honeypot, consent required, rate limit, no key = disabled",
+          all(s in sj for s in ("originAllowed", "website", "consent", "rateLimited", "enabled: Boolean(key)")))
+    aj = open(os.path.join(site, "assets", "js", "alerts.js"), encoding="utf-8").read()
+    check("alerts form renders only when the endpoint is enabled, only on /ipo pages, and needs explicit consent",
+          "cfg.enabled" in aj and "startsWith('/ipo')" in aj and "consent" in aj and "no tips" in aj)
+    priv = read("privacy-policy", "index.html") or ""
+    check("privacy policy discloses the alert signup (data, purpose, withdrawal)", "IPO email alerts" in priv and "withdraw consent" in priv)
+
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])
     sources = {r.get("source") for r in rules}

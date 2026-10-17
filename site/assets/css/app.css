@@ -1677,3 +1677,26 @@ table.data tr:hover td {
 @media (prefers-reduced-motion: reduce) {
   .film-glow, .film-play, .film-play-disc, .film-controls, .film-chap { transition: none; }
 }
+
+
+/* ------------------------------------------------------------ IPO alert signup */
+.alerts-card {
+  margin: var(--space-6) 0; padding: var(--space-5); display: grid; grid-template-columns: 1.1fr 1fr; gap: var(--space-5); align-items: center;
+  background: linear-gradient(135deg, var(--accent-soft), var(--bg-raised) 70%); border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.alerts-copy h2 { margin: 0 0 6px; font-size: var(--fs-lg); }
+.alerts-copy p { margin: 0; font-size: var(--fs-sm); color: var(--text-muted); max-width: 52ch; line-height: 1.55; }
+.alerts-label { display: block; font-size: var(--fs-xs); color: var(--text-muted); margin-bottom: 4px; }
+.alerts-row { display: flex; gap: 8px; }
+.alerts-row input[type="email"] {
+  flex: 1; min-width: 0; padding: 9px 12px; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+}
+.alerts-row input[type="email"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.alerts-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.alerts-consent { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; font-size: var(--fs-xs); color: var(--text-muted); line-height: 1.5; }
+.alerts-consent input { margin-top: 2px; flex: none; }
+.alerts-msg { min-height: 1.2em; margin: 8px 0 0; font-size: var(--fs-sm); }
+.alerts-msg.ok { color: var(--up); }
+.alerts-msg.err { color: var(--down); }
+@media (max-width: 760px) { .alerts-card { grid-template-columns: 1fr; } .alerts-row { flex-direction: column; } }
