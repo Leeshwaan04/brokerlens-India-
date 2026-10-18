@@ -2304,11 +2304,11 @@ def test_instrument_pages():
           "prevClose" in scj and "point.close - point.open" not in scj)
 
     css_hero = open(os.path.join(site, "assets", "css", "app.css"), encoding="utf-8").read()
-    check("light theme: the home hero stays a light card and renders the film as ink artwork (explicit and OS-light cases); dark theme keeps the screen blend",
-          ':root[data-theme="light"] .pitch {' in css_hero and ':root:not([data-theme="dark"]) .pitch {' in css_hero
-          and css_hero.count("grayscale(1) invert(1)") >= 2 and "mix-blend-mode: multiply" in css_hero
-          and ".pitch-video {\n  width: 100%" in css_hero and "mix-blend-mode: screen" in css_hero
-          and '--bg-raised: #1b1b1f' not in css_hero.split('Light theme: a clean light card')[1][:900])
+    light_block = css_hero.split("Light theme: a clean light card")[1].split("@media (max-width: 860px) {\n  .pitch-media")[0]
+    check("light theme: the home hero stays a light card and shows the film as a crisp rounded full-colour tile (explicit and OS-light cases); dark theme keeps the screen blend",
+          ':root[data-theme="light"] .pitch-media {' in light_block and ':root:not([data-theme="dark"]) .pitch-media {' in light_block
+          and "border-radius: 18px" in light_block and "mask-image: none" in light_block and "mix-blend-mode: normal" in light_block
+          and "grayscale" not in light_block and "mix-blend-mode: screen" in css_hero)
 
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])

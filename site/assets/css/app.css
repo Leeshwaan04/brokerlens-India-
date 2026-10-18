@@ -1511,10 +1511,10 @@ table.data tr:hover td {
      red) and lets the card show through everywhere else. */
   mix-blend-mode: screen;
 }
-/* Light theme: a clean light card, with the film rendered as ink-style artwork. The footage is
-   near-black; converting it to greyscale and inverting it turns the black backdrop white and the
-   gold bull and charcoal bear into dark silhouettes, and "multiply" lets the white vanish into
-   the card, so the artwork sits on the page instead of a dark rectangle fading into grey. */
+/* Light theme: a clean light card with the film as a crisp, rounded full-colour tile. The footage
+   is near-black, so feathering it into a light card only ever produced a grey smear and the
+   ink-style inversion lost the animals; a sharp framed tile keeps both clearly visible and still
+   looks deliberate (a dark image on a light page). Dark theme keeps the feathered screen blend. */
 :root[data-theme="light"] .pitch {
   background:
     radial-gradient(70% 100% at 8% 0%, rgba(47, 74, 143, 0.10), transparent 60%),
@@ -1522,7 +1522,13 @@ table.data tr:hover td {
   border-color: rgba(47, 74, 143, 0.16);
   box-shadow: 0 24px 48px -28px rgba(30, 45, 90, 0.35), 0 2px 8px rgba(30, 45, 90, 0.08), inset 0 1px 0 #fff;
 }
-:root[data-theme="light"] .pitch-video { filter: grayscale(1) invert(1) contrast(1.18) brightness(1.04); mix-blend-mode: multiply; opacity: 0.92; }
+:root[data-theme="light"] .pitch-media {
+  top: 16px; right: 16px; bottom: 16px; width: 34%;
+  border-radius: 18px; overflow: hidden;
+  -webkit-mask-image: none; mask-image: none;
+  box-shadow: 0 18px 40px -18px rgba(20, 30, 60, 0.55), 0 0 0 1px rgba(20, 30, 60, 0.12);
+}
+:root[data-theme="light"] .pitch-video { filter: none; mix-blend-mode: normal; opacity: 1; object-position: 58% 50%; }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) .pitch {
     background:
@@ -1531,7 +1537,19 @@ table.data tr:hover td {
     border-color: rgba(47, 74, 143, 0.16);
     box-shadow: 0 24px 48px -28px rgba(30, 45, 90, 0.35), 0 2px 8px rgba(30, 45, 90, 0.08), inset 0 1px 0 #fff;
   }
-  :root:not([data-theme="dark"]) .pitch-video { filter: grayscale(1) invert(1) contrast(1.18) brightness(1.04); mix-blend-mode: multiply; opacity: 0.92; }
+  :root:not([data-theme="dark"]) .pitch-media {
+    top: 16px; right: 16px; bottom: 16px; width: 34%;
+    border-radius: 18px; overflow: hidden;
+    -webkit-mask-image: none; mask-image: none;
+    box-shadow: 0 18px 40px -18px rgba(20, 30, 60, 0.55), 0 0 0 1px rgba(20, 30, 60, 0.12);
+  }
+  :root:not([data-theme="dark"]) .pitch-video { filter: none; mix-blend-mode: normal; opacity: 1; object-position: 58% 50%; }
+}
+@media (max-width: 860px) {
+  :root[data-theme="light"] .pitch-media { position: relative; inset: auto; width: 100%; height: 190px; margin-bottom: 18px; opacity: 1; -webkit-mask-image: none; mask-image: none; }
+}
+@media (prefers-color-scheme: light) and (max-width: 860px) {
+  :root:not([data-theme="dark"]) .pitch-media { position: relative; inset: auto; width: 100%; height: 190px; margin-bottom: 18px; opacity: 1; -webkit-mask-image: none; mask-image: none; }
 }
 @media (max-width: 860px) {
   .pitch-media { width: 100%; opacity: 0.3;
