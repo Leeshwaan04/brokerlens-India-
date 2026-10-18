@@ -515,6 +515,17 @@ def build():
     equity_companies = ((nse_d.get("universe") or {}).get("companies")) or []
     index_universe = nse_d.get("indices") or {}
     equity_history = nse_d.get("equity_history") or {}
+    # Prices are not adjusted for splits/bonuses, so keep only the comparable stretch after any
+    # such break; the stock page says so (see _stock_perf).
+    from .common import trim_to_last_break
+    _EQUITY_BREAKS.clear()
+    for _sym, _candles in list(equity_history.items()):
+        _trimmed, _brk = trim_to_last_break(_candles)
+        if _brk:
+            equity_history[_sym] = _trimmed
+            _EQUITY_BREAKS[_sym.upper()] = _brk
+    if _EQUITY_BREAKS:
+        log("equity history: %d stocks had a split/bonus-sized break; earlier prices excluded" % len(_EQUITY_BREAKS), "ok")
     build_equity_history(equity_history)
     _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"),
                         index_universe, equity_history, bse_d.get("corporate_actions") or [])
@@ -1363,6 +1374,15 @@ def _pct_html(n, sign=True, decimals=2):
     return "%s%.*f%%" % (s, decimals, n)
 
 
+def _px_html(n):
+    """A share price: two decimals below Rs 10,000 (Rs 85.09, not "Rs 85"; Rs 0.45, not "Rs 0"),
+    Indian grouping above. _inr_html's whole-rupee default is right for charges and totals,
+    wrong for prices."""
+    if n is None:
+        return "-"
+    return _inr_html(n, decimals=2) if abs(n) < 1e4 else _inr_html(n)
+
+
 def _inr_html(n, decimals=None):
     """Python port of store.js's inr()."""
     if n is None:
@@ -2118,7 +2138,7 @@ def _stock_price_html(history):
         '<div class="stat-label">Last close</div>'
         '<div class="stat-value sm">%s <span class="%s" style="font-family:var(--font);font-size:var(--fs-base)">%s</span></div>'
         '<div class="stat-sub">as of %s</div></div>'
-    ) % (_inr_html(last["close"]), _cls_class(chg_pct), _pct_html(chg_pct), _iso_to_long_date(last["date"]))
+    ) % (_px_html(last["close"]), _cls_class(chg_pct), _pct_html(chg_pct), _iso_to_long_date(last["date"]))
 
 
 def _stock_ohlc_html(history):
@@ -2142,12 +2162,12 @@ def _stock_ohlc_html(history):
     window_days = len(history)
     range_label = "52-Week Range" if window_days >= 252 else "%d-Day Range" % window_days
     tiles = [
-        ("Open", _inr_html(last.get("open"))),
-        ("Day High", _inr_html(last.get("high"))),
-        ("Day Low", _inr_html(last.get("low"))),
-        ("Previous Close", _inr_html(prev.get("close"))),
+        ("Open", _px_html(last.get("open"))),
+        ("Day High", _px_html(last.get("high"))),
+        ("Day Low", _px_html(last.get("low"))),
+        ("Previous Close", _px_html(prev.get("close"))),
         ("Volume", _indian_grouping(last["volume"]) if isinstance(last.get("volume"), (int, float)) else "-"),
-        (range_label, ("%s - %s" % (_inr_html(min(lows)), _inr_html(max(highs)))) if lows and highs else "-"),
+        (range_label, ("%s - %s" % (_px_html(min(lows)), _px_html(max(highs)))) if lows and highs else "-"),
     ]
     return (
         '<div class="grid g3" style="margin-top:14px">'
@@ -2160,7 +2180,10 @@ def _stock_ohlc_html(history):
     )
 
 
-def _stock_perf(history):
+_EQUITY_BREAKS = {}   # symbol -> date of the split/bonus-sized break after which history is kept
+
+
+def _stock_perf(history, break_date=None):
     """Real performance measures computed only from the daily closes already on
     file (NSE bhavcopy). Every window is labelled by the sessions actually
     available, never as 1-year/52-week when the cache is shorter, and nothing
@@ -2202,8 +2225,10 @@ def _stock_perf(history):
         '<div class="grid g3">%s</div>'
         '<p class="xs faint" style="margin-top:8px;max-width:78ch">Computed from %d daily closes in NSE\'s bhavcopy, %s to %s. '
         'This is the history BrokerLens holds, not a full year, so no 1-year or 52-week figure is shown. '
-        'Past performance does not indicate future results.</p>'
-        % ("".join(tiles), n, _esc(_iso_to_long_date(first_date)), _esc(_iso_to_long_date(last_date)))
+        'Past performance does not indicate future results.%s</p>'
+        % ("".join(tiles), n, _esc(_iso_to_long_date(first_date)), _esc(_iso_to_long_date(last_date)),
+           (" Prices before %s are left out: a split or bonus around that date would make them incomparable, and "
+            "BrokerLens does not yet adjust for corporate actions." % _esc(_iso_to_long_date(break_date))) if break_date else "")
     )
     return html, facts
 
@@ -2350,8 +2375,8 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                 "SEBI-registered research analysts and brokerages; read their reports and the company's own disclosures. What the "
                 "data shows: %s last closed at %s on %s. Over the %d sessions on file it traded between %s and %s and was %.1f%% "
                 "%s its high on the last close." % (
-                    name, _inr_html(perf["last"]), _iso_to_long_date(perf["last_date"]), perf["n"],
-                    _inr_html(perf["lo"]), _inr_html(perf["hi"]), abs(perf["from_high"]),
+                    name, _px_html(perf["last"]), _iso_to_long_date(perf["last_date"]), perf["n"],
+                    _px_html(perf["lo"]), _px_html(perf["hi"]), abs(perf["from_high"]),
                     "below" if perf["from_high"] < 0 else "at")))
             faqs.append((
                 "How has %s performed recently?" % name,
@@ -2359,7 +2384,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                     _iso_to_long_date(perf["first_date"]), _iso_to_long_date(perf["last_date"]), name, perf["since"], perf["n"],
                     ("Over the last month it moved %+.1f%%." % dict(perf["wins"])["1 month"]) if "1 month" in dict(perf["wins"]) else "")))
         faqs.append(("What was %s's last closing price?" % name,
-                     "%s closed at %s on %s, from NSE's own daily bhavcopy." % (name, _inr_html(price_row["close"]), price_row["date"])
+                     "%s closed at %s on %s, from NSE's own daily bhavcopy." % (name, _px_html(price_row["close"]), price_row["date"])
                      if price_row else
                      "A recent closing price for %s was not available in this site's latest data refresh." % name))
         return faqs
@@ -2480,7 +2505,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             '</div>'
         ) % (_esc(symbol), _esc(name))
 
-        perf_html, perf = _stock_perf(history)
+        perf_html, perf = _stock_perf(history, _EQUITY_BREAKS.get(symbol.upper()))
         faqs = stock_faqs(name, symbol, c, member_of, match, price_row, perf)
         faq_html = "".join(
             '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))

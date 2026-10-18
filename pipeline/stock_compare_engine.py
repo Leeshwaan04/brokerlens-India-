@@ -565,6 +565,10 @@ def build_stock_compare_suite(site_url="https://www.brokerlens.in", universe_top
     nse = ingest.get("nse", {})
     companies = {c.get("symbol", "").upper().strip(): c for c in nse.get("universe", {}).get("companies", [])}
     eq_hist = nse.get("equity_history", {})
+    # same rule as the stock pages: nothing computed across an unadjusted split/bonus break
+    sys.path.insert(0, ROOT)
+    from pipeline.common import trim_to_last_break
+    eq_hist = {sym: trim_to_last_break(c)[0] for sym, c in eq_hist.items()}
 
     all_pairs_by_sector = {}
     generated_urls = []

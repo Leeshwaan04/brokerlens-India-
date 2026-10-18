@@ -429,3 +429,24 @@ def to_num(s):
 def slugify(s):
     s = re.sub(r"[^a-z0-9]+", "-", (s or "").lower()).strip("-")
     return re.sub(r"-{2,}", "-", s)
+
+
+def trim_to_last_break(candles, low=0.55, high=1.9):
+    """Drop everything before the last close-to-close move that no ordinary trading day can
+    produce (below 0.55x or above 1.9x), which in practice is a split, bonus or a data break.
+    BrokerLens does not adjust prices for corporate actions, so figures computed across such a
+    break (returns, ranges, drawdowns) would be wrong; it keeps only the comparable stretch
+    after it. Returns (candles, break_date or None). Smaller breaks (for example a 3:2 bonus,
+    ratio 0.67) are not detected here; a corporate-action feed is the proper fix."""
+    prev = None
+    cut = None
+    for i, c in enumerate(candles or []):
+        cl = c.get("close")
+        if prev and cl and prev > 0:
+            r = cl / prev
+            if r < low or r > high:
+                cut = i
+        prev = cl if cl else prev
+    if cut is None:
+        return candles, None
+    return candles[cut:], candles[cut].get("date")

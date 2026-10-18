@@ -397,7 +397,11 @@ async function initChart(host) {
   const lastPoint = points[points.length - 1];
   const updateHud = (p) => {
     const point = p || lastPoint;
-    const chg = point.open ? (((point.close - point.open) / point.open) * 100).toFixed(2) : '0.00';
+    // Change versus the previous session's close: the same definition as the "Last close" card,
+    // so the two figures on a page can never disagree (it used to be close vs open).
+    const idx = points.findIndex((q) => q.time === point.time);
+    const prevClose = idx > 0 ? points[idx - 1].close : null;
+    const chg = prevClose ? (((point.close - prevClose) / prevClose) * 100).toFixed(2) : '0.00';
     const sign = Number(chg) >= 0 ? '+' : '';
     const chgColor = Number(chg) >= 0 ? colors.up : colors.down;
 
@@ -408,7 +412,7 @@ async function initChart(host) {
       <span>L: <strong>${fmtNum(point.low)}</strong></span>
       <span>C: <strong>${fmtNum(point.close)}</strong></span>
       <span>Vol: <strong>${fmtVol(point.volume)}</strong></span>
-      <span style="color:${chgColor}">Chg: <strong>${sign}${chg}%</strong></span>
+      <span style="color:${chgColor}" title="Close versus previous close">Chg: <strong>${sign}${chg}%</strong></span>
     `;
   };
   updateHud();

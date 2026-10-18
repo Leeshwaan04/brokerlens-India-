@@ -2282,6 +2282,27 @@ def test_instrument_pages():
         check("an IPO listed before our price history says so instead of showing a listing-day gain",
               "Not on file" in kf and "Listing Day Gainer" not in kf and "Listing Discount" not in kf)
 
+    # Split/bonus breaks: nothing is computed across an unadjusted price break
+    from pipeline.common import trim_to_last_break
+    split = [{"date": "2026-04-10", "close": 1000.0}, {"date": "2026-04-16", "close": 1004.0},
+             {"date": "2026-04-17", "close": 99.0}, {"date": "2026-04-20", "close": 96.0}]
+    tr, brk = trim_to_last_break(split)
+    check("a 10-for-1 split in the history keeps only the stretch after it", brk == "2026-04-17" and [c["close"] for c in tr] == [99.0, 96.0])
+    calm = [{"date": "d%d" % i, "close": 100 + i} for i in range(30)]
+    check("an ordinary history is left untouched", trim_to_last_break(calm) == (calm, None))
+    pc = read("stock", "pashupati", "index.html") or ""
+    if pc:
+        m = re.search(r"Return since[^<]*</div><div[^>]*>.*?([-+]\d+\.\d+)%", pc, re.S)
+        check("a stock with a split in its history shows no absurd since-start return and says why",
+              "left out" in pc and (m is None or abs(float(m.group(1))) < 80), m.group(1) if m else "no return tile")
+
+    from pipeline import publish as _pub
+    check("share prices keep their decimals (Rs 85.09, Rs 0.45) while totals stay whole rupees",
+          _pub._px_html(85.09) == "&#8377;85.09" and _pub._px_html(0.45) == "&#8377;0.45" and _pub._inr_html(255) == "&#8377;255")
+    scj = open(os.path.join(site, "assets", "js", "stock-chart.js"), encoding="utf-8").read()
+    check("chart HUD change is close vs previous close, matching the Last close card",
+          "prevClose" in scj and "point.close - point.open" not in scj)
+
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])
     sources = {r.get("source") for r in rules}
