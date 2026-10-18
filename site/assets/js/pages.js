@@ -33,19 +33,6 @@ function pending(what, detail) {
 
 const HAS = (o, key) => Boolean(o?.metadata?.data_status?.[key]);
 
-function sampleBanner(meta) {
-  const s = meta?.sample_data || {};
-  const which = Object.entries(s).filter(([, v]) => v).map(([k]) => k.replace(/_/g, ' '));
-  if (!which.length) return '';
-  return `<div class="banner">
-    <span>⚠</span>
-    <div><strong>Sample data in use for: ${esc(which.join(', '))}.</strong>
-    These are placeholder figures generated to exercise the interface, not facts about any broker.
-    Regulator-sourced fields (legal entity, SEBI registration, exchange memberships, defaulter status)
-    are real. See <a href="/sources" data-link>sources</a> for what is live.</div>
-  </div>`;
-}
-
 const badge = (b) => {
   const out = [];
   if (b.tier === 'featured') out.push('<span class="badge badge-featured">Featured</span>');
@@ -266,7 +253,6 @@ export async function home() {
   const delivery = (m.bse_delivery || []).slice(-1)[0];
 
   return `
-  ${sampleBanner(meta)}
 
   <section class="pitch" style="margin-top:16px">
     <div class="pitch-media" aria-hidden="true"><video class="pitch-video" muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="/assets/video/hero-bull-bear-poster.jpg?v=7f050a4e83" data-src="/assets/video/hero-bull-bear.mp4?v=f824f289ac"></video></div>
@@ -357,8 +343,7 @@ export async function home() {
       </div>
       <div class="chart-box" style="margin-top:8px"><canvas id="bse-delivery"></canvas></div>
     </div>` : ''}
-  </div>` : `<div style="margin-top:16px">${pending('Client and complaint statistics',
-      'NSE publishes member-wise active-client counts monthly, and every broker must publish its complaint record in SEBI\'s Annexure-B format. Both are being brought in from those primary sources.')}</div>`}
+  </div>` : ''}
 
   <div class="section-title" style="margin-top:56px;margin-bottom:20px">
     <div>
@@ -581,7 +566,6 @@ export async function brokers(params) {
   });
 
   return `
-  ${sampleBanner(o.metadata)}
   <div class="spread" style="margin-top:16px">
     <div><h1>Brokers</h1>
       <p class="muted small">${o.metadata.broker_count} brokers tracked in depth.
@@ -784,7 +768,6 @@ export async function broker(id) {
     : rel.score >= 75 ? 'var(--up)' : rel.score >= 55 ? 'var(--warn)' : 'var(--down)';
 
   return `
-  ${sampleBanner(o.metadata)}
 
   <div class="hero" style="margin-top:16px">
     <div class="hero-mark" style="background:${markColor(p.id)}">${esc(initials(p.brand))}</div>
@@ -1096,7 +1079,6 @@ export async function compare(params) {
     .filter(([, cells]) => cells.some((c) => c != null));
 
   return `
-  ${sampleBanner(o.metadata)}
   <div class="spread" style="margin-top:16px">
     <h1>Comparing ${list.length} broker${list.length > 1 ? 's' : ''}</h1>
     ${list.length < 4 ? `<div style="min-width:200px"><select id="cmp-add"><option value="">Add a broker…</option>${opts}</select></div>` : ''}

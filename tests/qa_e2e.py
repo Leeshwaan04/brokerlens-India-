@@ -2310,6 +2310,12 @@ def test_instrument_pages():
           and light_block.count("radial-gradient(ellipse 62% 80% at 68% 50%") >= 4 and "mix-blend-mode: normal" in light_block
           and "grayscale" not in light_block and "border-radius: 18px" not in light_block and "mix-blend-mode: screen" in css_hero)
 
+    pj2 = open(os.path.join(site, "assets", "js", "pages.js"), encoding="utf-8").read()
+    homepage = read("index.html") or ""
+    check("the home page no longer carries the sample-data banner or the 'client and complaint statistics not published yet' card",
+          "Sample data in use" not in homepage and "Client and complaint statistics not published" not in homepage
+          and "sampleBanner" not in pj2 and "Client and complaint statistics" not in pj2)
+
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])
     sources = {r.get("source") for r in rules}

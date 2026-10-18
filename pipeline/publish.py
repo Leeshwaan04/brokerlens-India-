@@ -5785,22 +5785,6 @@ def _write_algo_page(algo_data):
     log("algo page: written, %d platforms" % len(platforms), "ok")
 
 
-def _sample_banner_html(meta):
-    """Python port of pages.js's sampleBanner() - correctly renders nothing
-    in production today (data_status/sample_data are all false), but stays
-    a faithful port rather than a permanently-empty stub in case that ever
-    changes."""
-    which = [k.replace("_", " ") for k, v in (meta.get("sample_data") or {}).items() if v]
-    if not which:
-        return ""
-    return (
-        '<div class="banner"><span>&#9888;</span><div><strong>Sample data in use for: %s.</strong> '
-        'These are placeholder figures generated to exercise the interface, not facts about any broker. '
-        'Regulator-sourced fields (legal entity, SEBI registration, exchange memberships, defaulter status) are '
-        'real. See <a href="/sources" data-link>sources</a> for what is live.</div></div>'
-    ) % _esc(", ".join(which))
-
-
 def _pending_html(what, detail):
     """Python port of pages.js's pending() - the standing "not published yet"
     notice used whenever a section has no real, source-traced data."""
@@ -6577,7 +6561,6 @@ def _write_brokers_page(overview):
         "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
     }
     body += crumb_html
-    body += _sample_banner_html(meta)
     body += (
         '<div class="spread" style="margin-top:16px"><div><h1>Brokers</h1>'
         '<p class="muted small">%d brokers tracked in depth. Looking for a smaller firm? '
@@ -6881,8 +6864,7 @@ def _prerender_home(overview):
     bse_delivery = m.get("bse_delivery") or []
     delivery = bse_delivery[-1] if bse_delivery else None
 
-    html = _sample_banner_html(meta)
-    html += (
+    html = (
         '<section class="pitch" style="margin-top:16px">'
         '%s'
         '<div class="pill-tag accent" style="margin-bottom:12px"><span>✦</span> Verified Regulatory &amp; Market Intelligence</div>'
@@ -6972,11 +6954,6 @@ def _prerender_home(overview):
              '<div class="chart-box" style="margin-top:8px"><canvas id="bse-delivery" height="160"></canvas></div></div>'
              if bse_delivery else ""),
         )
-    else:
-        html += '<div style="margin-top:16px">%s</div>' % _pending_html(
-            "Client and complaint statistics",
-            "NSE publishes member-wise active-client counts monthly, and every broker must publish its "
-            "complaint record in SEBI's Annexure-B format. Both are being brought in from those primary sources.")
 
     table_head = (
         '<th>#</th><th>Broker</th><th class="right">Active clients</th><th class="right">Share</th>'
