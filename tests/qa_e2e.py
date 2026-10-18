@@ -2304,11 +2304,11 @@ def test_instrument_pages():
           "prevClose" in scj and "point.close - point.open" not in scj)
 
     css_hero = open(os.path.join(site, "assets", "css", "app.css"), encoding="utf-8").read()
-    light_block = css_hero.split("Light theme: a clean light card")[1].split("@media (max-width: 860px) {\n  .pitch-media")[0]
-    check("light theme: the home hero stays a light card and shows the film as a crisp rounded full-colour tile (explicit and OS-light cases); dark theme keeps the screen blend",
+    light_block = css_hero.split("Light theme: same geometry and feathered edges")[1].split("@media (max-width: 860px) {\n  .pitch-media")[0]
+    check("light theme: the home hero keeps the dark theme's geometry and feathered mask (explicit and OS-light cases) on a clean light card; no framed tile, no inversion",
           ':root[data-theme="light"] .pitch-media {' in light_block and ':root:not([data-theme="dark"]) .pitch-media {' in light_block
-          and "border-radius: 18px" in light_block and "mask-image: none" in light_block and "mix-blend-mode: normal" in light_block
-          and "grayscale" not in light_block and "mix-blend-mode: screen" in css_hero)
+          and light_block.count("radial-gradient(ellipse 62% 80% at 68% 50%") >= 4 and "mix-blend-mode: normal" in light_block
+          and "grayscale" not in light_block and "border-radius: 18px" not in light_block and "mix-blend-mode: screen" in css_hero)
 
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])
