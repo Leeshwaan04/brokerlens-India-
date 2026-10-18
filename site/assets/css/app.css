@@ -1511,9 +1511,27 @@ table.data tr:hover td {
      red) and lets the card show through everywhere else. */
   mix-blend-mode: screen;
 }
-:root[data-theme="light"] .pitch-video { mix-blend-mode: normal; opacity: 0.88; }
+/* Light theme: a clean light card, with the film rendered as ink-style artwork. The footage is
+   near-black; converting it to greyscale and inverting it turns the black backdrop white and the
+   gold bull and charcoal bear into dark silhouettes, and "multiply" lets the white vanish into
+   the card, so the artwork sits on the page instead of a dark rectangle fading into grey. */
+:root[data-theme="light"] .pitch {
+  background:
+    radial-gradient(70% 100% at 8% 0%, rgba(47, 74, 143, 0.10), transparent 60%),
+    linear-gradient(135deg, #f6f8fc 0%, #ffffff 52%, #eef2fa 100%);
+  border-color: rgba(47, 74, 143, 0.16);
+  box-shadow: 0 24px 48px -28px rgba(30, 45, 90, 0.35), 0 2px 8px rgba(30, 45, 90, 0.08), inset 0 1px 0 #fff;
+}
+:root[data-theme="light"] .pitch-video { filter: grayscale(1) invert(1) contrast(1.18) brightness(1.04); mix-blend-mode: multiply; opacity: 0.92; }
 @media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) .pitch-video { mix-blend-mode: normal; opacity: 0.88; }
+  :root:not([data-theme="dark"]) .pitch {
+    background:
+      radial-gradient(70% 100% at 8% 0%, rgba(47, 74, 143, 0.10), transparent 60%),
+      linear-gradient(135deg, #f6f8fc 0%, #ffffff 52%, #eef2fa 100%);
+    border-color: rgba(47, 74, 143, 0.16);
+    box-shadow: 0 24px 48px -28px rgba(30, 45, 90, 0.35), 0 2px 8px rgba(30, 45, 90, 0.08), inset 0 1px 0 #fff;
+  }
+  :root:not([data-theme="dark"]) .pitch-video { filter: grayscale(1) invert(1) contrast(1.18) brightness(1.04); mix-blend-mode: multiply; opacity: 0.92; }
 }
 @media (max-width: 860px) {
   .pitch-media { width: 100%; opacity: 0.3;

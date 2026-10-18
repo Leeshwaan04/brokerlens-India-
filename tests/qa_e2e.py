@@ -2303,6 +2303,13 @@ def test_instrument_pages():
     check("chart HUD change is close vs previous close, matching the Last close card",
           "prevClose" in scj and "point.close - point.open" not in scj)
 
+    css_hero = open(os.path.join(site, "assets", "css", "app.css"), encoding="utf-8").read()
+    check("light theme: the home hero stays a light card and renders the film as ink artwork (explicit and OS-light cases); dark theme keeps the screen blend",
+          ':root[data-theme="light"] .pitch {' in css_hero and ':root:not([data-theme="dark"]) .pitch {' in css_hero
+          and css_hero.count("grayscale(1) invert(1)") >= 2 and "mix-blend-mode: multiply" in css_hero
+          and ".pitch-video {\n  width: 100%" in css_hero and "mix-blend-mode: screen" in css_hero
+          and '--bg-raised: #1b1b1f' not in css_hero.split('Light theme: a clean light card')[1][:900])
+
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])
     sources = {r.get("source") for r in rules}
