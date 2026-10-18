@@ -2246,15 +2246,22 @@ def test_instrument_pages():
           "Closed, Awaiting Listing" in hub or "no recent" in hub.lower() or "Closed, Awaiting" not in hub)
     kf2 = read("ipo", "kfintech", "index.html") or ""
     check("IPO page carries a status banner with an 'as of' date", "Page data as of" in kf2)
-    sub_js = os.path.join(ROOT, "api", "subscribe.js")
-    sj = open(sub_js, encoding="utf-8").read() if os.path.exists(sub_js) else ""
-    check("signup endpoint: same-site origin check, honeypot, consent required, rate limit, no key = disabled",
-          all(s in sj for s in ("originAllowed", "website", "consent", "rateLimited", "enabled: Boolean(key)")))
-    aj = open(os.path.join(site, "assets", "js", "alerts.js"), encoding="utf-8").read()
-    check("alerts form renders only when the endpoint is enabled, only on /ipo pages, and needs explicit consent",
-          "cfg.enabled" in aj and "startsWith('/ipo')" in aj and "consent" in aj and "no tips" in aj)
     priv = read("privacy-policy", "index.html") or ""
-    check("privacy policy discloses the alert signup (data, purpose, withdrawal)", "IPO email alerts" in priv and "withdraw consent" in priv)
+    check("no account-dependent signup remains: no /api endpoint, no alerts script, no email form on IPO pages",
+          not os.path.exists(os.path.join(ROOT, "api")) and not os.path.exists(os.path.join(site, "assets", "js", "alerts.js"))
+          and "alerts-card" not in (read("ipo", "upcoming", "index.html") or "") and "IPO email alerts" not in priv)
+    feed = read("ipo", "feed.xml") or ""
+    cal_path = os.path.join(site, "ipo", "upcoming.ics")
+    cal = open(cal_path, encoding="utf-8", newline="").read() if os.path.exists(cal_path) else ""
+    check("IPO RSS feed is valid-looking RSS 2.0 with IPO date items and no recommendation language",
+          feed.startswith("<?xml") and "<rss version=\"2.0\">" in feed and "<channel>" in feed and "Facts only" in feed
+          and not re.search(r"\bbuy\b|\bsubscribe now\b|must apply|guaranteed", feed, re.I))
+    check("IPO calendar file is valid iCalendar (CRLF, BEGIN/END, VEVENTs with UID, DTSTAMP and all-day dates)",
+          cal.startswith("BEGIN:VCALENDAR\r\n") and cal.rstrip().endswith("END:VCALENDAR")
+          and cal.count("BEGIN:VEVENT") == cal.count("END:VEVENT") and cal.count("BEGIN:VEVENT") == cal.count("UID:")
+          and (cal.count("BEGIN:VEVENT") == 0 or re.search(r"DTSTART;VALUE=DATE:\d{8}", cal) is not None))
+    check("IPO hub and upcoming page offer the calendar and RSS follow options (no account)",
+          "/ipo/upcoming.ics" in (read("ipo", "upcoming", "index.html") or "") and "/ipo/feed.xml" in (read("ipo", "index.html") or ""))
 
     # Listing-day gain must come from the real listing-day candle, never from candles[0]
     from pipeline.ipo_engine import compute_listing_performance as clp

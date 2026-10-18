@@ -4789,7 +4789,12 @@ def _write_ipo_upcoming(records, equity_history=None):
     dest_dir = os.path.join(ROOT, "site", "ipo", "upcoming")
     os.makedirs(dest_dir, exist_ok=True)
     _write_text(os.path.join(dest_dir, "index.html"), body)
-    log("IPO upcoming page: written", "ok")
+    from .ipo_engine import build_ipo_event_feeds
+    rss, ics, n = build_ipo_event_feeds(records, SITE_URL)
+    _write_text(os.path.join(ROOT, "site", "ipo", "feed.xml"), rss)
+    with open(os.path.join(ROOT, "site", "ipo", "upcoming.ics"), "w", encoding="utf-8", newline="") as fh:
+        fh.write(ics)
+    log("IPO upcoming page: written; RSS and calendar feeds with %d dated events" % n, "ok")
 
 
 def _write_ipo_archive(records, equity_history=None):
@@ -5454,15 +5459,6 @@ def _write_privacy_page():
         'Clearing your browser data removes them. If you write to us by email, we hold that message and your '
         'email address only for as long as needed to answer it.</p></div>'
 
-        '<div class="section-title"><h2>IPO email alerts (optional)</h2></div>'
-        '<div class="card"><p class="small muted">If you sign up for IPO alerts, we collect only your email address, '
-        'the page you signed up from, and the time you gave consent. We use it only to send factual IPO event emails '
-        '(when an issue opens or closes and when allotment and listing dates are due), never to send tips or '
-        'recommendations, and we do not sell it or share it for marketing. An email service provider processes the '
-        'address on our behalf to send the messages. We email you once to confirm before sending anything else. You can '
-        'withdraw consent at any time with the unsubscribe link in every email, or by writing to <a href="mailto:%s">%s</a>, '
-        'and we will delete your address. We keep it until you unsubscribe.</p></div>'
-
         '<div class="section-title"><h2>Affiliate and sponsored links</h2></div>'
         '<div class="card"><p class="small muted">Some pages carry a clearly marked sponsored banner linking to '
         'a broker\'s own account-opening page. Once you follow that link, you are on the broker\'s own site and '
@@ -5488,7 +5484,7 @@ def _write_privacy_page():
         '<div class="section-title"><h2>Changes to this policy</h2></div>'
         '<div class="card"><p class="small muted">If this policy changes, the updated date at the top of this '
         'page will change too. Material changes will be reflected here before they take effect.</p></div>'
-    ) % (_month_html(now_iso()[:7]), CONTACT_EMAIL, CONTACT_EMAIL, CONTACT_EMAIL, CONTACT_EMAIL)
+    ) % (_month_html(now_iso()[:7]), CONTACT_EMAIL, CONTACT_EMAIL)
     body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
         "This page states BrokerLens's own data-handling practices.")}
     dest_dir = os.path.join(ROOT, "site", "privacy-policy")

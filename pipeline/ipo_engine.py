@@ -559,6 +559,110 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
     return body
 
 
+def _classify_ipos(records, today_iso):
+    """(active, forthcoming, awaiting_listing) by the same rules as the hub: awaiting means
+    bidding closed in the last 14 days and no listing date on record."""
+    cutoff = (datetime.strptime(today_iso, "%Y-%m-%d") - timedelta(days=14)).strftime("%Y-%m-%d")
+    active, forthcoming, awaiting = [], [], []
+    for r in records:
+        b_start, b_end = r.get("bidding_start") or "", r.get("bidding_end") or ""
+        if r.get("listing_date") or r.get("status") == "Listed":
+            continue
+        if r.get("status") == "Active" or (b_start and b_end and b_start <= today_iso <= b_end):
+            active.append(r)
+        elif r.get("status") == "Forthcoming" or (b_start and b_start > today_iso):
+            forthcoming.append(r)
+        elif b_end and cutoff <= b_end < today_iso:
+            awaiting.append(r)
+    return active, forthcoming, awaiting
+
+
+def build_ipo_event_feeds(records, site_url="https://www.brokerlens.in"):
+    """RSS feed and iCalendar file of IPO dates, so people can follow IPOs with no
+    account and no email: open dates, last day to bid, and the SEBI T+3 expected
+    listing date (weekdays only, so it is labelled indicative). Facts only."""
+    now = datetime.now(timezone.utc)
+    today_iso = now.strftime("%Y-%m-%d")
+    active, forthcoming, awaiting = _classify_ipos(records, today_iso)
+    events = []   # (iso_date, kind, record)
+    for r in active + forthcoming:
+        if r.get("bidding_start"):
+            events.append((r["bidding_start"], "opens", r))
+        if r.get("bidding_end"):
+            events.append((r["bidding_end"], "closes", r))
+    for r in active + forthcoming + awaiting:
+        exp = _add_working_days(r.get("bidding_end"), 3)
+        if exp:
+            events.append((exp, "listing", r))
+    events.sort(key=lambda e: (e[0], e[2].get("symbol", "")))
+
+    def title(kind, r):
+        co = r.get("company") or r.get("symbol")
+        return {"opens": f"{co} IPO opens for bidding", "closes": f"{co} IPO closes (last day to bid)",
+                "listing": f"{co} IPO: listing expected on or around this date"}[kind]
+
+    def detail(kind, r):
+        band = r.get("price_band") or "price band not announced"
+        base = f"Price band: {band}. "
+        note = {"opens": "Dates and price band are as announced by the issuer and can change.",
+                "closes": "Check the exchange notice for any extension.",
+                "listing": "SEBI requires listing within three working days of issue close; this date skips weekends only, so the exchange notice is final."}[kind]
+        return base + note + " Facts only, not a recommendation to apply."
+
+    def rfc822(iso):
+        return datetime.strptime(iso, "%Y-%m-%d").strftime("%a, %d %b %Y 00:00:00 +0000")
+
+    items = "".join(
+        "<item><title>%s</title><link>%s/ipo/%s/</link><guid isPermaLink=\"false\">%s-%s-%s</guid>"
+        "<pubDate>%s</pubDate><description>%s</description></item>" % (
+            _esc(title(k, r)), site_url, r["symbol"].lower(), r["symbol"].lower(), k, d, rfc822(d), _esc(detail(k, r)))
+        for d, k, r in events)
+    rss = ('<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel>'
+           "<title>BrokerLens IPO dates</title><link>%s/ipo/upcoming/</link>"
+           "<description>Open, close and expected listing dates for IPOs on NSE, from public-issue disclosures. Facts only.</description>"
+           "<language>en-IN</language><lastBuildDate>%s</lastBuildDate>%s</channel></rss>" % (
+               site_url, now.strftime("%a, %d %b %Y %H:%M:%S +0000"), items))
+
+    def ics_escape(s):
+        return s.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
+    stamp = now.strftime("%Y%m%dT%H%M%SZ")
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//BrokerLens//IPO dates//EN", "CALSCALE:GREGORIAN",
+             "X-WR-CALNAME:BrokerLens IPO dates"]
+    for d, k, r in events:
+        day = d.replace("-", "")
+        nxt = (datetime.strptime(d, "%Y-%m-%d") + timedelta(days=1)).strftime("%Y%m%d")
+        lines += ["BEGIN:VEVENT", f"UID:{r['symbol'].lower()}-{k}-{day}@brokerlens.in", f"DTSTAMP:{stamp}",
+                  f"DTSTART;VALUE=DATE:{day}", f"DTEND;VALUE=DATE:{nxt}", "SUMMARY:" + ics_escape(title(k, r)),
+                  "DESCRIPTION:" + ics_escape(detail(k, r)), f"URL:{site_url}/ipo/{r['symbol'].lower()}/", "END:VEVENT"]
+    lines.append("END:VCALENDAR")
+
+    def fold(line):
+        # RFC 5545: content lines longer than 75 octets are folded with CRLF + one space.
+        raw = line.encode("utf-8")
+        if len(raw) <= 75:
+            return line
+        out, first = [], True
+        while raw:
+            limit = 75 if first else 74
+            cut = limit
+            while cut > 0 and (raw[cut:cut + 1] and (raw[cut] & 0xC0) == 0x80):   # never split a UTF-8 character
+                cut -= 1
+            out.append(("" if first else " ") + raw[:cut].decode("utf-8"))
+            raw, first = raw[cut:], False
+        return "\r\n".join(out)
+    return rss, "\r\n".join(fold(l) for l in lines) + "\r\n", len(events)
+
+
+def _follow_card_html():
+    return (
+        '<section class="follow-card" aria-labelledby="follow-title"><h2 id="follow-title">Follow IPO dates, no account needed</h2>'
+        '<p>Open, last-day-to-bid and expected listing dates, straight from the exchange disclosures. Add them to your calendar or '
+        'subscribe in any feed reader. Facts only: no tips, no grey-market prices, no recommendations.</p>'
+        '<div class="row-wrap"><a class="btn btn-primary small" href="/ipo/upcoming.ics">Add to my calendar (.ics) &rarr;</a>'
+        '<a class="btn btn-outline small" href="/ipo/feed.xml">RSS feed &rarr;</a></div></section>'
+    )
+
+
 def render_enhanced_ipo_hub(records, equity_history, head_template, foot_template,
                             breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in", upcoming=False):
     """Renders the enhanced /ipo/ hub with real-time active, upcoming, and listed returns."""
@@ -818,6 +922,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
             + '<a href="/ipo/allotment-status/" class="btn btn-primary small">Check allotment status &rarr;</a>'
             + '<a href="/ipo/how-to-apply/" class="btn btn-outline small">How to apply via UPI &rarr;</a>'
             + '<a href="/ipo/" class="btn btn-outline small">IPO tracker and listing gains &rarr;</a></div>'
+            + _follow_card_html()
             + '<div class="section-title" style="margin-top:20px"><h2>Open for bidding now</h2></div>' + render_active_table(active)
             + '<div class="section-title" style="margin-top:28px"><h2>Opening soon</h2></div>' + render_upcoming_table(forthcoming)
             + ('<div class="section-title" style="margin-top:28px"><h2>Closed, awaiting listing</h2></div>' + render_awaiting_table(awaiting) if awaiting else "")
@@ -867,6 +972,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         + '<a href="/ipo/how-to-apply/" class="btn btn-outline small">How to Apply via UPI & ASBA &rarr;</a>'
         + '<a href="/ipo/archive/" class="btn btn-outline small">Full IPO Historical Archive &rarr;</a>'
         + '</div>'
+        + _follow_card_html()
         + '<div class="section-title" style="margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
         + '<h2>Currently Open for Bidding (Active IPOs)</h2>'
         + '</div>'
