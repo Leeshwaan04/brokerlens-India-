@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-19",
+  "manual_data_gaps": [
+    {
+      "dataset": "active_clients",
+      "status": "sample/placeholder",
+      "note": "SAMPLE DATA - replace with NSE member-wise UCC ingest."
+    },
+    {
+      "dataset": "charges",
+      "status": "sample/placeholder",
+      "note": "SAMPLE pricing for a handful of demo brokers. Others stay null by design."
+    }
+  ],
+  "coverage": [
+    {
+      "check": "SEBI registry size",
+      "live_site": 1706,
+      "live_generated_at": "2026-10-19T07:45:46+00:00"
+    }
+  ],
+  "gsc_opportunities": {
+    "ready": true,
+    "days_tracked": 36,
+    "candidates": [
+      {
+        "query": "rlp securities",
+        "page": "https://www.brokerlens.in/sebi-registry/r-l-p-securities-pvt-ltd-442006/",
+        "position": 7.0,
+        "impressions": 463,
+        "clicks": 1
+      },
+      {
+        "query": "qe securities llp",
+        "page": "https://www.brokerlens.in/sebi-registry/qe-securities-llp/",
+        "position": 7.1,
+        "impressions": 305,
+        "clicks": 1
+      },
+      {
+        "query": "cupid share price target 2026",
+        "page": "https://www.brokerlens.in/stock/cupid/share-price-target-2026/",
+        "position": 6.8,
+        "impressions": 273,
+        "clicks": 3
+      },
+      {
+        "query": "kfin ipo",
+        "page": "https://www.brokerlens.in/ipo/kfintech/",
+        "position": 7.7,
+        "impressions": 139,
+        "clicks": 1
+      },
+      {
+        "query": "kfin technologies ipo",
+        "page": "https://www.brokerlens.in/ipo/kfintech/",
+        "position": 8.1,
+        "impressions": 121,
+        "clicks": 1
+      },
+      {
+        "query": "kfintech share price ipo",
+        "page": "https://www.brokerlens.in/ipo/kfintech/",
+        "position": 9.8,
+        "impressions": 120,
+        "clicks": 2
+      },
+      {
+        "query": "pankaj mangaldas securities pvt. ltd",
+        "page": "https://www.brokerlens.in/sebi-registry/pankaj-mangaldas-securities-pvt-ltd-662015/",
+        "position": 6.5,
+        "impressions": 65,
+        "clicks": 3
+      },
+      {
+        "query": "cochin shipyard share price target 2027",
+        "page": "https://www.brokerlens.in/stock/cochinship/share-price-target-2027/",
+        "position": 7.0,
+        "impressions": 49,
+        "clicks": 1
+      },
+      {
+        "query": "bajaj housing finance share price target 2027",
+        "page": "https://www.brokerlens.in/stock/bajajhfl/share-price-target-2027/",
+        "position": 5.8,
+        "impressions": 46,
+        "clicks": 1
+      },
+      {
+        "query": "soaring peaks capital services private limited",
+        "page": "https://www.brokerlens.in/sebi-registry/soaring-peaks-capital-services-private-limited/",
+        "position": 6.1,
+        "impressions": 42,
+        "clicks": 1
+      },
+      {
+        "query": "jaykay enterprises share price target 2030",
+        "page": "https://www.brokerlens.in/stock/jaykay/share-price-target-2030/",
+        "position": 4.8,
+        "impressions": 32,
+        "clicks": 10
+      },
+      {
+        "query": "gkn securities",
+        "page": "https://www.brokerlens.in/sebi-registry/gkn-securities/",
+        "position": 8.5,
+        "impressions": 30,
+        "clicks": 1
+      },
+      {
+        "query": "absolute broking",
+        "page": "https://www.brokerlens.in/sebi-registry/absolute-broking-private-limited-892024/",
+        "position": 7.6,
+        "impressions": 30,
+        "clicks": 0
+      },
+      {
+        "query": "lumino industries share price target 2030",
+        "page": "https://www.brokerlens.in/stock/lumino/share-price-target-2028/",
+        "position": 8.1,
+        "impressions": 29,
+        "clicks": 1
+      },
+      {
+        "query": "indo thai share price target 2030",
+        "page": "https://www.brokerlens.in/stock/indothai/share-price-target-2030/",
+        "position": 5.9,
+        "impressions": 26,
+        "clicks": 1
+      },
+      {
+        "query": "apar industries share price target 2030",
+        "page": "https://www.brokerlens.in/stock/aparinds/share-price-target-2030/",
+        "position": 5.4,
+        "impressions": 25,
+        "clicks": 1
+      },
+      {
+        "query": "azad india mobility share price target 2030",
+        "page": "https://www.brokerlens.in/stock/azadind/share-price-target-2035/",
+        "position": 6.7,
+        "impressions": 24,
+        "clicks": 1
+      },
+      {
+        "query": "avance technologies share price target 2027",
+        "page": "https://www.brokerlens.in/stock/avance/share-price-target-2027/",
+        "position": 5.2,
+        "impressions": 23,
+        "clicks": 1
+      },
+      {
+        "query": "motisons jewellers share price target 2030",
+        "page": "https://www.brokerlens.in/stock/motisons/share-price-target-2030/",
+        "position": 5.7,
+        "impressions": 23,
+        "clicks": 1
+      },
+      {
+        "query": "jbv share broker",
+        "page": "https://www.brokerlens.in/sebi-registry/jbv-share-broker-and-fintech-private-limited-202025/",
+        "position": 6.6,
+        "impressions": 22,
+        "clicks": 1
+      }
+    ]
+  }
+}
