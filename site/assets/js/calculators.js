@@ -194,6 +194,28 @@ const CALCULATORS = {
       ${donut('Total invested', invested, 'Est. Returns', balance - invested)}`);
   },
 
+  'direct-regular'() {
+    const monthly = num('dr-monthly');
+    const rate = num('dr-rate');
+    const gap = num('dr-gap');
+    const years = num('dr-years');
+    if (monthly <= 0 || years <= 0) return;
+    const fv = (annualPct) => {
+      const r = annualPct / 100 / 12;
+      const n = years * 12;
+      if (Math.abs(r) < 1e-12) return monthly * n;
+      return monthly * ((Math.pow(1 + r, n) - 1) / r) * (1 + r);
+    };
+    const invested = monthly * years * 12;
+    const direct = fv(rate);
+    const regular = fv(rate - gap);
+    showResult(`
+      <div class="mega-seg"><div class="mega-seg-label">Direct plan value</div><div style="margin-top:2px">${inr(direct)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Regular plan value</div><div style="margin-top:2px">${inr(regular)}</div></div>
+      <div class="mega-seg"><div class="mega-seg-label">Cost of the gap</div><div style="margin-top:2px;font-weight:700">${inr(direct - regular)}</div></div>
+      <p class="xs faint" style="grid-column:1/-1;margin-top:4px">Total invested ${inr(invested)} in both plans. Regular plan return used: ${pct(rate - gap)} a year. Illustration of the expense gap you entered, not a recommendation of either plan.</p>`);
+  },
+
   swp() {
     const corpus = num('swp-corpus');
     const withdrawal = num('swp-withdrawal');

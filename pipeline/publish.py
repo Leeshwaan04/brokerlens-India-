@@ -3897,6 +3897,47 @@ CALCULATORS = [
              "Council notification before relying on this for a formal filing or invoice."),
         ],
     },
+    {
+        "slug": "direct-vs-regular-calculator", "calc": "direct-regular",
+        "h1": "Direct vs Regular Mutual Fund Calculator",
+        "title": "Direct vs Regular Mutual Fund Calculator: Cost of the Expense Gap | BrokerLens",
+        "description": "Work out how much a SIP grows in a direct plan compared with a regular plan of the same "
+                        "fund, given the difference between the two plans' expense ratios.",
+        "intro": "A regular plan and a direct plan hold the same portfolio. The regular plan's expense ratio is "
+                  "higher because it includes the distributor's commission, so its NAV grows a little slower. "
+                  "This shows what that gap does to a monthly SIP over time.",
+        "formula": "Both plans use the SIP future-value formula FV = P &times; [((1+r)<sup>n</sup> - 1) / r] "
+                   "&times; (1+r). The direct plan uses the return you enter; the regular plan uses that return "
+                   "minus the expense ratio gap.",
+        "fields": [
+            ("dr-monthly", "Monthly investment (Rs)", "10000", "500"),
+            ("dr-rate", "Direct plan annual return (%)", "12", "0.5"),
+            ("dr-gap", "Expense ratio gap, regular minus direct (% points)", "1", "0.1"),
+            ("dr-years", "Investment period (years)", "15", "1"),
+        ],
+        "how_to": "Look up the published expense ratios of the direct and regular plans of your fund, subtract "
+                  "one from the other and enter the gap. Enter the annual return you assume for the direct plan, "
+                  "your monthly amount and the period. The values pre-filled here are only placeholders to show "
+                  "the layout; replace them with figures you can source.",
+        "limits": "This treats the commission gap as the only difference between the plans and holds the return "
+                   "constant every month. It ignores exit loads, taxes on redemption and any advice or service a "
+                   "distributor may provide, which is a real benefit for some investors and is not priced here.",
+        "faqs": [
+            ("What is the difference between a direct and a regular plan?", "Both invest in the same portfolio. "
+             "A regular plan is sold through a distributor and its expense ratio includes a commission; a direct "
+             "plan is bought straight from the fund house and has a lower expense ratio."),
+            ("Where do I find the expense ratio gap?", "Each fund house publishes the total expense ratio of its "
+             "direct and regular plans on its own website and in the monthly scheme disclosures. Subtract the "
+             "direct plan's figure from the regular plan's figure."),
+            ("Does this calculator say which plan I should buy?", "No. It only shows the arithmetic effect of the "
+             "expense gap. Whether a regular plan's distributor service is worth its cost is your decision."),
+            ("Why does a small gap matter so much?", "The gap is charged every year on the whole corpus, so it "
+             "compounds. Over long periods a difference of a fraction of a percentage point shows up as a "
+             "noticeable difference in the final amount."),
+            ("Is the direct plan return guaranteed?", "No. Both plans carry market risk. The return here is an "
+             "assumption you supply, not a forecast."),
+        ],
+    },
 ]
 
 
@@ -7084,28 +7125,28 @@ def _prerender_home(overview):
         '<div class="section-title" style="margin-top:56px;margin-bottom:20px"><div>'
         '<div class="section-eyebrow">FINANCIAL SUITE &amp; DECISION TOOLS</div>'
         '<h2>Calculators &amp; Fair-Cost Estimators</h2></div>'
-        '<a class="small link-arrow" href="/calculator" data-link>All calculators &rarr;</a></div>'
+        '<a class="small link-arrow" href="/calculators/">All calculators &rarr;</a></div>'
         '<div class="grid g4" style="margin-top:0">'
         '<a class="card card-interactive" href="/calculator" data-link style="display:flex;flex-direction:column;padding:20px">'
         '<div class="pill-tag accent" style="align-self:flex-start;margin-bottom:12px">Brokerage</div>'
         '<h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Brokerage &amp; Regulatory Fees</h3>'
         '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">Calculate exact STT, GST, stamp duty and SEBI charges across delivery, intraday and F&amp;O.</p>'
         '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Calculate fees &rarr;</div></a>'
-        '<a class="card card-interactive" href="/calculator/sip/" data-link style="display:flex;flex-direction:column;padding:20px">'
+        '<a class="card card-interactive" href="/calculators/sip-calculator/" style="display:flex;flex-direction:column;padding:20px">'
         '<div class="pill-tag up" style="align-self:flex-start;margin-bottom:12px">SIP Compounder</div>'
         '<h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Stock &amp; MF Wealth SIP</h3>'
         '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">Project future corpus from disciplined monthly investments with compounding growth curves.</p>'
         '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Project returns &rarr;</div></a>'
-        '<a class="card card-interactive" href="/calculator/direct-vs-regular/" data-link style="display:flex;flex-direction:column;padding:20px">'
+        '<a class="card card-interactive" href="/calculators/direct-vs-regular-calculator/" style="display:flex;flex-direction:column;padding:20px">'
         '<div class="pill-tag accent" style="align-self:flex-start;margin-bottom:12px">Direct vs Regular</div>'
         '<h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Mutual Fund Commission Leak</h3>'
         '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">See how much wealth you lose to distributor commissions compared to direct mutual fund plans.</p>'
         '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Compare plans &rarr;</div></a>'
-        '<a class="card card-interactive" href="/calculator/margin/" data-link style="display:flex;flex-direction:column;padding:20px">'
-        '<div class="pill-tag" style="align-self:flex-start;margin-bottom:12px">Derivatives</div>'
-        '<h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Span &amp; F&amp;O Margin Rules</h3>'
-        '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">Compute required upfront margin, exposure margin and peak intraday leverage limits.</p>'
-        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Check margins &rarr;</div></a>'
+        '<a class="card card-interactive" href="/calculators/capital-gains-tax-calculator/" style="display:flex;flex-direction:column;padding:20px">'
+        '<div class="pill-tag" style="align-self:flex-start;margin-bottom:12px">Tax</div>'
+        '<h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Capital Gains Tax Estimator</h3>'
+        '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">Estimate short-term and long-term capital gains tax on listed equity and equity mutual funds.</p>'
+        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Estimate tax &rarr;</div></a>'
         '</div>'
         '<div class="card" style="margin-top:48px;padding:24px 28px;background:radial-gradient(80% 120% at 50% 0%, var(--bg-hover) 0%, var(--bg-raised) 100%);border-radius:20px">'
         '<div class="row-between" style="align-items:center;flex-wrap:wrap;gap:18px">'

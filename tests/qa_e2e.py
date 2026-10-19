@@ -761,7 +761,7 @@ def test_published():
     check("site/calculators/ static pages exist on disk", os.path.isdir(calc_dir))
     if os.path.isdir(calc_dir):
         calc_slugs = sorted(d for d in os.listdir(calc_dir) if os.path.isdir(os.path.join(calc_dir, d)) and d != "sip")
-        check("all 13 calculator pages were written", len(calc_slugs) == 13, "found %d: %s" % (len(calc_slugs), calc_slugs))
+        check("all 14 calculator pages were written", len(calc_slugs) == 14, "found %d: %s" % (len(calc_slugs), calc_slugs))
         sip_path = os.path.join(calc_dir, "sip-calculator", "index.html")
         sip_html = open(sip_path, encoding="utf-8").read() if os.path.exists(sip_path) else ""
         check("calculator page has no leaked 'None' from an unset field",
@@ -773,11 +773,25 @@ def test_published():
         check("calculator page has a data-calc container matching its dispatch key",
               'data-calc="sip"' in sip_html)
         calc_js = open(os.path.join(ROOT, "site", "assets", "js", "calculators.js"), encoding="utf-8").read()
-        check("calculators.js defines all 13 calculator functions",
+        check("calculators.js defines all 14 calculator functions",
               all(k in calc_js for k in [
                   "sip()", "lumpsum()", "emi()", "cagr()", "compound()", "'capital-gains'()",
                   "'simple-interest'()", "'stepup-sip'()", "swp()", "inflation()", "retirement()", "ppf()", "gst()",
+                  "'direct-regular'()",
               ]))
+        # Home "Calculators & Fair-Cost Estimators" cards once linked /calculator/sip/,
+        # /calculator/direct-vs-regular/ and /calculator/margin/, none of which were
+        # ever built (three 404s). Every card href must resolve to a real page.
+        import re as _re
+        for _src in ("pipeline/publish.py", "site/assets/js/pages.js"):
+            _t = open(os.path.join(ROOT, _src), encoding="utf-8").read()
+            _a = _t.find("Calculators &amp; Fair-Cost Estimators")
+            _blk = _t[_a:_a + 6000]
+            _hrefs = [h for h in _re.findall(r'href="(/calculators?/[^"]*)"', _blk)]
+            _ok = all(h in ("/calculator", "/calculators/") or
+                      (h.startswith("/calculators/") and h.strip("/").split("/")[-1] in calc_slugs + ["sip"])
+                      for h in _hrefs)
+            check("home calculator cards in %s only link pages that exist" % _src, bool(_hrefs) and _ok, str(_hrefs))
         gst_path = os.path.join(calc_dir, "gst-calculator", "index.html")
         gst_html = open(gst_path, encoding="utf-8").read() if os.path.exists(gst_path) else ""
         check("gst calculator has a rate <select> and an inclusive/exclusive radio group",

@@ -463,7 +463,7 @@ export async function home() {
       <div class="section-eyebrow">FINANCIAL SUITE &amp; DECISION TOOLS</div>
       <h2>Calculators &amp; Fair-Cost Estimators</h2>
     </div>
-    <a class="small link-arrow" href="/calculator" data-link>All calculators &rarr;</a>
+    <a class="small link-arrow" href="/calculators/">All calculators &rarr;</a>
   </div>
   <div class="grid g4" style="margin-top:0">
     <a class="card card-interactive" href="/calculator" data-link style="display:flex;flex-direction:column;padding:20px">
@@ -472,23 +472,23 @@ export async function home() {
       <p class="xs muted" style="line-height:1.45;flex:1 0 auto">Calculate exact STT, GST, stamp duty and SEBI charges across delivery, intraday and F&amp;O.</p>
       <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Calculate fees &rarr;</div>
     </a>
-    <a class="card card-interactive" href="/calculator/sip/" data-link style="display:flex;flex-direction:column;padding:20px">
+    <a class="card card-interactive" href="/calculators/sip-calculator/" style="display:flex;flex-direction:column;padding:20px">
       <div class="pill-tag up" style="align-self:flex-start;margin-bottom:12px">SIP Compounder</div>
       <h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Stock &amp; MF Wealth SIP</h3>
       <p class="xs muted" style="line-height:1.45;flex:1 0 auto">Project future corpus from disciplined monthly investments with compounding growth curves.</p>
       <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Project returns &rarr;</div>
     </a>
-    <a class="card card-interactive" href="/calculator/direct-vs-regular/" data-link style="display:flex;flex-direction:column;padding:20px">
+    <a class="card card-interactive" href="/calculators/direct-vs-regular-calculator/" style="display:flex;flex-direction:column;padding:20px">
       <div class="pill-tag accent" style="align-self:flex-start;margin-bottom:12px">Direct vs Regular</div>
       <h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Mutual Fund Commission Leak</h3>
       <p class="xs muted" style="line-height:1.45;flex:1 0 auto">See how much wealth you lose to distributor commissions compared to direct mutual fund plans.</p>
       <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Compare plans &rarr;</div>
     </a>
-    <a class="card card-interactive" href="/calculator/margin/" data-link style="display:flex;flex-direction:column;padding:20px">
-      <div class="pill-tag" style="align-self:flex-start;margin-bottom:12px">Derivatives</div>
-      <h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Span &amp; F&amp;O Margin Rules</h3>
-      <p class="xs muted" style="line-height:1.45;flex:1 0 auto">Compute required upfront margin, exposure margin and peak intraday leverage limits.</p>
-      <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Check margins &rarr;</div>
+    <a class="card card-interactive" href="/calculators/capital-gains-tax-calculator/" style="display:flex;flex-direction:column;padding:20px">
+      <div class="pill-tag" style="align-self:flex-start;margin-bottom:12px">Tax</div>
+      <h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Capital Gains Tax Estimator</h3>
+      <p class="xs muted" style="line-height:1.45;flex:1 0 auto">Estimate short-term and long-term capital gains tax on listed equity and equity mutual funds.</p>
+      <div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600;margin-top:14px">Estimate tax &rarr;</div>
     </a>
   </div>
 
