@@ -2335,10 +2335,11 @@ def test_instrument_pages():
           and all(os.path.getsize(os.path.join(adir, n)) < 300 * 1024 for n in dims), str(dims))
     from pipeline import publish as _pb
     bn = _pb.ibslBanner_html("wide", "ipo")
-    check("banner is marked Sponsored, links to the approved IBSL URL (sponsored, noopener, new tab) and carries SEBI numbers and the referral-fee disclosure",
+    check("banner is marked Sponsored, links to the approved IBSL URL (sponsored, noopener, new tab) and carries the SEBI numbers; the referral-fee sentence is gone",
           'href="https://stocks-onboarding.indiabullssecurities.com/login"' in bn and 'rel="sponsored noopener"' in bn
           and 'target="_blank"' in bn and ">Sponsored<" in bn and "INZ000036136" in bn and "IN-DP-423-2019" in bn
-          and "referral fee" in bn and "not a recommendation" in bn and "/sebi-registry/indiabulls-securities-limited/" in bn)
+          and "referral fee" not in bn and "not a recommendation" not in bn and "How BrokerLens makes money" not in bn
+          and "/sebi-registry/indiabulls-securities-limited/" in bn)
     css_all2 = open(os.path.join(site, "assets", "css", "app.css"), encoding="utf-8").read()
     check("banner has a descriptive alt, lazy loading, set dimensions and versioned image URLs, and NO close button; the Sponsored tag sits top-right",
           'alt="Indiabulls Securities: Rs 0' in bn and 'loading="lazy"' in bn and 'width="1000" height="400"' in bn

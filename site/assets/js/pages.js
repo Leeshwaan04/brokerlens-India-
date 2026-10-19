@@ -48,7 +48,7 @@ function ibslBanner(slot, pageType) {
   return `<aside class="ad-wrap ad-${slot}" data-ad="ibsl" data-slot="${slot}" data-page-type="${pageType}" aria-label="Sponsored: Indiabulls Securities">
     <div class="ad-ibsl"><span class="ad-tag">Sponsored</span>
     <a href="${safeUrl(IBSL_LINK)}" target="_blank" rel="sponsored noopener" data-ad-click>${pic}</a></div>
-    <p class="ad-note">Sponsored. Indiabulls Securities Limited, SEBI Reg. INZ000036136 (<a href="/sebi-registry/indiabulls-securities-limited/">check the SEBI register</a>), DP IN-DP-423-2019. BrokerLens may earn a referral fee if you open an account. This is advertising, not a recommendation. <a href="/methodology">How BrokerLens makes money</a></p>
+    <p class="ad-note">Sponsored. Indiabulls Securities Limited, SEBI Reg. INZ000036136 (<a href="/sebi-registry/indiabulls-securities-limited/">check the SEBI register</a>), DP IN-DP-423-2019.</p>
   </aside>`;
 }
 
