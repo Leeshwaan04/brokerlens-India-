@@ -33,6 +33,25 @@ function pending(what, detail) {
 
 const HAS = (o, key) => Boolean(o?.metadata?.data_status?.[key]);
 
+const IBSL_LINK = 'https://stocks-onboarding.indiabullssecurities.com/login';
+const IBSL_ALT = 'Indiabulls Securities: Rs 0 account opening charges, Rs 11 per executed order across all segments*, 20 years of trust. Open your free account now. Terms apply.';
+
+/* Sponsored Indiabulls Securities banner; the same markup as ibslBanner_html() in publish.py
+ * (kept in step by hand: the static pages carry the Python version, client-side renders this one).
+ * No close button: the Sponsored tag sits in the top-right corner instead. */
+function ibslBanner(slot, pageType) {
+  const big = { strip: ['/assets/img/ads/ibsl-strip-2400x320.jpg?v=e3ee699a56', 2400, 320], wide: ['/assets/img/ads/ibsl-wide-2000x500.jpg?v=d88be48695', 2000, 500] }[slot];
+  const card = `<img src="/assets/img/ads/ibsl-card-1000x400.jpg?v=9bcd5a9d69" width="1000" height="400" alt="${esc(IBSL_ALT)}" loading="lazy">`;
+  const pic = big
+    ? `<picture><source media="(min-width:900px)" srcset="${big[0]}" width="${big[1]}" height="${big[2]}">${card}</picture>`
+    : card;
+  return `<aside class="ad-wrap ad-${slot}" data-ad="ibsl" data-slot="${slot}" data-page-type="${pageType}" aria-label="Sponsored: Indiabulls Securities">
+    <div class="ad-ibsl"><span class="ad-tag">Sponsored</span>
+    <a href="${safeUrl(IBSL_LINK)}" target="_blank" rel="sponsored noopener" data-ad-click>${pic}</a></div>
+    <p class="ad-note">Sponsored. Indiabulls Securities Limited, SEBI Reg. INZ000036136 (<a href="/sebi-registry/indiabulls-securities-limited/">check the SEBI register</a>), DP IN-DP-423-2019. BrokerLens may earn a referral fee if you open an account. This is advertising, not a recommendation. <a href="/methodology">How BrokerLens makes money</a></p>
+  </aside>`;
+}
+
 const badge = (b) => {
   const out = [];
   if (b.tier === 'featured') out.push('<span class="badge badge-featured">Featured</span>');
@@ -111,7 +130,6 @@ const ZERODHA_LOGO_DATA_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDo
 
 function affiliateBanner() {
   return `<div class="aff-banner aff-banner-zerodha">
-    <button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>
     <span class="aff-tag">Sponsored</span>
     <div class="aff-art aff-art-zerodha">
       <img src="/assets/img/partners/zerodha.svg" width="152" height="20" alt="Zerodha" style="display:block">
@@ -137,7 +155,6 @@ const FIVEPAISA_LOGO_DATA_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0c
 
 function fivepaisaBanner() {
   return `<div class="aff-banner aff-banner-5paisa">
-    <button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>
     <span class="aff-tag">Sponsored</span>
     <div class="aff-art aff-art-5paisa">
       <img src="/assets/img/partners/5paisa.svg" width="120" height="29" alt="5paisa" style="display:block">
@@ -161,7 +178,6 @@ const JIRAAF_LOGO_DATA_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDov
 
 function jiraafBanner() {
   return `<div class="aff-banner aff-banner-jiraaf">
-    <button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>
     <span class="aff-tag">Sponsored</span>
     <div class="aff-art aff-art-jiraaf">
       <img src="/assets/img/partners/jiraaf.svg" width="120" height="32" alt="Jiraaf" style="display:block">
@@ -290,6 +306,8 @@ export async function home() {
     ${statTile('SEBI-registered on file', count(o.registry_count),
       `${meta.verified_count} tracked brokers matched to the register`, provDot('sebi_registry'))}
   </div>
+
+  ${ibslBanner('strip', 'home')}
 
   ${hasClients ? `
   <div class="section-title" style="margin-top:56px;margin-bottom:20px">

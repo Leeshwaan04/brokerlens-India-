@@ -379,8 +379,10 @@ def render_lot_size_table(lot, p_high):
 def render_full_ipo_page(r, equity_history, head_template, foot_template,
                          affiliate_banner_html, fivepaisa_banner_html,
                          breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in",
-                         jiraaf_banner_html=""):
+                         jiraaf_banner_html="", ibsl_wide_html=""):
     """Renders institutional-grade /ipo/[slug]/ page."""
+    # IBSL is a broker banner, so it takes the place of 5paisa here and the page keeps three sponsored blocks.
+    _five_b = "" if ibsl_wide_html else fivepaisa_banner_html
     symbol = r["symbol"].upper()
     company = r.get("company") or symbol
     slug = symbol.lower()
@@ -522,6 +524,7 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         + perf_html
         + sub_html
         + lot_html
+        + ibsl_wide_html
         + f'<div class="card" style="margin-top:24px;padding:20px;background:var(--bg-raised)">'
         + f'<div class="section-title"><h2 style="margin:0;font-size:16px">How to Apply for {_esc(company)} IPO Online via UPI</h2></div>'
         + f'<p class="muted small" style="margin:4px 0 12px 0">Step-by-step UPI application walkthroughs across India\'s leading SEBI-registered brokers:</p>'
@@ -544,7 +547,7 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         + f'<div class="aff-block" style="margin-top:24px">'
         + f'<div class="section-title"><h2>Apply for IPOs online with top SEBI-registered brokers</h2></div>'
         + f'<p class="muted small" style="margin-top:4px">Open a free Demat account in 5 minutes with India\'s leading brokers and submit your IPO bid seamlessly via UPI.</p>'
-        + f'<div class="grid g3 aff-pair" style="margin-top:14px">{affiliate_banner_html}{fivepaisa_banner_html}{jiraaf_banner_html}</div></div>'
+        + f'<div class="grid g3 aff-pair" style="margin-top:14px">{affiliate_banner_html}{_five_b}{jiraaf_banner_html}</div></div>'
         + f'<h2 style="margin-top:28px;font-size:18px">Frequently Asked Questions</h2>'
         + f'<div style="max-width:70ch">{faq_html}</div>'
     )
@@ -664,7 +667,7 @@ def _follow_card_html():
 
 
 def render_enhanced_ipo_hub(records, equity_history, head_template, foot_template,
-                            breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in", upcoming=False):
+                            breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in", upcoming=False, ibsl_html=""):
     """Renders the enhanced /ipo/ hub with real-time active, upcoming, and listed returns."""
     today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     active = []
@@ -923,6 +926,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
             + '<a href="/ipo/how-to-apply/" class="btn btn-outline small">How to apply via UPI &rarr;</a>'
             + '<a href="/ipo/" class="btn btn-outline small">IPO tracker and listing gains &rarr;</a></div>'
             + _follow_card_html()
+            + ibsl_html
             + '<div class="section-title" style="margin-top:20px"><h2>Open for bidding now</h2></div>' + render_active_table(active)
             + '<div class="section-title" style="margin-top:28px"><h2>Opening soon</h2></div>' + render_upcoming_table(forthcoming)
             + ('<div class="section-title" style="margin-top:28px"><h2>Closed, awaiting listing</h2></div>' + render_awaiting_table(awaiting) if awaiting else "")
@@ -973,6 +977,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         + '<a href="/ipo/archive/" class="btn btn-outline small">Full IPO Historical Archive &rarr;</a>'
         + '</div>'
         + _follow_card_html()
+        + ibsl_html
         + '<div class="section-title" style="margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
         + '<h2>Currently Open for Bidding (Active IPOs)</h2>'
         + '</div>'

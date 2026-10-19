@@ -845,22 +845,9 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
 }
 
 .aff-banner .aff-tag {
-  position: absolute; top: 10px; right: 38px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em;
+  position: absolute; top: 10px; right: 10px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em;
   color: #fff; background: rgba(0, 0, 0, 0.35); border-radius: var(--radius-full); padding: 2px 8px; font-weight: 600;
 }
-/* Dismiss control - a neutral grey chip works unmodified against every
-   banner variant's own art background (plain card, Binance's dark gradient,
-   Zerodha/5paisa's tinted gradient in dark mode) without needing a
-   per-variant override the way .aff-tag needs one. */
-.aff-close {
-  position: absolute; top: 8px; right: 8px; z-index: 2; width: 24px; height: 24px; padding: 0;
-  display: flex; align-items: center; justify-content: center; border: none; border-radius: 50%;
-  background: rgba(127, 127, 127, 0.22); color: var(--text-muted); font-size: 16px; line-height: 1;
-  cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
-}
-.aff-close:hover { background: rgba(127, 127, 127, 0.38); color: var(--text); }
-.aff-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-
 .aff-art { position: relative; height: 52px; display: flex; align-items: center; padding: var(--space-3) var(--space-4) 0; flex-shrink: 0; }
 .aff-art-binance { background: linear-gradient(135deg, #16181c 0%, #0b0e11 70%); }
 .aff-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; letter-spacing: 0.02em; }
@@ -1709,3 +1696,14 @@ table.data tr:hover td {
 .follow-card h2 { margin: 0 0 4px; font-size: var(--fs-md); }
 .follow-card p { margin: 0 0 10px; font-size: var(--fs-sm); color: var(--text-muted); max-width: 70ch; line-height: 1.55; }
 .follow-card .row-wrap { gap: 10px; }
+
+
+/* ------------------------------------------------------------ sponsored IBSL banners */
+.ad-wrap { margin: var(--space-5) 0; }
+.ad-ibsl { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: #000; box-shadow: var(--shadow-sm); }
+.ad-ibsl a { display: block; line-height: 0; }
+.ad-ibsl img { width: 100%; height: auto; display: block; }
+.ad-tag { position: absolute; top: 8px; right: 8px; z-index: 2; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.88); color: #333; }
+.ad-note { margin: 8px 2px 0; font-size: 11px; line-height: 1.5; color: var(--text-faint); max-width: 90ch; }
+.ad-card { max-width: 420px; }
+.stack .ad-wrap { margin: 0; }

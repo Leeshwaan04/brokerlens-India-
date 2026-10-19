@@ -912,6 +912,16 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     return articles
 
 
+def _ibsl_news_banner():
+    """The sponsored IBSL banner for article pages. Imported lazily because publish.py imports this
+    module; when this file runs on its own (no publish module) the page simply has no banner."""
+    try:
+        from .publish import ibslBanner_html
+        return ibslBanner_html("wide", "news")
+    except Exception:
+        return ""
+
+
 def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
     """Compiles and writes all news articles, blogs, the hub, and feeds."""
     from .publish import (
@@ -1080,7 +1090,8 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
             + '<div class="xs"><a href="/editorial-policy" style="color:var(--accent);text-decoration:none;font-weight:600">Editorial Guidelines &rarr;</a></div>'
             + '</div>'
             + '<div class="card" style="margin-top:20px;padding:28px;line-height:1.7">%s</div>' % art["body_html"]
-            + '<p class="xs faint" style="margin-top:12px">Editorial Integrity: BrokerLens does not accept payment to promote brokers or alter factual analyses. Read our <a href="/editorial-policy">Editorial Policy</a> and <a href="/methodology">Methodology</a>.</p>'
+            + _ibsl_news_banner()
+            + '<p class="xs faint" style="margin-top:12px">Editorial Integrity: BrokerLens does not accept payment to alter factual analyses. Sponsored placements are labelled and do not affect any data, ranking or analysis. Read our <a href="/editorial-policy">Editorial Policy</a> and <a href="/methodology">Methodology</a>.</p>'
             + affiliate_html
             + '<div style="margin-top:24px"><a class="btn btn-sm" href="/news/" data-link>&larr; Back to all News, Blogs &amp; Market Insights</a></div>'
         )

@@ -584,8 +584,8 @@ def test_published():
                   chart_card_end > 0 and "Trade ITC" in itc_html[:chart_card_end])
             check("stock page lists peer stocks in the same sector index",
                   "Other Nifty FMCG stocks" in itc_html and "/stock/hindunilvr/" in itc_html)
-            check("stock page carries both sponsored broker banners",
-                  "aff-banner-zerodha" in itc_html and "aff-banner-5paisa" in itc_html)
+            check("stock page carries the Zerodha and Indiabulls sponsored broker banners (IBSL replaced 5paisa, keeping three blocks)",
+                  "aff-banner-zerodha" in itc_html and 'data-ad="ibsl"' in itc_html)
         # A stock with no price history yet takes a different layout branch
         # (no chart, no g-main split) - the banners must still render there,
         # not only on the common chart-having path. ABAN (BE series, delisted
@@ -593,9 +593,9 @@ def test_published():
         aban_path = os.path.join(stock_dir, "aban", "index.html")
         if os.path.exists(aban_path):
             aban_html = open(aban_path, encoding="utf-8").read()
-            check("a stock page with no price history still carries both sponsored broker banners",
+            check("a stock page with no price history still carries the Zerodha and Indiabulls sponsored broker banners",
                   "data-stock-chart" not in aban_html
-                  and "aff-banner-zerodha" in aban_html and "aff-banner-5paisa" in aban_html)
+                  and "aff-banner-zerodha" in aban_html and 'data-ad="ibsl"' in aban_html)
         stock_chart_path = os.path.join(ROOT, "site", "assets", "js", "stock-chart.js")
         check("stock-chart.js exists", os.path.exists(stock_chart_path))
         if os.path.exists(stock_chart_path):
@@ -1446,8 +1446,8 @@ def test_published():
               "not investment advice" in sample_ipo_html.lower())
         check("an IPO page has no leaked 'None'",
               ">None<" not in sample_ipo_html and "None</p>" not in sample_ipo_html)
-        check("an IPO page carries both sponsored broker banners",
-              "aff-banner-zerodha" in sample_ipo_html and "aff-banner-5paisa" in sample_ipo_html)
+        check("an IPO page carries the Zerodha and Indiabulls sponsored broker banners (IBSL replaced 5paisa, keeping three blocks)",
+              "aff-banner-zerodha" in sample_ipo_html and 'data-ad="ibsl"' in sample_ipo_html)
         fabricated_rhp_markers = (
             "RHP Financials", "RHP audited financials", "Industry Median",
             "industry peer benchmark", "industry_pe", "Business Strengths",
@@ -2247,8 +2247,8 @@ def test_instrument_pages():
     kf2 = read("ipo", "kfintech", "index.html") or ""
     check("IPO page carries a status banner with an 'as of' date", "Page data as of" in kf2)
     priv = read("privacy-policy", "index.html") or ""
-    check("no account-dependent signup remains: no /api endpoint, no alerts script, no email form on IPO pages",
-          not os.path.exists(os.path.join(ROOT, "api")) and not os.path.exists(os.path.join(site, "assets", "js", "alerts.js"))
+    check("no account-dependent signup remains: no subscribe endpoint, no alerts script, no email form on IPO pages",
+          not os.path.exists(os.path.join(ROOT, "api", "subscribe.js")) and not os.path.exists(os.path.join(site, "assets", "js", "alerts.js"))
           and "alerts-card" not in (read("ipo", "upcoming", "index.html") or "") and "IPO email alerts" not in priv)
     feed = read("ipo", "feed.xml") or ""
     cal_path = os.path.join(site, "ipo", "upcoming.ics")
@@ -2315,6 +2315,99 @@ def test_instrument_pages():
     check("the home page no longer carries the sample-data banner or the 'client and complaint statistics not published yet' card",
           "Sample data in use" not in homepage and "Client and complaint statistics not published" not in homepage
           and "sampleBanner" not in pj2 and "Client and complaint statistics" not in pj2)
+
+    # ---- IBSL sponsored banners
+    import struct
+    def jpeg_dims(path):
+        d = open(path, "rb").read(); i = 2
+        while i < len(d):
+            if d[i] != 0xFF: i += 1; continue
+            m = d[i + 1]
+            if m in (0xC0, 0xC1, 0xC2):
+                h, w = struct.unpack(">HH", d[i + 5:i + 9]); return w, h
+            i += 2 + struct.unpack(">H", d[i + 2:i + 4])[0]
+        return None
+    adir = os.path.join(site, "assets", "img", "ads")
+    dims = {n: jpeg_dims(os.path.join(adir, n)) if os.path.exists(os.path.join(adir, n)) else None
+            for n in ("ibsl-strip-2400x320.jpg", "ibsl-wide-2000x500.jpg", "ibsl-card-1000x400.jpg")}
+    check("IBSL creatives ship unmodified in their received shapes (4:1, 5:2) and the 7.5:1 strip at 2400 wide, each under 300 KB",
+          dims == {"ibsl-strip-2400x320.jpg": (2400, 320), "ibsl-wide-2000x500.jpg": (2000, 500), "ibsl-card-1000x400.jpg": (1000, 400)}
+          and all(os.path.getsize(os.path.join(adir, n)) < 300 * 1024 for n in dims), str(dims))
+    from pipeline import publish as _pb
+    bn = _pb.ibslBanner_html("wide", "ipo")
+    check("banner is marked Sponsored, links to the approved IBSL URL (sponsored, noopener, new tab) and carries SEBI numbers and the referral-fee disclosure",
+          'href="https://stocks-onboarding.indiabullssecurities.com/login"' in bn and 'rel="sponsored noopener"' in bn
+          and 'target="_blank"' in bn and ">Sponsored<" in bn and "INZ000036136" in bn and "IN-DP-423-2019" in bn
+          and "referral fee" in bn and "not a recommendation" in bn and "/sebi-registry/indiabulls-securities-limited/" in bn)
+    css_all2 = open(os.path.join(site, "assets", "css", "app.css"), encoding="utf-8").read()
+    check("banner has a descriptive alt, lazy loading, set dimensions and versioned image URLs, and NO close button; the Sponsored tag sits top-right",
+          'alt="Indiabulls Securities: Rs 0' in bn and 'loading="lazy"' in bn and 'width="1000" height="400"' in bn
+          and re.search(r"ibsl-wide-2000x500\.jpg\?v=[0-9a-f]{10}", bn) is not None
+          and "ad-close" not in bn and "data-ad-close" not in bn and "<button" not in bn
+          and re.search(r"\.ad-tag \{[^}]*top: 8px; right: 8px;", css_all2) is not None)
+    all_gen = "".join(open(os.path.join(ROOT, "pipeline", f), encoding="utf-8").read() for f in ("publish.py", "news_engine.py", "ipo_engine.py", "trade_cost_engine.py", "ipo_apply_engine.py", "ipo_subscription_engine.py", "broker_branch_engine.py"))
+    all_js = "".join(open(os.path.join(site, "assets", "js", f), encoding="utf-8").read() for f in os.listdir(os.path.join(site, "assets", "js")) if f.endswith(".js"))
+    built_samples = "".join(read(*x, "index.html") or "" for x in (("",), ("brokers",), ("crypto",), ("stock", "itc"), ("ipo", "kfintech"), ("fund", "360-one-mutual-fund-360-one-balanced-hybrid-fund"), ("etf", "abslbanetf")))
+    check("no banner anywhere has a cancel icon: no close buttons in any generator, script, stylesheet or built page; Sponsored tag is top-right on every banner",
+          "aff-close" not in all_gen and "Dismiss this ad" not in all_gen and "aff-close" not in all_js and "Dismiss this ad" not in all_js
+          and ".aff-close" not in css_all2 and "aff-close" not in built_samples and "Dismiss this ad" not in built_samples
+          and re.search(r"\.aff-banner \.aff-tag \{\s*position: absolute; top: 10px; right: 10px;", css_all2) is not None)
+    check("the old session-remembering banner dismissal code is gone (no stored dismissals can hide a banner)",
+          "bl-aff-dismissed" not in all_js and "applyDismissedBanners" not in all_js)
+    trk = open(os.path.join(site, "assets", "js", "ad-track.js"), encoding="utf-8").read()
+    trk_code = re.sub(r"/\*.*?\*/", "", trk, flags=re.S)
+    check("banners cannot be hidden and the tracker stores nothing, so every banner shows on every page load",
+          "wrap.hidden" not in trk and "data-ad-close" not in trk and not re.search(r"localStorage|sessionStorage|document\.cookie|indexedDB", trk_code))
+    check("tracking records imp (50% visible for 1 s, once) and click with sendBeacon; no personal data",
+          all(s in trk for s in ("'imp'", "'click'", "sendBeacon", "intersectionRatio >= 0.5", "}, 1000)")) and "'close'" not in trk and "userAgent" not in trk_code)
+    check("search.js loads ad-track.js (present on every page with a header)", "ad-track.js" in open(os.path.join(site, "assets", "js", "search.js"), encoding="utf-8").read())
+    check("api/ad-event.js unit tests pass (origin, whitelist, size, rate limit, no caller logging)",
+          os.system("node %s > /dev/null 2>&1" % os.path.join(ROOT, "tests", "ad_event_test.js")) == 0)
+
+    def n_sponsored(h): return h.count('class="aff-banner ') + h.count('class="ad-ibsl"')
+    hm = read("index.html") or ""
+    i_stats = hm.find("SEBI-registered on file") if "SEBI-registered on file" in hm else hm.lower().find("sebi-registered on file")
+    i_ad = hm.find('data-ad="ibsl"')
+    i_bento = hm.find("MARKET INTELLIGENCE BENTO")
+    check("home: the strip sits directly below the four stat tiles (after the last tile, before the next section)",
+          i_ad > 0 and i_stats > 0 and i_ad > i_stats and (i_bento < 0 or i_ad < i_bento) and 'data-slot="strip"' in hm and 'data-page-type="home"' in hm)
+    pjs = open(os.path.join(site, "assets", "js", "pages.js"), encoding="utf-8").read()
+    j_ad = pjs.find("${ibslBanner('strip', 'home')}")
+    j_stats = pjs.find("tracked brokers matched to the register")
+    j_bento = pjs.find("MARKET INTELLIGENCE BENTO")
+    check("home (client-side render) places the same strip below the stat tiles, before the next section",
+          j_stats > 0 and j_ad > j_stats and (j_bento < 0 or j_ad < j_bento))
+    placements = {
+        ("ipo", "kfintech"): ("wide", "ipo"), ("ipo", "upcoming"): ("wide", "ipo"), ("ipo",): ("wide", "ipo"),
+        ("broker", "zerodha"): ("wide", "broker"), ("stock", "itc"): ("card", "stock"), ("calculators",): ("wide", "calculator"),
+    }
+    miss = []
+    for parts, (slot, pt) in placements.items():
+        h = read(*parts, "index.html") or ""
+        if 'data-ad="ibsl"' not in h or ('data-slot="%s"' % slot) not in h or ('data-page-type="%s"' % pt) not in h:
+            miss.append("/".join(parts))
+    news_pages = [d for d in os.listdir(os.path.join(site, "news")) if os.path.isfile(os.path.join(site, "news", d, "index.html"))] if os.path.isdir(os.path.join(site, "news")) else []
+    news_no_ad = [d for d in news_pages if "Editorial Integrity" in (read("news", d, "index.html") or "") and 'data-ad="ibsl"' not in read("news", d, "index.html")]
+    check("banner appears on the home, IPO hub, upcoming, IPO detail, broker, stock and calculator pages with the right slot and page type", not miss, str(miss))
+    check("every news article (new and older) carries the banner", news_pages and not news_no_ad, str(news_no_ad[:3]))
+    excluded = [("privacy-policy",), ("terms-of-service",), ("about",), ("methodology",), ("contact",), ("editorial-policy",), ("sources",),
+                ("sebi-registry", "indiabulls-securities-limited"), ("crypto", "btc"), ("etf", "abslbanetf")]
+    leaked = [("/".join(x)) for x in excluded if 'data-ad="ibsl"' in (read(*x, "index.html") or "")]
+    check("no banner on legal and trust pages, SEBI registry entity pages, crypto, or ETF pages", not leaked, str(leaked))
+    four04 = read("404.html") or ""
+    check("no banner on the 404 page", 'data-ad="ibsl"' not in four04)
+    over = []
+    for parts in list(placements) + [("news", news_pages[0])] if news_pages else list(placements):
+        h = read(*parts, "index.html") or ""
+        if n_sponsored(h) > 3 or h.count('data-ad="ibsl"') > 2:
+            over.append(("/".join(parts), n_sponsored(h)))
+    check("no page carries more than three sponsored blocks or more than two IBSL banners", not over, str(over))
+    stk = read("stock", "itc", "index.html") or ""
+    check("stock page: IBSL (a broker) takes the place of 5paisa, so Zerodha, IBSL and Jiraaf remain", "aff-banner-5paisa" not in stk and "aff-banner-zerodha" in stk and "aff-banner-jiraaf" in stk)
+    check("the editorial-integrity line no longer claims BrokerLens takes no payment to promote brokers",
+          "does not accept payment to promote" not in open(os.path.join(ROOT, "pipeline", "news_engine.py"), encoding="utf-8").read()
+          and not any("does not accept payment to promote" in (read("news", d, "index.html") or "") for d in news_pages))
+    check("privacy policy discloses the anonymous banner events", "sponsored banner is shown or clicked" in (read("privacy-policy", "index.html") or ""))
 
     # Redirects for retired price-target URLs must cover the trailing-slash form
     rules = (load("vercel.json") or {}).get("redirects", [])

@@ -6,10 +6,10 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=3e1dd431fe';
-import * as pages from './pages.js?v=26506ae5ce';
+import * as pages from './pages.js?v=e2575428c6';
 import { clearRedraws } from './chart.js?v=ec48a39b98';
-import './nav-widgets.js?v=7a44d55fb7';
-import './search.js?v=0278326948';
+import './nav-widgets.js?v=61e20586e7';
+import './search.js?v=e1224b2aa0';
 import './hero-video.js?v=9e658a1fa5';
 
 const app = document.getElementById('app');
@@ -115,7 +115,6 @@ async function render() {
     const html = hit ? await hit[1](path.match(hit[0]), query) : pages.notFound();
     app.innerHTML = html;
     pages.runAfter();
-    applyDismissedBanners();
   } catch (err) {
     console.error(err);
     app.innerHTML = `<div class="empty"><h2>Could not load this page</h2>
@@ -183,49 +182,6 @@ document.addEventListener('click', (e) => {
   if (url.pathname + url.search + url.hash === location.pathname + location.search + location.hash) return;
   history.pushState({}, '', url);
   render();
-});
-
-/* --------------------------------------------------------- sponsored banners
- *
- * Every .aff-banner (Zerodha, 5paisa, Binance, Delta - stock/fund/ETF/IPO
- * pages and the SPA-rendered ones alike) ships an .aff-close button. A
- * dismissal is remembered in sessionStorage, keyed by banner variant, so it
- * stays gone for the rest of this tab across every page the viewer visits -
- * but a fresh tab still sees it, same tradeoff most dismissible ad units
- * make, rather than sessionStorage's alternative of losing the sponsor
- * placement for good after one accidental click.
- */
-const AFF_DISMISS_KEY = 'bl-aff-dismissed';
-
-function dismissedAffVariants() {
-  try {
-    return new Set(JSON.parse(sessionStorage.getItem(AFF_DISMISS_KEY) || '[]'));
-  } catch {
-    return new Set();
-  }
-}
-
-function applyDismissedBanners() {
-  const dismissed = dismissedAffVariants();
-  if (!dismissed.size) return;
-  document.querySelectorAll('.aff-banner').forEach((el) => {
-    const variant = [...el.classList].find((c) => c.startsWith('aff-banner-'));
-    if (variant && dismissed.has(variant)) el.remove();
-  });
-}
-
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.aff-close');
-  if (!btn) return;
-  const banner = btn.closest('.aff-banner');
-  if (!banner) return;
-  const variant = [...banner.classList].find((c) => c.startsWith('aff-banner-'));
-  if (variant) {
-    const dismissed = dismissedAffVariants();
-    dismissed.add(variant);
-    try { sessionStorage.setItem(AFF_DISMISS_KEY, JSON.stringify([...dismissed])); } catch { /* private mode etc. */ }
-  }
-  banner.remove();
 });
 
 window.addEventListener('popstate', render);
@@ -492,8 +448,4 @@ async function initTicker() {
 }
 
 initTicker();
-// Static pages (stock/fund/ETF/IPO, etc.) have no #app wrapper, so render()
-// below never touches their server-rendered banners at all - this direct
-// call is what hides an already-dismissed one on those pages' first paint.
-applyDismissedBanners();
 render();

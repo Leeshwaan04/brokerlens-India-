@@ -79,7 +79,7 @@ def _stamp_asset_versions(html):
         except OSError:
             return m.group(0)
         return '%s="/assets/%s?v=%s"' % (attr, rel, digest)
-    return re.sub(r'(href|src|poster|data-src)="/assets/([^"]+)"', repl, html)
+    return re.sub(r'(href|srcset|src|poster|data-src)="/assets/([^"]+)"', repl, html)
 
 
 def _require_site_url():
@@ -627,7 +627,7 @@ def _restamp_js_media():
     never reach a returning visitor. Runs before _restamp_js_imports() so the
     JS files' own hashes reflect the stamped URLs."""
     js_dir = os.path.join(ROOT, "site", "assets", "js")
-    media_re = re.compile(r"(/assets/(?:video|audio)/[\w.-]+\.(?:mp4|jpg|mp3))(?:\?v=[0-9a-f]+)?")
+    media_re = re.compile(r"(/assets/(?:video|audio|img/ads)/[\w.-]+\.(?:mp4|jpg|mp3))(?:\?v=[0-9a-f]+)?")
 
     def repl(m):
         path = os.path.join(ROOT, "site", m.group(1).lstrip("/"))
@@ -1840,6 +1840,7 @@ def _broker_depth(b, built):
     )
     body = (
         '<div class="wrap" data-static-only style="padding-top:0;padding-bottom:24px">'
+        + ibslBanner_html("wide", "broker")
         + reg_html + verify_html + complain_html + "".join(extra) + faq_html
         + '<p class="xs faint" style="margin-top:20px">BrokerLens is an information service, not a SEBI-registered investment '
           'adviser. Nothing here is a recommendation to open an account with, or avoid, any broker. '
@@ -2547,15 +2548,15 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                 '<div class="card"><div class="card-title">Price history</div>'
                 '<div data-stock-chart data-symbol="%s"></div>%s%s</div>'
                 '<div class="stack">%s%s%s%s%s</div></div>'
-                % (_esc(slug), _stock_ohlc_html(history), trade_cta_html, _stock_price_html(history), listing_html,
-                   affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html())
+                % (_esc(slug), _stock_ohlc_html(history), trade_cta_html, ibslBanner_html("card", "stock"),
+                   _stock_price_html(history), listing_html, affiliateBanner_html(), jiraafBanner_html())
                 if history else
                 listing_html
                 + '<div class="aff-block" style="margin-top:24px">'
                   '<div class="section-title"><h2>Trade Indian equities &amp; invest in high-yield bonds</h2></div>'
                   '<p class="muted small" style="margin-top:4px">Open an account with verified SEBI-registered brokers and fixed-income platforms.</p>'
                   '<div class="grid g3 aff-pair" style="margin-top:14px">%s%s%s</div></div>'
-                % (affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html())
+                % (affiliateBanner_html(), ibslBanner_html("card", "stock"), jiraafBanner_html())
               )
             + '<p class="xs faint" style="margin-top:16px">Source: NSE listed-securities master file (EQUITY_L)%s.</p>'
               % (" and NSE's daily bhavcopy for price history" if history else "; price history was not available "
@@ -4353,6 +4354,44 @@ _FIVEPAISA_LOGO_DATA_URI = "/assets/img/partners/5paisa.svg"
 _BINANCE_LOGO_DATA_URI = "/assets/img/partners/binance.png"
 
 
+IBSL_LINK = "https://stocks-onboarding.indiabullssecurities.com/login"
+IBSL_REGISTER_URL = "/sebi-registry/indiabulls-securities-limited/"
+_IBSL_ALT = ("Indiabulls Securities: Rs 0 account opening charges, Rs 11 per executed order across all segments*, "
+             "20 years of trust. Open your free account now. Terms apply.")
+_IBSL_SLOTS = {"strip", "wide", "card"}
+_IBSL_PAGE_TYPES = {"home", "ipo", "broker", "stock", "news", "calculator"}
+_ibsl_cache = {}
+
+
+def ibslBanner_html(slot, page_type):
+    """Indiabulls Securities (IBSL) sponsored banner. slot: strip (7.5:1, desktop home), wide (4:1
+    in-content) or card (5:2 sidebar); phones always get the card creative because the fine print on
+    the wider ones is unreadable at that width. The creatives are served unmodified (the fine print
+    is part of the ad). Marked sponsored, carries IBSL's SEBI registration numbers (from our own
+    SEBI-register data) and a referral-fee disclosure. data-ad / data-slot / data-page-type feed
+    ad-track.js (impressions and clicks, first-party, no cookies)."""
+    assert slot in _IBSL_SLOTS and page_type in _IBSL_PAGE_TYPES, (slot, page_type)
+    key = (slot, page_type)
+    if key in _ibsl_cache:
+        return _ibsl_cache[key]
+    big = {"strip": ("/assets/img/ads/ibsl-strip-2400x320.jpg", 2400, 320),
+           "wide": ("/assets/img/ads/ibsl-wide-2000x500.jpg", 2000, 500)}.get(slot)
+    card = '<img src="/assets/img/ads/ibsl-card-1000x400.jpg" width="1000" height="400" alt="%s" loading="lazy">' % _esc(_IBSL_ALT)
+    pic = ('<picture><source media="(min-width:900px)" srcset="%s" width="%d" height="%d">%s</picture>' % (big[0], big[1], big[2], card)
+           ) if big else card
+    out = (
+        '<aside class="ad-wrap ad-%s" data-ad="ibsl" data-slot="%s" data-page-type="%s" aria-label="Sponsored: Indiabulls Securities">'
+        '<div class="ad-ibsl"><span class="ad-tag">Sponsored</span>'
+        '<a href="%s" target="_blank" rel="sponsored noopener" data-ad-click>%s</a></div>'
+        '<p class="ad-note">Sponsored. Indiabulls Securities Limited, SEBI Reg. INZ000036136 '
+        '(<a href="%s">check the SEBI register</a>), DP IN-DP-423-2019. BrokerLens may earn a referral fee if you open an account. '
+        'This is advertising, not a recommendation. <a href="/methodology">How BrokerLens makes money</a></p></aside>'
+    ) % (slot, slot, page_type, IBSL_LINK, pic, IBSL_REGISTER_URL)
+    out = _stamp_asset_versions(out)
+    _ibsl_cache[key] = out
+    return out
+
+
 def affiliateBanner_html():
     """Python port of pages.js's affiliateBanner() - the Zerodha sponsored
     banner, kept byte-for-byte in sync with the JS version (same logo, same
@@ -4360,7 +4399,6 @@ def affiliateBanner_html():
     /brokers and / shows the identical banner a fresh visit already saw."""
     return (
         '<div class="aff-banner aff-banner-zerodha">'
-        '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
         '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-zerodha">'
         '<img src="%s" width="152" height="20" alt="Zerodha" style="display:block"></div>'
@@ -4393,7 +4431,6 @@ def fivepaisaBanner_html():
     carries for 5paisa's broker profile, not a fresh, unverified lookup."""
     return (
         '<div class="aff-banner aff-banner-5paisa">'
-        '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
         '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-5paisa">'
         '<img src="%s" width="120" height="29" alt="5paisa" style="display:block"></div>'
@@ -4423,7 +4460,6 @@ def jiraafBanner_html():
     .aff-banner-jiraaf styling) stacked beside/below Zerodha and 5paisa."""
     return (
         '<div class="aff-banner aff-banner-jiraaf">'
-        '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
         '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-jiraaf">'
         f'<img src="{_JIRAAF_LOGO_DATA_URI}" width="120" height="32" alt="Jiraaf" style="display:block"></div>'
@@ -4453,7 +4489,6 @@ def _crypto_banner_html():
     third-party logo mirror."""
     return (
         '<div class="aff-banner aff-banner-binance">'
-        '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
         '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-binance">'
         '<div class="aff-logo">'
@@ -4486,7 +4521,6 @@ def _delta_banner_html():
     directly from delta.exchange's own favicon, not a third-party mirror."""
     return (
         '<div class="aff-banner aff-banner-delta">'
-        '<button class="aff-close" type="button" aria-label="Dismiss this ad">&times;</button>'
         '<span class="aff-tag">Sponsored</span>'
         '<div class="aff-art aff-art-delta">'
         '<div class="aff-logo">'
@@ -4769,6 +4803,7 @@ def _write_ipo_pages(records, equity_history=None):
             affiliate_banner_html=aff_b,
             fivepaisa_banner_html=five_b,
             jiraaf_banner_html=jiraaf_b,
+            ibsl_wide_html=ibslBanner_html("wide", "ipo"),
             breadcrumb_fn=_breadcrumb,
             source_note_fn=_source_note,
             site_url=SITE_URL,
@@ -4792,6 +4827,7 @@ def _write_ipo_hub(records, equity_history=None):
         equity_history=equity_history,
         head_template=_REGISTRY_PAGE_HEAD,
         foot_template=_REGISTRY_PAGE_FOOT,
+        ibsl_html=ibslBanner_html("wide", "ipo"),
         breadcrumb_fn=_breadcrumb,
         source_note_fn=_source_note,
         site_url=SITE_URL,
@@ -4809,6 +4845,7 @@ def _write_ipo_upcoming(records, equity_history=None):
     body = render_enhanced_ipo_hub(
         records=records, equity_history=equity_history,
         head_template=_REGISTRY_PAGE_HEAD, foot_template=_REGISTRY_PAGE_FOOT,
+        ibsl_html=ibslBanner_html("wide", "ipo"),
         breadcrumb_fn=_breadcrumb, source_note_fn=_source_note, site_url=SITE_URL, upcoming=True,
     )
     dest_dir = os.path.join(ROOT, "site", "ipo", "upcoming")
@@ -5481,7 +5518,10 @@ def _write_privacy_page():
         '<div class="card"><p class="small muted">BrokerLens runs no third-party analytics or advertising '
         'tracking. The site stores two preferences in your own browser\'s local storage (never sent to us or '
         'anyone else): your light or dark theme choice, and your selected market exchange on the price ticker. '
-        'Clearing your browser data removes them. If you write to us by email, we hold that message and your '
+        'Clearing your browser data removes them. When a sponsored banner is shown or clicked, the site '
+        'records an anonymous event (which banner, which page, phone or desktop, and the referring site) with no '
+        'cookie, no IP address and no personal identifier, so we can see which pages send readers to an advertiser. '
+        'If you write to us by email, we hold that message and your '
         'email address only for as long as needed to answer it.</p></div>'
 
         '<div class="section-title"><h2>Affiliate and sponsored links</h2></div>'
@@ -6910,6 +6950,7 @@ def _prerender_home(overview):
                               "%s tracked brokers matched to the register" % meta.get("verified_count", 0),
                               _prov_dot_html("sebi_registry"))
     html += '<div class="grid g4" style="margin-top:28px">%s</div>' % tiles
+    html += ibslBanner_html("strip", "home")
 
     if has_clients:
         total_series = agg.get("total_series") or []
@@ -7161,6 +7202,7 @@ def _write_calculator_hub():
         '<p class="muted" style="max-width:68ch">Thirteen calculators covering investing, saving, loans '
         'and tax, each built on the standard formula the calculation is actually based on, with the '
         'formula itself shown on the page.</p>'
+        + ibslBanner_html("wide", "calculator") +
 
         '<h2 style="margin-top:28px;font-size:18px">Compare broker charges instead</h2>'
         '<a class="card" href="/calculator" style="display:block;max-width:520px">'

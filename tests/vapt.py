@@ -436,6 +436,63 @@ def test_pipeline_hardening():
            "site/data/_ingest.json is world-readable once deployed", severity="high")
 
 
+def test_ad_surface():
+    """Sponsored-banner surface: the beacon endpoint, the tracking script and the outbound links."""
+    section("sponsored banners: beacon endpoint, tracking script, outbound links")
+    api = os.path.join(ROOT, "api", "ad-event.js")
+    src = open(api, encoding="utf-8").read() if os.path.exists(api) else ""
+    result("beacon endpoint exists", bool(src), "api/ad-event.js missing", severity="high")
+    result("beacon endpoint refuses cross-site and missing Origin", "originAllowed" in src and "if (!originAllowed(req)) return done(res, 403)" in src, severity="high")
+    result("beacon endpoint whitelists every field and drops unknown ones",
+           all(k in src for k in ("TYPES.has", "ADS.has", "SLOTS.has", "PAGE_TYPES.has", "PATH_RE.test", "HOST_RE.test")), severity="high")
+    result("beacon endpoint caps the body and rate-limits per address", "413" in src and "rateLimited(" in src and "429" in src, severity="medium")
+    result("beacon endpoint never sends CORS headers and never logs the caller (no ip, user agent or headers)",
+           "Access-Control-Allow-Origin" not in src and not re.search(r"console\.log\([^)]*(req\.headers|req\.socket|user-agent|x-forwarded)", src, re.I),
+           severity="high")
+    nodes = os.system("node %s > /dev/null 2>&1" % os.path.join(ROOT, "tests", "ad_event_test.js"))
+    result("beacon endpoint unit tests pass (node tests/ad_event_test.js)", nodes == 0, "exit %s" % nodes, severity="high")
+
+    trk = os.path.join(ROOT, "site", "assets", "js", "ad-track.js")
+    ts = open(trk, encoding="utf-8").read() if os.path.exists(trk) else ""
+    code = re.sub(r"/\*.*?\*/", "", ts, flags=re.S)   # comments may mention what the script avoids
+    result("tracking script stores nothing: no cookies, no localStorage, no sessionStorage, no IndexedDB",
+           bool(ts) and not re.search(r"document\.cookie|localStorage|sessionStorage|indexedDB", code), severity="high")
+    result("tracking script sends only to the same-origin endpoint", "const ENDPOINT = '/api/ad-event'" in ts and "http://" not in code and "https://" not in code, severity="high")
+    result("tracking script never reads personal data (no input values, no navigator fingerprinting)",
+           not re.search(r"\.value\b|userAgent|platform|plugins|canvas|getBattery|deviceMemory", code), severity="medium")
+
+    # outbound links on built pages
+    site = os.path.join(ROOT, "site")
+    bad, seen = [], 0
+    for rel in ("index.html", "ipo/upcoming/index.html", "ipo/index.html", "broker/zerodha/index.html",
+                "stock/itc/index.html", "calculators/index.html"):
+        pth = os.path.join(site, rel)
+        if not os.path.exists(pth):
+            continue
+        h = open(pth, encoding="utf-8").read()
+        for m in re.finditer(r"<a ([^>]*)data-ad-click([^>]*)>", h):
+            attrs = m.group(1) + m.group(2)
+            seen += 1
+            href = re.search(r'href="([^"]+)"', attrs)
+            ok = (href and href.group(1) == "https://stocks-onboarding.indiabullssecurities.com/login"
+                  and 'rel="sponsored noopener"' in attrs and 'target="_blank"' in attrs)
+            if not ok:
+                bad.append(rel)
+    result("every sponsored link is the approved https partner URL with rel=sponsored noopener and target=_blank",
+           seen > 0 and not bad, "checked %d; bad: %s" % (seen, bad[:3]), severity="high")
+    inline = []
+    for rel in ("index.html", "ipo/upcoming/index.html", "stock/itc/index.html"):
+        pth = os.path.join(site, rel)
+        if os.path.exists(pth):
+            h = open(pth, encoding="utf-8").read()
+            for m in re.finditer(r'<aside class="ad-wrap.*?</aside>', h, re.S):
+                if "<script" in m.group(0) or re.search(r"\son\w+=", m.group(0)):
+                    inline.append(rel)
+    result("banner markup has no inline script or inline event handlers (CSP script-src 'self')", not inline, str(inline), severity="high")
+    imgs = re.findall(r'(?:src|srcset)="(https?://[^"]+)"', open(os.path.join(site, "index.html"), encoding="utf-8").read()) if os.path.exists(os.path.join(site, "index.html")) else []
+    result("banner images are served from our own origin", not [u for u in imgs if "/assets/img/ads/" in u], str(imgs[:2]), severity="medium")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--url", help="base URL of a running server")
@@ -446,6 +503,7 @@ def main():
     test_frontend_sinks()
     test_published_json_safety()
     test_pipeline_hardening()
+    test_ad_surface()
 
     if args.url:
         base = args.url.rstrip("/")
