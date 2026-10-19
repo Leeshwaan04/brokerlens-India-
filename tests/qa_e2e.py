@@ -2447,6 +2447,15 @@ def main():
     test_leaderboards_market_movers()
     test_hub()
     test_instrument_pages()
+    # Per-area regression checks live in tests/qa_extra_<area>.py, each exposing
+    # run(check, ROOT, load) so parallel work never conflicts in this file.
+    import glob, importlib.util
+    for _p in sorted(glob.glob(os.path.join(ROOT, "tests", "qa_extra_*.py"))):
+        _spec = importlib.util.spec_from_file_location(os.path.basename(_p)[:-3], _p)
+        _mod = importlib.util.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        section(os.path.basename(_p))
+        _mod.run(check, ROOT, load)
     if args.url:
         test_server(args.url.rstrip("/"))
         test_sse(args.url.rstrip("/"))
