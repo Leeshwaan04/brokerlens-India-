@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-10-19T07:26:22.882700+00:00",
-  "total_articles": 22,
+  "generated_at": "2026-10-19T18:54:08.447575+00:00",
+  "total_articles": 23,
   "articles": [
     {
       "slug": "indian-stock-market-wrap-2026-10-19",
-      "title": "Indian Stock Market Today: Nifty 50 at 22,421.95, Key Gainers and Sectoral Action (19 October 2026)",
-      "description": "NSE market summary for 19 October 2026: Nifty 50 declined by -198.50 points. Review top gainers, losers, turnover, and exchange breadth disclosures.",
+      "title": "Indian Stock Market Today: Nifty 50 at 22,888.95, Key Gainers and Sectoral Action (19 October 2026)",
+      "description": "NSE market summary for 19 October 2026: Nifty 50 declined by -257.20 points. Review top gainers, losers, turnover, and exchange breadth disclosures.",
       "date": "2026-10-19",
       "date_str": "19 October 2026",
       "category": "Market News",
@@ -33,9 +33,9 @@
       "read_time": "3 min read"
     },
     {
-      "slug": "ipo-vnl-live-subscription-bidding-review",
-      "title": "Vishal Nirmiti Limited IPO Live Status: Subscribed 0.44x, Price Band Rs.208 to Rs.220",
-      "description": "Vishal Nirmiti Limited IPO is currently open for bidding. Price band is Rs.208 to Rs.220 with issue closing on 05 October 2026. Track live subscription numbers and broker application procedures.",
+      "slug": "ipo-bonfig-live-subscription-bidding-review",
+      "title": "Bonfiglioli Transmissions Limited IPO Live Status: Subscribed 31.77x, Price Band Rs.558 to Rs.586",
+      "description": "Bonfiglioli Transmissions Limited IPO is currently open for bidding. Price band is Rs.558 to Rs.586 with issue closing on 19 October 2026. Track live subscription numbers and broker application procedures.",
       "date": "2026-10-19",
       "date_str": "19 October 2026",
       "category": "IPO Bulletin",
@@ -43,9 +43,9 @@
       "read_time": "3 min read"
     },
     {
-      "slug": "ipo-nityas-live-subscription-bidding-review",
-      "title": "Nityas Gems and Jewellery Limited IPO Live Status: Subscribed 0.43x, Price Band Rs.70 to Rs.75",
-      "description": "Nityas Gems and Jewellery Limited IPO is currently open for bidding. Price band is Rs.70 to Rs.75 with issue closing on 05 October 2026. Track live subscription numbers and broker application procedures.",
+      "slug": "ipo-zetwerk-live-subscription-bidding-review",
+      "title": "Zetwerk Manufacturing Businesses Limited IPO Live Status: Subscribed 1.37x, Price Band Rs.143 to Rs.151",
+      "description": "Zetwerk Manufacturing Businesses Limited IPO is currently open for bidding. Price band is Rs.143 to Rs.151 with issue closing on 19 October 2026. Track live subscription numbers and broker application procedures.",
       "date": "2026-10-19",
       "date_str": "19 October 2026",
       "category": "IPO Bulletin",
@@ -53,9 +53,19 @@
       "read_time": "3 min read"
     },
     {
-      "slug": "ipo-eventions-live-subscription-bidding-review",
-      "title": "Eventions Limited IPO Live Status: Subscribed 1.75x, Price Band Disclosed on bid",
-      "description": "Eventions Limited IPO is currently open for bidding. Price band is Disclosed on bid with issue closing on 05 October 2026. Track live subscription numbers and broker application procedures.",
+      "slug": "ipo-tonbo-live-subscription-bidding-review",
+      "title": "Tonbo Imaging India Limited IPO Live Status: Subscribed 96.88x, Price Band Rs.665 to Rs.700",
+      "description": "Tonbo Imaging India Limited IPO is currently open for bidding. Price band is Rs.665 to Rs.700 with issue closing on 19 October 2026. Track live subscription numbers and broker application procedures.",
+      "date": "2026-10-19",
+      "date_str": "19 October 2026",
+      "category": "IPO Bulletin",
+      "category_badge": "badge-up",
+      "read_time": "3 min read"
+    },
+    {
+      "slug": "ipo-smt-live-subscription-bidding-review",
+      "title": "Sahajanand Medical Technologies Limited IPO Live Status: Subscribed 4.29x, Price Band Rs.327 to Rs.344",
+      "description": "Sahajanand Medical Technologies Limited IPO is currently open for bidding. Price band is Rs.327 to Rs.344 with issue closing on 19 October 2026. Track live subscription numbers and broker application procedures.",
       "date": "2026-10-19",
       "date_str": "19 October 2026",
       "category": "IPO Bulletin",
