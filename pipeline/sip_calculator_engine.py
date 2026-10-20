@@ -25,6 +25,11 @@ import math
 import os
 from datetime import datetime, timezone
 
+try:
+    from .indexation import NOINDEX_META, sip_indexable
+except ImportError:  # run as a script
+    from indexation import NOINDEX_META, sip_indexable
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_DIR = os.path.join(ROOT, "site")
 
@@ -79,6 +84,9 @@ def render_sip_scenario_page(amount: int, years: int, site_url="https://www.brok
 
     # Inflation adjusted real purchasing power at 6% CPI
     real_purchasing_power = fv_12 / ((1.0 + 0.06) ** years)
+
+    # Only the amounts and horizons people search stay indexable (see indexation.py).
+    robots_meta = "" if sip_indexable(amount, years) else NOINDEX_META + "\n"
 
     title = f"SIP of ₹{amount:,} per Month for {years} Years: Returns & Wealth Growth | BrokerLens"
     desc = f"Investing ₹{amount:,}/month for {years} years: Total investment of ₹{invested:,} grows to ₹{int(round(fv_12)):,} at 12% CAGR. Check tax impact, year-by-year schedule, and FD comparison."
@@ -149,7 +157,7 @@ def render_sip_scenario_page(amount: int, years: int, site_url="https://www.brok
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/app.css">
+{robots_meta}<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>
 </head>
 <body>
@@ -413,9 +421,13 @@ def build_sip_calculator_suite(site_url="https://www.brokerlens.in"):
             with open(os.path.join(page_dir, "index.html"), "w", encoding="utf-8") as out:
                 out.write(page_html)
 
-            generated_urls.append(f"/calculators/sip/{slug}/")
+            # Pages stay live either way; only the searched amount x year pairs are
+            # indexable, so only those are returned for the sitemap.
+            if sip_indexable(amt, yr):
+                generated_urls.append(f"/calculators/sip/{slug}/")
 
-    print(f"[sip_calculator_engine] Successfully generated {len(generated_urls)} SIP scenario pages & hub!")
+    print(f"[sip_calculator_engine] Generated {len(AMOUNTS) * len(DURATIONS)} SIP scenario pages; "
+          f"{len(generated_urls) - 1} indexable and in the sitemap, the rest noindex,follow")
     return generated_urls
 
 

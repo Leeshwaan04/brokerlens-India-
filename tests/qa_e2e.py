@@ -2234,15 +2234,16 @@ def test_instrument_pages():
     kf = read("ipo", "kfintech", "index.html") or ""
     if kf:
         mt = re.search(r"<title>(.*?)</title>", kf, re.S)
-        check("a listed IPO's title leads with its real outcome (issue price plus listing gain or return since issue), not the pre-issue checklist",
-              mt is not None and "Issue Price Rs" in mt.group(1) and ("Listing Gain" in mt.group(1) or "Since Issue" in mt.group(1)), mt.group(1) if mt else "")
+        check("a listed IPO's title leads with the facts people search (name, IPO, date or price band), with no return figure in it",
+              mt is not None and "KFin Technologies" in mt.group(1) and " IPO" in mt.group(1)
+              and "%" not in mt.group(1) and "Latest Close" not in mt.group(1), mt.group(1) if mt else "")
         check("a fixed-price IPO shows one price, not 'Rs 366 to Rs 366'", "Rs 366 to Rs 366" not in kf)
 
     # Tiered sitemap, IPO lifecycle, email alerts
     smx = open(os.path.join(site, "sitemap.xml"), encoding="utf-8").read()
     listed = re.findall(r"/sitemaps/sitemap-([a-z0-9-]+?)(?:-\d+)?\.xml", smx)
-    check("sitemap index lists only wave-1 files (core, brokers, ipos, registry, news, crypto, top stocks)",
-          set(listed) <= {"core", "brokers", "ipos", "registry", "news", "crypto", "stocks-top"} and len(listed) >= 5, str(sorted(set(listed))))
+    check("sitemap index lists only wave-1 files (core, brokers, broker-charges, ipos, registry, news, crypto, top stocks)",
+          set(listed) <= {"core", "brokers", "broker-charges", "ipos", "registry", "news", "crypto", "stocks-top"} and len(listed) >= 5, str(sorted(set(listed))))
     heldback = [n for n in ("trade-costs", "branches", "fund-compare", "stock-compare", "funds") if os.path.exists(os.path.join(site, "sitemaps", "sitemap-%s.xml" % n))]
     check("held-back waves are not written to the sitemaps folder (nothing stale left to submit)", not heldback, str(heldback))
     all_loc = "".join(open(os.path.join(site, "sitemaps", f), encoding="utf-8").read() for f in os.listdir(os.path.join(site, "sitemaps")) if f.endswith(".xml"))

@@ -304,6 +304,51 @@ const CALCULATORS = {
       <div class="mega-seg"><div class="mega-seg-label">GST (${rate}%)</div><div style="margin-top:2px">${inr(gst)}</div></div>
       <div class="mega-seg"><div class="mega-seg-label">Total</div><div style="margin-top:2px;font-weight:700">${inr(total)}</div></div>`);
   },
+
+  /* Stock pages: "What-if price calculator". Pure arithmetic on numbers the
+   * visitor types (starting price, their own growth assumption, years). It
+   * never reads or implies a forecast and, unlike showResult(), adds no broker
+   * call to action beside the result. Every value written into the page is a
+   * number formatted here, never raw input text. */
+  'price-whatif'() {
+    const out = document.getElementById('calc-result');
+    if (!out) return;
+    const say = (msg) => {
+      out.innerHTML = `<p class="small" role="alert">${msg}</p>`;
+      out.hidden = false;
+    };
+    const priceRaw = (document.getElementById('pw-price') || {}).value;
+    const growthRaw = (document.getElementById('pw-growth') || {}).value;
+    const yearsRaw = (document.getElementById('pw-years') || {}).value;
+    const price = Number(priceRaw);
+    const growth = Number(growthRaw);
+    const years = Math.round(Number(yearsRaw));
+    if (!priceRaw || !Number.isFinite(price) || price <= 0) { say('Enter a starting price above zero.'); return; }
+    if (growthRaw === '' || growthRaw == null || !Number.isFinite(growth)) { say('Enter your own growth assumption in percent a year. It is left empty on purpose.'); return; }
+    if (growth < -90 || growth > 100) { say('Use a yearly growth assumption between -90 and 100 percent.'); return; }
+    if (!yearsRaw || !Number.isFinite(years) || years < 1 || years > 30) { say('Enter a number of years from 1 to 30.'); return; }
+    const factor = 1 + growth / 100;
+    const at = (y) => price * Math.pow(factor, y);
+    const rs = (n) => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const end = at(years);
+    if (!Number.isFinite(end)) { say('That combination is too large to show. Try fewer years or a lower rate.'); return; }
+    const changePct = (end / price - 1) * 100;
+    const marks = [1, 3, 5, 10];
+    if (marks.indexOf(years) < 0) marks.push(years);
+    marks.sort((a, b) => a - b);
+    const rows = marks.map((y) => {
+      const v = at(y);
+      return `<tr${y === years ? ' style="font-weight:700"' : ''}><td>${y} year${y === 1 ? '' : 's'}</td><td>${rs(v)}</td><td>${((v / price - 1) * 100).toFixed(1)}%</td></tr>`;
+    }).join('');
+    out.innerHTML = `
+      <div class="grid g3">
+        <div class="mega-seg"><div class="mega-seg-label">Starting price</div><div style="margin-top:2px">${rs(price)}</div></div>
+        <div class="mega-seg"><div class="mega-seg-label">Your assumption</div><div style="margin-top:2px">${growth.toFixed(1)}% a year</div></div>
+        <div class="mega-seg"><div class="mega-seg-label">Value after ${years} year${years === 1 ? '' : 's'}</div><div style="margin-top:2px;font-weight:700">${rs(end)}</div><div class="xs faint" style="margin-top:2px">${changePct.toFixed(1)}% in total</div></div>
+      </div>
+      <div class="table-scroll"><table class="data"><thead><tr><th>After</th><th>Value under your assumption</th><th>Total change</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    out.hidden = false;
+  },
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -313,4 +358,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('calc-btn');
   if (!fn || !btn) return;
   btn.addEventListener('click', fn);
+  if (kind === 'price-whatif') {
+    // Enter in any field runs the calculation, like pressing the button.
+    container.querySelectorAll('input').forEach((el) => {
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); fn(); } });
+    });
+  }
 });

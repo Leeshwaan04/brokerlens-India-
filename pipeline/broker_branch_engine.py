@@ -23,6 +23,11 @@ import os
 import re
 from datetime import datetime, timezone
 
+try:
+    from . import indexation as _ix
+except ImportError:  # run as a script
+    import indexation as _ix
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_DIR = os.path.join(ROOT, "site")
 DATA_DIR = os.path.join(ROOT, "data")
@@ -958,6 +963,51 @@ BROKER_BRANCH_METADATA = {
 }
 
 
+
+# ---- Branch verification (see pipeline/indexation.py) -------------------------
+# A city page is indexable only where the data on file places the broker in that
+# city: a SEBI register entity of the broker lists the city, or the curated master
+# file gives it as the head office city. Everything else stays live but is
+# noindex,follow, is left out of the sitemap, and says plainly that no office or
+# authorised-person location is on file.
+
+_BASIS_TEXT = {
+    "sebi_register": "a city listed for {brand} on the SEBI register",
+    "head_office_on_file": "{brand}'s head office city on file",
+}
+_BASIS_LABEL = {
+    "sebi_register": "City listed on the SEBI register",
+    "head_office_on_file": "Head office city on file",
+}
+_PROFILE_CACHE = {}
+LAST_RUN_STATS = {}
+
+
+def _verified_cities(b_id):
+    """{city_key: basis} for one broker, from the profile written earlier in the build."""
+    if b_id not in _PROFILE_CACHE:
+        _PROFILE_CACHE[b_id] = _ix.verified_city_keys(
+            _ix.load_broker_profile(b_id, SITE_DIR), set(CITIES))
+    return _PROFILE_CACHE[b_id]
+
+
+def _branch_verification(b_id, meta, city_key, city_data):
+    basis = _verified_cities(b_id).get(city_key)
+    return {
+        "verified": basis is not None,
+        "basis": basis,
+        # A curated street address is printed only on the page of the city it names.
+        "address_ok": basis is not None and _ix.address_mentions_city(
+            meta.get("hq_address"), city_key, city_data["name"]),
+    }
+
+
+def _norm_city(raw):
+    """Register city text to a CITIES key where it names one of them (Bangalore ->
+    bengaluru, New Delhi -> delhi), else the trimmed lower-case text."""
+    return _ix.city_key(raw, set(CITIES)) or (raw or "").strip().lower()
+
+
 def _get_registry_city_entities():
     """Extracts city-level SEBI registered intermediaries from data/_ingest.json or site/data/registry.json."""
     city_map = {}
@@ -969,7 +1019,7 @@ def _get_registry_city_entities():
             reg = d.get("sebi", {}).get("registry", {})
             for cat in ["commodity_broker", "dp_cdsl", "dp_nsdl"]:
                 for item in reg.get(cat, []):
-                    city = (item.get("city") or "").strip().lower()
+                    city = _norm_city(item.get("city"))
                     if city:
                         city_map.setdefault(city, []).append(item)
         except Exception:
@@ -982,7 +1032,7 @@ def _get_registry_city_entities():
                 with open(reg_path, "r", encoding="utf-8") as f:
                     d = json.load(f)
                 for item in d.get("entities", []):
-                    city = (item.get("city") or "").strip().lower()
+                    city = _norm_city(item.get("city"))
                     if city:
                         city_map.setdefault(city, []).append(item)
             except Exception:
@@ -992,32 +1042,52 @@ def _get_registry_city_entities():
 
 
 def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, site_url):
-    """Renders /broker/[broker-id]/branches/[city-slug]/index.html."""
+    """Renders /broker/[broker-id]/branches/[city-slug]/index.html.
+
+    Returns (html, indexable). Wording follows what is on file: a page states an
+    office, address or registered city only when the data places the broker in
+    this city, and otherwise says that nothing is on file."""
     brand = meta["brand"]
     c_name = city_data["name"]
     state = city_data["state"]
     tier = city_data["tier"]
-    zones_str = ", ".join(city_data["zones"])
     canonical = f"{site_url}/broker/{b_id}/branches/{city_key}/"
 
-    title = f"{brand} Branch in {c_name}, {state}: Address, Phone, Demat & KYC Services"
-    desc = (
-        f"Looking for {brand} branch in {c_name}, {state}? Find office contact details, "
-        f"DP ID ({meta['demat_id']}), offline KYC, physical share demat (DRF) procedure, and {c_name} support points."
-    )[:295]
+    ver = _branch_verification(b_id, meta, city_key, city_data)
+    verified = ver["verified"]
+    is_hq = ver["address_ok"]
+    basis_text = _BASIS_TEXT.get(ver["basis"], "").format(brand=brand)
+    hq_addr = meta["hq_address"]
 
-    is_hq = (b_id == "zerodha" and city_key == "bengaluru") or \
-            (b_id == "groww" and city_key == "bengaluru") or \
-            (b_id in ("angel-one", "icici-direct", "hdfc-securities", "kotak-securities", "sharekhan", "motilal-oswal", "dhan", "anand-rathi", "ventura", "nirmal-bang", "sbi-securities") and city_key == "mumbai") or \
-            (b_id in ("upstox", "smc", "paytm-money") and city_key == "delhi") or \
-            (b_id == "geojit" and city_key == "kochi")
-
-    office_type = "Corporate Headquarters & Flagship Investor Center" if is_hq else (
-        "Authorized Branch & Physical Service Desk" if "Branch" in meta["model"] or "Network" in meta["model"] else
-        "Digital Support Center & Regional Facilitation Desk"
-    )
-
-    address_display = meta["hq_address"] if is_hq else f"Authorized partner service desks and relationship desks across key financial zones in {c_name}: {zones_str} (Postal codes: {city_data['pincodes']}). For centralized postal operations and DRF submissions, route to corporate operations headquarters: {meta['hq_address']}."
+    if verified:
+        title = f"{brand} Branch in {c_name}, {state}: Address, Phone, Demat & KYC Services"
+        desc = (
+            f"Looking for {brand} branch in {c_name}, {state}? Find office contact details, "
+            f"DP ID ({meta['demat_id']}), offline KYC, physical share demat (DRF) procedure, and {c_name} support points."
+        )[:295]
+        h1 = f"{brand} Branch in {c_name}, {state}"
+        lead = (f"{city_data['desc']} Guide to the {brand} address on file, customer care helpline, "
+                f"Depository Participant details, offline KYC and physical share dematerialisation for {c_name}.")
+        if is_hq:
+            office_type = "Head office address on file"
+            address_display = hq_addr
+        else:
+            office_type = _BASIS_LABEL[ver["basis"]]
+            address_display = (f"{c_name} is {basis_text}. A street address in {c_name} is not on file. "
+                               f"Check {brand}'s own website for current office details.")
+    else:
+        title = f"{brand} in {c_name}: Office Status, KYC and Demat Support"
+        desc = (
+            f"No {brand} office or authorised-person location in {c_name} is on file with BrokerLens. "
+            f"DP ID ({meta['demat_id']}), how offline KYC and physical share demat (DRF) work, and where to complain."
+        )[:295]
+        h1 = f"{brand} in {c_name}, {state}"
+        lead = (f"No {brand} office or authorised-person location in {c_name} is on file with BrokerLens. "
+                f"This page explains how account opening, offline KYC and physical share dematerialisation work "
+                f"for investors in {c_name}, and where to take a complaint.")
+        office_type = f"No {c_name} office or authorised-person location on file"
+        address_display = (f"No street address in {c_name} is on file for {brand}. Registration and head office "
+                           f'details are on the <a href="/broker/{b_id}/">{_esc(brand)} profile</a>.')
 
     partner_cta = f'<a class="btn primary" href="{meta["cta_url"]}" target="_blank" rel="noopener nofollow">Open {brand} Demat Account Online</a>'
     if meta.get("partner_badge"):
@@ -1046,58 +1116,66 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
         </div>
         """
 
+    # Office answer: only what the data supports.
+    if is_hq:
+        office_answer = (f"{brand}'s head office address on file is {hq_addr}. Whether walk-in service is available "
+                         f"there is not on file, so confirm with {brand} before visiting.")
+    elif verified:
+        office_answer = (f"{c_name} is {basis_text}. A street address or walk-in desk in {c_name} "
+                         f"is not on file, so confirm with {brand} before visiting.")
+    else:
+        office_answer = (f"BrokerLens has no {c_name} office or authorised-person location on file for {brand}. "
+                         f"Account opening and servicing are available through {brand}'s app, website and central "
+                         f"operations. Check {brand}'s own website for current office details.")
+
     faq_items = [
-        (
-            f"Does {brand} have a physical office or branch in {c_name}?",
-            f"{brand} operates in {c_name} via its {meta['model'].lower()}. {'As the corporate headquarters, it maintains full-scale walk-in investor relations and grievance desks in this city.' if is_hq else f'While retail traders in {c_name} predominantly manage their accounts digitally via mobile app and web, physical documentation, account modifications, and in-person verification are supported through {brand} regional desks, authorized representatives, or direct centralized postal dispatch.'}"
-        ),
+        (f"Does {brand} have a physical office or branch in {c_name}?", office_answer),
         (
             f"How do I submit physical share certificates for Demat with {brand} in {c_name}?",
-            f"To convert physical paper share certificates into electronic demat holdings via {brand}: (1) Open a {brand} Demat account if not already active; (2) Fill out the Demat Request Form (DRF) in duplicate for each company; (3) Deface the physical certificates by writing 'Surrendered for Dematerialisation'; (4) { 'Submit directly at the local branch desk in ' + c_name if ('Branch' in meta['model'] or is_hq) else 'Courier the original certificates along with signed DRF forms and self-attested PAN/Aadhaar copies to ' + brand + ' central processing unit at ' + meta['hq_address'] }. The shares will be credited to your CDSL/NSDL Demat ID ({meta['demat_id']}) within 15 to 21 working days upon registrar confirmation."
+            f"To convert physical paper share certificates into electronic demat holdings via {brand}: (1) Open a {brand} Demat account if not already active; (2) Fill out the Demat Request Form (DRF) in duplicate for each company; (3) Deface the physical certificates by writing 'Surrendered for Dematerialisation'; (4) Send the original certificates with the signed DRF and self-attested PAN and Aadhaar copies to the address {brand} publishes for physical share processing (central operations address on file: {hq_addr}). The shares are credited to your demat account ({meta['demat_id']}) once the registrar confirms the request."
         ),
         (
             f"Can I complete offline KYC or account opening with {brand} in {c_name}?",
-            f"Yes. While {brand} offers instant 100% paperless Aadhaar e-KYC completing in 5 to 10 minutes, investors without Aadhaar-linked mobile numbers, HUF accounts, corporate entities, or partnership firms in {c_name} can complete offline verification. {'You can visit the local branch in ' + c_name + ' with physical KYC documents.' if ('Branch' in meta['model'] or is_hq) else 'Download the physical account opening forms from the official portal, affix passport photographs, attach self-attested identity/address proofs, and send them to the corporate operations office.'}"
+            f"{brand} offers paperless Aadhaar e-KYC. Investors without an Aadhaar-linked mobile number, and HUF, corporate or partnership accounts in {c_name}, can ask {brand} for the offline process: download the account opening forms from the official website, attach self-attested identity and address proofs, and send them to the operations address {brand} publishes."
         ),
         (
             f"What is the grievance redressal and customer care escalation for {brand} in {c_name}?",
-            f"For support in {c_name}, call {brand} helpline at {meta['helpline']}. If a ticket remains unresolved within 7 days, investors can escalate to {brand} designated Principal Compliance Officer. As a statutory right, clients can also lodge complaints directly with SEBI through the SCORES 2.0 portal (scores.sebi.gov.in) citing {brand} registration number {meta['sebi_reg'].split()[0]}, or visit the regional SEBI office ({city_data['sebi_regional']})."
+            f"For support in {c_name}, call the {brand} helpline at {meta['helpline']}. If the complaint is not resolved, escalate it to {brand}'s Principal Compliance Officer. Clients can also lodge complaints directly with SEBI through the SCORES portal (scores.sebi.gov.in) citing {brand} registration number {meta['sebi_reg'].split()[0]}. The regional SEBI office on file for {c_name} is {city_data['sebi_regional']}."
         ),
     ]
 
     faq_html = "".join(
         f'<div class="faq-item" style="margin-bottom:16px;">'
-        f'<h4 style="margin:0 0 6px 0;font-size:15px;color:var(--text-bright);">{q}</h4>'
-        f'<p class="muted" style="margin:0;font-size:14px;line-height:1.6;">{a}</p>'
+        f'<h4 style="margin:0 0 6px 0;font-size:15px;color:var(--text-bright);">{_esc(q)}</h4>'
+        f'<p class="muted" style="margin:0;font-size:14px;line-height:1.6;">{_esc(a)}</p>'
         f'</div>'
         for q, a in faq_items
     )
 
+    entity_node = {
+        "@type": "FinancialService",
+        "name": f"{brand} - {c_name}" if verified else brand,
+        "url": canonical if verified else f"{site_url}/broker/{b_id}/",
+        "telephone": meta["helpline"],
+        "parentOrganization": {
+            "@type": "Organization",
+            "name": brand,
+            "url": f"{site_url}/broker/{b_id}/"
+        },
+    }
+    if verified:
+        entity_node["address"] = {
+            "@type": "PostalAddress",
+            "addressLocality": c_name,
+            "addressRegion": state,
+            "addressCountry": "IN",
+        }
+        if is_hq:
+            entity_node["address"]["streetAddress"] = hq_addr
     schema_jsonld = {
         "@context": "https://schema.org",
         "@graph": [
-            {
-                "@type": "FinancialService",
-                "name": f"{brand} - {c_name} Branch & Service Point",
-                "url": canonical,
-                "telephone": meta["helpline"],
-                "priceRange": "Brokerage varies by asset class (Zero delivery / Rs 20 intraday)",
-                "currenciesAccepted": "INR",
-                "paymentAccepted": "UPI, Netbanking, NEFT, RTGS",
-                "address": {
-                    "@type": "PostalAddress",
-                    "streetAddress": meta["hq_address"] if is_hq else f"Financial Hub Zones ({zones_str})",
-                    "addressLocality": c_name,
-                    "addressRegion": state,
-                    "postalCode": city_data["pincodes"].split(",")[0].strip(),
-                    "addressCountry": "IN"
-                },
-                "parentOrganization": {
-                    "@type": "Organization",
-                    "name": brand,
-                    "url": f"{site_url}/broker/{b_id}/"
-                }
-            },
+            entity_node,
             {
                 "@type": "FAQPage",
                 "mainEntity": [
@@ -1118,6 +1196,12 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
         ]
     }
 
+    robots_meta = "" if verified else _ix.NOINDEX_META + "\n"
+    model_row = ""
+    demat_service = (
+        f"Physical share certificates are converted into demat form through {brand}'s central processing unit "
+        f"or a registered depository participant.")
+
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1126,7 +1210,7 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/app.css">
+{robots_meta}<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -1140,9 +1224,9 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
       <a href="/branches/" class="active">Branches</a>
       <a href="/trade-costs/">Trade Costs</a>
       <a href="/compare">Compare</a>
-      <a href="/ipo">IPOs</a>
-      <a href="/calculators">Calculators</a>
-      <a href="/news">News</a>
+      <a href="/ipo/">IPOs</a>
+      <a href="/calculators/">Calculators</a>
+      <a href="/news/">News</a>
     </div>
   </div>
 </nav>
@@ -1158,24 +1242,22 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
 
   <header style="margin-bottom:28px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-      <h1 style="font-size:28px;line-height:1.2;margin:0;">{brand} Branch in {c_name}, {state}</h1>
+      <h1 style="font-size:28px;line-height:1.2;margin:0;">{_esc(h1)}</h1>
       <span class="badge" style="background:var(--surface-raised);border:1px solid var(--border);padding:4px 10px;border-radius:16px;font-size:12px;">{tier}</span>
     </div>
     <p class="lead muted" style="font-size:15px;line-height:1.6;max-width:76ch;">
-      {city_data["desc"]} Complete guide to {brand} office address, customer care helpline, Depository Participant operations, offline KYC, and physical share dematerialisation in {c_name}.
+      {_esc(lead)}
     </p>
   </header>
 
   <div class="grid g2" style="gap:20px;margin-bottom:28px;">
     <div class="card">
-      <h2 style="font-size:17px;margin-top:0;margin-bottom:12px;color:var(--text-bright);">Branch & Service Point Overview</h2>
+      <h2 style="font-size:17px;margin-top:0;margin-bottom:12px;color:var(--text-bright);">{brand} in {c_name}: What Is On File</h2>
       <div style="font-size:14px;line-height:1.8;">
-        <div><span class="muted">Operating Model:</span> <strong>{meta["model"]}</strong></div>
-        <div><span class="muted">Office Classification:</span> <strong>{office_type}</strong></div>
+        {model_row}<div><span class="muted">Office status:</span> <strong>{_esc(office_type)}</strong></div>
         <div><span class="muted">Primary Helpline:</span> <strong>{meta["helpline"]}</strong></div>
         <div><span class="muted">Depository Participant:</span> <strong>{meta["demat_provider"]} (ID: {meta["demat_id"]})</strong></div>
         <div><span class="muted">SEBI Registration:</span> <span class="mono xs">{meta["sebi_reg"]}</span></div>
-        <div style="margin-top:8px;"><span class="muted">Key City Zones Covered:</span> <span>{zones_str}</span></div>
       </div>
       <div style="margin-top:18px;">
         {partner_cta}
@@ -1183,9 +1265,9 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
     </div>
 
     <div class="card">
-      <h2 style="font-size:17px;margin-top:0;margin-bottom:12px;color:var(--text-bright);">Operational Address & Handling</h2>
+      <h2 style="font-size:17px;margin-top:0;margin-bottom:12px;color:var(--text-bright);">Address and Handling</h2>
       <div style="font-size:13.5px;line-height:1.6;">
-        <p style="margin:0 0 10px 0;"><strong>Local Service Point & Address Details:</strong><br>{address_display}</p>
+        <p style="margin:0 0 10px 0;"><strong>Address on file for {c_name}:</strong><br>{address_display}</p>
         <p style="margin:0 0 10px 0;"><span class="muted">Local SEBI Regional Office:</span><br><strong>{city_data["sebi_regional"]}</strong></p>
         <p style="margin:0;"><span class="muted">Postal Pincodes:</span> <span class="mono">{city_data["pincodes"]}</span></p>
       </div>
@@ -1193,9 +1275,9 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
   </div>
 
   <section class="card" style="margin-bottom:28px;">
-    <h2 style="font-size:18px;margin-top:0;margin-bottom:12px;color:var(--text-bright);">Demat & Physical Share Processing in {c_name}</h2>
+    <h2 style="font-size:18px;margin-top:0;margin-bottom:12px;color:var(--text-bright);">Demat & Physical Share Processing for {c_name} Investors</h2>
     <p style="font-size:14.5px;line-height:1.6;margin-bottom:16px;">
-      {meta["demat_service"]} Under SEBI regulations, all physical share certificates must be converted into demat form before selling on NSE or BSE.
+      {demat_service} Under SEBI regulations, all physical share certificates must be converted into demat form before selling on NSE or BSE.
     </p>
 
     <div class="grid g3" style="gap:16px;margin-top:16px;">
@@ -1215,21 +1297,16 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
   </section>
 
   <section class="card" style="margin-bottom:28px;">
-    <h2 style="font-size:18px;margin-top:0;margin-bottom:12px;color:var(--text-bright);">Digital e-KYC vs Local Branch Walk-in</h2>
+    <h2 style="font-size:18px;margin-top:0;margin-bottom:12px;color:var(--text-bright);">Digital e-KYC vs Offline Paper Process</h2>
     <p style="font-size:14px;line-height:1.6;margin-bottom:14px;">
-      Most investors in {c_name} open accounts online in under 10 minutes. Here is how digital onboarding compares with in-person branch verification:
+      Most investors in {c_name} open accounts online. Here is how digital onboarding compares with the offline paper process:
     </p>
     <div class="table-wrap">
       <table class="table striped">
         <thead>
-          <tr><th>Feature</th><th>Online Digital e-KYC (Recommended)</th><th>Offline Branch Walk-in / Assisted</th></tr>
+          <tr><th>Feature</th><th>Online Digital e-KYC</th><th>Offline Paper Process</th></tr>
         </thead>
         <tbody>
-          <tr>
-            <td><strong>Turnaround Time</strong></td>
-            <td>5 to 10 minutes (Active within 2 to 4 hours)</td>
-            <td>24 to 72 business hours upon paper form verification</td>
-          </tr>
           <tr>
             <td><strong>Required Proofs</strong></td>
             <td>Aadhaar OTP via DigiLocker, PAN, canceled cheque / bank statement</td>
@@ -1243,7 +1320,7 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
           <tr>
             <td><strong>Signature Verification</strong></td>
             <td>Digital Aadhaar e-Sign (NSDL / CDSL electronic gateway)</td>
-            <td>Wet ink physical signature on printed 24-page application booklet</td>
+            <td>Wet ink physical signature on the printed application form</td>
           </tr>
         </tbody>
       </table>
@@ -1258,7 +1335,7 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
   </section>
 
   <section style="margin-top:32px;padding:20px;background:var(--surface-raised);border-radius:10px;border:1px solid var(--border);">
-    <h3 style="font-size:16px;margin:0 0 12px 0;">Explore {brand} Across India</h3>
+    <h3 style="font-size:16px;margin:0 0 12px 0;">{brand} city pages</h3>
     <div class="row-wrap" style="gap:8px;">
       {"".join(f'<a class="chip" href="/broker/{b_id}/branches/{c}/">{CITIES[c]["name"]}</a>' for c in sorted(CITIES.keys()))}
     </div>
@@ -1280,27 +1357,30 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
 </footer>
 </body>
 </html>"""
-    return html_content
+    return html_content, verified
 
 
 def _render_broker_branches_hub(b_id, meta, site_url):
     """Renders /broker/[broker-id]/branches/index.html."""
     brand = meta["brand"]
     canonical = f"{site_url}/broker/{b_id}/branches/"
-    title = f"{brand} Branches & Service Centers in India: City Directory & Demat Hubs"
+    vkeys = _verified_cities(b_id)
+    indexable = bool(vkeys)
+    robots_meta = "" if indexable else _ix.NOINDEX_META + "\n"
+    title = f"{brand} by City: Office Status, KYC and Demat Support in India"
     desc = (
-        f"Find {brand} branch offices, customer support desks, and depository participant service centers across "
-        f"all major Indian cities. Includes office addresses, helplines, DRF demat procedures, and SEBI registration."
+        f"{brand} city pages: where an office or registered city is on file it is stated, otherwise the page says "
+        f"so. Helpline, DRF demat procedure and SEBI registration."
     )[:295]
 
     city_cards_html = "".join(
         f'<a class="card" href="/broker/{b_id}/branches/{c}/" style="display:block;text-decoration:none;padding:16px;">'
         f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
         f'<h3 style="margin:0;font-size:16px;color:var(--text-bright);">{CITIES[c]["name"]}</h3>'
-        f'<span class="badge" style="font-size:11px;">{CITIES[c]["tier"]}</span>'
+        f'<span class="badge" style="font-size:11px;">{"On file" if c in vkeys else CITIES[c]["tier"]}</span>'
         f'</div>'
         f'<p class="muted xs" style="margin:0 0 8px 0;">{CITIES[c]["state"]}</p>'
-        f'<p class="faint xs" style="margin:0;line-height:1.4;">Key zones: {", ".join(CITIES[c]["zones"][:3])}...</p>'
+        f'<p class="faint xs" style="margin:0;line-height:1.4;">{_BASIS_LABEL[vkeys[c]] if c in vkeys else "No office on file"}</p>'
         f'</a>'
         for c in sorted(CITIES.keys())
     )
@@ -1326,7 +1406,7 @@ def _render_broker_branches_hub(b_id, meta, site_url):
         ]
     }
 
-    return f"""<!DOCTYPE html>
+    html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1334,7 +1414,7 @@ def _render_broker_branches_hub(b_id, meta, site_url):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/app.css">
+{robots_meta}<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -1348,9 +1428,9 @@ def _render_broker_branches_hub(b_id, meta, site_url):
       <a href="/branches/" class="active">Branches</a>
       <a href="/trade-costs/">Trade Costs</a>
       <a href="/compare">Compare</a>
-      <a href="/ipo">IPOs</a>
-      <a href="/calculators">Calculators</a>
-      <a href="/news">News</a>
+      <a href="/ipo/">IPOs</a>
+      <a href="/calculators/">Calculators</a>
+      <a href="/news/">News</a>
     </div>
   </div>
 </nav>
@@ -1364,9 +1444,9 @@ def _render_broker_branches_hub(b_id, meta, site_url):
   </div>
 
   <header style="margin-bottom:28px;">
-    <h1 style="font-size:28px;line-height:1.2;margin:0 0 10px 0;">{brand} Branches & Service Centers in India</h1>
+    <h1 style="font-size:28px;line-height:1.2;margin:0 0 10px 0;">{brand} by City</h1>
     <p class="lead muted" style="font-size:15px;line-height:1.6;max-width:76ch;">
-      Explore {brand}'s physical branch presence, regional support desks, and depository participant facilitation hubs across 37 major Indian financial cities.
+      {len(CITIES)} city pages for {brand}. A city is marked "On file" only where the SEBI register or the head office record places {brand} there; every other city page says that no office is on file.
     </p>
   </header>
 
@@ -1374,19 +1454,18 @@ def _render_broker_branches_hub(b_id, meta, site_url):
     <h2 style="font-size:17px;margin:0 0 10px 0;">{brand} Corporate & Regulatory Information</h2>
     <div class="grid g2" style="gap:16px;font-size:14px;line-height:1.7;">
       <div>
-        <div><span class="muted">Operating Model:</span> <strong>{meta["model"]}</strong></div>
         <div><span class="muted">Customer Care:</span> <strong>{meta["helpline"]}</strong></div>
         <div><span class="muted">Depository ID:</span> <strong>{meta["demat_provider"]} ({meta["demat_id"]})</strong></div>
       </div>
       <div>
         <div><span class="muted">SEBI Registration:</span> <span class="mono xs">{meta["sebi_reg"]}</span></div>
-        <div><span class="muted">Central Processing HQ:</span> <span>{meta["hq_address"]}</span></div>
+        <div><span class="muted">Head office address on file:</span> <span>{meta["hq_address"]}</span></div>
       </div>
     </div>
   </div>
 
   <section>
-    <h2 style="font-size:20px;margin-bottom:16px;">Browse {brand} Offices by City</h2>
+    <h2 style="font-size:20px;margin-bottom:16px;">Browse {brand} city pages</h2>
     <div class="grid g3" style="gap:16px;">
       {city_cards_html}
     </div>
@@ -1400,6 +1479,7 @@ def _render_broker_branches_hub(b_id, meta, site_url):
 </footer>
 </body>
 </html>"""
+    return html_content, indexable
 
 
 def _render_city_registry_hub(city_key, city_data, local_entities, site_url):
@@ -1456,7 +1536,7 @@ def _render_city_registry_hub(city_key, city_data, local_entities, site_url):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/app.css">
+{"" if local_entities else _ix.NOINDEX_META + chr(10)}<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -1471,8 +1551,8 @@ def _render_city_registry_hub(city_key, city_data, local_entities, site_url):
       <a href="/registry" class="active">Registry</a>
       <a href="/trade-costs/">Trade Costs</a>
       <a href="/compare">Compare</a>
-      <a href="/ipo">IPOs</a>
-      <a href="/news">News</a>
+      <a href="/ipo/">IPOs</a>
+      <a href="/news/">News</a>
     </div>
   </div>
 </nav>
@@ -1527,14 +1607,19 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
     c_name = city_data["name"]
     c_state = city_data["state"]
     canonical = f"{site_url}/branches/city/{city_key}/"
-    title = f"Best Stock Brokers in {c_name}: Branches, Demat Offices & Local KYC | BrokerLens"
+    vlist = [(b_id, meta, _verified_cities(b_id)[city_key])
+             for b_id, meta in sorted(BROKER_BRANCH_METADATA.items(), key=lambda x: x[1]["brand"])
+             if city_key in _verified_cities(b_id)]
+    indexable = bool(vlist)
+    robots_meta = "" if indexable else _ix.NOINDEX_META + "\n"
+    title = f"Stock Brokers Registered or Headquartered in {c_name}: What Is on File | BrokerLens"
     desc = (
-        f"Compare top stock broker branches in {c_name}, {c_state}. Review authorized person desks, "
-        f"demat centers, physical KYC verification offices, and regional SEBI contact info."
+        f"Which of the {len(BROKER_BRANCH_METADATA)} brokers BrokerLens tracks list {c_name}, {c_state} as a registered "
+        f"or head office city, and what each page has on file. Offline demat and KYC basics, regional SEBI contact."
     )[:295]
 
     broker_rows = []
-    for b_id, meta in sorted(BROKER_BRANCH_METADATA.items(), key=lambda x: x[1]["brand"]):
+    for b_id, meta, basis in vlist:
         broker_rows.append(f"""
         <tr>
           <td>
@@ -1542,22 +1627,26 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
             <span class="muted xs block">{meta['sebi_reg'].split(',')[0]}</span>
           </td>
           <td><span class="badge" style="font-size:11px;">{meta['demat_provider']} DP</span></td>
-          <td class="xs">{meta['model']}</td>
+          <td class="xs">{_BASIS_LABEL[basis]}</td>
           <td class="xs">{meta['helpline']}</td>
           <td class="center">
-            <a href="/broker/{b_id}/branches/{city_key}/" class="btn primary small" style="font-size:12px;padding:4px 8px;">{c_name} Branch &rarr;</a>
+            <a href="/broker/{b_id}/branches/{city_key}/" class="btn primary small" style="font-size:12px;padding:4px 8px;">{meta['brand']} in {c_name} &rarr;</a>
           </td>
         </tr>
         """)
+    if not broker_rows:
+        broker_rows.append(
+            f'<tr><td colspan="5" class="muted xs">None of the {len(BROKER_BRANCH_METADATA)} tracked brokers has '
+            f'{c_name} as a registered or head office city on file.</td></tr>')
 
     reg_rows = []
     for ent in local_ents[:15]:
         reg_rows.append(f"""
         <tr>
-          <td><strong>{_esc(ent.get('name', 'Registered Intermediary'))}</strong></td>
-          <td><span class="badge">{_esc(ent.get('category', 'Stock Broker'))}</span></td>
-          <td class="xs font-mono">{_esc(ent.get('reg_no', 'SEBI Registered'))}</td>
-          <td class="xs">{_esc(ent.get('address', c_name))}</td>
+          <td><strong>{_esc(ent.get('legal_name') or ent.get('name') or 'Registered Intermediary')}</strong></td>
+          <td><span class="badge">{_esc((ent.get('category') or 'registered intermediary').replace('_', ' '))}</span></td>
+          <td class="xs font-mono">{_esc(ent.get('sebi_reg_no') or ent.get('reg') or ent.get('reg_no') or 'On the SEBI register')}</td>
+          <td class="xs">{_esc(ent.get('address') or c_name)}</td>
         </tr>
         """)
 
@@ -1576,15 +1665,22 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
         ]
     }
 
+    if vlist:
+        names = ", ".join(m["brand"] for _b, m, _x in vlist)
+        faq1 = (f"{names} {'lists' if len(vlist) == 1 else 'list'} {c_name} as a registered or head office city "
+                f"in the data BrokerLens holds. Other tracked brokers have no {c_name} office or authorised-person "
+                f"location on file.")
+    else:
+        faq1 = (f"None of the {len(BROKER_BRANCH_METADATA)} brokers BrokerLens tracks lists {c_name} as a registered "
+                f"or head office city, and no authorised-person location in {c_name} is on file.")
     faqs = [
-        (f"Which stock brokers have local branches or support desks in {c_name}?",
-         f"Major national full-service brokers including Angel One, Motilal Oswal, Sharekhan, ICICI Direct, Kotak Securities, and SBI Securities operate physical branch offices and authorized person desks in {c_name}. Digital discount brokers like Zerodha and Groww offer 100% paperless e-KYC onboarding with courier-based demat services."),
+        (f"Which tracked brokers have an office or registered city in {c_name}?", faq1),
         (f"Can I open an offline Demat account in {c_name}?",
-         f"Yes. Investors without an Aadhaar-linked mobile phone or those requiring Non-Individual (HUF, Corporate) demat accounts can complete physical paper KYC and In-Person Verification (IPV) at broker branch offices in {c_name}."),
+         f"Brokers offer paperless Aadhaar e-KYC. Investors without an Aadhaar-linked mobile number, and HUF or corporate accounts, can ask their broker for the offline paper process."),
         (f"How can I submit physical share certificates for dematerialisation in {c_name}?",
-         f"You can submit original share certificates along with a signed Demat Request Form (DRF) at local branch desks of full-service brokers or courier them directly to the centralized depository processing center of your chosen broker."),
-        (f"Where is the nearest SEBI office for {c_name} investors?",
-         f"Investors in {c_name} fall under the jurisdiction of: {city_data['sebi_regional']}. For unresolved grievances, complaints can also be registered online via the SEBI SCORES 2.0 portal.")
+         f"Send the original share certificates with a signed Demat Request Form (DRF) to the address your chosen broker publishes for physical share processing."),
+        (f"Where is the regional SEBI office on file for {c_name} investors?",
+         f"The regional SEBI office on file for {c_name} is {city_data['sebi_regional']}. Complaints can also be registered online on the SEBI SCORES portal.")
     ]
 
     faq_html = "".join(f'<details class="faq-item"><summary>{_esc(q)}</summary><p>{_esc(a)}</p></details>' for q, a in faqs)
@@ -1615,7 +1711,7 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
         ]
     }
 
-    return f"""<!DOCTYPE html>
+    html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1623,7 +1719,7 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
-<link rel="stylesheet" href="/assets/css/app.css">
+{robots_meta}<link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(jsonld, indent=2, ensure_ascii=False)}
 </script>
@@ -1637,9 +1733,9 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
       <a href="/branches/" class="active">Branches</a>
       <a href="/trade-costs/">Trade Costs</a>
       <a href="/compare">Compare</a>
-      <a href="/ipo">IPOs</a>
-      <a href="/calculators">Calculators</a>
-      <a href="/news">News</a>
+      <a href="/ipo/">IPOs</a>
+      <a href="/calculators/">Calculators</a>
+      <a href="/news/">News</a>
     </div>
   </div>
 </nav>
@@ -1648,9 +1744,9 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
   {crumb_html}
 
   <header style="margin-bottom:28px;">
-    <h1 style="font-size:28px;line-height:1.2;margin:0 0 10px 0;">Best Stock Brokers in {c_name}: Branches, Demat Offices & Local KYC</h1>
+    <h1 style="font-size:28px;line-height:1.2;margin:0 0 10px 0;">Stock Brokers in {c_name}: Office Status on File</h1>
     <p class="lead muted" style="font-size:15px;line-height:1.6;max-width:76ch;">
-      Directory of authorized stock broker branches, depository participant desks, and offline KYC support centers in {c_name}, {c_state}. Compare account features, Demat services, and local SEBI contacts.
+      Which tracked brokers list {c_name}, {c_state} as a registered or head office city, with offline KYC and demat basics and the regional SEBI contact. Brokers without an office on file are not listed.
     </p>
   </header>
 
@@ -1667,22 +1763,22 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
     </div>
     <div class="card" style="padding:16px;">
       <div class="muted xs">Tracked Brokers</div>
-      <div class="bold" style="font-size:18px;color:var(--accent);margin-top:4px;">{len(BROKER_BRANCH_METADATA)} Nationwide Brokers</div>
-      <div class="faint xs" style="margin-top:2px;">Physical & Digital Coverage</div>
+      <div class="bold" style="font-size:18px;color:var(--accent);margin-top:4px;">{len(vlist)} of {len(BROKER_BRANCH_METADATA)}</div>
+      <div class="faint xs" style="margin-top:2px;">list {c_name} as a registered or head office city</div>
     </div>
   </div>
 
   <section class="card" style="margin-bottom:32px;">
-    <h2 style="font-size:19px;margin-top:0;margin-bottom:14px;">Stock Brokers Serving {c_name}</h2>
+    <h2 style="font-size:19px;margin-top:0;margin-bottom:14px;">Tracked brokers with {c_name} on file</h2>
     <div class="table-scroll">
       <table class="data">
         <thead>
           <tr>
             <th>Broker Brand</th>
             <th>Depository</th>
-            <th>Branch Model</th>
+            <th>Basis on file</th>
             <th>Helpline</th>
-            <th class="center">Local Office</th>
+            <th class="center">Page</th>
           </tr>
         </thead>
         <tbody>
@@ -1710,9 +1806,9 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
     <section class="card">
       <h3 style="font-size:17px;margin-top:0;margin-bottom:12px;">Offline Demat & KYC Guide in {c_name}</h3>
       <ul class="xs muted" style="line-height:1.6;padding-left:18px;margin:0;">
-        <li><strong>Physical Share Demat:</strong> Fill Demat Request Form (DRF) and submit original certificates to your broker branch.</li>
-        <li><strong>Non-Individual Accounts:</strong> HUF, Partnership, and Corporate accounts require branch In-Person Verification (IPV).</li>
-        <li><strong>Nomination Updates:</strong> Add or modify up to 3 nominees online or by physical submission at branch desks.</li>
+        <li><strong>Physical Share Demat:</strong> Fill the Demat Request Form (DRF) and send original certificates to the address your broker publishes.</li>
+        <li><strong>Non-Individual Accounts:</strong> HUF, partnership and corporate accounts follow the broker's offline account opening process.</li>
+        <li><strong>Nomination Updates:</strong> Ask your broker how nominations can be added or changed online or on paper.</li>
       </ul>
       <div style="margin-top:16px;">
         <a href="/registry/city/{city_key}/" class="btn secondary small">View {c_name} SEBI Intermediaries &rarr;</a>
@@ -1762,6 +1858,7 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
 </footer>
 </body>
 </html>"""
+    return html_content, indexable
 
 
 def _render_master_branches_hub(site_url):
@@ -1779,10 +1876,9 @@ def _render_master_branches_hub(site_url):
         f'<h3 style="margin:0;font-size:17px;color:var(--text-bright);">{m["brand"]}</h3>'
         f'<span class="badge" style="font-size:11px;">{m["demat_provider"]} DP</span>'
         f'</div>'
-        f'<p class="muted xs" style="margin:0 0 10px 0;">{m["model"]}</p>'
         f'<p class="xs" style="margin:0 0 12px 0;"><strong>Helpline:</strong> {m["helpline"]}</p>'
         f'<div class="row-wrap" style="gap:6px;">'
-        f'<a class="btn primary small" href="/broker/{b}/branches/">View City Branches &rarr;</a>'
+        f'<a class="btn primary small" href="/broker/{b}/branches/">View city pages &rarr;</a>'
         f'<a class="btn secondary small" href="/broker/{b}/">Review</a>'
         f'</div>'
         f'</div>'
@@ -1835,9 +1931,9 @@ def _render_master_branches_hub(site_url):
       <a href="/branches/" class="active">Branches</a>
       <a href="/trade-costs/">Trade Costs</a>
       <a href="/compare">Compare</a>
-      <a href="/ipo">IPOs</a>
-      <a href="/calculators">Calculators</a>
-      <a href="/news">News</a>
+      <a href="/ipo/">IPOs</a>
+      <a href="/calculators/">Calculators</a>
+      <a href="/news/">News</a>
     </div>
   </div>
 </nav>
@@ -1851,12 +1947,12 @@ def _render_master_branches_hub(site_url):
   <header style="margin-bottom:28px;">
     <h1 style="font-size:30px;line-height:1.2;margin:0 0 10px 0;">Stock Broker Branches & Local Support Desks in India</h1>
     <p class="lead muted" style="font-size:15px;line-height:1.6;max-width:76ch;">
-      Complete nationwide directory of stock broker branch offices, authorized representative desks, physical share demat (DRF) facilities, and customer care helplines across {len(CITIES)} major financial cities.
+      City pages for {len(BROKER_BRANCH_METADATA)} brokers across {len(CITIES)} financial cities. A city page states an office address or registered city only where one is on file; otherwise it says that no office is on file.
     </p>
   </header>
 
   <section style="margin-bottom:36px;">
-    <h2 style="font-size:20px;margin-bottom:16px;">Top Broker Branch Networks</h2>
+    <h2 style="font-size:20px;margin-bottom:16px;">Tracked brokers</h2>
     <div class="grid g2" style="gap:16px;">
       {broker_cards}
     </div>
@@ -1864,7 +1960,7 @@ def _render_master_branches_hub(site_url):
 
   <section class="card">
     <h2 style="font-size:18px;margin-top:0;margin-bottom:12px;">Browse Branches by Financial City</h2>
-    <p class="muted xs" style="margin-bottom:16px;">Select a city to explore local authorized offices, regional SEBI investor centers, and Depository Participants:</p>
+    <p class="muted xs" style="margin-bottom:16px;">Select a city to see which tracked brokers list it as a registered or head office city, and the regional SEBI contact:</p>
     <div class="row-wrap" style="gap:8px;">
       {city_chips}
     </div>
@@ -1887,6 +1983,9 @@ def generate_all(site_url="https://www.brokerlens.in"):
     """
     written_urls = []
     city_entities = _get_registry_city_entities()
+    _PROFILE_CACHE.clear()
+    stats = {"city_pages": 0, "city_pages_indexable": 0, "city_pages_noindex": 0,
+             "broker_hubs_noindex": 0, "city_compare_hubs_noindex": 0, "registry_city_hubs_noindex": 0}
 
     # 1. Master Hub: /branches/
     master_dir = os.path.join(SITE_DIR, "branches")
@@ -1895,31 +1994,45 @@ def generate_all(site_url="https://www.brokerlens.in"):
         f.write(_render_master_branches_hub(site_url))
     written_urls.append("/branches/")
 
-    # 2. Broker Branch Hubs & City Pages
+    # 2. Broker Branch Hubs & City Pages. Every page is written (the URLs stay live);
+    # only pages the data supports are returned for the sitemap.
     for b_id, meta in BROKER_BRANCH_METADATA.items():
         b_branch_dir = os.path.join(SITE_DIR, "broker", b_id, "branches")
         os.makedirs(b_branch_dir, exist_ok=True)
+        hub_html, hub_indexable = _render_broker_branches_hub(b_id, meta, site_url)
         with open(os.path.join(b_branch_dir, "index.html"), "w", encoding="utf-8") as f:
-            f.write(_render_broker_branches_hub(b_id, meta, site_url))
-        written_urls.append(f"/broker/{b_id}/branches/")
+            f.write(hub_html)
+        if hub_indexable:
+            written_urls.append(f"/broker/{b_id}/branches/")
+        else:
+            stats["broker_hubs_noindex"] += 1
 
         for city_key, city_data in CITIES.items():
             c_dir = os.path.join(b_branch_dir, city_key)
             os.makedirs(c_dir, exist_ok=True)
             local_ents = city_entities.get(city_key, [])
-            html_page = _render_city_branch_page(b_id, meta, city_key, city_data, local_ents, site_url)
+            html_page, indexable = _render_city_branch_page(b_id, meta, city_key, city_data, local_ents, site_url)
             with open(os.path.join(c_dir, "index.html"), "w", encoding="utf-8") as f:
                 f.write(html_page)
-            written_urls.append(f"/broker/{b_id}/branches/{city_key}/")
+            stats["city_pages"] += 1
+            if indexable:
+                stats["city_pages_indexable"] += 1
+                written_urls.append(f"/broker/{b_id}/branches/{city_key}/")
+            else:
+                stats["city_pages_noindex"] += 1
 
     # 3. City Branch Comparison Hubs: /branches/city/[city-slug]/
     for city_key, city_data in CITIES.items():
         b_city_dir = os.path.join(SITE_DIR, "branches", "city", city_key)
         os.makedirs(b_city_dir, exist_ok=True)
         local_ents = city_entities.get(city_key, [])
+        page, indexable = _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_url)
         with open(os.path.join(b_city_dir, "index.html"), "w", encoding="utf-8") as f:
-            f.write(_render_city_branches_comparison_hub(city_key, city_data, local_ents, site_url))
-        written_urls.append(f"/branches/city/{city_key}/")
+            f.write(page)
+        if indexable:
+            written_urls.append(f"/branches/city/{city_key}/")
+        else:
+            stats["city_compare_hubs_noindex"] += 1
 
     # 4. City Registry Intermediary Hubs: /registry/city/[city-slug]/
     for city_key, city_data in CITIES.items():
@@ -1928,8 +2041,15 @@ def generate_all(site_url="https://www.brokerlens.in"):
         local_ents = city_entities.get(city_key, [])
         with open(os.path.join(reg_city_dir, "index.html"), "w", encoding="utf-8") as f:
             f.write(_render_city_registry_hub(city_key, city_data, local_ents, site_url))
-        written_urls.append(f"/registry/city/{city_key}/")
+        if local_ents:
+            written_urls.append(f"/registry/city/{city_key}/")
+        else:
+            stats["registry_city_hubs_noindex"] += 1
 
+    LAST_RUN_STATS.clear()
+    LAST_RUN_STATS.update(stats)
+    print("[broker_branch_engine] branch pages: %(city_pages)d city pages, %(city_pages_indexable)d indexable, "
+          "%(city_pages_noindex)d flipped to noindex,follow" % stats)
     return written_urls
 
 

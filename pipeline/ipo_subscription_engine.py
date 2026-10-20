@@ -23,6 +23,8 @@ import os
 import re
 from datetime import datetime, timezone
 
+from pipeline import ipo_facts
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_DIR = os.path.join(ROOT, "site")
 DATA_DIR = os.path.join(ROOT, "data")
@@ -38,26 +40,28 @@ def _slugify(text):
     return text
 
 
-def _parse_price_band(band_str):
-    """Parses lower and upper price bounds from price band string."""
-    if not band_str:
-        return 0.0, 0.0
-    nums = re.findall(r"\d+(?:\.\d+)?", str(band_str))
-    if len(nums) >= 2:
-        return float(nums[0]), float(nums[1])
-    if len(nums) == 1:
-        val = float(nums[0])
-        return val, val
-    return 0.0, 0.0
+# There is no lot-size estimator here on purpose: a lot size is shown only when a record
+# carries a sourced lot_size (ipo_facts.lot_size_on_file). The old Rs 14,500 estimate
+# printed 99 shares for JSW Cement against 102 in the prospectus.
 
 
-def _estimate_lot_size(upper_price):
-    """Estimates standard retail lot size aiming for approximately Rs 14,000 to Rs 15,000."""
-    if upper_price <= 0:
-        return 1
-    target = 14500.0
-    approx_lot = max(1, int(round(target / upper_price)))
-    return approx_lot
+def _allotment_href(slug, status):
+    """The per-IPO allotment checker page is built only for current and upcoming IPOs (and
+    the most recent ones), so other IPOs link to the allotment hub instead of a dead URL."""
+    return f"/ipo/{slug}/allotment-status/" if status in ("Active", "Forthcoming") else "/ipo/allotment-status/"
+
+
+def _robots_and_canonical(ipo_row, slug, page_path, site_url):
+    """(canonical, robots meta line) for a per-IPO sub-page.
+
+    Listed IPOs: these pages earn no search traffic once the issue has listed, so they
+    canonical to the main IPO page, are noindex,follow and are left out of the sitemap
+    (see build_ipo_subscription_suite). Open and upcoming IPOs keep self-canonical
+    indexable pages, since allotment and subscription demand sits in that window."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if ipo_facts.is_listed(ipo_row, today):
+        return (f"{site_url}/ipo/{slug}/", '<meta name="robots" content="noindex,follow">')
+    return (f"{site_url}{page_path}", "")
 
 
 def render_subscription_hub(all_ipos, site_url="https://www.brokerlens.in"):
@@ -74,22 +78,19 @@ def render_subscription_hub(all_ipos, site_url="https://www.brokerlens.in"):
             continue
         slug = sym.lower()
         co = r.get("company", sym)
-        status = r.get("status", "Closed")
+        status = ipo_facts.ipo_status(r, today)
         sub_val = r.get("times_subscribed")
-        if sub_val is not None:
-            try:
-                sub_str = f"{float(sub_val):.2f}x"
-            except (ValueError, TypeError):
-                sub_str = "Available"
-        else:
-            sub_str = "Disclosed"
+        try:
+            sub_str = f"{float(sub_val):.2f}x" if sub_val is not None else "Not on file"
+        except (ValueError, TypeError):
+            sub_str = "Not on file"
 
-        p_low, p_high = _parse_price_band(r.get("price_band"))
-        price_str = f"Rs {p_low:g} to Rs {p_high:g}" if p_high > 0 else (r.get("price_band") or "Disclosed")
+        price_str = ipo_facts.band_text(r) or "Not on file"
 
-        dates = f"{r.get('bidding_start') or ''} to {r.get('bidding_end') or ''}".strip(" to")
-        if not dates:
-            dates = "Announced"
+        dates = ipo_facts.date_range_text(r.get("bidding_start"), r.get("bidding_end")) or "Announced"
+        # Listed IPOs link to the main IPO page: their sub-pages are noindex.
+        detail_href = f"/ipo/{slug}/" if status == "Listed" else f"/ipo/{slug}/subscription-status/"
+        detail_label = "View IPO" if status == "Listed" else "View Bids"
 
         badge_cls = "badge-up" if status == "Active" else ("badge-warn" if status == "Forthcoming" else "")
         badge_html = f'<span class="badge {badge_cls}">{_esc(status)}</span>' if badge_cls else f'<span class="badge">{_esc(status)}</span>'
@@ -97,7 +98,7 @@ def render_subscription_hub(all_ipos, site_url="https://www.brokerlens.in"):
         row_html = f"""
         <tr>
           <td>
-            <strong><a href="/ipo/{slug}/subscription-status/">{_esc(co)}</a></strong>
+            <strong><a href="{detail_href}">{_esc(co)}</a></strong>
             <span class="muted xs block">{_esc(sym)}</span>
           </td>
           <td>{badge_html}</td>
@@ -105,7 +106,7 @@ def render_subscription_hub(all_ipos, site_url="https://www.brokerlens.in"):
           <td class="center">{_esc(dates)}</td>
           <td class="right num font-semibold" style="color:var(--accent)">{_esc(sub_str)}</td>
           <td class="center">
-            <a href="/ipo/{slug}/subscription-status/" class="btn btn-xs">View Bids &rarr;</a>
+            <a href="{detail_href}" class="btn btn-xs">{detail_label} &rarr;</a>
           </td>
         </tr>
         """
@@ -219,25 +220,25 @@ def render_allotment_hub(all_ipos, site_url="https://www.brokerlens.in"):
             continue
         slug = sym.lower()
         co = r.get("company", sym)
-        status = r.get("status", "Closed")
-        list_date = r.get("listing_date") or r.get("bidding_end") or "Announced"
-        p_low, p_high = _parse_price_band(r.get("price_band"))
-        eff_price = p_high if p_high > 0 else (r.get("issue_price") or 100.0)
-        lot = _estimate_lot_size(eff_price)
-        min_invest = lot * eff_price
+        status = ipo_facts.ipo_status(r, today)
+        list_date = ipo_facts.fmt_date(r.get("listing_date") or r.get("bidding_end")) or "Announced"
+        price_str = ipo_facts.band_text(r) or "Not on file"
+        # Listed IPOs link to the main IPO page: their sub-pages are noindex.
+        detail_href = f"/ipo/{slug}/" if status == "Listed" else f"/ipo/{slug}/basis-of-allotment/"
+        detail_label = "IPO Details" if status == "Listed" else "Basis of Allotment"
+        type_label = {"SME": "SME", "EQ": "Mainboard"}.get(r.get("security_type"), "IPO")
 
         rows.append(f"""
         <tr>
           <td>
-            <strong><a href="/ipo/{slug}/basis-of-allotment/">{_esc(co)}</a></strong>
-            <span class="muted xs block">{_esc(sym)} &middot; {r.get('security_type') or 'Mainboard'}</span>
+            <strong><a href="{detail_href}">{_esc(co)}</a></strong>
+            <span class="muted xs block">{_esc(sym)} &middot; {type_label}</span>
           </td>
           <td><span class="badge">{_esc(status)}</span></td>
-          <td class="num">₹{eff_price:,.2f}</td>
-          <td class="center num">{lot} Shares (₹{min_invest:,.0f})</td>
+          <td class="num">{_esc(price_str)}</td>
           <td class="center">{_esc(list_date)}</td>
           <td class="center">
-            <a href="/ipo/{slug}/basis-of-allotment/" class="btn btn-xs">Basis of Allotment &rarr;</a>
+            <a href="{detail_href}" class="btn btn-xs">{detail_label} &rarr;</a>
           </td>
         </tr>
         """)
@@ -294,7 +295,7 @@ def render_allotment_hub(all_ipos, site_url="https://www.brokerlens.in"):
 <header style="margin:20px 0 28px 0">
   <h1 style="font-size:28px;line-height:1.2;margin:0 0 10px 0">IPO Basis of Allotment & Lottery Probability</h1>
   <p class="muted" style="margin:0;font-size:15px;max-width:76ch">
-    Empirical calculation of retail allotment odds based on SEBI ICDR allocation mandates. Understand computerized lottery procedures, lot sizes, and unfreeze release timelines.
+    Empirical calculation of retail allotment odds based on SEBI ICDR allocation mandates. Understand computerized lottery procedures and unfreeze release timelines.
   </p>
 </header>
 
@@ -303,7 +304,7 @@ def render_allotment_hub(all_ipos, site_url="https://www.brokerlens.in"):
   <div class="table-scroll">
     <table class="data">
       <thead>
-        <tr><th>Company / Issue</th><th>Status</th><th>Cutoff Price</th><th class="center">Minimum Lot</th><th class="center">Listing Date</th><th class="center">Details</th></tr>
+        <tr><th>Company / Issue</th><th>Status</th><th>Price Band</th><th class="center">Listing Date</th><th class="center">Details</th></tr>
       </thead>
       <tbody>
         {''.join(rows)}
@@ -314,7 +315,7 @@ def render_allotment_hub(all_ipos, site_url="https://www.brokerlens.in"):
 </main>
 
 <footer class="site"><div class="wrap">
-  <p class="small muted" style="max-width:70ch">Allotment ratios are derived from published exchange bid records and SEBI minimum lot reservation formulas.</p>
+  <p class="small muted" style="max-width:70ch">Allotment procedures follow SEBI ICDR guidelines. Figures shown are as published by the exchange, never estimated.</p>
   <p class="small"><a href="/ipo/">IPO Main Hub</a> &middot; <a href="/ipo/subscription/">Subscription Hub</a> &middot; <a href="/ipo/registrars/">IPO Registrars</a> &middot; <a href="/">BrokerLens Home</a></p>
 </div></footer>
 </body>
@@ -326,36 +327,48 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
     sym = ipo_row.get("symbol", "").upper()
     slug = sym.lower()
     co = ipo_row.get("company", sym)
-    canonical = f"{site_url}/ipo/{slug}/subscription-status/"
+    canonical, robots_meta = _robots_and_canonical(ipo_row, slug, f"/ipo/{slug}/subscription-status/", site_url)
 
-    status = ipo_row.get("status", "Closed")
-    p_low, p_high = _parse_price_band(ipo_row.get("price_band"))
-    price_desc = f"₹{p_low:g} to ₹{p_high:g}" if p_high > 0 else (ipo_row.get("price_band") or "Disclosed")
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    status = ipo_facts.ipo_status(ipo_row, today_iso)
+    allot_href = _allotment_href(slug, status)
+    price_desc = ipo_facts.band_text(ipo_row) or "Not on file"
 
+    # A status word never goes in a numeric slot: no overall multiple on file means
+    # "Not on file" here, and the FAQ and meta say so in words.
     sub_val = ipo_row.get("times_subscribed")
-    sub_num = float(sub_val) if sub_val is not None else 1.0
-    sub_str = f"{sub_num:.2f}x" if sub_val is not None else "Disclosed"
+    try:
+        sub_num = float(sub_val) if sub_val is not None else None
+    except (TypeError, ValueError):
+        sub_num = None
+    sub_str = f"{sub_num:.2f}x" if sub_num is not None else "Not on file"
 
     shares_offered_val = ipo_row.get("issue_size_shares") or ipo_row.get("shares_offered")
     shares_offered = float(shares_offered_val) if shares_offered_val else None
     shares_bid_val = ipo_row.get("shares_bid")
     shares_bid = float(shares_bid_val) if shares_bid_val else None
 
-    start_date = ipo_row.get("bidding_start") or "Announced"
-    end_date = ipo_row.get("bidding_end") or "Announced"
+    start_date = ipo_facts.fmt_date(ipo_row.get("bidding_start")) or "Announced"
+    end_date = ipo_facts.fmt_date(ipo_row.get("bidding_end")) or "Announced"
 
     title = f"{co} ({sym}) IPO Subscription Status Live & Bidding Demand | BrokerLens"
-    desc = f"Check {co} ({sym}) IPO's overall subscription multiple ({sub_str}), price band and bidding window, sourced from NSE's public-issue feed."
+    if sub_num is not None:
+        desc = f"Check {co} ({sym}) IPO's overall subscription multiple ({sub_str}), price band and bidding window, sourced from NSE's public-issue feed."
+    else:
+        desc = f"{co} ({sym}) IPO price band and bidding window from NSE's public-issue feed. The overall subscription multiple is not on file."
 
     crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/ipo/">IPOs</a></li><li class="muted">/</li><li><a href="/ipo/{slug}/">{_esc(sym)}</a></li><li class="muted">/</li><li class="muted">Subscription Status</li></ol></nav>'
 
     faqs = [
         (f"What is the total subscription of {co} IPO?",
-         f"The public issue has recorded a total subscription of approximately {sub_str} based on official exchange disclosures."),
+         (f"The public issue has recorded a total subscription of approximately {sub_str} based on official exchange disclosures."
+          if sub_num is not None else
+          f"BrokerLens does not have an overall subscription figure on file for {co} IPO. The exchanges publish final bidding data on their public-issue pages.")),
         (f"Does BrokerLens show a QIB/NII/Retail category breakdown for {co} IPO?",
          f"No. NSE's public-issue feed that BrokerLens ingests reports only the overall subscription multiple, not a category-wise (QIB/NII/Retail) breakdown. Check NSE's or BSE's own bidding portal directly for live category-wise figures rather than a third-party estimate."),
         (f"When does bidding close for {co} IPO?",
-         f"Official exchange bidding closes at 5:00 PM on {end_date}. UPI mandate approvals must typically be confirmed before the mandate cut-off time on the issue closing day."),
+         (f"Bidding for {co} IPO closed on {end_date}." if status in ("Listed", "Closed") else
+          f"Official exchange bidding closes at 5:00 PM on {end_date}. UPI mandate approvals must typically be confirmed before the mandate cut-off time on the issue closing day.")),
         (f"Where can I verify official bidding figures for {sym}?",
          f"Official live cumulative bidding data is published directly by the National Stock Exchange (NSE) and Bombay Stock Exchange (BSE) on their respective public issue portals.")
     ]
@@ -380,6 +393,7 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
+{robots_meta}
 <link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(jsonld, indent=2)}
@@ -394,7 +408,7 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
     <a href="/stocks/">Stocks</a>
     <a href="/ipo/">IPOs</a>
     <a href="/ipo/{slug}/">IPO Details</a>
-    <a href="/ipo/{slug}/allotment-status/">Check Allotment</a>
+    <a href="{allot_href}">Check Allotment</a>
   </nav>
 </div></header>
 
@@ -407,7 +421,7 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
     <p class="muted" style="margin:0;max-width:76ch">Live investor category bidding breakdown, shares offered versus bid, and oversubscription multiple.</p>
   </div>
   <div style="display:flex;gap:8px">
-    <a href="/ipo/{slug}/allotment-status/" class="btn btn-secondary">Check Allotment &rarr;</a>
+    <a href="{allot_href}" class="btn btn-secondary">Check Allotment &rarr;</a>
     <a href="/ipo/{slug}/basis-of-allotment/" class="btn btn-primary">Basis of Allotment &rarr;</a>
   </div>
 </div>
@@ -420,23 +434,23 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
   </div>
   <div class="card" style="padding:16px">
     <div class="xs muted">Shares Offered</div>
-    <div class="font-bold" style="font-size:20px;color:var(--text);margin-top:6px">{f"{shares_offered:,.0f}" if shares_offered else "Not disclosed"}</div>
+    <div class="font-bold" style="font-size:20px;color:var(--text);margin-top:6px">{f"{shares_offered:,.0f}" if shares_offered else "Not on file"}</div>
   </div>
   <div class="card" style="padding:16px">
     <div class="xs muted">Shares Bid</div>
-    <div class="font-bold" style="font-size:20px;color:var(--text);margin-top:6px">{f"{shares_bid:,.0f}" if shares_bid else "Not disclosed"}</div>
+    <div class="font-bold" style="font-size:20px;color:var(--text);margin-top:6px">{f"{shares_bid:,.0f}" if shares_bid else "Not on file"}</div>
   </div>
   <div class="card" style="padding:16px">
     <div class="xs muted">Price Band</div>
     <div class="font-bold" style="font-size:20px;color:var(--text);margin-top:6px">{_esc(price_desc)}</div>
-    <div class="xs muted" style="margin-top:2px">Cutoff: {start_date} to {end_date}</div>
+    <div class="xs muted" style="margin-top:2px">Bidding window: {start_date} to {end_date}</div>
   </div>
 </div>
 
 <section class="card" style="padding:24px;margin-bottom:28px">
   <h2 style="font-size:19px;margin-top:0;margin-bottom:12px">Regulatory Bidding Guidelines & SEBI Compliance</h2>
   <p class="muted" style="font-size:14px;line-height:1.6;margin:0 0 12px 0">
-    Under Securities and Exchange Board of India (SEBI) ICDR regulations, retail investors applying with UPI 2.0 can bid up to a maximum limit of Rs 5,00,000 per application. Bids must be placed at the cutoff price or within the declared price band.
+    Under Securities and Exchange Board of India (SEBI) ICDR regulations, applications made through UPI can be up to Rs 5,00,000, and the retail category limit is Rs 2 lakh per application. Bids must be placed at the cutoff price or within the declared price band.
   </p>
   <p class="muted" style="font-size:14px;line-height:1.6;margin:0 0 12px 0">
     NSE's public-issue feed that BrokerLens ingests reports only the overall subscription multiple shown above, not a category-wise (QIB/NII/Retail) breakdown. For live category-wise bidding, check
@@ -458,7 +472,7 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
 
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">Bidding statistics are compiled from NSE exchange updates. Consult a registered investment adviser before making capital allocation decisions.</p>
-  <p class="small"><a href="/ipo/{slug}/">Overview</a> &middot; <a href="/ipo/{slug}/allotment-status/">Allotment Status</a> &middot; <a href="/ipo/{slug}/basis-of-allotment/">Basis of Allotment</a> &middot; <a href="/ipo/">All IPOs</a> &middot; <a href="/">Home</a></p>
+  <p class="small"><a href="/ipo/{slug}/">Overview</a> &middot; <a href="{allot_href}">Allotment Status</a> &middot; <a href="/ipo/{slug}/basis-of-allotment/">Basis of Allotment</a> &middot; <a href="/ipo/">All IPOs</a> &middot; <a href="/">Home</a></p>
 </div></footer>
 </body>
 </html>"""
@@ -469,33 +483,32 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
     sym = ipo_row.get("symbol", "").upper()
     slug = sym.lower()
     co = ipo_row.get("company", sym)
-    canonical = f"{site_url}/ipo/{slug}/basis-of-allotment/"
+    canonical, robots_meta = _robots_and_canonical(ipo_row, slug, f"/ipo/{slug}/basis-of-allotment/", site_url)
 
-    p_low, p_high = _parse_price_band(ipo_row.get("price_band"))
-    eff_price = p_high if p_high > 0 else (ipo_row.get("issue_price") or 100.0)
-    lot = _estimate_lot_size(eff_price)
-    min_invest = lot * eff_price
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    status = ipo_facts.ipo_status(ipo_row, today_iso)
+    allot_href = _allotment_href(slug, status)
 
-    shares_offered_val = ipo_row.get("issue_size_shares") or ipo_row.get("shares_offered")
-    shares_offered = float(shares_offered_val) if shares_offered_val else None
-    if shares_offered:
-        retail_shares = shares_offered * 0.35
-        total_retail_lots = max(1, int(round(retail_shares / lot)))
-    else:
-        retail_shares = None
-        total_retail_lots = None
+    pf = ipo_facts.price_facts(ipo_row)
+    price_str = ipo_facts.band_text(ipo_row) or "Not on file"
+    top = pf["band_high"] if pf["band_high"] is not None else (pf["single"] or pf["issue_price"])
+    # Sourced lot size only. The old page estimated a lot, a retail quota (35 percent) and a
+    # count of possible retail allottees from it; none of that is on file, so none is shown.
+    lot = ipo_facts.lot_size_on_file(ipo_row)
+    min_invest = (lot * top) if (lot and top) else None
+    lot_str = f"{lot} Shares" if lot else "Not on file"
 
-    b_end = ipo_row.get("bidding_end") or "Day T"
-    list_date = ipo_row.get("listing_date") or "Day T+3"
+    b_end = ipo_facts.fmt_date(ipo_row.get("bidding_end")) or "Day T"
+    list_date = ipo_facts.fmt_date(ipo_row.get("listing_date")) or "Day T+3"
 
-    title = f"{co} ({sym}) IPO Basis of Allotment: Lot Size & Lottery Process | BrokerLens"
-    desc = f"Basis of Allotment for {co} ({sym}) IPO: estimated lot size of {lot} shares (approx Rs {min_invest:,.0f}), how the SEBI retail lottery works, and the ASBA unblocking schedule."
+    title = f"{co} ({sym}) IPO Basis of Allotment: Lottery Process & Refund Timeline | BrokerLens"
+    desc = f"Basis of Allotment for {co} ({sym}) IPO: how the SEBI retail lottery works, the ASBA unblocking schedule and where to check the registrar's allotment."
 
     crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/ipo/">IPOs</a></li><li class="muted">/</li><li><a href="/ipo/{slug}/">{_esc(sym)}</a></li><li class="muted">/</li><li class="muted">Basis of Allotment</li></ol></nav>'
 
     faqs = [
         (f"How is the Basis of Allotment calculated for {co} IPO?",
-         f"Under SEBI rules, when the retail category is oversubscribed, each valid applicant is guaranteed equal odds of receiving at most 1 minimum lot ({lot} shares, estimated) through a computerized lottery run by the registrar; applicants beyond what the retail quota can cover receive zero shares."),
+         f"Under SEBI rules, when the retail category is oversubscribed, each valid applicant has equal odds of receiving at most 1 minimum lot through a computerized lottery run by the registrar; applicants beyond what the retail quota can cover receive zero shares." + (f" The lot size on file is {lot} shares." if lot else " The lot size is printed in the issue prospectus; none is on file here.")),
         (f"What are my allotment chances for {co} IPO?",
          f"Your exact odds depend on the retail category's own subscription multiple, which NSE's public feed does not break out by category (BrokerLens does not estimate this number). Check NSE's or BSE's bidding portal for the live retail-category multiple during bidding, or the registrar's published Basis of Allotment PDF once {co}'s allotment is finalized, for your exact odds."),
         (f"When will my blocked funds be released if not allotted?",
@@ -524,6 +537,7 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
+{robots_meta}
 <link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(jsonld, indent=2)}
@@ -539,7 +553,7 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
     <a href="/ipo/">IPOs</a>
     <a href="/ipo/{slug}/">IPO Details</a>
     <a href="/ipo/{slug}/subscription-status/">Subscription</a>
-    <a href="/ipo/{slug}/allotment-status/">Check Allotment</a>
+    <a href="{allot_href}">Check Allotment</a>
   </nav>
 </div></header>
 
@@ -551,7 +565,7 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
     <h1 style="font-size:26px;margin:0 0 6px 0">{_esc(co)} ({_esc(sym)}) Basis of Allotment</h1>
     <p class="muted" style="margin:0;max-width:76ch">Lottery allotment ratio, available retail lots, and step-by-step unblocking timeline.</p>
   </div>
-  <a href="/ipo/{slug}/allotment-status/" class="btn btn-primary">Check Allotment Online &rarr;</a>
+  <a href="{allot_href}" class="btn btn-primary">Check Allotment Online &rarr;</a>
 </div>
 
 <div class="grid g4" style="gap:12px;margin-bottom:24px">
@@ -561,14 +575,14 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
     <div class="xs muted" style="margin-top:2px">If retail is oversubscribed</div>
   </div>
   <div class="card" style="padding:16px">
-    <div class="xs muted">Retail Lot Size (estimated)</div>
-    <div class="font-bold" style="font-size:24px;color:var(--text);margin-top:4px">{lot} Shares</div>
-    <div class="xs muted" style="margin-top:2px">approx Rs {min_invest:,.0f} per lot</div>
+    <div class="xs muted">Retail Lot Size</div>
+    <div class="font-bold" style="font-size:24px;color:var(--text);margin-top:4px">{_esc(lot_str)}</div>
+    <div class="xs muted" style="margin-top:2px">{_esc(f"Rs {ipo_facts.fmt_price(min_invest)} per lot at the upper price" if min_invest else "Printed in the issue prospectus")}</div>
   </div>
   <div class="card" style="padding:16px">
-    <div class="xs muted">Retail Lots Offered (estimated)</div>
-    <div class="font-bold" style="font-size:24px;color:var(--text);margin-top:4px">{f"{total_retail_lots:,}" if total_retail_lots else "Not disclosed"}</div>
-    <div class="xs muted" style="margin-top:2px">35% net allocation</div>
+    <div class="xs muted">Retail Bid Limit (SEBI)</div>
+    <div class="font-bold" style="font-size:24px;color:var(--text);margin-top:4px">Rs 2 lakh</div>
+    <div class="xs muted" style="margin-top:2px">Per application, retail category</div>
   </div>
   <div class="card" style="padding:16px">
     <div class="xs muted">Retail-Category Odds</div>
@@ -578,21 +592,20 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
 </div>
 
 <section class="card" style="padding:24px;margin-bottom:28px">
-  <h2 style="font-size:19px;margin-top:0;margin-bottom:14px">Retail Lot Sizing Reference</h2>
+  <h2 style="font-size:19px;margin-top:0;margin-bottom:14px">Lot Size and Bid Limits</h2>
   <p class="muted" style="font-size:13px;line-height:1.6;margin:0 0 14px 0">
-    Lot size below is a BrokerLens estimate (SEBI issuers typically target a retail lot value in the Rs 14,000 to 15,000 range), not the exact RHP-disclosed figure. Confirm the exact lot size on your application form before bidding.
+    Only figures on file are shown. The lot size is printed in the issue prospectus and on your broker's bid screen; BrokerLens does not estimate it.
   </p>
   <div class="table-scroll">
     <table class="data">
       <thead>
-        <tr><th>Parameter</th><th>Value</th><th>Regulatory Context</th></tr>
+        <tr><th>Parameter</th><th>Value</th><th>Context</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Cutoff Issue Price</strong></td><td class="num">₹{eff_price:,.2f}</td><td>Final discovered pricing</td></tr>
-        <tr><td><strong>Minimum Bid Lot Size (estimated)</strong></td><td class="num">{lot} Shares</td><td>Minimum allowable retail application</td></tr>
-        <tr><td><strong>Minimum Investment Required (estimated)</strong></td><td class="num font-semibold">₹{min_invest:,.2f}</td><td>Blocked in bank account via ASBA / UPI</td></tr>
-        <tr><td><strong>Retail Quota Shares (estimated)</strong></td><td class="num">{f"{retail_shares:,.0f}" if retail_shares else "Not disclosed"}</td><td>35% of total public offer</td></tr>
-        <tr><td><strong>Total Retail Allottees Possible (estimated)</strong></td><td class="num font-bold">{f"{total_retail_lots:,} Applicants" if total_retail_lots else "Not disclosed"}</td><td>Maximum successful retail beneficiaries if every lot is allotted once</td></tr>
+        <tr><td><strong>Price band</strong></td><td class="num">{_esc(price_str)}</td><td>As published for the issue</td></tr>
+        <tr><td><strong>Minimum bid lot size</strong></td><td class="num">{_esc(lot_str)}</td><td>Minimum allowable retail application</td></tr>
+        <tr><td><strong>Minimum investment</strong></td><td class="num font-semibold">{_esc(f"Rs {ipo_facts.fmt_price(min_invest)}" if min_invest else "Not on file")}</td><td>One lot at the upper price, blocked via ASBA or UPI</td></tr>
+        <tr><td><strong>Retail bid limit</strong></td><td class="num">Up to Rs 2 lakh</td><td>SEBI limit for the retail category</td></tr>
       </tbody>
     </table>
   </div>
@@ -646,7 +659,7 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
 
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">Allotment procedures follow SEBI ICDR guidelines. Calculations are illustrative based on published public issue parameters.</p>
-  <p class="small"><a href="/ipo/{slug}/">Overview</a> &middot; <a href="/ipo/{slug}/subscription-status/">Subscription Status</a> &middot; <a href="/ipo/{slug}/allotment-status/">Check Allotment</a> &middot; <a href="/ipo/">All IPOs</a> &middot; <a href="/">Home</a></p>
+  <p class="small"><a href="/ipo/{slug}/">Overview</a> &middot; <a href="/ipo/{slug}/subscription-status/">Subscription Status</a> &middot; <a href="{allot_href}">Check Allotment</a> &middot; <a href="/ipo/">All IPOs</a> &middot; <a href="/">Home</a></p>
 </div></footer>
 </body>
 </html>"""
@@ -692,6 +705,9 @@ def build_ipo_subscription_suite(site_url="https://www.brokerlens.in"):
         if not sym:
             continue
         slug = sym.lower()
+        # Pages of listed IPOs are still written (noindex,follow, canonical to the main IPO
+        # page) but are kept out of the returned list, which feeds the sitemap.
+        listed = ipo_facts.is_listed(r)
 
         # Subscription page
         sub_dir = os.path.join(SITE_DIR, "ipo", slug, "subscription-status")
@@ -699,7 +715,8 @@ def build_ipo_subscription_suite(site_url="https://www.brokerlens.in"):
         sub_html = render_subscription_page(r, site_url=site_url)
         with open(os.path.join(sub_dir, "index.html"), "w", encoding="utf-8") as out:
             out.write(sub_html)
-        generated_urls.append(f"/ipo/{slug}/subscription-status/")
+        if not listed:
+            generated_urls.append(f"/ipo/{slug}/subscription-status/")
 
         # Basis of allotment page
         boa_dir = os.path.join(SITE_DIR, "ipo", slug, "basis-of-allotment")
@@ -707,9 +724,10 @@ def build_ipo_subscription_suite(site_url="https://www.brokerlens.in"):
         boa_html = render_basis_of_allotment_page(r, site_url=site_url)
         with open(os.path.join(boa_dir, "index.html"), "w", encoding="utf-8") as out:
             out.write(boa_html)
-        generated_urls.append(f"/ipo/{slug}/basis-of-allotment/")
+        if not listed:
+            generated_urls.append(f"/ipo/{slug}/basis-of-allotment/")
 
-    print(f"[ipo_subscription_engine] Successfully generated {len(generated_urls)} subscription & allotment pages!")
+    print(f"[ipo_subscription_engine] Successfully generated {len(generated_urls)} indexable subscription & allotment pages (listed IPOs are noindex and not in the sitemap)!")
     return generated_urls
 
 

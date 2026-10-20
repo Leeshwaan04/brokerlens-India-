@@ -135,12 +135,17 @@ def _merge_registry(sebi_registry_by_cat):
             key = r.get("sebi_reg_no") or (r.get("legal_name") or "").lower()
             if not key:
                 continue
-            cur = merged.setdefault(key, dict(r, categories=[], exchanges=list(r.get("exchanges") or [])))
+            cur = merged.setdefault(key, dict(r, categories=[], exchanges=list(r.get("exchanges") or []),
+                                              validities=list(r.get("validities") or [])))
             if cat not in cur["categories"]:
                 cur["categories"].append(cat)
             for e in r.get("exchanges") or []:
                 if e not in cur["exchanges"]:
                     cur["exchanges"].append(e)
+            # every distinct validity string the register lists for this number
+            for v in (r.get("validities") or ([r["validity"]] if r.get("validity") else [])):
+                if v not in cur["validities"]:
+                    cur["validities"].append(v)
             # prefer the record with the most contact detail
             for f in ("email", "telephone", "address", "city", "validity", "trade_name"):
                 if not cur.get(f) and r.get(f):
@@ -500,6 +505,13 @@ def build():
             suffix = re.sub(r"[^a-z0-9]", "", (row.get("reg") or "").lower())[-6:] or str(n)
             row["slug"] = "%s-%s" % (base, suffix)
 
+    # One legal entity can hold several registrations (broker + DP). Non-primary
+    # rows get row["primary"] = the primary slug (canonical target; see registry_entity).
+    from . import registry_entity
+    _reg_group_stats = registry_entity.annotate(reg_rows, untracked)
+    log("registry entities: %(groups)d multi-registration groups, %(non_primary)d canonicalised "
+        "secondary pages, %(ambiguous_slugs)d left unmerged as ambiguous" % _reg_group_stats, "ok")
+
     reg_size = write_json(os.path.join(SITE_DATA, "registry.json"),
                           {"generated_at": now_iso(), "source": "SEBI recognised intermediaries",
                            "count": len(reg_rows), "entities": reg_rows}, compact=True)
@@ -509,7 +521,7 @@ def build():
     sources_data = _write_sources(sources_cfg, ingest, sample_flags)
     algo_data = _write_algo(brokers_cfg)
     _write_timings()
-    _write_registry_pages(reg_rows)
+    _write_registry_pages(reg_rows, untracked, registry_entity.register_asof(ingest))
     _write_broker_pages(built)
     hub_groups = _write_broker_hub_pages(built)
     equity_companies = ((nse_d.get("universe") or {}).get("companies")) or []
@@ -555,7 +567,7 @@ def build():
     _write_brokers_page(overview)
     _write_calculator_tool_page(built)
     _prerender_home(overview)
-    stock_letters = _write_stock_directory(equity_companies)
+    stock_letters = _write_stock_directory(equity_companies, index_universe)
     amc_slugs = _write_fund_amc_pages(fund_slugs, _funds)
     _write_etf_directory(etf_universe)
     crypto_slugs = _write_crypto_pages(crypto_coins)
@@ -568,6 +580,8 @@ def build():
     _news_count, news_articles = write_news_suite(ingest, SITE_URL)
     from .trade_cost_engine import build_trade_cost_pages
     trade_cost_urls = build_trade_cost_pages(limit_stocks=2500, site_url=SITE_URL)
+    from .broker_charges_engine import build_broker_charges_pages
+    broker_charges_urls = build_broker_charges_pages(built, registry, site_url=SITE_URL)
     from .ipo_apply_engine import build_ipo_apply_suite
     ipo_apply_urls = build_ipo_apply_suite(limit_recent_ipos=100, site_url=SITE_URL)
     from .ipo_subscription_engine import build_ipo_subscription_suite
@@ -580,8 +594,10 @@ def build():
     branch_urls = build_branch_suite(site_url=SITE_URL)
     from .fund_compare_engine import generate_all as build_fund_compare_suite
     fund_compare_urls, fund_category_urls, fund_compare_search = build_fund_compare_suite(site_url=SITE_URL)
-    from .share_price_target_engine import build_share_price_target_suite
-    share_price_target_urls = build_share_price_target_suite(limit_stocks=2500, site_url=SITE_URL)
+    # The /stock/:symbol/share-price-target-:year pages are retired (308 to the stock page in vercel.json;
+    # the query is answered on the stock page, see price_target_section.py). Never regenerate them and
+    # never advertise them in a sitemap.
+    share_price_target_urls = []
     _write_sitemap(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
                     fund_slugs, report_slugs, calc_slugs, stock_letters, amc_slugs, crypto_slugs, ipo_records,
                     registry_letters, equity_history, fund_nav_dates, comparison_pairs=comparison_pairs,
@@ -589,7 +605,8 @@ def build():
                     stock_compare_urls=stock_compare_urls, sip_calc_urls=sip_calc_urls,
                     branch_urls=branch_urls, fund_compare_urls=fund_compare_urls,
                     fund_category_urls=fund_category_urls, ipo_sub_urls=ipo_sub_urls,
-                    share_price_target_urls=share_price_target_urls)
+                    share_price_target_urls=share_price_target_urls,
+                    broker_charges_urls=broker_charges_urls)
     _write_search_index(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
                          fund_slugs, report_slugs, amc_slugs, crypto_coins, ipo_records, comparison_pairs=comparison_pairs,
                          news_articles=news_articles, stock_compare_search=stock_compare_search,
@@ -1081,6 +1098,11 @@ _REGISTRY_PAGE_FOOT = f"""</main>
   <a href="/stocks/">Browse stocks A-Z →</a> ·
   <a href="/funds-by/">Browse mutual funds by AMC →</a> ·
   <a href="/etfs/">Browse ETFs →</a> · <a href="/ipo/">IPO tracker →</a> · <a href="/">BrokerLens home →</a></p>
+  <p class="small"><a href="/ipo/upcoming/">Upcoming IPOs →</a> ·
+  <a href="/ipo/subscription/">IPO subscription status →</a> ·
+  <a href="/trade-costs/">Trade cost calculator →</a> ·
+  <a href="/index/nifty-50/">Nifty 50 constituents →</a> ·
+  <a href="/etf/niftybees/">Nifty 50 ETF: NIFTYBEES →</a></p>
   <p class="small"><a href="/about">About</a> · <a href="/editorial-policy">Editorial policy</a> · <a href="/contact">Contact</a> ·
   <a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a> · <a href="/privacy-policy">Privacy policy</a> ·
   <a href="/terms-of-service">Terms of service</a></p>
@@ -1230,6 +1252,8 @@ _APP_SHELL_FOOT = """</main>
           <li><a href="/trade-costs/">Trade cost calculator</a></li>
           <li><a href="/compare/stocks/">Compare stocks</a></li>
           <li><a href="/ipo/">IPO tracker</a></li>
+          <li><a href="/ipo/upcoming/">Upcoming IPOs</a></li>
+          <li><a href="/ipo/subscription/">IPO subscription status</a></li>
           <li><a href="/ipo/allotment-status/">IPO allotment status</a></li>
           <li><a href="/ipo/how-to-apply/">How to apply for IPO</a></li>
           <li><a href="/calculator" data-link>Brokerage calculator</a></li>
@@ -1252,9 +1276,11 @@ _APP_SHELL_FOOT = """</main>
         <h5>Markets &amp; Wealth</h5>
         <ul>
           <li><a href="/stocks/">Browse stocks A-Z</a></li>
+          <li><a href="/index/nifty-50/">Nifty 50 constituents</a></li>
           <li><a href="/calculators/sip/">SIP scenarios matrix</a></li>
           <li><a href="/funds-by/">Browse mutual funds by AMC</a></li>
           <li><a href="/etfs/">Browse ETFs</a></li>
+          <li><a href="/etf/niftybees/">Nifty 50 ETF: NIFTYBEES</a></li>
           <li><a href="/calculators/">Financial calculators</a></li>
         </ul>
       </div>
@@ -1492,7 +1518,7 @@ def _breadcrumb(trail):
     return html, jsonld
 
 
-def _write_registry_pages(reg_rows):
+def _write_registry_pages(reg_rows, details=None, asof=None):
     """One static, server-rendered page per SEBI-registered entity.
 
     Everything else on this site is a client-rendered SPA: a crawler that
@@ -1505,71 +1531,41 @@ def _write_registry_pages(reg_rows):
     JavaScript. Links off this page are plain <a> (no data-link): there is no
     app.js here to intercept the click, so a normal browser navigation to the
     SPA is exactly what should happen.
+
+    Grouping, labels, titles, FAQs and the page body live in
+    pipeline/registry_entity.py (every URL is still written; secondary
+    registrations of one legal name canonicalise to the primary page).
+    `details` is the full register record list (email, address, validities)
+    aligned with reg_rows; `asof` is the register as-of date or None.
     """
+    from . import registry_entity
     base = os.path.join(SITE_DATA, "..", "sebi-registry")
     written = 0
     keep = {r["slug"] for r in reg_rows if r.get("slug")}
     pruned = _prune_stale_dirs(base, keep)
-    for r in reg_rows:
-        slug = r.get("slug")
-        if not slug:
+    models = registry_entity.build_models(reg_rows, details, asof, SITE_URL)
+    for r, model in zip(reg_rows, models):
+        if not model:
             continue
-        name = r.get("name") or "Unnamed entity"
-        cats = [CATEGORY_LABELS.get(c, c) for c in (r.get("categories") or [])]
-        canonical = "%s/sebi-registry/%s/" % (SITE_URL, slug)
+        slug = model["slug"]
+        name = model["display"]
+        canonical = model["canonical"]
 
-        title = "%s: SEBI Registration | BrokerLens" % name
-        description = ("%s: SEBI registration number, category, exchange memberships and validity, "
-                       "sourced from SEBI's recognised-intermediary register." % name)[:300]
+        def attr(v):
+            return _esc(v).replace('"', "&quot;")
 
-        org_jsonld = {
-            "@type": "Organization",
-            "name": name,
-            "url": canonical,
-        }
-        if r.get("trade_name"):
-            org_jsonld["alternateName"] = r["trade_name"]
-        if r.get("reg"):
-            org_jsonld["identifier"] = r["reg"]
-        if r.get("city"):
-            org_jsonld["address"] = {"@type": "PostalAddress", "addressLocality": r["city"], "addressCountry": "IN"}
         crumb_html, crumb_jsonld = _breadcrumb([
             ("BrokerLens", "/"), ("SEBI registry", "/registry"), (name, None),
         ])
-        jsonld = {"@context": "https://schema.org", "@graph": [org_jsonld, crumb_jsonld]}
-
-        def fact(raw):
-            # _esc() stringifies before escaping, so _esc(None) == "None" (a
-            # truthy string) - the missing-value check must happen first.
-            return _esc(raw) if raw else "Not disclosed"
-
-        facts = [
-            ("SEBI registration number", fact(r.get("reg"))),
-            ("Category", fact(", ".join(cats))),
-            ("Exchange / register memberships", fact(", ".join(r.get("exchanges") or []))),
-            ("City", fact(r.get("city"))),
-            ("Validity", fact(r.get("validity"))),
-        ]
-        facts_html = "".join(
-            '<div class="mega-seg"><div class="mega-seg-label">%s</div>'
-            '<div style="margin-top:2px">%s</div></div>' % (label, value)
-            for label, value in facts
-        )
+        jsonld = {"@context": "https://schema.org",
+                  "@graph": [model["org_jsonld"], model["faq_jsonld"], crumb_jsonld]}
 
         body = _REGISTRY_PAGE_HEAD % {
-            "title": _esc(title), "description": _esc(description),
-            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
+            "title": attr(model["title"]), "description": attr(model["description"][:300]),
+            "canonical": attr(canonical),
+            "jsonld": json.dumps(jsonld, ensure_ascii=False).replace("</", "<\\/"),
         }
-        body += (
-            crumb_html
-            + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
-            + (('<p class="muted">Trading as %s</p>' % _esc(r["trade_name"])) if r.get("trade_name") else "")
-            + '<p class="muted" style="max-width:70ch">This entity is registered with SEBI but is not one of the '
-              'brokers BrokerLens tracks in depth, so no client, complaint or cost data is shown here - only what '
-              'the regulator itself discloses.</p>'
-            + '<div class="card" style="margin-top:16px;padding:16px">' + facts_html + '</div>'
-            + '<p class="xs faint" style="margin-top:12px">Source: SEBI recognised-intermediary register.</p>'
-        )
+        body += crumb_html + model["main_html"]
         body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
             "This page is generated directly from SEBI's recognised-intermediary register.")}
 
@@ -1790,6 +1786,11 @@ def _broker_depth(b, built):
                     % (_esc(brand), _esc(brand), "".join(
                         '<a class="chip" href="/broker/%s/trade/%s/">%s &rarr;</a>'
                         % (_esc(bid), _esc(_stock_slug(s["symbol"])), _esc(s["symbol"])) for s in stocks)))
+    except Exception:
+        pass
+    try:
+        from .broker_charges_engine import profile_links_html
+        extra.append(profile_links_html(bid))
     except Exception:
         pass
     try:
@@ -2298,6 +2299,9 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
     use (nothing named "stock" exists there) - same discipline that avoided
     two prior collisions (site/registry/, site/brokers/).
     """
+    from .price_target_section import (
+        stock_title as _price_target_title, stock_description as _price_target_description,
+        price_target_section_html, stock_target_faqs as _price_target_faqs)
     by_symbol = {s["symbol"].upper(): s for s in (brokers_cfg or [])}
     try:
         from .stock_compare_engine import curated_peer_index
@@ -2369,16 +2373,19 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             faqs.append(("Is %s a listed stock broker?" % name,
                          "Yes, %s is the listed parent of a BrokerLens-tracked broker; see its broker profile "
                          "for regulatory and cost details." % name))
+        # Share-price-target query: answered on the page itself, never with a forecast
+        # (pipeline/price_target_section.py). The "what the data shows" sentence is
+        # only added when real history exists.
+        facts_line = ""
         if perf:
-            faqs.append((
-                "What is the share price target of %s for 2026, 2027 or 2030?" % name,
-                "BrokerLens does not publish price targets or forecasts, and nothing here is investment advice. Targets come from "
-                "SEBI-registered research analysts and brokerages; read their reports and the company's own disclosures. What the "
-                "data shows: %s last closed at %s on %s. Over the %d sessions on file it traded between %s and %s and was %.1f%% "
-                "%s its high on the last close." % (
+            facts_line = (
+                "What the data shows: %s last closed at %s on %s. Over the %d sessions on file it traded between %s and %s "
+                "and was %.1f%% %s its high on the last close." % (
                     name, _px_html(perf["last"]), _iso_to_long_date(perf["last_date"]), perf["n"],
                     _px_html(perf["lo"]), _px_html(perf["hi"]), abs(perf["from_high"]),
-                    "below" if perf["from_high"] < 0 else "at")))
+                    "below" if perf["from_high"] < 0 else "at"))
+        faqs.extend(_price_target_faqs(name, symbol, facts_line))
+        if perf:
             faqs.append((
                 "How has %s performed recently?" % name,
                 "From %s to %s, %s moved %+.1f%% (%d sessions on file). %s Past performance does not indicate future results." % (
@@ -2400,11 +2407,8 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             continue
         name = c.get("name") or symbol
         canonical = "%s/stock/%s/" % (SITE_URL, slug)
-        title = "%s (%s): NSE Listing Details | BrokerLens" % (_esc(name), _esc(symbol))
-        description = _esc(
-            "%s (NSE: %s): last close, sector, listing facts and price history, sourced directly from "
-            "NSE's own listed-securities register and daily bhavcopy." % (name, symbol)
-        )[:300]
+        title = _price_target_title(name, symbol)
+        description = _esc(_price_target_description(name, symbol)[:300])
 
         corp_jsonld = {"@type": "Corporation", "name": name, "tickerSymbol": symbol, "url": canonical}
         if c.get("isin"):
@@ -2538,6 +2542,9 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             body = body.replace("</head>", _stamp_asset_versions(
                 '<script src="/assets/js/vendor/lightweight-charts.standalone.production.js"></script>'
                 '<script type="module" src="/assets/js/stock-chart.js" defer></script></head>'))
+        # what-if price calculator (kind 'price-whatif'), same versioned loader as /calculators/
+        body = body.replace("</head>", _stamp_asset_versions(
+            '<script src="/assets/js/calculators.js" defer></script></head>'))
         body += (
             crumb_html
             + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
@@ -2562,6 +2569,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
               % (" and NSE's daily bhavcopy for price history" if history else "; price history was not available "
                  "for this symbol in the latest data refresh")
             + perf_html
+            + price_target_section_html(name, symbol, history, _px_html, _iso_to_long_date, _esc)
             + index_html
             + ("" if history else trade_cta_html)
             + actions_html
@@ -4020,7 +4028,23 @@ def _write_calculator_pages():
     return written
 
 
-def _write_stock_directory(companies):
+def _index_chips_html(indices):
+    """A crawlable 'Browse by index' block for the /stocks/ hub: before this nothing but a
+    stock page's own membership line linked to the /index/<slug>/ constituent pages, and
+    /index/nifty-50/ was reported unknown to Google."""
+    chips = "".join(
+        '<a class="chip" href="/index/%s/">%s</a>' % (_esc(slug), _esc(idx.get("label") or slug))
+        for slug, idx in sorted((indices or {}).items(), key=lambda kv: (kv[1].get("label") or kv[0]).lower())
+    )
+    if not chips:
+        return ""
+    return ('<div class="section-title" style="margin-top:28px"><h2>Browse by index</h2></div>'
+            '<p class="muted" style="max-width:70ch">Constituent lists published by NSE for each index, '
+            'with a link to every company\'s listing page.</p>'
+            '<div class="row-wrap" style="gap:8px;margin-top:12px">%s</div>' % chips)
+
+
+def _write_stock_directory(companies, indices=None):
     """A-Z browse pages for every NSE-listed equity.
 
     Index-membership links already reach a stock page for anything in a
@@ -4121,6 +4145,7 @@ def _write_stock_directory(companies):
         '<p class="muted" style="max-width:70ch">%d companies across %d letters, sourced from NSE\'s own '
         'listed-securities master file.</p>' % (total, len(letters))
         + '<div class="grid g4" style="margin-top:16px">' + counts_html + '</div>'
+        + _index_chips_html(indices)
     )
     body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
         "This page indexes NSE's own listed-securities master file alphabetically by company name.")}
@@ -6696,7 +6721,8 @@ def _write_brokers_page(overview):
         " &middot; ".join('<a href="/brokers-by/segment/%s/">%s</a>' % (k.replace("_", "-"), _esc(v)) for k, v in SEGMENT_LABEL.items()),
         affiliateBanner_html(), fivepaisaBanner_html(), jiraafBanner_html(),
     )
-    body += _APP_SHELL_FOOT
+    from .broker_charges_engine import brokers_index_links_html
+    body += _APP_SHELL_FOOT.replace("</main>", "</main>" + brokers_index_links_html(), 1)
     dest_dir = os.path.join(ROOT, "site", "brokers")
     os.makedirs(dest_dir, exist_ok=True)
     _write_text(os.path.join(dest_dir, "index.html"), body)
@@ -7173,6 +7199,8 @@ def _prerender_home(overview):
         lambda m2: m2.group(1) + html + m2.group(2),
         current, count=1, flags=re.S,
     )
+    from . import indexation as _ix
+    new_html = _ix.add_home_footer_links(new_html)  # crawlable links to the hub pages Google had not found
     if new_html != current:
         _write_text(index_path, new_html)
     log("home page: prerendered into index.html, hasClients=%s" % has_clients, "ok")
@@ -7249,6 +7277,10 @@ def _write_calculator_hub():
         '<h3 style="font-size:15px">Brokerage cost calculator</h3>'
         '<p class="small muted" style="margin-top:6px">Work out what a month of your actual trading '
         'costs at each Indian broker, using their published charges.</p></a>'
+        '<a class="card" href="/trade-costs/" style="display:block;max-width:520px;margin-top:12px">'
+        '<h3 style="font-size:15px">Trade cost calculator by stock and broker</h3>'
+        '<p class="small muted" style="margin-top:6px">Brokerage, STT, exchange charges, stamp duty, SEBI fee '
+        'and GST for a trade in each liquid stock under a broker\'s rate card.</p></a>'
 
         '<h2 style="margin-top:28px;font-size:18px">Investing and savings</h2>'
         '<div class="grid g3">' + cards_html + '</div>'
@@ -7275,6 +7307,7 @@ SITEMAP_WAVES = {
     "stocks": 2, "funds": 2, "stock-compare": 2, "fund-compare": 2, "ipo-apply": 2, "ipo-sub": 2, "sip-calc": 2,
     "trade-costs": 3, "branches": 3, "price-targets": 3,
 }
+SITEMAP_WAVES["broker-charges"] = 1  # per-broker calculator and charges pages: few, high intent
 
 
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
@@ -7283,7 +7316,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
                     fund_nav_dates=None, comparison_pairs=None, trade_cost_urls=None,
                     ipo_apply_urls=None, stock_compare_urls=None, sip_calc_urls=None,
                     branch_urls=None, fund_compare_urls=None, fund_category_urls=None,
-                    ipo_sub_urls=None, share_price_target_urls=None):
+                    ipo_sub_urls=None, share_price_target_urls=None, broker_charges_urls=None):
     _require_site_url()
     import math
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -7295,13 +7328,17 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         return f"<url><loc>{clean_loc}</loc><lastmod>{lastmod}</lastmod><changefreq>{freq}</changefreq></url>"
 
     # 1. CORE SITEMAP (Main navigation, static hubs, calculators, legal, methodology)
+    # Each entry is the page's own canonical URL (static hub pages end in a slash, the
+    # SPA-routed pages do not). A sitemap entry that differs from the canonical by a
+    # trailing slash is a duplicate URL Google has to reconcile, and /ipo/ and /news/
+    # were reported as unknown while only /ipo and /news were listed.
     core_urls = [
-        "/", "/brokers", "/leaderboards", "/compare", "/calculator", "/calculators",
-        "/registry", "/algo", "/methodology", "/sources", "/stocks", "/funds-by", "/etfs", "/crypto",
-        "/ipo", "/ipo/upcoming/", "/ipo/archive", "/ipo/allotment-status/", "/ipo/how-to-apply/", "/ipo/registrars/",
+        "/", "/brokers", "/leaderboards", "/compare", "/calculator", "/calculators/",
+        "/registry", "/algo", "/methodology", "/sources", "/stocks/", "/funds-by/", "/etfs/", "/crypto/",
+        "/ipo/", "/ipo/upcoming/", "/ipo/archive/", "/ipo/allotment-status/", "/ipo/how-to-apply/", "/ipo/registrars/",
         "/ipo/subscription/", "/ipo/allotment/",
         "/trade-costs/", "/compare/stocks/", "/compare/mutual-funds/", "/calculators/sip/",
-        "/branches/", "/news", "/about", "/editorial-policy", "/contact",
+        "/branches/", "/news/", "/about", "/editorial-policy", "/contact",
         "/privacy-policy", "/terms-of-service"
     ]
     for slug in (report_slugs or []):
@@ -7387,12 +7424,16 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
             "<url><loc>%s/funds-by/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"
             % (SITE_URL, amc_slug, today)
         )
+    from . import indexation as _ix
+    top_etfs = set(_ix.top_etf_slugs(etfs, eq_hist, _stock_slug, limit=40))
     for e in (etfs or []):
         slug = _stock_slug(e.get("symbol"))
         if slug:
             hist = eq_hist.get((e.get("symbol") or "").upper()) or []
             lastmod = hist[-1]["date"] if hist else today
-            fund_entries.append(
+            # The most-traded ETFs ride in wave 1, inside the stocks-top shard (the /etf/ pages
+            # were reported unknown to Google while the whole fund shard waits in wave 2).
+            (stock_top_entries if slug in top_etfs else fund_entries).append(
                 "<url><loc>%s/etf/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
                 % (SITE_URL, slug, lastmod)
             )
@@ -7400,7 +7441,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     # 6. SEBI REGISTRY SITEMAP
     registry_entries = [
         "<url><loc>%s/sebi-registry/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
-        % (SITE_URL, r["slug"], today) for r in (reg_rows or []) if r.get("slug")
+        % (SITE_URL, r["slug"], today) for r in (reg_rows or []) if r.get("slug") and not r.get("primary")
     ]
     if registry_letters:
         registry_entries.append(
@@ -7436,7 +7477,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         for u in trade_cost_urls:
             trade_cost_entries.append(_xml_url(SITE_URL + u, today, "monthly"))
     else:
-        broker_dir = os.path.join(SITE_DIR, "broker")
+        broker_dir = os.path.join(ROOT, "site", "broker")
         if os.path.isdir(broker_dir):
             for b_id in os.listdir(broker_dir):
                 t_dir = os.path.join(broker_dir, b_id, "trade")
@@ -7490,6 +7531,9 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         for u in share_price_target_urls:
             price_target_entries.append(_xml_url(SITE_URL + u, today, "monthly"))
 
+    # 17. PER-BROKER BROKERAGE CALCULATOR AND CHARGES PAGES (wave 1, see SITEMAP_WAVES)
+    broker_charges_entries = [_xml_url(SITE_URL + u, today, "monthly") for u in (broker_charges_urls or [])]
+
     # Partitioned sitemaps automatically shard at CHUNK_LIMIT (45,000 URLs) into
     # sitemap-<name>-1.xml, sitemap-<name>-2.xml, etc.
     sub_sitemaps = [
@@ -7510,6 +7554,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         ("branches", branch_entries),
         ("fund-compare", fund_compare_entries),
         ("price-targets", price_target_entries),
+        ("broker-charges", broker_charges_entries),
     ]
 
     sitemap_index_entries = []

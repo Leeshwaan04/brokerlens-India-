@@ -445,6 +445,17 @@ def _esc(s):
     return html.escape(str(s or ""), quote=True)
 
 
+def _charges_link_block(broker_id):
+    """Visible link to /broker/<id>/charges/ with the exact anchor text, or "" when the broker has no page."""
+    try:
+        from .broker_charges_engine import charges_link_html
+        link = charges_link_html(broker_id)
+    except Exception:
+        link = ""
+    return ('<p class="small" style="margin-top:14px">%s: delivery and intraday charges, DP charge and a worked example on Rs 1,00,000.</p>' % link
+            ) if link else ""
+
+
 def calculate_trade_fees(price: float, qty: int, broker_key: str, trade_type: str = "delivery"):
     """Computes exact rupee breakdown for buy and sell round-trip transaction."""
     b = BROKER_RATES.get(broker_key, BROKER_RATES["zerodha"])
@@ -527,6 +538,9 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
     page_title = f"{brand} Charges to Trade {stock_name} ({stock_sym}) | Brokerage & Tax Calculator"
     meta_desc = (f"Exact brokerage, STT, exchange fees, GST, stamp duty and breakeven calculator for "
                  f"buying {stock_name} ({stock_sym}) shares on {brand}. Compare delivery vs intraday.")[:290]
+
+    # Link to the broker's canonical calculator page (one-line hook, see broker_charges_engine)
+    charges_link_html = _charges_link_block(broker_id)
 
     # Pre-calculated standard trade tiers
     quantities = [1, 10, 50, 100, 500]
@@ -712,6 +726,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
   </div>
 </div>
 
+{charges_link_html}
 <div class="grid g4" style="margin-top:24px">
   <div class="card stat">
     <div class="stat-label">Delivery Brokerage</div>
@@ -897,6 +912,7 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
           <div style="display:flex;gap:8px">
             <a class="btn btn-outline small" href="/broker/{b_id}/trade/" style="flex:1;text-align:center">Browse {b['brand']} Stocks &rarr;</a>
           </div>
+          {_charges_link_block(b_id)}
         </div>
         """)
 
@@ -1054,6 +1070,7 @@ def render_broker_trade_index(broker_id, broker_info, stocks, site_url="https://
   </div>
   <a href="{broker_info['cta_url']}" target="_blank" rel="noopener sponsored" class="btn btn-primary">Open {brand} Account &rarr;</a>
 </div>
+{_charges_link_block(broker_id)}
 
 <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:12px;margin-top:24px">
   {''.join(stock_items)}

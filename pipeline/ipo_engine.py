@@ -1,7 +1,7 @@
 """IPO Lot Size, Listing Performance & Subscription Analytics Engine.
 
 Provides NSE-sourced IPO analysis:
-  - Retail & HNI lot sizing and application limits per SEBI ICDR guidelines.
+  - SEBI application categories; a lot size is shown only when it is sourced (never estimated).
   - Real-time post-listing returns: Issue Price vs Listing Day Open vs Current Market Price (CMP).
   - Listing Day Gains/Losses (% and Rs) + Total Return Since Listing.
   - Live subscription tracking across QIB, NII, and Retail quotas.
@@ -17,6 +17,8 @@ import math
 import os
 import re
 from datetime import datetime, timezone, timedelta
+
+from pipeline import ipo_facts
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_DIR = os.path.join(ROOT, "site")
@@ -60,7 +62,7 @@ def _add_working_days(iso, n):
     return d.strftime("%Y-%m-%d")
 
 
-def _stage_banner(status, r, today_iso):
+def _stage_banner(status, r, today_iso, as_of_iso=None):
     """A one-glance status line with the dates that matter at this stage. The
     T+3 listing date is SEBI's rule (listing within three working days of the
     issue closing), shown as expected on or around that date, never as a fact."""
@@ -68,7 +70,7 @@ def _stage_banner(status, r, today_iso):
     listing = r.get("listing_date") or ""
     if status == "Listed" and listing:
         head, tone = "Listed on %s" % _long_date(listing), "var(--green)"
-        detail = "Listing-day and current figures below are from NSE's own candles."
+        detail = "Listing-day and current figures below are from NSE's own candles, shown only where the price history on file covers them."
     elif status == "Active":
         head, tone = "Bidding is open" + ((", closes %s" % _long_date(b_end)) if b_end else ""), "var(--accent)"
         detail = "Basis of allotment, refunds and listing follow after the issue closes."
@@ -90,72 +92,21 @@ def _stage_banner(status, r, today_iso):
         '<div class="card" style="padding:14px;margin:0 0 16px 0;border-left:3px solid %s">'
         '<div style="font-weight:700">%s</div><div class="small muted" style="margin-top:2px">%s</div>%s'
         '<div class="xs faint" style="margin-top:6px">Page data as of %s.</div></div>'
-        % (tone, _esc(head), _esc(detail), steps, _long_date(today_iso))
+        % (tone, _esc(head), _esc(detail), steps, ipo_facts.fmt_date(as_of_iso or today_iso))
     )
 
 
 def parse_price_band(band_str, issue_price=None):
-    """Parses lower, upper, and cut-off prices from string."""
-    if issue_price is not None:
-        try:
-            ip = float(issue_price)
-            if ip > 0:
-                return ip, ip, ip
-        except (ValueError, TypeError):
-            pass
+    """(low, high, cut_off) from the stored band; kept for callers outside this module.
 
-    if not band_str:
-        return 0.0, 0.0, 0.0
-
-    nums = re.findall(r"\d+(?:\.\d+)?", str(band_str))
-    if len(nums) >= 2:
-        low, high = float(nums[0]), float(nums[1])
-        return low, high, high
-    if len(nums) == 1:
-        val = float(nums[0])
-        return val, val, val
-    return 0.0, 0.0, 0.0
-
-
-def compute_lot_metrics(upper_price, is_sme=False):
-    """Computes retail and HNI lot sizes and application amounts per SEBI regulations."""
-    if upper_price <= 0:
-        return {
-            "lot_size": 1, "min_retail_inv": 0.0,
-            "max_retail_lots": 13, "max_retail_inv": 0.0,
-            "snii_lots": 14, "snii_inv": 0.0,
-            "bnii_lots": 70, "bnii_inv": 0.0,
-        }
-
-    if is_sme:
-        lot_size = max(100, int(round(120000.0 / upper_price / 100.0)) * 100) if upper_price < 200 else max(50, int(round(120000.0 / upper_price / 50.0)) * 50)
-        min_retail = lot_size * upper_price
-        max_retail_lots = 1
-        max_retail_inv = min_retail
-        snii_lots = 2
-        snii_inv = snii_lots * min_retail
-        bnii_lots = max(int(math.ceil(1000000.0 / min_retail)), 8)
-        bnii_inv = bnii_lots * min_retail
-    else:
-        lot_size = max(1, int(round(14500.0 / upper_price)))
-        min_retail = lot_size * upper_price
-        max_retail_lots = max(1, int(200000.0 // min_retail))
-        max_retail_inv = max_retail_lots * min_retail
-        snii_lots = max_retail_lots + 1
-        snii_inv = snii_lots * min_retail
-        bnii_lots = max(int(math.ceil(1000000.0 / min_retail)), snii_lots + 1)
-        bnii_inv = bnii_lots * min_retail
-
-    return {
-        "lot_size": lot_size,
-        "min_retail_inv": min_retail,
-        "max_retail_lots": max_retail_lots,
-        "max_retail_inv": max_retail_inv,
-        "snii_lots": snii_lots,
-        "snii_inv": snii_inv,
-        "bnii_lots": bnii_lots,
-        "bnii_inv": bnii_inv,
-    }
+    Reads through ipo_facts.price_facts, so a stored issue price no longer replaces both
+    ends of the band (that made /ipo/kfintech/ say 366 where the band is 347 to 366).
+    0.0 stands for not on file."""
+    pf = ipo_facts.price_facts({"price_band": band_str, "issue_price": issue_price})
+    if pf["band_low"] is not None:
+        return pf["band_low"], pf["band_high"], pf["band_high"]
+    one = pf["single"] if pf["single"] is not None else pf["issue_price"]
+    return (one, one, one) if one else (0.0, 0.0, 0.0)
 
 
 def compute_listing_performance(symbol, effective_issue_price, equity_history, listing_date=None):
@@ -262,7 +213,7 @@ def render_performance_card(perf, sym_slug):
           {listing_cell}
         </div>
         <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Current Market Price (CMP)</div>
+          <div class="xs muted">Latest Close (as of {_esc(_long_date(perf['cmp_date']))})</div>
           <div style="font-size:18px;font-weight:700;margin-top:4px">Rs {perf['cmp']:,.2f}</div>
           <div class="xs" style="color:{cg_cls};font-weight:600">{cg_sign}{cg_pct:.1f}% ({cg_sign}Rs {perf['current_gain_inr']:,.2f})</div>
         </div>
@@ -322,53 +273,35 @@ def render_subscription_card(r):
     """
 
 
-def render_lot_size_table(lot, p_high):
-    """Renders retail, sNII, and bNII application slabs."""
+def render_lot_size_table(r, pf):
+    """Lot size and SEBI application categories.
+
+    A lot size is printed only when the record carries a sourced lot_size field. The old
+    table derived a lot from an assumed Rs 14,500 retail value and printed every slab from
+    it (JSW Cement showed 99 shares against 102 in the prospectus), so those derived rows
+    are gone. The category limits below are SEBI rules, not per-issue estimates."""
+    lot = ipo_facts.lot_size_on_file(r)
+    top = pf["band_high"] if pf["band_high"] is not None else (pf["single"] or pf["issue_price"])
+    if lot:
+        line = f"Lot size on file: {lot} shares."
+        if top:
+            line += f" One lot at the upper price of Rs {ipo_facts.fmt_price(top)} is Rs {ipo_facts.fmt_price(lot * top)}."
+    else:
+        line = ("Lot size for this issue is not on file here. It is printed in the issue prospectus and on your broker's bid screen, "
+                "so BrokerLens shows none rather than an estimate.")
     return f"""
     <div class="card" style="margin-top:24px;padding:22px;background:var(--bg-raised)">
-      <h2 style="margin:0 0 6px 0;font-size:18px">IPO Lot Size & Investment Sizing (SEBI Categories, Estimated)</h2>
-      <p class="muted small" style="margin:0 0 16px 0">Lot size is a BrokerLens estimate (SEBI issuers typically target a retail lot value in the Rs 14,000 to 15,000 range), not the exact RHP-disclosed figure; confirm on your application form before bidding. Application categories, lot quantities, and required UPI mandate allocation amounts:</p>
-      
+      <h2 style="margin:0 0 6px 0;font-size:18px">Lot Size and Application Limits</h2>
+      <p class="muted small" style="margin:0 0 16px 0">{_esc(line)}</p>
       <div class="table-scroll">
         <table class="data">
           <thead>
-            <tr>
-              <th>Application Category</th>
-              <th class="right">Lots</th>
-              <th class="right">Shares</th>
-              <th class="right">Amount (at Cut-Off Rs {p_high:,.0f})</th>
-              <th>Category Notes</th>
-            </tr>
+            <tr><th>Application Category</th><th>Application Size (SEBI)</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td><strong>Retail Minimum (1 Lot)</strong></td>
-              <td class="right num">1 Lot</td>
-              <td class="right num">{lot['lot_size']} shares</td>
-              <td class="right num font-semibold" style="color:var(--text-bright)">Rs {lot['min_retail_inv']:,.0f}</td>
-              <td class="small muted">Guaranteed lottery allotment chance if oversubscribed</td>
-            </tr>
-            <tr>
-              <td><strong>Retail Maximum</strong></td>
-              <td class="right num">{lot['max_retail_lots']} Lots</td>
-              <td class="right num">{lot['max_retail_lots'] * lot['lot_size']} shares</td>
-              <td class="right num font-semibold">Rs {lot['max_retail_inv']:,.0f}</td>
-              <td class="small muted">Maximum allowed under SEBI Rs 2 Lakh retail ceiling</td>
-            </tr>
-            <tr>
-              <td><strong>Small HNI (sNII) Min</strong></td>
-              <td class="right num">{lot['snii_lots']} Lots</td>
-              <td class="right num">{lot['snii_lots'] * lot['lot_size']} shares</td>
-              <td class="right num font-semibold">Rs {lot['snii_inv']:,.0f}</td>
-              <td class="small muted">Applications between Rs 2 Lakh and Rs 10 Lakh</td>
-            </tr>
-            <tr>
-              <td><strong>Big HNI (bNII) Min</strong></td>
-              <td class="right num">{lot['bnii_lots']} Lots</td>
-              <td class="right num">{lot['bnii_lots'] * lot['lot_size']} shares</td>
-              <td class="right num font-semibold">Rs {lot['bnii_inv']:,.0f}</td>
-              <td class="small muted">Institutional HNI applications above Rs 10 Lakh</td>
-            </tr>
+            <tr><td><strong>Retail individual</strong></td><td>Up to Rs 2 lakh</td></tr>
+            <tr><td><strong>Small HNI (sNII)</strong></td><td>Above Rs 2 lakh and up to Rs 10 lakh</td></tr>
+            <tr><td><strong>Big HNI (bNII)</strong></td><td>Above Rs 10 lakh</td></tr>
           </tbody>
         </table>
       </div>
@@ -388,97 +321,29 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
     slug = symbol.lower()
     canonical = f"{site_url}/ipo/{slug}/"
 
-    p_low, p_high, cut_off = parse_price_band(r.get("price_band"), r.get("issue_price"))
-    is_sme = (r.get("security_type") == "SME")
-    lot = compute_lot_metrics(p_high, is_sme)
-    perf = compute_listing_performance(symbol, r.get("issue_price") or cut_off, equity_history, r.get("listing_date"))
+    # One reading of the stored price fields feeds the title, meta, facts card, FAQs and
+    # performance numbers, so they cannot disagree. Band low and high come from the stored
+    # price band; an issue price outside that band is treated as a data fault and ignored.
+    pf = ipo_facts.price_facts(r)
+    perf = compute_listing_performance(symbol, pf["issue_price"] or 0.0, equity_history, r.get("listing_date"))
 
     today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    b_end = r.get("bidding_end") or ""
-    b_start = r.get("bidding_start") or ""
-    status = r.get("status", "Closed")
-    if perf.get("has_listing_data") or r.get("listing_date"):
-        status = "Listed"
-    elif b_end and b_end < today_iso:
-        status = "Closed"
-    elif b_start and b_start > today_iso:
-        status = "Forthcoming"
-    elif b_start and b_end and b_start <= today_iso <= b_end:
-        status = "Active"
+    as_of_iso = ipo_facts.data_as_of(today_iso)
+    status = ipo_facts.ipo_status(r, today_iso)
+    candle = ipo_facts.listing_candle(symbol, r.get("listing_date"), equity_history) if status == "Listed" else None
 
-    sec_type_label = "SME Emerge" if is_sme else "Mainboard Equity"
+    # Title and meta A/B split by zlib.crc32(slug) % 2 (see ipo_facts.title_group and
+    # docs/IPO_TITLE_TEST.md). The latest-close figure stays in the body, never here.
+    title = ipo_facts.build_title(r, pf, status)
+    description = ipo_facts.build_description(r, pf, status, candle=candle, has_latest_close=bool(perf.get("has_current_data")))
 
-    band_txt = f"Rs {p_low:g}" if p_low == p_high else f"Rs {p_low:g}-{p_high:g}"
-    if perf.get("has_listing_data"):
-        # Listed IPOs are searched for their outcome ("kfintech ipo", "bandhan bank ipo price"),
-        # so lead with the real listing result instead of the pre-issue checklist. All three
-        # numbers come from NSE's own candles in perf; nothing is estimated.
-        title = (f"{company} IPO: Issue Price Rs {perf['issue_price']:,.0f}, Listing Gain "
-                 f"{perf['listing_gain_pct']:+.1f}% & Current Price | BrokerLens")
-        description = (f"{company} ({symbol}) IPO: issued at Rs {perf['issue_price']:,.0f}, listed at Rs {perf['listing_open']:,.0f} "
-                       f"({perf['listing_gain_pct']:+.1f}% listing gain), last close Rs {perf['cmp']:,.2f} "
-                       f"({perf['current_gain_pct']:+.1f}% since issue). Price band, lot size, dates and subscription.")[:295]
-    elif status == "Listed" and perf.get("has_current_data"):
-        title = (f"{company} IPO: Issue Price Rs {perf['issue_price']:,.0f}, Latest Close Rs {perf['cmp']:,.0f} "
-                 f"({perf['current_gain_pct']:+.1f}% Since Issue) | BrokerLens")
-        description = (f"{company} ({symbol}) IPO: issued at Rs {perf['issue_price']:,.0f}, last close Rs {perf['cmp']:,.2f} on "
-                       f"{_long_date(perf['cmp_date'])} ({perf['current_gain_pct']:+.1f}% since issue). Price band, lot size, dates and subscription.")[:295]
-    elif status == "Active":
-        title = f"{company} IPO Open: Dates, Price Band, Lot Size & Subscription Status | BrokerLens"
-        description = (f"{company} ({symbol}) IPO is open for bidding" + (f" until {_long_date(b_end)}" if b_end else "")
-                       + f": price band {band_txt}, estimated retail lot size {lot['lot_size']} shares, subscription and allotment steps.")[:295]
-    elif status == "Forthcoming":
-        title = f"{company} IPO: Opening Date, Price Band & Lot Size | BrokerLens"
-        description = (f"{company} ({symbol}) IPO" + (f" opens {_long_date(b_start)}" if b_start else " dates announced")
-                       + f": price band {band_txt}, estimated retail lot size {lot['lot_size']} shares, how to apply and check allotment.")[:295]
-    else:
-        title = f"{company} IPO Closed: Allotment Status, Listing Date & Subscription | BrokerLens"
-        description = (f"{company} ({symbol}) IPO" + (f" closed {_long_date(b_end)}" if b_end else " has closed")
-                       + f": how to check allotment, expected listing timeline, price band {band_txt} and subscription.")[:295]
-
-    # Quick overview facts
-    facts = [
-        ("Status", f'<span class="badge {"badge-up" if status == "Active" else ("badge-verified" if status == "Listed" else "")}">{_esc(status)}</span>'),
-        ("Issue Type", _esc(sec_type_label)),
-        ("Price Band", (f"Rs {p_low:g}" if p_low == p_high else f"Rs {p_low:g} to Rs {p_high:g}") if p_high > 0 else (r.get("price_band") or "Not disclosed")),
-        ("Issue Size", (f"Rs {(int(r['issue_size_shares']) * p_high / 1e7):,.1f} Cr ({format(int(r['issue_size_shares']), ',')} shares)" if p_high > 0 else f"{format(int(r['issue_size_shares']), ',')} shares") if r.get("issue_size_shares") else "Not disclosed"),
-        ("Retail Lot Size (estimated)", f"{lot['lot_size']} shares (Rs {lot['min_retail_inv']:,.0f})"),
-        ("Bidding Opens", _long_date(r.get("bidding_start")) if r.get("bidding_start") else "Announced soon"),
-        ("Bidding Closes", _long_date(r.get("bidding_end")) if r.get("bidding_end") else "Announced soon"),
-        ("Listing Date", _long_date(r.get("listing_date") or perf.get("listing_date")) if (r.get("listing_date") or perf.get("listing_date")) else "Not yet listed"),
-    ]
-    if r.get("times_subscribed") is not None:
-        facts.append(("Subscription Demand", f"{float(r['times_subscribed']):.2f}x Total"))
-
-    facts_html = "".join(
-        f'<div class="mega-seg"><div class="mega-seg-label">{lbl}</div><div style="margin-top:2px;font-weight:600">{val}</div></div>'
-        for lbl, val in facts
-    )
-
+    facts_html = ipo_facts.render_facts_card(r, pf, status, candle, as_of_iso, company)
+    gmp_html = ipo_facts.render_gmp_section(r, pf, status, candle, perf, company)
     perf_html = render_performance_card(perf, slug)
     sub_html = render_subscription_card(r)
-    lot_html = render_lot_size_table(lot, p_high)
+    lot_html = render_lot_size_table(r, pf)
 
-    faqs = [
-        (
-            f"What is the retail lot size and minimum investment for {company} IPO?",
-            f"BrokerLens estimates a retail lot size of {lot['lot_size']} shares for {company} IPO (SEBI issuers typically target a retail lot value in the Rs 14,000 to 15,000 range); confirm the exact figure on your application form. At the cut-off price of Rs {p_high:,.0f} per share, the estimated minimum retail investment is Rs {lot['min_retail_inv']:,.0f}. Retail investors can apply for up to {lot['max_retail_lots']} lots (Rs {lot['max_retail_inv']:,.0f}) within the SEBI Rs 2 Lakh ceiling."
-        ),
-        (
-            f"How did {company} perform on its listing day?",
-            (f"{company} listed on the exchange at an opening price of Rs {perf['listing_open']:,.2f}, delivering a listing day gain of {perf['listing_gain_pct']:+.1f}% (+Rs {perf['listing_gain_inr']:,.2f} per share) over its issue price of Rs {perf['issue_price']:,.2f}."
-             if perf.get("has_listing_data")
-             else f"{company} has not listed on the exchange yet. Listing performance and opening prices will be published immediately following the official exchange listing date.")
-        ),
-        (
-            f"Does BrokerLens display grey market premium (GMP) for {company}?",
-            "No. Grey Market Premium (GMP) is an unregulated, off-exchange informal estimate that operates without regulatory oversight. BrokerLens publishes strictly verified, exchange-disclosed data only."
-        ),
-        (
-            f"Is investing in {company} IPO recommended by BrokerLens?",
-            f"No. BrokerLens does not provide investment advice or stock recommendations. Our platform publishes NSE's own public-issue disclosures (price band, dates, lot size, subscription figures and listing performance) to help investors do their own research."
-        ),
-    ]
+    faqs = ipo_facts.build_faqs(r, pf, status, candle, perf, company, as_of_iso)
 
     faq_html = "".join(
         f'<details class="faq-item"><summary>{_esc(q)}</summary><p>{_esc(a)}</p></details>'
@@ -513,27 +378,39 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         "jsonld": json.dumps(jsonld, ensure_ascii=False),
     }
 
+    # The per-broker apply pages exist only for current, upcoming and the most recent IPOs
+    # (see build_ipo_apply_suite). Link them only where they exist, so no page links a 404.
+    apply_html = ""
+    if ipo_facts.has_apply_pages(slug):
+        _brokers = (("zerodha", "Zerodha Kite"), ("groww", "Groww"), ("angel-one", "Angel One"),
+                    ("upstox", "Upstox"), ("dhan", "Dhan"))
+        _links = "".join(
+            f'<a class="badge" href="/ipo/{slug}/apply-via-{bid}/" style="text-decoration:none;padding:6px 10px;background:var(--bg)">Apply on {bname} &rarr;</a>'
+            for bid, bname in _brokers)
+        apply_html = (
+            f'<div class="card" style="margin-top:24px;padding:20px;background:var(--bg-raised)">'
+            f'<div class="section-title"><h2 style="margin:0;font-size:16px">How to Apply for {_esc(company)} IPO Online via UPI</h2></div>'
+            f'<p class="muted small" style="margin:4px 0 12px 0">Step-by-step UPI application walkthroughs across India\'s leading SEBI-registered brokers:</p>'
+            f'<div style="display:flex;flex-wrap:wrap;gap:8px">{_links}</div></div>'
+        )
+
+    sec_label = {"SME": "SME Emerge", "EQ": "Mainboard Equity"}.get(r.get("security_type"), "")
+    sec_prefix = f"{sec_label} &bull; " if sec_label else ""
+
     body += (
         crumb_html
         + f'<div style="margin-top:10px">'
         + f'<h1 style="margin:0 0 6px 0;font-size:26px">{_esc(company)} IPO <span class="muted" style="font-size:18px">({_esc(symbol)})</span></h1>'
-        + f'<p class="muted small" style="margin:0 0 16px 0">{sec_type_label} &bull; Sourced directly from official NSE public-issue disclosures.</p>'
-        + _stage_banner(status, r, today_iso)
+        + f'<p class="muted small" style="margin:0 0 16px 0">{sec_prefix}Sourced directly from official NSE public-issue disclosures.</p>'
+        + _stage_banner(status, r, today_iso, as_of_iso)
         + f'</div>'
-        + f'<div class="grid g3" style="margin-top:16px">{facts_html}</div>'
+        + facts_html
         + perf_html
         + sub_html
+        + gmp_html
         + lot_html
         + ibsl_wide_html
-        + f'<div class="card" style="margin-top:24px;padding:20px;background:var(--bg-raised)">'
-        + f'<div class="section-title"><h2 style="margin:0;font-size:16px">How to Apply for {_esc(company)} IPO Online via UPI</h2></div>'
-        + f'<p class="muted small" style="margin:4px 0 12px 0">Step-by-step UPI application walkthroughs across India\'s leading SEBI-registered brokers:</p>'
-        + f'<div style="display:flex;flex-wrap:wrap;gap:8px">'
-        + f'<a class="badge" href="/ipo/{slug}/apply-via-zerodha/" style="text-decoration:none;padding:6px 10px;background:var(--bg)">Apply on Zerodha Kite &rarr;</a>'
-        + f'<a class="badge" href="/ipo/{slug}/apply-via-groww/" style="text-decoration:none;padding:6px 10px;background:var(--bg)">Apply on Groww &rarr;</a>'
-        + f'<a class="badge" href="/ipo/{slug}/apply-via-angel-one/" style="text-decoration:none;padding:6px 10px;background:var(--bg)">Apply on Angel One &rarr;</a>'
-        + f'<a class="badge" href="/ipo/{slug}/apply-via-upstox/" style="text-decoration:none;padding:6px 10px;background:var(--bg)">Apply on Upstox &rarr;</a>'
-        + f'<a class="badge" href="/ipo/{slug}/apply-via-dhan/" style="text-decoration:none;padding:6px 10px;background:var(--bg)">Apply on Dhan &rarr;</a>'
+        + apply_html
         + f'<div class="card" style="margin-top:20px;padding:20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
         + f'<div class="section-title"><h2 style="margin:0;font-size:16px">Check Official {_esc(company)} Allotment Status Online</h2></div>'
         + f'<p class="muted small" style="margin:4px 0 14px 0">Direct allotment search portals across India\'s primary registrar platforms (PAN / Application / DP Client ID):</p>'
@@ -693,8 +570,8 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
     listed_with_perf = []
     for r in listed_candidates:
         sym = r.get("symbol", "").upper()
-        p_low, p_high, cut_off = parse_price_band(r.get("price_band"), r.get("issue_price"))
-        perf = compute_listing_performance(sym, r.get("issue_price") or cut_off, equity_history, r.get("listing_date"))
+        _ip = ipo_facts.price_facts(r)["issue_price"] or 0.0
+        perf = compute_listing_performance(sym, _ip, equity_history, r.get("listing_date"))
         row_dict = dict(r)
         row_dict["perf"] = perf
         listed_with_perf.append(row_dict)
@@ -712,7 +589,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
     title = "IPO Tracker: Live Subscription, Listing Gains, Upcoming & Open IPOs | BrokerLens"
     description = (
         f"{len(active)} IPOs open for bidding, {len(forthcoming)} upcoming, and real-time post-listing returns "
-        f"tracked from NSE's public disclosures: price band, lot size, subscription and listing day gain analysis."
+        f"tracked from NSE's public disclosures: price band, dates, subscription and listing day gain analysis."
     )[:295]
 
     def render_active_table(rows):
@@ -736,8 +613,8 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
             sym = r["symbol"].upper()
             slug = sym.lower()
             co = r.get("company") or sym
-            p_str = r.get("price_band") or "Disclosed"
-            dates = f"{r.get('bidding_start') or ''} to {r.get('bidding_end') or ''}".strip(" to")
+            p_str = ipo_facts.band_text(r) or "Not on file"
+            dates = ipo_facts.date_range_text(r.get("bidding_start"), r.get("bidding_end")) or "Not on file"
             sub_val = r.get("times_subscribed")
             sub_str = f"{float(sub_val):.2f}x" if sub_val is not None else "Bidding Open"
             chance_html = ""   # no allotment-odds estimate: the category split behind it is not published per bid
@@ -766,7 +643,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
               <th>Status</th>
               <th class="right">Price Band</th>
               <th class="right">Opening Date</th>
-              <th class="right">Est. Lot Size</th>
+              <th class="right">Closing Date</th>
               <th class="center">Analysis</th>
             </tr>
           </thead>
@@ -776,18 +653,16 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
             sym = r["symbol"].upper()
             slug = sym.lower()
             co = r.get("company") or sym
-            p_str = r.get("price_band") or "Announced"
+            p_str = ipo_facts.band_text(r) or "Announced"
             d_start = _long_date(r.get("bidding_start")) or "Announced Soon"
-            p_low, p_high, _ = parse_price_band(r.get("price_band"))
-            lot = compute_lot_metrics(p_high, r.get("security_type") == "SME")
-            lot_str = f"{lot['lot_size']} shares" if lot['lot_size'] > 1 else "-"
+            d_end = _long_date(r.get("bidding_end")) or "Announced Soon"
             out += f"""
             <tr>
               <td><strong><a href="/ipo/{slug}/">{_esc(co)}</a></strong> <span class="xs faint">{_esc(sym)}</span></td>
               <td><span class="badge badge-warn">Upcoming</span></td>
               <td class="right num">{_esc(p_str)}</td>
               <td class="right small">{_esc(d_start)}</td>
-              <td class="right num">{_esc(lot_str)}</td>
+              <td class="right small">{_esc(d_end)}</td>
               <td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">View Issue &rarr;</a></td>
             </tr>
             """
@@ -820,9 +695,9 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
             perf = r.get("perf") or {}
             d_list = _long_date(r.get("listing_date") or perf.get("listing_date")) or "-"
             
-            ip_val = r.get("issue_price")
+            ip_val = ipo_facts.price_facts(r)["issue_price"]
             ip_str = (f"Rs {perf['issue_price']:,.2f}" if perf.get("has_current_data")
-                      else (f"Rs {ip_val}" if ip_val else (r.get("price_band") or "-")))
+                      else (f"Rs {ipo_facts.fmt_price(ip_val)}" if ip_val else (ipo_facts.band_text(r) or "-")))
             lo_str = lg_str = cmp_str = cg_str = "-"
             if perf.get("has_listing_data"):
                 lo_str = f"Rs {perf['listing_open']:,.2f}"
@@ -864,7 +739,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
             exp = _add_working_days(r.get("bidding_end"), 3)
             out += (f'<tr><td><strong><a href="/ipo/{slug}/">{_esc(r.get("company") or sym)}</a></strong> '
                     f'<span class="xs faint">{_esc(sym)}</span></td>'
-                    f'<td class="right num">{_esc(r.get("price_band") or "Announced")}</td>'
+                    f'<td class="right num">{_esc(ipo_facts.band_text(r) or "Announced")}</td>'
                     f'<td class="right small">{_esc(_long_date(r.get("bidding_end")) or "-")}</td>'
                     f'<td class="right small">{_esc(_long_date(exp) if exp else "-")}</td>'
                     f'<td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">Allotment &amp; timeline &rarr;</a></td></tr>')
@@ -876,7 +751,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         ("How are IPO listing gains and total returns computed on this page?",
          "Listing gains are calculated using the opening trade price on the official exchange listing day versus the final offer cut-off issue price. Total returns track current market price (CMP) derived from official NSE closing candles against the IPO issue price."),
         ("What is the difference between Mainboard and SME IPOs?",
-         "Mainboard IPOs list on the main exchange with larger issue sizes and retail application minimums around Rs 14,000 to Rs 15,000. SME IPOs list on NSE Emerge or BSE SME with minimum lot sizes calibrated to approximately Rs 1,00,000 to Rs 1,40,000."),
+         "Mainboard IPOs list on the main exchange boards with larger issue sizes. SME IPOs list on the SME platforms (NSE Emerge or BSE SME) and are generally smaller issues. The lot size for each issue is stated in its prospectus."),
         ("Does BrokerLens recommend applying to any IPO?",
          "No. BrokerLens does not recommend any IPO, stock or broker. This page states public facts only; it is not investment advice, and BrokerLens is not a SEBI-registered investment adviser or research analyst."),
     ]
@@ -947,7 +822,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
     body += (
         crumb_html
         + '<h1 style="margin-top:0">IPO Tracker & Performance Hub</h1>'
-        + '<p class="muted" style="max-width:75ch">Mainboard and SME IPOs tracked directly from official NSE disclosures and SEBI prospectuses: price bands, retail lot sizing, live bidding subscription, and verified post-listing gains. No grey market premium, no speculative recommendations &bull; <a href="/methodology" data-link>see methodology</a>.</p>'
+        + '<p class="muted" style="max-width:75ch">Mainboard and SME IPOs tracked directly from official NSE disclosures and SEBI prospectuses: price bands, dates, live bidding subscription, and verified post-listing gains. No grey market premium, no speculative recommendations &bull; <a href="/methodology" data-link>see methodology</a>.</p>'
         + f'<div class="grid g4" style="margin:20px 0 24px 0;gap:12px">'
         + f'<div class="card" style="padding:14px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
         + f'<div class="xs muted">Active for Bidding</div>'
@@ -1039,12 +914,11 @@ def render_enhanced_ipo_archive(records, equity_history, head_template, foot_tem
         slug = sym.lower()
         co = r.get("company") or sym
         status = r.get("status", "Closed")
-        p_low, p_high, cut_off = parse_price_band(r.get("price_band"), r.get("issue_price"))
-        perf = compute_listing_performance(sym, r.get("issue_price") or cut_off, equity_history, r.get("listing_date"))
+        _ip = ipo_facts.price_facts(r)["issue_price"] or 0.0
+        perf = compute_listing_performance(sym, _ip, equity_history, r.get("listing_date"))
 
         d_str = _long_date(r.get("listing_date") or r.get("bidding_end") or perf.get("listing_date")) or "-"
-        ip_val = r.get("issue_price") or cut_off
-        ip_str = f"Rs {ip_val:,.0f}" if ip_val > 0 else (r.get("price_band") or "-")
+        ip_str = f"Rs {ipo_facts.fmt_price(_ip)}" if _ip > 0 else (ipo_facts.band_text(r) or "-")
 
         gain_str = cmp_str = "-"
         if perf.get("has_listing_data"):

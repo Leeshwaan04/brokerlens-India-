@@ -18,6 +18,8 @@ import os
 import re
 from datetime import datetime, timezone
 
+from pipeline import ipo_facts
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_DIR = os.path.join(ROOT, "site")
 DATA_DIR = os.path.join(ROOT, "data")
@@ -513,22 +515,17 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
     ipo_slug = sym.lower()
     b_brand = broker_info["brand"]
 
-    low_p, high_p = parse_price_band(ipo_record.get("price_band"))
-    eff_price = high_p if high_p > 0 else (low_p if low_p > 0 else 0.0)
-
-    # Estimate lot size and retail min investment
-    # In India, typical retail lot value is ~Rs. 14,000 - 15,000
-    if eff_price > 0:
-        raw_lot = max(1, round(14500.0 / eff_price))
-        lot_size = raw_lot if raw_lot < 50 else round(raw_lot / 10) * 10
-        min_invest = lot_size * eff_price
-    else:
-        lot_size = 1
-        min_invest = 0.0
+    pf = ipo_facts.price_facts(ipo_record)
+    band_str = ipo_facts.band_text(ipo_record)
+    top = pf["band_high"] if pf["band_high"] is not None else (pf["single"] or pf["issue_price"])
+    # Lot size is shown only when a sourced lot_size is on the record. The old estimate
+    # (Rs 14,500 divided by price) was wrong against prospectus figures and is gone.
+    lot_size = ipo_facts.lot_size_on_file(ipo_record)
+    min_invest = (lot_size * top) if (lot_size and top) else 0.0
 
     canonical = f"{site_url}/ipo/{ipo_slug}/apply-via-{broker_id}/"
     title = f"How to Apply for {company} IPO in {b_brand}: Step-by-Step UPI Guide | BrokerLens"
-    desc = f"Learn how to apply for {company} IPO on {b_brand} ({broker_info['platform']}). Step-by-step UPI mandate guide, lot size, cutoff price, and bidding cutoff time."
+    desc = f"Learn how to apply for {company} IPO on {b_brand} ({broker_info['platform']}). Step-by-step UPI mandate guide, price band, and bidding cutoff time."
 
     steps_html = "".join(f"<li>{s.format(company=company)}</li>" for s in broker_info["steps"])
 
@@ -538,7 +535,8 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
         (f"Can I apply for {company} IPO using UPI on {b_brand}?",
          f"Yes, {b_brand} supports 100% digital IPO applications via NPCI UPI 2.0 mandate up to ₹5,00,000 per application."),
         (f"What is the minimum investment for {company} IPO?",
-         f"The minimum bid is 1 lot (an estimated {lot_size} shares) at the cutoff price of ₹{eff_price:,.2f}, requiring a blocked amount of approximately ₹{min_invest:,.2f}; confirm the exact lot size on your application form." if min_invest > 0 else f"Check the published price band on BrokerLens to verify the minimum investment."),
+         (f"The minimum bid is 1 lot of {lot_size} shares. At the upper price of Rs {ipo_facts.fmt_price(top)}, one lot is Rs {ipo_facts.fmt_price(min_invest)}." if min_invest > 0
+          else f"The minimum bid is 1 lot. BrokerLens has no sourced lot size for {company} IPO, so no rupee minimum is shown. The lot size is printed in the issue prospectus and on the bid screen of {b_brand}." + (f" The price band is {band_str} per share." if band_str else ""))),
         (f"What happens if my UPI mandate for {company} is delayed?",
          f"UPI mandates are usually delivered within 15 to 45 minutes of submitting the bid on {b_brand}. If you do not receive the notification, open your UPI app and check the 'Pending Mandates / Autopay' section."),
         (f"Can I cancel or modify my {company} IPO application on {b_brand}?",
@@ -618,19 +616,19 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
 <div class="card" style="padding:20px;background:var(--bg-raised);margin-bottom:28px;display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px">
   <div>
     <div class="xs muted">Price Band</div>
-    <div style="font-weight:600;font-size:16px">{_esc(ipo_record.get('price_band') or 'To be announced')}</div>
+    <div style="font-weight:600;font-size:16px">{_esc(band_str or 'Not on file')}</div>
   </div>
   <div>
-    <div class="xs muted">Estimated Lot Size</div>
-    <div style="font-weight:600;font-size:16px">{lot_size} Shares</div>
+    <div class="xs muted">Lot Size</div>
+    <div style="font-weight:600;font-size:16px">{_esc(f"{lot_size} Shares" if lot_size else "Not on file")}</div>
   </div>
   <div>
-    <div class="xs muted">Min Investment (Retail, Estimated)</div>
-    <div style="font-weight:600;font-size:16px;color:var(--accent)">₹{min_invest:,.2f}</div>
+    <div class="xs muted">Retail Bid Limit (SEBI)</div>
+    <div style="font-weight:600;font-size:16px;color:var(--accent)">Up to Rs 2 lakh</div>
   </div>
   <div>
     <div class="xs muted">Bidding Opens / Closes</div>
-    <div style="font-weight:600;font-size:14px">{_esc(ipo_record.get('bidding_start') or '-')} to {_esc(ipo_record.get('bidding_end') or '-')}</div>
+    <div style="font-weight:600;font-size:14px">{_esc(ipo_facts.date_range_text(ipo_record.get('bidding_start'), ipo_record.get('bidding_end')) or 'Not on file')}</div>
   </div>
 </div>
 
@@ -928,12 +926,11 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
     sym = (ipo_record.get("symbol") or "").strip().upper()
     ipo_slug = sym.lower()
     company = ipo_record.get("company") or sym
-    price_band = ipo_record.get("price_band") or "Disclosed on bid"
-    b_start = ipo_record.get("bidding_start") or "Announced"
-    b_end = ipo_record.get("bidding_end") or "Announced"
-    low_p, high_p = parse_price_band(ipo_record.get("price_band"))
-    eff_p = high_p if high_p > 0 else (ipo_record.get("issue_price") or 0.0)
-    lot_size = max(1, round(14500.0 / eff_p)) if eff_p > 0 else None
+    price_band = ipo_facts.band_text(ipo_record) or "Not on file"
+    b_start = ipo_facts.fmt_date(ipo_record.get("bidding_start")) or "Announced"
+    b_end = ipo_facts.fmt_date(ipo_record.get("bidding_end")) or "Announced"
+    # Sourced lot size only; the old Rs 14,500 estimate is gone.
+    lot_size = ipo_facts.lot_size_on_file(ipo_record)
 
     canonical = f"{site_url}/ipo/{ipo_slug}/allotment-status/"
     title = f"{company} IPO Allotment Status: Check Online via Registrar, BSE & NSE Link"
@@ -1065,8 +1062,8 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
       <div style="font-weight:600;font-size:16px">{_esc(price_band)}</div>
     </div>
     <div>
-      <div class="xs muted">Lot Size (estimated)</div>
-      <div style="font-weight:600;font-size:16px">{f"{lot_size} Shares" if lot_size else "Not disclosed"}</div>
+      <div class="xs muted">Lot Size</div>
+      <div style="font-weight:600;font-size:16px">{f"{lot_size} Shares" if lot_size else "Not on file"}</div>
     </div>
     <div>
       <div class="xs muted">Bidding Closed</div>
@@ -1135,24 +1132,14 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
 </html>"""
 
 
-def build_ipo_apply_suite(limit_recent_ipos: int = 50, site_url: str = "https://www.brokerlens.in"):
-    """Compiles allotment status hub, how to apply master guide, broker apply matrix, and registrar hubs."""
-    ingest_path = os.path.join(DATA_DIR, "_ingest.json")
-    if not os.path.exists(ingest_path):
-        print("[ipo_apply_engine] Error: _ingest.json not found")
-        return []
-
-    with open(ingest_path, "r", encoding="utf-8") as f:
-        ingest = json.load(f)
-
-    nse = ingest.get("nse", {})
-    ipo_data = nse.get("ipo", {})
-
+def select_target_ipos(ipo_data, limit_recent_ipos):
+    """Raw IPO records that get allotment-checker and apply-via pages: every current and
+    upcoming issue, then past equity issues until the limit. Shared with ipo_facts, so the
+    IPO page links the apply pages only where they exist."""
     current_ipos = ipo_data.get("current", [])
     upcoming_ipos = ipo_data.get("upcoming", [])
     past_ipos = ipo_data.get("past", [])
 
-    # Filter to unique valid equity IPOs
     seen_syms = set()
     target_ipos = []
 
@@ -1170,6 +1157,24 @@ def build_ipo_apply_suite(limit_recent_ipos: int = 50, site_url: str = "https://
         if sym and sym not in seen_syms and sec_type in ("EQ", "SME", None):
             seen_syms.add(sym)
             target_ipos.append(r)
+    return target_ipos
+
+
+def build_ipo_apply_suite(limit_recent_ipos: int = 50, site_url: str = "https://www.brokerlens.in"):
+    """Compiles allotment status hub, how to apply master guide, broker apply matrix, and registrar hubs."""
+    ingest_path = os.path.join(DATA_DIR, "_ingest.json")
+    if not os.path.exists(ingest_path):
+        print("[ipo_apply_engine] Error: _ingest.json not found")
+        return []
+
+    with open(ingest_path, "r", encoding="utf-8") as f:
+        ingest = json.load(f)
+
+    nse = ingest.get("nse", {})
+    ipo_data = nse.get("ipo", {})
+
+    # Unique valid equity IPOs (shared selection, see select_target_ipos)
+    target_ipos = select_target_ipos(ipo_data, limit_recent_ipos)
 
     generated_urls = []
 

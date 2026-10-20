@@ -6,7 +6,7 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=3e1dd431fe';
-import * as pages from './pages.js?v=a249642932';
+import * as pages from './pages.js?v=db4757cb62';
 import { clearRedraws } from './chart.js?v=ec48a39b98';
 import './nav-widgets.js?v=61e20586e7';
 import './search.js?v=e1224b2aa0';
@@ -105,6 +105,12 @@ async function render() {
   // real -> blank -> real on every single load, which is worse than doing
   // nothing. Every render after the first (an in-app navigation) still
   // shows the skeleton for transition feedback, same as always.
+  // A crawler that cannot fetch /data/*.json (robots.txt disallows it) used to
+  // watch this render replace real server-rendered content with "Not found" or
+  // "Could not load this page", which Search Console reported as a soft 404 on
+  // /broker/<id>/. When the page arrived with its own content, a failed data
+  // load must leave that content in place instead of overwriting it.
+  const hadServerContent = isFirstRender && !!app.querySelector('h1');
   if (!isFirstRender) {
     app.innerHTML = `<div class="grid g3"><div class="card skeleton" style="height:96px"></div>
       <div class="card skeleton" style="height:96px"></div><div class="card skeleton" style="height:96px"></div></div>`;
@@ -113,13 +119,18 @@ async function render() {
 
   try {
     const html = hit ? await hit[1](path.match(hit[0]), query) : pages.notFound();
-    app.innerHTML = html;
-    pages.runAfter();
+    const isNotFoundView = /^\s*<div class="empty"[^>]*>\s*<h1>Not found<\/h1>/.test(html);
+    if (!(hadServerContent && isNotFoundView)) {
+      app.innerHTML = html;
+      pages.runAfter();
+    }
   } catch (err) {
     console.error(err);
-    app.innerHTML = `<div class="empty"><h2>Could not load this page</h2>
+    if (!hadServerContent) {
+      app.innerHTML = `<div class="empty"><h2>Could not load this page</h2>
       <p class="muted small">${esc(err.message)}</p>
       <p class="xs faint">If the data files are missing, run <code>python3 -m pipeline.run all</code> first.</p></div>`;
+    }
   }
 
   // Per-broker titles come from the rendered heading so they stay in step with

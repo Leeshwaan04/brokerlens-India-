@@ -150,10 +150,21 @@ def registry(f: Fetcher, category="commodity_broker", max_pages=None):
             key = norm.pop("_exchange_key")
             exch = norm.pop("exchange_name", None)
             if key in by_key:
-                if exch and exch not in by_key[key]["exchanges"]:
-                    by_key[key]["exchanges"].append(exch)
+                cur = by_key[key]
+                if exch and exch not in cur["exchanges"]:
+                    cur["exchanges"].append(exch)
+                # Later rows of the same number can carry a validity or contact
+                # field the first row lacked, or a different start date: keep
+                # every distinct validity string instead of silently dropping it.
+                if norm.get("validity") and norm["validity"] not in cur["validities"]:
+                    cur["validities"].append(norm["validity"])
+                for fld in ("email", "telephone", "address", "city", "validity",
+                            "trade_name", "contact_person"):
+                    if not cur.get(fld) and norm.get(fld):
+                        cur[fld] = norm[fld]
                 continue
             norm["exchanges"] = [exch] if exch else []
+            norm["validities"] = [norm["validity"]] if norm.get("validity") else []
             by_key[key] = norm
             order.append(key)
         if not got:
