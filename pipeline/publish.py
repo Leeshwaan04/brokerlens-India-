@@ -58,6 +58,24 @@ PRODUCTION = os.environ.get("PUBLISH_MODE", "").lower() == "production"
 _PLACEHOLDER_HOSTS = ("example.invalid", "example.com", "localhost", "127.0.0.1")
 
 
+def _load_affiliate_partners():
+    aff_path = os.path.join(ROOT, "config", "affiliates.json")
+    if os.path.exists(aff_path):
+        try:
+            with open(aff_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("partners", {})
+        except Exception:
+            pass
+    return {
+        "zerodha": "https://zerodha.com/open-account?c=ZE5729",
+        "5paisa": "https://www.5paisa.com/demat-account?ReferralCode=53293333&ReturnUrl=invest-open-account",
+        "dhan": "https://dhan.co/?ref=BROKERLENS",
+        "angel-one": "https://www.angelone.in/open-demat-account?referral=BROKERLENS",
+        "upstox": "https://upstox.com/open-account/?f=BROKERLENS",
+    }
+
+
 def _stamp_asset_versions(html):
     """Append a content-hash query string to every /assets/* href or src so a
     changed CSS/JS file gets a new URL, not just new bytes at the old one.
@@ -1672,6 +1690,11 @@ def _broker_facts_html(b, built=None):
         )
 
     website = p.get("website") or ""
+    aff_url = _load_affiliate_partners().get(b["id"])
+    open_acc_html = (
+        '<a class="btn btn-primary btn-sm" href="%s" rel="noopener noreferrer sponsored" target="_blank">Open Demat Account &rarr;</a>'
+        % _esc(aff_url)
+    ) if aff_url else ""
     website_html = (
         '<a class="btn btn-sm" href="%s" rel="nofollow noopener external" target="_blank">Website &#8599;</a>'
         % _esc(website) if website.startswith(("http://", "https://")) else ""
@@ -1695,9 +1718,9 @@ def _broker_facts_html(b, built=None):
         '<h1 style="margin-top:16px">%s</h1>' % _esc(p.get("brand") or b["id"])
         + '<p class="muted small">%s</p>' % _esc(p.get("legal_name") or "")
         + flag_html
-        + '<div class="row-wrap" style="margin-top:10px">%s'
+        + '<div class="row-wrap" style="margin-top:10px">%s%s'
           '<a class="btn btn-sm" href="/compare?b=%s">Compare</a></div>'
-          % (website_html, _esc(b["id"]))
+          % (open_acc_html, website_html, _esc(b["id"]))
         + '<div class="grid g4" style="margin-top:16px">' + client_html + complaint_html + cost_html + rel_html + '</div>'
         + '<div class="section-title" style="margin-top:20px"><h2>Registration and identity</h2></div>'
         + '<div class="grid g3">' + identity_html + '</div>'
@@ -6507,11 +6530,37 @@ def _write_compare_pages(overview, built=None):
             '</div></div>'
         ) % (_esc(brand1), _esc(brand2), _esc(id1), _esc(brand1), _esc(id2), _esc(brand2))
 
+        aff_partners = _load_affiliate_partners()
+        aff1 = aff_partners.get(id1)
+        aff2 = aff_partners.get(id2)
+        badge1 = '<span class="badge badge-verified" style="font-size:10px">Partner</span>' if aff1 else ('<span class="chip">%s</span>' % _esc(type_str1))
+        badge2 = '<span class="badge badge-verified" style="font-size:10px">Partner</span>' if aff2 else ('<span class="chip">%s</span>' % _esc(type_str2))
+
+        cta1_html = (
+            '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'
+            '<a class="btn btn-primary btn-sm" href="%s" target="_blank" rel="noopener noreferrer sponsored">Open on %s &rarr;</a>'
+            '<a class="btn btn-sm" href="/broker/%s/">Profile &rarr;</a>'
+            '</div>'
+        ) % (_esc(aff1), _esc(brand1), _esc(id1)) if aff1 else (
+            '<div style="margin-top:14px"><a class="btn btn-sm" href="/broker/%s/">View full %s profile &rarr;</a></div>'
+            % (_esc(id1), _esc(brand1))
+        )
+
+        cta2_html = (
+            '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'
+            '<a class="btn btn-primary btn-sm" href="%s" target="_blank" rel="noopener noreferrer sponsored">Open on %s &rarr;</a>'
+            '<a class="btn btn-sm" href="/broker/%s/">Profile &rarr;</a>'
+            '</div>'
+        ) % (_esc(aff2), _esc(brand2), _esc(id2)) if aff2 else (
+            '<div style="margin-top:14px"><a class="btn btn-sm" href="/broker/%s/">View full %s profile &rarr;</a></div>'
+            % (_esc(id2), _esc(brand2))
+        )
+
         # Highlights cards
         p_page += (
             '<div class="grid g2" style="margin-top:16px">'
             '<div class="card">'
-            '<div class="card-head"><div class="card-title">%s</div><span class="chip">%s</span></div>'
+            '<div class="card-head"><div class="card-title">%s</div>%s</div>'
             '<div class="stat-value" style="font-size:var(--fs-lg);margin-top:4px">%s</div>'
             '<div class="stat-sub">Active clients (%s share)</div>'
             '<div style="margin-top:12px;font-size:var(--fs-sm)">'
@@ -6519,10 +6568,10 @@ def _write_compare_pages(overview, built=None):
             '<div style="margin-top:4px"><strong>Intraday:</strong> %s</div>'
             '<div style="margin-top:4px"><strong>Demat AMC:</strong> %s</div>'
             '</div>'
-            '<div style="margin-top:14px"><a class="btn btn-sm" href="/broker/%s/">View full %s profile &rarr;</a></div>'
+            '%s'
             '</div>'
             '<div class="card">'
-            '<div class="card-head"><div class="card-title">%s</div><span class="chip">%s</span></div>'
+            '<div class="card-head"><div class="card-title">%s</div>%s</div>'
             '<div class="stat-value" style="font-size:var(--fs-lg);margin-top:4px">%s</div>'
             '<div class="stat-sub">Active clients (%s share)</div>'
             '<div style="margin-top:12px;font-size:var(--fs-sm)">'
@@ -6530,12 +6579,12 @@ def _write_compare_pages(overview, built=None):
             '<div style="margin-top:4px"><strong>Intraday:</strong> %s</div>'
             '<div style="margin-top:4px"><strong>Demat AMC:</strong> %s</div>'
             '</div>'
-            '<div style="margin-top:14px"><a class="btn btn-sm" href="/broker/%s/">View full %s profile &rarr;</a></div>'
+            '%s'
             '</div>'
             '</div>'
         ) % (
-            _esc(brand1), _esc(type_str1), _esc(clients_str1), _esc(share_str1), _esc(deliv_str1), _esc(intra_str1), _esc(amc_str1), _esc(id1), _esc(brand1),
-            _esc(brand2), _esc(type_str2), _esc(clients_str2), _esc(share_str2), _esc(deliv_str2), _esc(intra_str2), _esc(amc_str2), _esc(id2), _esc(brand2)
+            _esc(brand1), badge1, _esc(clients_str1), _esc(share_str1), _esc(deliv_str1), _esc(intra_str1), _esc(amc_str1), cta1_html,
+            _esc(brand2), badge2, _esc(clients_str2), _esc(share_str2), _esc(deliv_str2), _esc(intra_str2), _esc(amc_str2), cta2_html
         )
 
         # Full table

@@ -36,6 +36,14 @@ const HAS = (o, key) => Boolean(o?.metadata?.data_status?.[key]);
 const IBSL_LINK = 'https://stocks-onboarding.indiabullssecurities.com/login';
 const IBSL_ALT = 'Indiabulls Securities: Rs 0 account opening charges, Rs 11 per executed order across all segments*, 20 years of trust. Open your free account now. Terms apply.';
 
+const PARTNER_AFFILIATES = {
+  'zerodha': 'https://zerodha.com/open-account?c=ZE5729',
+  '5paisa': 'https://www.5paisa.com/demat-account?ReferralCode=53293333&ReturnUrl=invest-open-account',
+  'dhan': 'https://dhan.co/?ref=BROKERLENS',
+  'angel-one': 'https://www.angelone.in/open-demat-account?referral=BROKERLENS',
+  'upstox': 'https://upstox.com/open-account/?f=BROKERLENS',
+};
+
 /* Sponsored Indiabulls Securities banner; the same markup as ibslBanner_html() in publish.py
  * (kept in step by hand: the static pages carry the Python version, client-side renders this one).
  * No close button: the Sponsored tag sits in the top-right corner instead. */
@@ -799,6 +807,7 @@ export async function broker(id) {
         ${p.legal_name_verified ? ' · <span class="badge badge-verified">SEBI Registered Intermediary ✓</span>' : ' · <span class="badge badge-warn">entity not yet matched to SEBI register</span>'}
       </p>
       <div class="row-wrap" style="margin-top:10px">
+        ${PARTNER_AFFILIATES[p.id] ? `<a class="btn btn-primary btn-sm" href="${safeUrl(PARTNER_AFFILIATES[p.id])}" rel="noopener noreferrer sponsored" target="_blank">Open Demat Account &rarr;</a>` : ''}
         ${safeUrl(p.website) ? `<a class="btn btn-sm" href="${safeUrl(p.website)}" rel="nofollow noopener external" target="_blank">Website ↗</a>` : ''}
         <a class="btn btn-sm" href="/compare?b=${esc(p.id)}" data-link>Compare</a>
         <a class="btn btn-sm" href="/calculator?b=${esc(p.id)}" data-link>Cost for my trades</a>
@@ -1118,6 +1127,10 @@ export async function compare(params) {
         </tr>`).join('')}
       </tbody>
     </table>
+  </div>
+
+  <div class="row-wrap" style="margin-top:16px;gap:10px">
+    ${list.map((b) => PARTNER_AFFILIATES[b.profile.id] ? `<a class="btn btn-primary btn-sm" href="${safeUrl(PARTNER_AFFILIATES[b.profile.id])}" target="_blank" rel="noopener noreferrer sponsored">Open ${esc(b.profile.brand)} Demat &rarr;</a>` : '').join('')}
   </div>
 
   ${hasClientSeries ? `<div class="card" style="margin-top:16px">

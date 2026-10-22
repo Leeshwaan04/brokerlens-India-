@@ -26,7 +26,8 @@ function brokerCta() {
         <div class="xs muted" style="margin-top:2px">Compare charges and open a verified Demat account with India's top SEBI-registered brokers.</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a href="https://zerodha.com/open-account?c=ZMPXEU" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-primary btn-xs">Open on Zerodha &rarr;</a>
+        <a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-primary btn-xs">Open on Zerodha &rarr;</a>
+        <a href="https://dhan.co/?ref=BROKERLENS" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-outline btn-xs">Open on Dhan &rarr;</a>
         <a href="/compare/zerodha-vs-groww" class="btn btn-outline btn-xs">Compare Brokers &rarr;</a>
       </div>
     </div>`;
