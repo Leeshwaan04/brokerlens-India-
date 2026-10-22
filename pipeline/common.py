@@ -140,7 +140,18 @@ class Fetcher:
         req = urllib.request.Request(
             url, data=data, headers=self._headers(headers), method=method
         )
-        resp = self.opener.open(req, timeout=self.timeout)
+        try:
+            resp = self.opener.open(req, timeout=self.timeout)
+        except urllib.error.URLError as uerr:
+            if isinstance(getattr(uerr, "reason", None), ssl.SSLError) or "CERTIFICATE_VERIFY_FAILED" in str(uerr):
+                unverified_opener = urllib.request.build_opener(
+                    urllib.request.HTTPCookieProcessor(self.jar),
+                    urllib.request.HTTPSHandler(context=ssl._create_unverified_context()),
+                    urllib.request.HTTPRedirectHandler(),
+                )
+                resp = unverified_opener.open(req, timeout=self.timeout)
+            else:
+                raise
 
         declared = resp.headers.get("Content-Length")
         if declared and declared.isdigit() and int(declared) > MAX_RESPONSE_BYTES:

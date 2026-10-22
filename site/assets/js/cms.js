@@ -14,6 +14,7 @@ const SESSION_STORAGE_KEY = 'bl_cms_auth_token';
 let inMemoryAuthToken = null;
 let currentFilter = '30d';
 let activeTab = 'overview';
+let forecastModel = 'realistic';
 
 async function sha256(text) {
   const enc = new TextEncoder().encode(text);
@@ -48,8 +49,8 @@ function isAuthenticated() {
   return Boolean(token && token.startsWith('bl_auth_') && token.length > 20);
 }
 
-// Analytics Dataset scaled by selected time window
-function getAnalyticsData(timeWindow) {
+// Analytics Dataset scaled by selected time window and forecast model
+function getAnalyticsData(timeWindow, model = 'realistic') {
   const multipliers = {
     today: 0.04,
     '7d': 0.25,
@@ -57,27 +58,112 @@ function getAnalyticsData(timeWindow) {
     all: 3.4
   };
   const mult = multipliers[timeWindow] || 1.0;
+  const isRealistic = (model === 'realistic');
+
+  const partners = isRealistic ? [
+    {
+      name: 'Zerodha', id: 'zerodha', code: 'ZE5729',
+      clicks: Math.round(2410 * mult), convRate: '4.8%', estLeads: Math.round(115 * mult),
+      estPayoutInr: Math.round(28750 * mult),
+      modelNote: '10% brokerage share on active traders (zero on free delivery)',
+      status: 'Active (Direct Partner)'
+    },
+    {
+      name: 'Dhan', id: 'dhan', code: 'BROKERLENS',
+      clicks: Math.round(1860 * mult), convRate: '5.2%', estLeads: Math.round(97 * mult),
+      estPayoutInr: Math.round(43650 * mult),
+      modelNote: '20% lifetime brokerage share on active F&O volume',
+      status: 'Active (High Growth)'
+    },
+    {
+      name: 'Angel One', id: 'angel-one', code: 'BROKERLENS',
+      clicks: Math.round(1120 * mult), convRate: '4.5%', estLeads: Math.round(50 * mult),
+      estPayoutInr: Math.round(17500 * mult),
+      modelNote: 'Rs 350 upfront CPA per active Demat activated within 30d',
+      status: 'Active'
+    },
+    {
+      name: 'Upstox', id: 'upstox', code: 'BROKERLENS',
+      clicks: Math.round(680 * mult), convRate: '4.2%', estLeads: Math.round(28 * mult),
+      estPayoutInr: Math.round(9800 * mult),
+      modelNote: 'Rs 350 upfront CPA on approved KYC accounts',
+      status: 'Active'
+    },
+    {
+      name: '5paisa', id: '5paisa', code: '53293333',
+      clicks: Math.round(240 * mult), convRate: '3.8%', estLeads: Math.round(9 * mult),
+      estPayoutInr: Math.round(2250 * mult),
+      modelNote: 'Rs 250 upfront CPA + 12.5% recurring brokerage share',
+      status: 'Active'
+    },
+    {
+      name: 'Jiraaf Bonds', id: 'jiraaf', code: 'EZ4168',
+      clicks: Math.round(110 * mult), convRate: '2.5%', estLeads: Math.round(3 * mult),
+      estPayoutInr: Math.round(1500 * mult),
+      modelNote: '0.50% volume commission on funded corporate bond subscriptions',
+      status: 'Active (OBPP Partner)'
+    }
+  ] : [
+    {
+      name: 'Zerodha', id: 'zerodha', code: 'ZE5729',
+      clicks: Math.round(2410 * mult), convRate: '9.2%', estLeads: Math.round(222 * mult),
+      estPayoutInr: Math.round(111000 * mult),
+      modelNote: 'Optimistic projection (assumes high-frequency F&O traders)',
+      status: 'Active (Direct Partner)'
+    },
+    {
+      name: 'Dhan', id: 'dhan', code: 'BROKERLENS',
+      clicks: Math.round(1860 * mult), convRate: '9.8%', estLeads: Math.round(182 * mult),
+      estPayoutInr: Math.round(109200 * mult),
+      modelNote: 'Optimistic projection (assumes heavy daily intraday volume)',
+      status: 'Active (High Growth)'
+    },
+    {
+      name: 'Angel One', id: 'angel-one', code: 'BROKERLENS',
+      clicks: Math.round(1120 * mult), convRate: '8.1%', estLeads: Math.round(91 * mult),
+      estPayoutInr: Math.round(54600 * mult),
+      modelNote: 'Optimistic projection (includes festive campaign tier bonus)',
+      status: 'Active'
+    },
+    {
+      name: 'Upstox', id: 'upstox', code: 'BROKERLENS',
+      clicks: Math.round(680 * mult), convRate: '7.4%', estLeads: Math.round(50 * mult),
+      estPayoutInr: Math.round(35000 * mult),
+      modelNote: 'Optimistic projection (top-tier volume tier pricing)',
+      status: 'Active'
+    },
+    {
+      name: '5paisa', id: '5paisa', code: '53293333',
+      clicks: Math.round(240 * mult), convRate: '6.8%', estLeads: Math.round(16 * mult),
+      estPayoutInr: Math.round(9600 * mult),
+      modelNote: 'Optimistic projection (includes high brokerage rev-share)',
+      status: 'Active'
+    },
+    {
+      name: 'Jiraaf Bonds', id: 'jiraaf', code: 'EZ4168',
+      clicks: Math.round(110 * mult), convRate: '5.2%', estLeads: Math.round(6 * mult),
+      estPayoutInr: Math.round(65100 * mult),
+      modelNote: 'Optimistic projection (assumes HNI bond tickets > Rs 10 Lakhs)',
+      status: 'Active (OBPP Partner)'
+    }
+  ];
+
+  const estPipelineInr = partners.reduce((sum, p) => sum + p.estPayoutInr, 0);
 
   return {
     window: timeWindow,
+    model: model,
     kpis: {
       impressions: Math.round(184290 * mult),
       sessions: Math.round(48120 * mult),
       affiliateClicks: Math.round(6420 * mult),
-      estPipelineInr: Math.round(384500 * mult),
+      estPipelineInr: estPipelineInr,
       matchmakerStarts: Math.round(4890 * mult),
       matchmakerCompletions: Math.round(3628 * mult),
       avgSessionSecs: '3m 42s',
       bounceRatePct: '28.4%'
     },
-    partners: [
-      { name: 'Zerodha', id: 'zerodha', code: 'ZE5729', clicks: Math.round(2410 * mult), convRate: '9.2%', estLeads: Math.round(222 * mult), estPayoutInr: Math.round(111000 * mult), status: 'Active (Top Partner)' },
-      { name: 'Dhan', id: 'dhan', code: 'BROKERLENS', clicks: Math.round(1860 * mult), convRate: '9.8%', estLeads: Math.round(182 * mult), estPayoutInr: Math.round(109200 * mult), status: 'Active (High Growth)' },
-      { name: 'Angel One', id: 'angel-one', code: 'BROKERLENS', clicks: Math.round(1120 * mult), convRate: '8.1%', estLeads: Math.round(91 * mult), estPayoutInr: Math.round(54600 * mult), status: 'Active' },
-      { name: 'Upstox', id: 'upstox', code: 'BROKERLENS', clicks: Math.round(680 * mult), convRate: '7.4%', estLeads: Math.round(50 * mult), estPayoutInr: Math.round(35000 * mult), status: 'Active' },
-      { name: '5paisa', id: '5paisa', code: '53293333', clicks: Math.round(240 * mult), convRate: '6.8%', estLeads: Math.round(16 * mult), estPayoutInr: Math.round(9600 * mult), status: 'Active' },
-      { name: 'Jiraaf Bonds', id: 'jiraaf', code: 'EZ4168', clicks: Math.round(110 * mult), convRate: '5.2%', estLeads: Math.round(6 * mult), estPayoutInr: Math.round(65100 * mult), status: 'Active (High Yield)' }
-    ],
+    partners: partners,
     funnel: [
       { step: 'Matchmaker Initiated', count: Math.round(4890 * mult), pct: 100 },
       { step: 'Step 1: Goal Selected', count: Math.round(4450 * mult), pct: 91 },
@@ -195,7 +281,7 @@ function renderLogin(container) {
 }
 
 function renderDashboard(container) {
-  const data = getAnalyticsData(currentFilter);
+  const data = getAnalyticsData(currentFilter, forecastModel);
 
   container.innerHTML = `
     <div class="cms-portal-wrap">
@@ -209,6 +295,10 @@ function renderDashboard(container) {
           <p class="muted small" style="margin:2px 0 0 0">Real-time audience traction, partner conversion attribution, and data health.</p>
         </div>
         <div class="row-wrap" style="gap:12px;align-items:center">
+          <div class="cms-filter-group" id="cms-model-filters">
+            <button type="button" class="cms-filter-btn ${forecastModel === 'realistic' ? 'active' : ''}" data-model="realistic" title="Conservative industry median conversion and actual broker payout schedules">Realistic Model</button>
+            <button type="button" class="cms-filter-btn ${forecastModel === 'optimistic' ? 'active' : ''}" data-model="optimistic" title="Top-quartile active trader conversion scenario">Optimistic</button>
+          </div>
           <div class="cms-filter-group" id="cms-time-filters">
             <button type="button" class="cms-filter-btn ${currentFilter === 'today' ? 'active' : ''}" data-filter="today">Today</button>
             <button type="button" class="cms-filter-btn ${currentFilter === '7d' ? 'active' : ''}" data-filter="7d">7 Days</button>
@@ -271,6 +361,13 @@ function renderDashboard(container) {
   `;
 
   // Attach event handlers
+  container.querySelectorAll('#cms-model-filters button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      forecastModel = btn.dataset.model;
+      renderDashboard(container);
+    });
+  });
+
   container.querySelectorAll('#cms-time-filters button').forEach((btn) => {
     btn.addEventListener('click', () => {
       currentFilter = btn.dataset.filter;
@@ -318,6 +415,7 @@ function renderTabContent(tab, data) {
               <tr>
                 <th>Partner Broker</th>
                 <th>Referral Code</th>
+                <th>Revenue Model</th>
                 <th class="right">Outbound Clicks</th>
                 <th class="right">Conversion Rate</th>
                 <th class="right">Est. Accounts Opened</th>
@@ -330,6 +428,7 @@ function renderTabContent(tab, data) {
                 <tr>
                   <td><strong>${esc(p.name)}</strong></td>
                   <td><code>${esc(p.code)}</code></td>
+                  <td><span class="xs muted">${esc(p.modelNote)}</span></td>
                   <td class="right num">${count(p.clicks)}</td>
                   <td class="right num">${esc(p.convRate)}</td>
                   <td class="right num">${count(p.estLeads)}</td>
@@ -339,6 +438,14 @@ function renderTabContent(tab, data) {
               `).join('')}
             </tbody>
           </table>
+        </div>
+        <div class="card" style="margin-top:20px;padding:14px 18px;background:var(--bg-sub);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:650;margin-bottom:4px;color:var(--text)">About Broker Commission Structures in India</div>
+          <p class="xs muted" style="margin:0;line-height:1.5">
+            <strong>Zerodha &amp; Dhan:</strong> Pay recurring lifetime brokerage sharing (10% to 20% on executed F&amp;O and intraday orders). Equity delivery is zero brokerage, so revenue accrues only from active derivative traders.<br>
+            <strong>Angel One &amp; Upstox:</strong> Pay flat upfront CPAs (Rs 250 to Rs 500 per Demat account opened with first trade in 30 days).<br>
+            <strong>Jiraaf:</strong> Regulated online bond platform paying 0.25% to 0.75% of investment volume on corporate debt issues.
+          </p>
         </div>
       </div>
     `;
