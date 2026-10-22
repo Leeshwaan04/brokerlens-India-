@@ -569,6 +569,7 @@ def build():
                                    _funds, len(sebi_d.get("defaulters") or []))
     calc_slugs = _write_calculator_pages()
     _write_calculator_hub()
+    _write_find_broker_page(overview, built)
     _write_methodology_page()
     _write_coming_soon_pages()
     _write_about_page()
@@ -1266,6 +1267,7 @@ _APP_SHELL_FOOT = """</main>
       <div>
         <h5>Compare</h5>
         <ul>
+          <li><a href="/find-broker/" data-link>Broker Matchmaker</a></li>
           <li><a href="/brokers" data-link>All brokers</a></li>
           <li><a href="/trade-costs/">Trade cost calculator</a></li>
           <li><a href="/compare/stocks/">Compare stocks</a></li>
@@ -6371,6 +6373,10 @@ def _write_compare_pages(overview, built=None):
         '<div class="card" style="max-width:420px;margin-top:16px">'
         '<label for="cmp-add">Add a broker</label>'
         '<select id="cmp-add"><option value="">Select&hellip;</option>%s</select></div>'
+        '<div class="card row-between" style="margin-top:20px;padding:16px 20px;align-items:center;background:linear-gradient(135deg, rgba(37,99,235,0.06), rgba(16,185,129,0.06));border:1px solid rgba(37,99,235,0.2)">'
+        '<div><div style="font-size:14px;font-weight:650;color:var(--text)">Not sure which brokers to compare?</div>'
+        '<div class="xs muted">Take our 30-second Broker Matchmaker quiz to find the best match for your trading style and capital.</div></div>'
+        '<a class="btn btn-sm btn-primary link-arrow" href="/find-broker/" data-link>Find My Broker &rarr;</a></div>'
     ) % "".join('<option value="%s">%s</option>' % (_esc(b["id"]), _esc(b["brand"])) for b in brokers)
 
     popular_cards = "".join(
@@ -7029,7 +7035,10 @@ def _popular_comparisons_widget_html():
         '<div class="row-between" style="align-items:center;margin-bottom:12px">'
         '<div class="card-title" style="margin:0">Popular Comparisons</div>'
         '<a class="xs link-arrow" href="/compare" data-link>All 191 pairs &rarr;</a></div>'
-        '<div style="display:flex;flex-direction:column;gap:8px">%s</div></div>'
+        '<div style="display:flex;flex-direction:column;gap:8px">%s</div>'
+        '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">'
+        '<a href="/find-broker/" class="xs" style="font-weight:600;color:var(--accent-text);display:flex;align-items:center;justify-content:space-between" data-link>'
+        '<span>Can\'t decide? Try Broker Matchmaker</span><span>&rarr;</span></a></div></div>'
         % links
     )
 
@@ -7061,6 +7070,7 @@ def _prerender_home(overview):
         'SEBI-registered entities on file. %s</p>'
         '<div class="row-wrap" style="margin-top:18px">'
         '<a class="btn btn-primary" href="/brokers" data-link>Browse brokers</a>'
+        '<a class="btn" href="/find-broker/" data-link>Find my broker</a>'
         '<a class="btn" href="/compare" data-link>Compare side by side</a>%s</div></section>'
     ) % (
         '<div class="pitch-media" aria-hidden="true"><video class="pitch-video" muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="/assets/video/hero-bull-bear-poster.jpg" data-src="/assets/video/hero-bull-bear.mp4"></video></div>',
@@ -7189,7 +7199,11 @@ def _prerender_home(overview):
         '<div class="card row-between" style="margin-top:14px;padding:16px 20px;align-items:center;background:var(--bg-raised)">'
         '<div><div style="font-size:14px;font-weight:650;color:var(--text)">Explore all %d tracked brokers</div>'
         '<div class="xs muted">Compare active clients, market share, complaints and trading fees</div></div>'
-        '<a class="btn btn-sm btn-primary link-arrow" href="/brokers" data-link>View all %d &rarr;</a></div></div>'
+        '<a class="btn btn-sm btn-primary link-arrow" href="/brokers" data-link>View all %d &rarr;</a></div>'
+        '<div class="card row-between" style="margin-top:14px;padding:16px 20px;align-items:center;background:linear-gradient(135deg, rgba(37,99,235,0.06), rgba(16,185,129,0.06));border:1px solid rgba(37,99,235,0.2)">'
+        '<div><div style="font-size:14px;font-weight:650;color:var(--text)">Not sure which broker fits your strategy?</div>'
+        '<div class="xs muted">Take our 30-second Broker Matchmaker quiz to find your ideal match based on fees, capital, and tools.</div></div>'
+        '<a class="btn btn-sm btn-primary link-arrow" href="/find-broker/" data-link>Find My Broker &rarr;</a></div></div>'
         '<div class="stack" style="gap:16px">%s%s%s%s%s</div></div>'
     ) % (
         "Largest brokers by active clients" if has_clients else "Brokers on the SEBI register",
@@ -7380,6 +7394,132 @@ def _write_calculator_hub():
     log("calculator hub: written", "ok")
 
 
+def _write_find_broker_page(overview, built=None):
+    """Interactive Broker Matchmaker page at /find-broker/ with 30-second decision
+    wizard, full Schema.org WebApplication + FAQPage JSON-LD, and zero inline script."""
+    canonical = "%s/find-broker/" % SITE_URL
+    title = "Broker Matchmaker: Find the Best Stock Broker in India (2026) | BrokerLens"
+    description = (
+        "Find the ideal stock broker for your investment style, trading capital, and platform needs in 30 seconds. "
+        "Objective recommendations based on verified SEBI registrations, complaint ratios, and published fee cards."
+    )[:300]
+    crumb_html, crumb_jsonld = _breadcrumb([
+        ("BrokerLens", "/"),
+        ("Find My Broker", None)
+    ])
+    faqs = [
+        ("How does the BrokerLens Matchmaker choose the best broker for me?",
+         "The matchmaker maps your primary activity (long-term equity delivery, F&O derivatives, IPOs, or 3-in-1 banking), your capital level, and your preferred platform feature (lowest cost, TradingView charts, free algo APIs, or physical branches) to verified primary exchange disclosures and official SEBI registration records."),
+        ("Is BrokerLens paid to recommend specific stock brokers?",
+         "No. BrokerLens scores brokers objectively using published tariff schedules, active client counts from NSE, and complaint ratios from SEBI SCORES disclosures. While BrokerLens may earn an affiliate referral commission if you open an account through partner links, this does not influence broker scoring or ranking methodology."),
+        ("Which stock broker is best for beginners in India?",
+         "For beginners investing primarily in equity delivery and direct mutual funds, discount brokers offering zero brokerage on delivery and zero annual Demat maintenance fees (such as Zerodha or Dhan) provide the lowest cost burden and highest regulatory trust."),
+        ("Which broker is best for options and day trading?",
+         "For active F&O traders, brokers offering direct TradingView charting integration, instant option chains, and flat Rs 20 per order fee caps (such as Dhan and Angel One) provide the best execution speed and lowest transaction friction.")
+    ]
+    faq_html = "".join(
+        '<details class="faq-item"><summary>%s</summary><p>%s</p></details>'
+        % (_esc(q), _esc(a)) for q, a in faqs
+    )
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "WebApplication",
+                "name": "BrokerLens Stock Broker Matchmaker",
+                "url": canonical,
+                "description": description,
+                "applicationCategory": "FinanceApplication",
+                "operatingSystem": "All"
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in faqs
+                ]
+            },
+            crumb_jsonld
+        ]
+    }
+    
+    body = _APP_SHELL_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False)
+    }
+    body += crumb_html
+    body += (
+        '<div style="margin-top:16px">'
+        '<div class="pill-tag accent" style="margin-bottom:8px"><span>✦</span> Automated Concierge</div>'
+        '<h1 style="margin:0 0 8px 0;font-size:28px">Find Your Ideal Stock Broker</h1>'
+        '<p class="muted" style="max-width:68ch;margin:0 0 24px 0">Answer 3 quick questions about your trading style, '
+        'capital, and workflow preferences to get an instant, unbiased recommendation based on verified SEBI filings and fee cards.</p>'
+        '<div id="broker-matchmaker-container">'
+        '  <div class="matchmaker-wrap">'
+        '    <div class="match-step-indicator">'
+        '      <div class="match-step-dot active">1</div>'
+        '      <div class="match-step-line"></div>'
+        '      <div class="match-step-dot">2</div>'
+        '      <div class="match-step-line"></div>'
+        '      <div class="match-step-dot">3</div>'
+        '    </div>'
+        '    <div class="matchmaker-header">'
+        '      <div class="pill-tag accent" style="margin-bottom:8px"><span>✦</span> 30-Second Matchmaker</div>'
+        '      <h2 style="margin:0 0 6px 0;font-size:22px">What is your primary trading or investment goal?</h2>'
+        '      <p class="muted small" style="margin:0">We match broker fee structures and platform strengths to your activity.</p>'
+        '    </div>'
+        '    <div class="match-grid">'
+        '      <div class="match-card" data-val="investing">'
+        '        <div class="match-card-icon">📈</div>'
+        '        <div class="match-card-title">Long-Term Investing</div>'
+        '        <div class="match-card-desc">Buy &amp; hold equity delivery, ETFs, and direct mutual funds without commissions.</div>'
+        '      </div>'
+        '      <div class="match-card" data-val="fno">'
+        '        <div class="match-card-icon">⚡</div>'
+        '        <div class="match-card-title">Options &amp; Day Trading</div>'
+        '        <div class="match-card-desc">Active Nifty/BankNifty derivatives and intraday with fast charts and flat brokerage.</div>'
+        '      </div>'
+        '      <div class="match-card" data-val="ipos">'
+        '        <div class="match-card-icon">🚀</div>'
+        '        <div class="match-card-title">IPOs &amp; Primary Issues</div>'
+        '        <div class="match-card-desc">Apply for upcoming mainboard and SME public issues easily via UPI mandate.</div>'
+        '      </div>'
+        '      <div class="match-card" data-val="bank_3in1">'
+        '        <div class="match-card-icon">🏦</div>'
+        '        <div class="match-card-title">3-in-1 Bank Integration</div>'
+        '        <div class="match-card-desc">All-in-one seamless savings bank, demat and trading account under one umbrella.</div>'
+        '      </div>'
+        '    </div>'
+        '    <div class="match-actions">'
+        '      <div></div>'
+        '      <div class="xs muted">Step 1 of 3</div>'
+        '    </div>'
+        '  </div>'
+        '</div>'
+        '<div style="margin-top:40px">'
+        '  <h2 style="font-size:20px;margin-bottom:12px">Frequently Asked Questions</h2>'
+        '  <div style="max-width:72ch">' + faq_html + '</div>'
+        '</div>'
+        '<p class="xs faint" style="margin-top:24px">BrokerLens is an independent financial research publisher, not a SEBI-registered investment adviser. '
+        'Recommendations are computed algorithmically from primary regulatory disclosures. <a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources &amp; Lineage</a> &middot; <a href="/editorial-policy">Editorial Policy</a></p>'
+        '</div>'
+    )
+    matchmaker_script = _stamp_asset_versions('<script type="module" src="/assets/js/matchmaker.js"></script>')
+    body += matchmaker_script
+    body += _APP_SHELL_FOOT
+    
+    dest_dir = os.path.join(ROOT, "site", "find-broker")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    
+    alias_dir = os.path.join(ROOT, "site", "match")
+    os.makedirs(alias_dir, exist_ok=True)
+    alias_body = body.replace("%s/find-broker/" % SITE_URL, "%s/match/" % SITE_URL)
+    _write_text(os.path.join(alias_dir, "index.html"), alias_body)
+    log("find-broker page: written", "ok")
+
+
+
 # Which sitemap files are submitted at each stage. 1 = core, brokers, IPO pages, the SEBI
 # registry (best performer), news, crypto and the ~500 most-traded stocks; 2 = fund/ETF/AMC,
 # comparison permutations, long-tail stocks, per-IPO apply/subscription pages, SIP scenarios;
@@ -7415,7 +7555,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     # trailing slash is a duplicate URL Google has to reconcile, and /ipo/ and /news/
     # were reported as unknown while only /ipo and /news were listed.
     core_urls = [
-        "/", "/brokers", "/leaderboards", "/compare", "/calculator", "/calculators/",
+        "/", "/brokers", "/leaderboards", "/compare", "/find-broker/", "/calculator", "/calculators/",
         "/registry", "/algo", "/methodology", "/sources", "/stocks/", "/funds-by/", "/etfs/", "/crypto/",
         "/ipo/", "/ipo/upcoming/", "/ipo/archive/", "/ipo/allotment-status/", "/ipo/how-to-apply/", "/ipo/registrars/",
         "/ipo/subscription/", "/ipo/allotment/",

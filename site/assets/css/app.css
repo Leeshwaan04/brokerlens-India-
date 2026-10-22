@@ -1746,3 +1746,106 @@ table.data tr:hover td {
     z-index: 1000;
   }
 }
+
+/* Broker Matchmaker Component */
+.matchmaker-wrap {
+  margin: 32px 0;
+  padding: 28px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+.matchmaker-header {
+  margin-bottom: 24px;
+}
+.match-step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.match-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--bg-sub);
+  color: var(--text-faint);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+.match-step-dot.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.match-step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  transition: all 0.2s ease;
+}
+.match-step-line.active {
+  background: var(--accent);
+}
+.match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.match-card {
+  padding: 18px 20px;
+  background: var(--bg-sub);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+}
+.match-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.match-card.selected {
+  border-color: var(--accent);
+  background: rgba(0, 102, 255, 0.06);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.match-card-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.match-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.match-card-desc {
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.45;
+}
+.match-result-card {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--bg-sub);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+}
+.match-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+

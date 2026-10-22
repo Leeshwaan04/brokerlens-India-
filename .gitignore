@@ -10,6 +10,8 @@ data/_ingest.json
 # Published payloads; regenerate with `make all`.
 site/*
 !site/about/
+!site/find-broker/
+!site/match/
 !site/contact/
 !site/editorial-policy/
 !site/assets/

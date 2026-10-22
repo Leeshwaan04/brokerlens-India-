@@ -290,6 +290,7 @@ export async function home() {
     </p>
     <div class="row-wrap" style="margin-top:18px">
       <a class="btn btn-primary" href="/brokers" data-link>Browse brokers</a>
+      <a class="btn" href="/find-broker" data-link>Find my broker</a>
       <a class="btn" href="/compare" data-link>Compare side by side</a>
       ${hasClients ? '<a class="btn" href="/calculator" data-link>What will it cost me?</a>'
                    : '<a class="btn" href="/registry" data-link>Search the SEBI register</a>'}
@@ -415,6 +416,13 @@ export async function home() {
           <div class="xs muted">Compare active clients, market share, complaints and trading fees</div>
         </div>
         <a class="btn btn-sm btn-primary link-arrow" href="/brokers" data-link>View all ${meta.broker_count} &rarr;</a>
+      </div>
+      <div class="card row-between" style="margin-top:14px;padding:16px 20px;align-items:center;background:linear-gradient(135deg, rgba(37,99,235,0.06), rgba(16,185,129,0.06));border:1px solid rgba(37,99,235,0.2)">
+        <div>
+          <div style="font-size:14px;font-weight:650;color:var(--text)">Not sure which broker fits your strategy?</div>
+          <div class="xs muted">Take our 30-second Broker Matchmaker quiz to find your ideal match based on fees, capital, and tools.</div>
+        </div>
+        <a class="btn btn-sm btn-primary link-arrow" href="/find-broker" data-link>Find My Broker &rarr;</a>
       </div>
     </div>
 
@@ -1072,6 +1080,13 @@ export async function compare(params) {
         <label for="cmp-add">Add a broker</label>
         <select id="cmp-add"><option value="">Select&hellip;</option>${opts}</select>
       </div>
+      <div class="card row-between" style="margin-top:20px;padding:16px 20px;align-items:center;background:linear-gradient(135deg, rgba(37,99,235,0.06), rgba(16,185,129,0.06));border:1px solid rgba(37,99,235,0.2)">
+        <div>
+          <div style="font-size:14px;font-weight:650;color:var(--text)">Not sure which brokers to compare?</div>
+          <div class="xs muted">Take our 30-second Broker Matchmaker quiz to find the best match for your trading style and capital.</div>
+        </div>
+        <a class="btn btn-sm btn-primary link-arrow" href="/find-broker" data-link>Find My Broker &rarr;</a>
+      </div>
       <div class="section-title" style="margin-top:28px"><h2>Popular broker comparisons</h2></div>
       <p class="muted small">Direct head-to-head comparisons of India's leading stock brokers.</p>
       <div class="grid g3" style="margin-top:12px">${popularCards}</div>`;
@@ -1716,6 +1731,28 @@ export async function about() {
   <p class="small">Questions, corrections or partnership enquiries: see the
   <a href="/contact" data-link>contact page</a>, or write to
   <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</p>`;
+}
+
+export async function findBroker() {
+  onMount(async () => {
+    try {
+      const mod = await import('./matchmaker.js');
+      const container = document.getElementById('broker-matchmaker-container');
+      if (container && mod.renderMatchmaker) {
+        mod.renderMatchmaker(container);
+      }
+    } catch (e) {
+      console.error('Matchmaker import error', e);
+    }
+  });
+
+  return `
+  <div style="margin-top:16px">
+    <div class="pill-tag accent" style="margin-bottom:8px"><span>✦</span> Automated Concierge</div>
+    <h1 style="margin:0 0 8px 0;font-size:28px">Find Your Ideal Stock Broker</h1>
+    <p class="muted" style="max-width:68ch;margin:0 0 24px 0">Answer 3 quick questions about your trading style, capital, and workflow preferences to get an instant, unbiased recommendation based on verified SEBI filings and fee cards.</p>
+    <div id="broker-matchmaker-container"></div>
+  </div>`;
 }
 
 export async function contact() {
