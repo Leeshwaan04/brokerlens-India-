@@ -6643,9 +6643,11 @@ def _write_compare_pages(overview, built=None):
             )
 
         p_page += (
-            '<p class="xs faint" style="margin-top:24px">Source: SEBI recognised-intermediary register, NSE monthly active client disclosures, '
-            'and official broker rate cards. <a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources &amp; lineage</a> &middot; '
-            '<a href="/compare">All comparisons</a></p>'
+            '<p class="xs faint" style="margin-top:24px">BrokerLens is an independent financial research publisher, not a SEBI-registered investment adviser. '
+            'Data verified against the SEBI recognised-intermediary register, NSE monthly active client disclosures, '
+            'and official broker tariff schedules as of BrokerLens\'s latest data refresh. '
+            '<a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources &amp; lineage</a> &middot; '
+            '<a href="/editorial-policy">Editorial Policy</a> &middot; <a href="/compare">All comparisons</a></p>'
         )
         p_page += _APP_SHELL_FOOT
 

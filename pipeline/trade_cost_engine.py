@@ -889,7 +889,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 </main>
 
 <footer class="site"><div class="wrap">
-  <p class="small muted" style="max-width:70ch">All trade calculations are based on published broker tariffs and official SEBI/NSE statutory schedules. Not investment advice.</p>
+  <p class="small muted" style="max-width:70ch">BrokerLens is an independent financial research service, not a SEBI-registered investment adviser. Calculations reflect official NSE, BSE, SEBI, and broker published rate schedules as of BrokerLens's latest data refresh. Nothing here constitutes a recommendation to buy, sell, or trade any security. <a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources &amp; lineage</a> &middot; <a href="/editorial-policy">Editorial Policy</a></p>
   <p class="small"><a href="/brokers">All Brokers</a> &middot; <a href="/compare">Compare Brokers</a> &middot; <a href="/calculator">Fee Calculator</a> &middot; <a href="/stocks/">Stocks Directory</a> &middot; <a href="/">BrokerLens Home</a></p>
 </div></footer>
 </body>
@@ -1031,7 +1031,7 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
 </main>
 
 <footer class="site"><div class="wrap">
-  <p class="small muted" style="max-width:70ch">All trade calculations are based on published broker tariffs and official SEBI/NSE statutory schedules. Not investment advice.</p>
+  <p class="small muted" style="max-width:70ch">BrokerLens is an independent financial research service, not a SEBI-registered investment adviser. Calculations reflect official NSE, BSE, SEBI, and broker published rate schedules as of BrokerLens's latest data refresh. Nothing here constitutes a recommendation to buy, sell, or trade any security. <a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources &amp; lineage</a> &middot; <a href="/editorial-policy">Editorial Policy</a></p>
   <p class="small"><a href="/brokers">All Brokers</a> &middot; <a href="/compare">Compare Brokers</a> &middot; <a href="/calculator">Fee Calculator</a> &middot; <a href="/stocks/">Stocks Directory</a> &middot; <a href="/">BrokerLens Home</a></p>
 </div></footer>
 </body>
