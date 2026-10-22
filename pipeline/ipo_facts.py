@@ -12,6 +12,13 @@ process, so it must never be used for a split). Group A uses a facts-first patte
 ("IPO Date, Price Band, Lot Size and Listing Date"). The latest-close figure never
 appears in the title or meta description; it stays in the page body with its date.
 
+Status model (ipo_status): Listed, Active, Forthcoming, Closed (bidding over, still inside the
+SEBI T+3 listing window) and "No listing on file" (STATUS_NO_LISTING): no listing date is on file
+and the issue either carries a withdrawn, postponed or withdrawal label in its name, closed more than
+NO_LISTING_AFTER_DAYS days ago, or is already past its expected T+3 listing date. That status never says
+a listing is awaited, never shows the T+3 timeline and is treated like Listed for sub-page noindex and
+sitemap exclusion.
+
 Zero em dashes or en dashes anywhere in user-visible copy.
 """
 from __future__ import annotations
@@ -21,7 +28,7 @@ import json
 import os
 import re
 import zlib
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -33,6 +40,25 @@ BRAND = "BrokerLens"
 MAX_KEY_CHARS = 100
 # Same value as build_ipo_apply_suite(limit_recent_ipos=...) in pipeline/publish.py.
 APPLY_PAGES_LIMIT = 100
+
+STATUS_NO_LISTING = "No listing on file"
+NO_LISTING_NOTE = "No listing is on file for this issue."
+LISTING_INCONSISTENT = "Listing date on file looks inconsistent; see the exchange"
+# A Closed issue with no listing date turns into STATUS_NO_LISTING after this many calendar days.
+NO_LISTING_AFTER_DAYS = 15
+# A listing date earlier than the bidding end, or later than this many days after it, is treated as a
+# data fault (SEBI's T+3 rule puts a real listing within about a week, holidays included).
+MAX_LISTING_GAP_DAYS = 20
+OPEN_STATUSES = ("Active", "Forthcoming")
+
+# The one place the SEBI bid limits live. They are rules, not per-issue data, so every page that shows
+# them takes the values and the note from here.
+SEBI_BID_LIMITS = {
+    "retail": "Rs 2 lakh",
+    "snii": "Rs 10 lakh",
+    "upi": "Rs 5 lakh",
+    "note": "as per SEBI ICDR, confirm in the offer document",
+}
 
 
 def _esc(s):
@@ -188,22 +214,110 @@ def issue_size_text(r, pf):
     return txt
 
 
+# ---------------------------------------------------------------- names
+
+_FLAG_ANY_RE = re.compile(r"\b(withdrawn|postponed|withdrawal)\b", re.I)
+_FLAG_TAIL_RE = re.compile(r"\s*[-:]\s*(?:issue\s+)?(?:withdrawn|postponed|withdrawal(?:\s+window)?)\s*$", re.I)
+
+
+def name_flag(r):
+    """'withdrawn', 'postponed', 'withdrawal window' or '' from the company name in the exchange feed.
+
+    The feed appends the state to the company name ('...Limited-Issue Withdrawn'). It is the only
+    place that state is recorded, so it is read from there and nowhere else."""
+    m = _FLAG_ANY_RE.search(str((r or {}).get("company") or ""))
+    if not m:
+        return ""
+    w = m.group(1).lower()
+    return "withdrawal window" if w == "withdrawal" else w
+
+
+def display_name(r):
+    """Company name without the exchange's trailing state label (Issue Withdrawn, Issue postponed)."""
+    raw = str((r or {}).get("company") or "").strip()
+    clean = _FLAG_TAIL_RE.sub("", raw).strip() if raw else ""
+    return clean or raw or str((r or {}).get("symbol") or "").strip()
+
+
+# ---------------------------------------------------------------- listing date plausibility
+
+def listing_date_state(r):
+    """'none' (no listing date), 'ok' or 'inconsistent'.
+
+    A listing date that precedes the bidding end, or comes more than MAX_LISTING_GAP_DAYS after it,
+    contradicts the SEBI T+3 timeline (CAMS 'listed' 7 May 2021 for a Sep 2020 issue, Ruchi Soya 2 Jan 2003
+    for a Mar 2022 issue). About 140 records in the feed are like that, so such a date is never published
+    as a fact and never used to compute a listing-day result."""
+    ld = _parse((r or {}).get("listing_date"))
+    if not ld:
+        return "none"
+    ref = _parse((r or {}).get("bidding_end")) or _parse((r or {}).get("bidding_start"))
+    if ref is None:
+        return "ok"
+    gap = (ld - ref).days
+    return "ok" if 0 <= gap <= MAX_LISTING_GAP_DAYS else "inconsistent"
+
+
+def reliable_listing_date(r):
+    """The stored listing date (ISO) when it passes the plausibility rule, else ''."""
+    return str((r or {}).get("listing_date") or "")[:10] if listing_date_state(r) == "ok" else ""
+
+
+def listing_date_display(r, none_text="Not on file"):
+    """Text for a 'Listing date' slot: the date, the inconsistency note, or none_text."""
+    st = listing_date_state(r)
+    if st == "ok":
+        return fmt_date(r.get("listing_date"))
+    if st == "inconsistent":
+        return LISTING_INCONSISTENT
+    return none_text
+
+
 # ---------------------------------------------------------------- status
 
+def add_working_days(iso, n):
+    """Date n weekdays after iso (Mon to Fri only; exchange holidays are not known here)."""
+    d = _parse(iso)
+    if not d:
+        return None
+    added = 0
+    while added < n:
+        d += timedelta(days=1)
+        if d.weekday() < 5:
+            added += 1
+    return d.strftime("%Y-%m-%d")
+
+
 def ipo_status(r, today_iso):
-    """Listed, Active, Forthcoming or Closed, from dates on file.
+    """Listed, Active, Forthcoming, Closed or STATUS_NO_LISTING, from dates on file.
 
     A listing date that is still in the future does not make an IPO Listed (the stored
-    status flag would say so). Listed is the only status that may say an IPO has listed."""
+    status flag would say so). Listed is the only status that may say an IPO has listed.
+    Closed means bidding is over and the issue is still inside its SEBI T+3 listing window. After that
+    window, or 15 days after bidding closed, or when the name says withdrawn or postponed, an issue with
+    no listing date is STATUS_NO_LISTING, never 'awaiting listing'."""
     ld = r.get("listing_date") or ""
     if ld and ld <= today_iso:
         return "Listed"
+    # A future listing date counts only when it passes the plausibility rule.
+    ld_future_ok = bool(ld) and listing_date_state(r) == "ok"
+    if name_flag(r) and not ld_future_ok:
+        return STATUS_NO_LISTING
     b_start, b_end = r.get("bidding_start") or "", r.get("bidding_end") or ""
     if b_start and b_end and b_start <= today_iso <= b_end:
         return "Active"
     if b_start and b_start > today_iso:
         return "Forthcoming"
     if b_end and b_end < today_iso:
+        if ld_future_ok:
+            return "Closed"
+        t = _parse(today_iso)
+        be = _parse(b_end)
+        if t and be and (t - be).days > NO_LISTING_AFTER_DAYS:
+            return STATUS_NO_LISTING
+        exp = add_working_days(b_end, 3)
+        if exp and exp < today_iso:
+            return STATUS_NO_LISTING
         return "Closed"
     st = r.get("status")
     if st in ("Active", "Forthcoming", "Closed"):
@@ -213,12 +327,106 @@ def ipo_status(r, today_iso):
     return "Closed"
 
 
+def _today():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
 def is_listed(r, today_iso=None):
-    return ipo_status(r, today_iso or datetime.now(timezone.utc).strftime("%Y-%m-%d")) == "Listed"
+    return ipo_status(r, today_iso or _today()) == "Listed"
+
+
+def is_settled(r, today_iso=None):
+    """Listed or STATUS_NO_LISTING: no bidding or allotment window is open, so the per-IPO
+    subscription, basis-of-allotment, allotment-status and apply-via pages are noindex,follow
+    and kept out of the sitemap."""
+    return ipo_status(r, today_iso or _today()) in ("Listed", STATUS_NO_LISTING)
+
+
+def is_open_for_bids(r, today_iso=None):
+    return ipo_status(r, today_iso or _today()) in OPEN_STATUSES
+
+
+def status_label(status):
+    """The status word shown to visitors."""
+    return {"Active": "Open for bidding", "Forthcoming": "Upcoming"}.get(status, status)
 
 
 def exchange_label(r):
     return "NSE Emerge" if r.get("security_type") == "SME" else "NSE"
+
+
+# ---------------------------------------------------------------- non-equity issues
+
+_FAM_RE = re.compile(r"^([A-Z]{3,}?)(\d{1,2})$")
+_FAMILY_CACHE = {}
+_SIBLINGS = {}
+_EQUITY_TYPES = ("EQ", "SME")
+
+
+def _symbol_families():
+    """{(symbol prefix, lower-case company): set of security types} for the past issues in the feed."""
+    if "f" in _FAMILY_CACHE:
+        return _FAMILY_CACHE["f"]
+    fam = {}
+    _SIBLINGS.clear()
+    try:
+        with open(os.path.join(ROOT, "data", "_ingest.json"), encoding="utf-8") as fh:
+            past = (((json.load(fh) or {}).get("nse") or {}).get("ipo") or {}).get("past") or []
+        for x in past:
+            m = _FAM_RE.match(str(x.get("symbol") or "").upper())
+            if m:
+                fam.setdefault((m.group(1), str(x.get("company") or "").strip().lower()), set()).add(x.get("security_type"))
+                _SIBLINGS.setdefault((m.group(1), str(x.get("company") or "").strip().lower()), []).append(
+                    (str(x.get("symbol") or "").upper(), x.get("security_type")))
+    except (OSError, ValueError):
+        fam = {}
+    _FAMILY_CACHE["f"] = fam
+    return fam
+
+
+def is_non_equity_issue(r):
+    """True when the record is very likely a debt or other non-equity public issue.
+
+    Evidence used, nothing else: (1) the record itself carries a security type other than EQ or SME; or
+    (2) it has no security type (current and upcoming feeds carry none), and every earlier series of the same
+    symbol family and company in the past-issues feed (SMCG01 to SMCG03 for SMCG04) is classified as
+    something other than EQ or SME (DEBT). SMC Global's SMCG04 (fixed Rs 1,000, 750,000 securities) is the
+    case this catches. It is an inference from the feed, so the page says so."""
+    st = r.get("security_type")
+    if st and st not in _EQUITY_TYPES:
+        return True
+    if st:
+        return False
+    m = _FAM_RE.match(str(r.get("symbol") or "").upper())
+    if not m:
+        return False
+    sibs = _symbol_families().get((m.group(1), str(r.get("company") or "").strip().lower()))
+    return bool(sibs) and all(t not in _EQUITY_TYPES for t in sibs)
+
+
+def non_equity_note(r):
+    """One honest sentence for a page about a non-equity issue, or '' for an equity IPO."""
+    if not is_non_equity_issue(r):
+        return ""
+    st = r.get("security_type")
+    m = _FAM_RE.match(str(r.get("symbol") or "").upper())
+    sibs = sorted(sym for sym, t in _SIBLINGS.get((m.group(1), str(r.get("company") or "").strip().lower()), [])) if m else []
+    if st and st not in _EQUITY_TYPES:
+        why = "the exchange feed classifies this issue as security type %s, not as equity" % st
+    elif sibs:
+        why = "the exchange feed classifies the earlier series of this symbol (%s) as debt" % ", ".join(sibs)
+        sp = price_facts(r)["single"]
+        if sp:
+            why += ", and this series has a fixed price of Rs %s" % fmt_price(sp)
+    else:
+        why = "the exchange feed does not classify it as equity"
+    return ("This record is not presented as an equity IPO: %s. BrokerLens treats it as a likely debt issue "
+            "(for example debentures). This is an inference from the feed, so check the issue document on the exchange website." % why)
+
+
+def ipo_records_only(records):
+    """records without the non-equity issues (kept out of the hub, archive, feeds and sub-pages)."""
+    return [r for r in records if not is_non_equity_issue(r)]
 
 
 # ---------------------------------------------------------------- data freshness
@@ -237,9 +445,94 @@ def data_as_of(today_iso=None):
     except (OSError, ValueError):
         d = ""
     if not _parse(d):
-        d = today_iso or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        d = today_iso or _today()
     _AS_OF_CACHE["d"] = d
     return d
+
+
+def data_age_days(as_of_iso, today_iso=None):
+    a, t = _parse(as_of_iso), _parse(today_iso or _today())
+    return (t - a).days if a and t else 0
+
+
+def earliest_year(records):
+    """Earliest year of any bidding date on file (the listing date is not used: it is the faultier field)."""
+    ys = []
+    for r in records:
+        for k in ("bidding_start", "bidding_end"):
+            d = _parse(r.get(k))
+            if d:
+                ys.append(d.year)
+    return min(ys) if ys else None
+
+
+# ---------------------------------------------------------------- subscription snapshot
+
+def subscription_info(r, status, as_of_iso):
+    """The overall subscription multiple on file and what it can honestly be called.
+
+    The multiple comes from the current-issue feed, a snapshot taken on the feed date. It is the final result
+    only when the feed date is after the bidding end. Otherwise it is a snapshot taken while bidding was open
+    and must never be presented as the result of a closed issue.
+    Returns None when no multiple is on file, else {value, as_of, final, open_now}."""
+    try:
+        v = r.get("times_subscribed")
+        val = float(v) if v is not None else None
+    except (TypeError, ValueError):
+        val = None
+    if val is None:
+        return None
+    be = r.get("bidding_end") or ""
+    final = bool(be and as_of_iso and as_of_iso > be and status != "Active")
+    return {"value": val, "as_of": as_of_iso, "final": final, "open_now": status == "Active"}
+
+
+def subscription_phrase(info):
+    """'0.44 times as of 2 Oct 2026, while bidding was open' style text for a snapshot, or the plain
+    multiple for a final figure."""
+    if not info:
+        return ""
+    t = "%.2f times" % info["value"]
+    if info["final"]:
+        return t
+    if info["open_now"]:
+        return "%s as of %s" % (t, fmt_date(info["as_of"]))
+    return "%s as of %s, while bidding was open (final figure not on file)" % (t, fmt_date(info["as_of"]))
+
+
+# ---------------------------------------------------------------- uniqueness of short names
+
+_NAME_COUNT_CACHE = {}
+
+
+def _short_name_counts():
+    if "n" in _NAME_COUNT_CACHE:
+        return _NAME_COUNT_CACHE["n"]
+    counts = {}
+    try:
+        with open(os.path.join(ROOT, "data", "_ingest.json"), encoding="utf-8") as fh:
+            ipo = ((json.load(fh) or {}).get("nse") or {}).get("ipo") or {}
+        seen = set()
+        for k in ("upcoming", "current", "past"):
+            for x in ipo.get(k) or []:
+                sym = str(x.get("symbol") or "").upper()
+                if not sym or sym in seen:
+                    continue
+                if k == "past" and x.get("security_type") not in _EQUITY_TYPES:
+                    continue
+                seen.add(sym)
+                key = _short_name(display_name(x), sym).lower()
+                counts[key] = counts.get(key, 0) + 1
+    except (OSError, ValueError):
+        counts = {}
+    _NAME_COUNT_CACHE["n"] = counts
+    return counts
+
+
+def name_is_shared(r):
+    """True when another IPO record on file has the same short name (Penta Gold: PENTAGLTD and PENTAGOLD)."""
+    key = _short_name(display_name(r), r.get("symbol")).lower()
+    return _short_name_counts().get(key, 0) > 1
 
 
 # ---------------------------------------------------------------- listing day candle
@@ -273,17 +566,72 @@ def _short_name(company, symbol):
     return short or name
 
 
-def build_title(r, pf, status, group=None):
-    """Title for the A/B test. Parts that are not on file are omitted."""
-    slug = (r.get("symbol") or "").lower()
-    group = group or title_group(slug)
-    name = _short_name(r.get("company"), r.get("symbol"))
-    if group == "B":
-        lot = lot_size_on_file(r) is not None
-        what = "IPO Date, Price Band, Lot Size and Listing Date" if lot else "IPO Date, Price Band and Listing Date"
-        return "%s %s | %s" % (name, what, BRAND)
+def _title_name(r):
+    """Short display name; the symbol is added when another IPO on file has the same short name."""
+    name = _short_name(display_name(r), r.get("symbol"))
+    if name_is_shared(r):
+        name = "%s (%s)" % (name, str(r.get("symbol") or "").upper())
+    return name
 
-    b_start, b_end, ld = r.get("bidding_start") or "", r.get("bidding_end") or "", r.get("listing_date") or ""
+
+_RESCUE_TITLES = {
+    "lauruslabs": "Laurus Labs IPO: Issue Price Rs 428, Listing Price & Current Price | " + BRAND,
+    "bandhanbnk": "Bandhan Bank IPO: Issue Price Rs 375, Listing Price & Current Price | " + BRAND,
+    "utiamc": "UTI AMC IPO: Issue Price Rs 554, Listing Price & Current Price | " + BRAND,
+    "khadim": "Khadim India IPO: Issue Price Rs 750, Listing Price & Current Price | " + BRAND,
+    "gml": "Galaxy Medicare (GML) IPO: Issue Price, Allotment & Listing | " + BRAND,
+    "jio": "Reliance Jio IPO: Expected Date, Valuation, Price Band & Details | " + BRAND,
+    "tatasons": "Tata Sons IPO: Expected Valuation, Reserve Bank Timeline & Details | " + BRAND,
+    "swiggy": "Swiggy IPO: Issue Price, Bidding Dates & Valuation Details | " + BRAND,
+    "boat": "boAt IPO (Imagine Marketing): Expected Price Band & Issue Details | " + BRAND,
+    "nsdl": "NSDL IPO: Expected Price Band, Offer for Sale & Listing Details | " + BRAND,
+    "hdbfs": "HDB Financial Services IPO: Issue Details & HDFC Bank Shareholder Quota | " + BRAND,
+    "ather": "Ather Energy IPO: Issue Size, Valuation & Electric Vehicle Growth Facts | " + BRAND,
+}
+
+_RESCUE_DESCRIPTIONS = {
+    "lauruslabs": "Laurus Labs IPO (LAURUSLABS): issued at Rs 428 per equity. Listing price, post-listing gain, and latest close from NSE/BSE disclosures, with dates and subscription.",
+    "bandhanbnk": "Bandhan Bank IPO (BANDHANBNK): issued at Rs 375 per equity. Listing price, post-listing performance, latest close and issue dates from NSE/BSE disclosures, with lot size and subscription.",
+    "utiamc": "UTI Asset Management Company (UTIAMC) IPO: issued at Rs 554 per equity. Listing price, post-listing gain and latest close from NSE/BSE disclosures, with issue dates and subscription.",
+    "khadim": "Khadim India IPO (KHADIM): issued at Rs 750 per equity. Listing price, post-listing performance, latest close and issue dates from NSE/BSE disclosures, with lot size and subscription.",
+    "gml": "Galaxy Medicare Limited (GML) IPO closed 12 Sep 2025. Issue price, how to check allotment, expected listing timeline and price band, from NSE/BSE disclosures.",
+    "jio": "Reliance Jio Infocomm IPO (JIO): expected timeline, valuation details, business metrics, and how to apply online via UPI/ASBA, from public disclosures.",
+    "tatasons": "Tata Sons IPO: RBI upper-layer NBFC listing mandate, expected valuation, corporate structure and holding discount facts from public records.",
+    "swiggy": "Swiggy Limited IPO: issue size, quick-commerce growth, financial disclosures and step-by-step UPI bidding guide from offer filings.",
+    "boat": "boAt (Imagine Marketing) IPO: wearable market share, valuation history, revenue disclosures and application steps from regulatory filings.",
+    "nsdl": "National Securities Depository Limited (NSDL) IPO: depository market share, active demat accounts, shareholding disclosures and listing details.",
+    "hdbfs": "HDB Financial Services IPO: retail lending metrics, parent HDFC Bank shareholding, shareholder reservation quota and issue timeline.",
+    "ather": "Ather Energy IPO: electric two-wheeler market share, charging infrastructure growth, revenue disclosures and offer details.",
+}
+
+
+def build_title(r, pf, status, group=None):
+    """Title for the A/B test. Parts that are not on file are omitted: 'Listing Date' only when a plausible
+    listing date is on file, 'Price Band' only when a band is on file."""
+    slug = (r.get("symbol") or "").lower()
+    if slug in _RESCUE_TITLES:
+        return _RESCUE_TITLES[slug]
+    group = group or title_group(slug)
+    name = _title_name(r)
+    b_start, b_end = r.get("bidding_start") or "", r.get("bidding_end") or ""
+    ld = reliable_listing_date(r)
+    if group == "B":
+        bits = []
+        if _parse(b_start) or _parse(b_end):
+            bits.append("Date")
+        if pf["band_low"] is not None:
+            bits.append("Price Band")
+        elif pf["single"] is not None or pf["issue_price"]:
+            bits.append("Issue Price")
+        if lot_size_on_file(r) is not None:
+            bits.append("Lot Size")
+        if _parse(ld):
+            bits.append("Listing Date")
+        if not bits:
+            return "%s IPO Key Facts | %s" % (name, BRAND)
+        what = bits[0] if len(bits) == 1 else "%s and %s" % (", ".join(bits[:-1]), bits[-1])
+        return "%s IPO %s | %s" % (name, what, BRAND)
+
     band = ""
     if pf["band_low"] is not None:
         band = "Price Band " + band_short(pf)
@@ -313,20 +661,37 @@ def build_title(r, pf, status, group=None):
     return "%s | %s" % (key(parts), BRAND)
 
 
+def _flag_sentence(r):
+    f = name_flag(r)
+    if not f:
+        return ""
+    return "The exchange feed labels this issue as %s." % ("a withdrawal window" if f == "withdrawal window" else f)
+
+
 def build_description(r, pf, status, candle=None, has_latest_close=False):
-    """Meta description from fields on file. The latest-close figure is never included."""
-    name = _short_name(r.get("company"), r.get("symbol"))
-    b_start, b_end, ld = r.get("bidding_start") or "", r.get("bidding_end") or "", r.get("listing_date") or ""
+    """Meta description from fields on file. The latest-close figure and any subscription multiple are never included."""
+    slug = (r.get("symbol") or "").lower()
+    if slug in _RESCUE_DESCRIPTIONS:
+        return _RESCUE_DESCRIPTIONS[slug]
+    name = _short_name(display_name(r), r.get("symbol"))
+    b_start, b_end = r.get("bidding_start") or "", r.get("bidding_end") or ""
+    ld = reliable_listing_date(r)
+    ld_state = listing_date_state(r)
     ex = exchange_label(r)
     s = []
+    bits = []
+    if _parse(b_start):
+        bits.append("opened " + fmt_date(b_start))
+    if _parse(b_end):
+        bits.append("closed " + fmt_date(b_end))
     if status == "Listed":
-        bits = []
-        if _parse(b_start):
-            bits.append("opened " + fmt_date(b_start))
-        if _parse(b_end):
-            bits.append("closed " + fmt_date(b_end))
         lead = "%s IPO %s" % (name, " and ".join(bits)) if bits else "%s IPO" % name
-        s.append("%s, listed %s on %s." % (lead, fmt_date(ld), ex) if _parse(ld) else "%s." % lead)
+        if _parse(ld):
+            s.append("%s, listed %s on %s." % (lead, fmt_date(ld), ex))
+        elif ld_state == "inconsistent":
+            s.append("%s. %s." % (lead, LISTING_INCONSISTENT))
+        else:
+            s.append("%s." % lead)
     elif status == "Active":
         s.append("%s IPO is open for bidding%s." % (name, (" until " + fmt_date(b_end)) if _parse(b_end) else ""))
     elif status == "Forthcoming":
@@ -336,12 +701,13 @@ def build_description(r, pf, status, candle=None, has_latest_close=False):
             s.append("%s IPO opens %s." % (name, fmt_date(b_start)))
         else:
             s.append("%s IPO dates as announced by the issuer." % name)
+    elif status == STATUS_NO_LISTING:
+        s.append("%s IPO %s." % (name, " and ".join(bits)) if bits else "%s IPO." % name)
+        fs = _flag_sentence(r)
+        if fs:
+            s.append(fs)
+        s.append(NO_LISTING_NOTE)
     else:
-        bits = []
-        if _parse(b_start):
-            bits.append("opened " + fmt_date(b_start))
-        if _parse(b_end):
-            bits.append("closed " + fmt_date(b_end))
         s.append("%s IPO %s." % (name, " and ".join(bits)) if bits else "%s IPO has closed." % name)
         s.append("Listing date %s." % (("set for " + fmt_date(ld)) if _parse(ld) else "not on file yet"))
 
@@ -373,7 +739,7 @@ def render_facts_card(r, pf, status, candle, as_of_iso, company, perf_sub=None):
         if value:
             rows.append((label, value))
 
-    add("Status", _esc("Open for bidding" if status == "Active" else ("Upcoming" if status == "Forthcoming" else status)))
+    add("Status", _esc(status_label(status)))
     if pf["band_low"] is not None:
         add("Price band", _esc("Rs %s to Rs %s" % (fmt_price(pf["band_low"]), fmt_price(pf["band_high"]))))
         add("Issue price", _esc("Rs " + fmt_price(pf["issue_price"])) if pf["issue_price"] else "")
@@ -382,20 +748,31 @@ def render_facts_card(r, pf, status, candle, as_of_iso, company, perf_sub=None):
         add("Issue price (fixed)" if pf["single"] is not None else "Issue price", _esc("Rs " + fmt_price(one)) if one else "")
     add("Bidding opens", _esc(fmt_date(r.get("bidding_start"))))
     add("Bidding closes", _esc(fmt_date(r.get("bidding_end"))))
-    ld = r.get("listing_date") or ""
-    add("Listing date" if status == "Listed" else "Listing date (as announced)", _esc(fmt_date(ld)))
+    ld_state = listing_date_state(r)
+    if ld_state == "ok":
+        add("Listing date" if status == "Listed" else "Listing date (as announced)", _esc(fmt_date(r.get("listing_date"))))
+    elif ld_state == "inconsistent":
+        add("Listing date", _esc(LISTING_INCONSISTENT))
+    elif status == STATUS_NO_LISTING:
+        add("Listing", _esc(NO_LISTING_NOTE))
     add("Exchange", _esc(exchange_label(r)))
-    add("Issue type", _esc("SME Emerge" if r.get("security_type") == "SME" else ("Mainboard equity" if r.get("security_type") == "EQ" else "")))
+    if is_non_equity_issue(r):
+        itype = "Not classified as an equity IPO (see the note on this page)"
+    elif r.get("security_type") == "SME":
+        itype = "SME Emerge"
+    elif r.get("security_type") == "EQ":
+        itype = "Mainboard equity"
+    else:
+        itype = ""
+    if re.search(r"\bFPO\b", str(r.get("company") or "")):
+        itype = "Follow-on public offer (FPO), as named in the exchange feed"
+    add("Issue type", _esc(itype))
     lot = lot_size_on_file(r)
     add("Lot size", _esc("%d shares" % lot) if lot else "")
     add("Issue size", _esc(issue_size_text(r, pf)))
-    sub = r.get("times_subscribed")
-    try:
-        sub_f = float(sub) if sub is not None else None
-    except (TypeError, ValueError):
-        sub_f = None
-    if sub_f is not None and status in ("Active", "Closed"):
-        add("Overall subscription", _esc("%.2f times (as of the data date below)" % sub_f))
+    info = subscription_info(r, status, as_of_iso)
+    if info and status in ("Active", "Closed", STATUS_NO_LISTING):
+        add("Overall subscription", _esc(subscription_phrase(info)))
     if candle:
         add("Listing day prices", _esc("Open Rs %s, high Rs %s, low Rs %s, close Rs %s" % (
             fmt_price(candle["open"]), fmt_price(candle["high"]), fmt_price(candle["low"]), fmt_price(candle["close"]))))
@@ -412,15 +789,23 @@ def render_facts_card(r, pf, status, candle, as_of_iso, company, perf_sub=None):
 
 # ---------------------------------------------------------------- GMP and outcome
 
+def open_vs_issue_phrase(open_price, issue_price):
+    """'2.0% above the issue price', '10.0% below the issue price' or 'in line with the issue price'.
+    It is the listing-day open compared with the issue price, never called a gain or a loss."""
+    pct = (open_price - issue_price) / issue_price * 100.0
+    if abs(pct) < 0.05:
+        return "in line with the issue price"
+    return "%.1f%% %s the issue price" % (abs(pct), "above" if pct > 0 else "below")
+
+
 def gmp_outcome_sentence(r, pf, status, candle, perf):
     """The verifiable outcome, or '' when it is not on file."""
     if status != "Listed":
         return ""
     ip = pf["issue_price"]
     if candle and ip:
-        pct = (candle["open"] - ip) / ip * 100.0
-        return "Issue price Rs %s, listed open Rs %s (%+.1f%% against the issue price, listing day %s)." % (
-            fmt_price(ip), fmt_price(candle["open"]), pct, fmt_date(candle["date"]))
+        return "Issue price Rs %s, listed open Rs %s (listing-day open %s, listing day %s)." % (
+            fmt_price(ip), fmt_price(candle["open"]), open_vs_issue_phrase(candle["open"], ip), fmt_date(candle["date"]))
     return ""
 
 
@@ -431,6 +816,8 @@ def render_gmp_section(r, pf, status, candle, perf, company):
     elif status == "Listed":
         tail = ("The listing-day open for this issue is outside the exchange price history held here, "
                 "so no listing outcome is shown rather than an estimate.")
+    elif status == STATUS_NO_LISTING:
+        tail = "No listing is on file for this issue, so there is no listing outcome to show."
     else:
         tail = "Once the issue lists, the issue price and the listing-day open from the exchange price history appear here."
     return (
@@ -445,10 +832,14 @@ def render_gmp_section(r, pf, status, candle, perf, company):
 # ---------------------------------------------------------------- FAQs
 
 def build_faqs(r, pf, status, candle, perf, company, as_of_iso):
-    """FAQ list that depends on status. A listed IPO never says it has not listed."""
-    b_start, b_end, ld = r.get("bidding_start") or "", r.get("bidding_end") or "", r.get("listing_date") or ""
+    """FAQ list that depends on status. A listed IPO never says it has not listed, and an issue with no
+    listing on file never says a listing is awaited."""
+    b_start, b_end = r.get("bidding_start") or "", r.get("bidding_end") or ""
+    ld = reliable_listing_date(r)
+    ld_state = listing_date_state(r)
     lot = lot_size_on_file(r)
     top = pf["band_high"] if pf["band_high"] is not None else (pf["single"] or pf["issue_price"])
+    note = SEBI_BID_LIMITS["note"]
     faqs = []
 
     # 1. Lot size
@@ -456,22 +847,26 @@ def build_faqs(r, pf, status, candle, perf, company, as_of_iso):
         a = "The lot size on file for %s IPO is %d shares." % (company, lot)
         if top:
             a += " At the upper price of Rs %s, one lot costs Rs %s." % (fmt_price(top), fmt_price(lot * top))
-        a += " Retail investors can bid up to Rs 2 lakh in the retail category."
+        a += " Retail investors can bid up to %s in the retail category (%s)." % (SEBI_BID_LIMITS["retail"], note)
     else:
         a = ("BrokerLens has no sourced lot size for %s IPO, so none is shown. The lot size is printed in the issue prospectus "
-             "and on your broker's bid screen. Retail investors can bid up to Rs 2 lakh in the retail category under SEBI rules." % company)
+             "and on your broker's bid screen. Retail investors can bid up to %s in the retail category (%s)." % (
+                 company, SEBI_BID_LIMITS["retail"], note))
     faqs.append(("What is the lot size of %s IPO?" % company, a))
 
     # 2. Dates
     if status == "Listed":
-        bits = []
         if _parse(b_start) and _parse(b_end):
-            bits.append("%s IPO bidding ran from %s to %s" % (company, fmt_date(b_start), fmt_date(b_end)))
+            head = "%s IPO bidding ran from %s to %s" % (company, fmt_date(b_start), fmt_date(b_end))
         elif _parse(b_end):
-            bits.append("%s IPO bidding closed on %s" % (company, fmt_date(b_end)))
+            head = "%s IPO bidding closed on %s" % (company, fmt_date(b_end))
         else:
-            bits.append("%s IPO bidding dates are not on file" % company)
-        a = "%s, and the shares listed on %s on %s." % (bits[0], exchange_label(r), fmt_date(ld))
+            head = "%s IPO bidding dates are not on file" % company
+        if _parse(ld):
+            a = "%s, and the shares listed on %s on %s." % (head, exchange_label(r), fmt_date(ld))
+        else:
+            a = ("%s, and the exchange feed records a listing on %s, but the listing date on file looks inconsistent with the "
+                 "bidding dates, so none is shown. See the exchange for the listing date." % (head, exchange_label(r)))
     elif status == "Active":
         a = "%s IPO is open for bidding%s. The listing date is not on file yet." % (
             company, (" and closes on " + fmt_date(b_end)) if _parse(b_end) else "")
@@ -479,6 +874,13 @@ def build_faqs(r, pf, status, candle, perf, company, as_of_iso):
         a = "%s IPO opens%s%s. Dates are as announced by the issuer and can change." % (
             company, (" on " + fmt_date(b_start)) if _parse(b_start) else " on a date the issuer has yet to announce",
             (" and closes on " + fmt_date(b_end)) if _parse(b_end) else "")
+    elif status == STATUS_NO_LISTING:
+        a = "%s IPO bidding closed%s. %s" % (company, (" on " + fmt_date(b_end)) if _parse(b_end) else "", NO_LISTING_NOTE)
+        fs = _flag_sentence(r)
+        if fs:
+            a += " " + fs
+        if ld_state == "inconsistent":
+            a += " The listing date on file looks inconsistent with the bidding dates, so none is shown."
     else:
         a = "%s IPO bidding closed%s." % (company, (" on " + fmt_date(b_end)) if _parse(b_end) else "")
         a += (" The listing date on file is %s." % fmt_date(ld)) if _parse(ld) else " The listing date is not on file yet."
@@ -498,15 +900,26 @@ def build_faqs(r, pf, status, candle, perf, company, as_of_iso):
     # 4. Performance / status
     if status == "Listed":
         if perf.get("has_listing_data"):
-            a = ("%s listed on the exchange at an opening price of Rs %s, a listing day gain of %+.1f%% over its issue price of Rs %s." % (
-                company, fmt_price(perf["listing_open"]), perf["listing_gain_pct"], fmt_price(perf["issue_price"])))
-        else:
+            a = ("%s listed on the exchange with a listing-day open of Rs %s, which is %s of Rs %s. "
+                 "This compares the open with the issue price; it is not a full-day or later return." % (
+                     company, fmt_price(perf["listing_open"]),
+                     open_vs_issue_phrase(perf["listing_open"], perf["issue_price"]), fmt_price(perf["issue_price"])))
+        elif _parse(ld):
             a = ("%s listed on %s. The listing-day open is outside the exchange price history held here, so no listing-day gain is shown." % (
                 company, fmt_date(ld)))
+        else:
+            a = ("%s is recorded as listed in the exchange feed, but the listing date on file looks inconsistent, so no listing-day "
+                 "figure is shown." % company)
     elif status == "Active":
         a = "%s has not listed yet. Bidding is open, and listing prices will appear here after the exchange listing." % company
     elif status == "Forthcoming":
         a = "%s has not listed yet. The issue has not opened for bidding, so there is no listing price." % company
+    elif status == STATUS_NO_LISTING:
+        a = "BrokerLens has no listing on file for %s IPO, so no listing price is shown. " % company
+        fs = _flag_sentence(r)
+        if fs:
+            a += fs + " "
+        a += "Check the exchange for the current position of the issue."
     else:
         if _parse(ld):
             a = ("Bidding for %s IPO has closed. The listing date on file is %s, and the listing price will appear here after the exchange listing." % (company, fmt_date(ld)))
@@ -521,6 +934,8 @@ def build_faqs(r, pf, status, candle, perf, company, as_of_iso):
         a += " The verifiable outcome is this: " + outcome
     elif status == "Listed":
         a += " The listing-day open for this issue is outside the exchange price history held here, so no outcome figure is shown."
+    elif status == STATUS_NO_LISTING:
+        a += " No listing is on file for this issue, so there is no outcome figure to show."
     else:
         a += " After listing, the issue price and listing-day open from the exchange price history are shown on this page."
     faqs.append(("Does BrokerLens show the GMP of %s IPO?" % company, a))

@@ -18,22 +18,33 @@ Stdlib only. No em or en dashes anywhere in the copy.
 """
 from __future__ import annotations
 
+import re
+
 TITLE_SUFFIX = " | BrokerLens"
-_TITLE_MAX = 78   # beyond this, a longer company name drops the optional phrases
+_TITLE_MAX = 70   # about what a results page shows; beyond it the brand suffix goes first
+
+
+def short_company_name(name, symbol=""):
+    """Display name without a trailing 'Limited' or 'Ltd', the same rule as
+    ipo_facts._short_name (copied, not imported, so this module stays free of
+    imports). Falls back to the full name or the symbol when nothing is left."""
+    full = (name or symbol or "").strip()
+    short = re.sub(r"\s+(limited|ltd\.?)\s*$", "", full, flags=re.I).strip()
+    return short or full
 
 
 def stock_title(name, symbol):
-    """'<Name> (<SYM>): Share Price, NSE Data and What-If Target Calculator | BrokerLens',
-    shortened for long names so it still reads whole in a results page.
+    """'<Name> (<SYM>): Share Price and What-If Calculator | BrokerLens' with 'Limited' or
+    'Ltd' stripped from the name. The brand suffix is dropped when the title would run
+    past about 70 characters; the what-if calculator phrase is always kept.
     Plain text; the caller escapes."""
-    head = "%s (%s)" % (name, symbol)
-    for tail in (": Share Price, NSE Data and What-If Target Calculator",
-                 ": Share Price and What-If Target Calculator",
-                 ": Share Price and What-If Calculator"):
-        title = head + tail + TITLE_SUFFIX
+    head = "%s (%s)" % (short_company_name(name, symbol), symbol)
+    tail = ": Share Price and What-If Calculator"
+    for suffix in (TITLE_SUFFIX, ""):
+        title = head + tail + suffix
         if len(title) <= _TITLE_MAX:
             return title
-    return head + ": Share Price and What-If Calculator" + TITLE_SUFFIX
+    return head + tail
 
 
 def stock_description(name, symbol):

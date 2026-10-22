@@ -79,15 +79,55 @@ def run(check, ROOT, load):
     check("charges pages: at least ten brokers have a complete schedule", len(keys) >= 10, "%d" % len(keys))
     check("charges pages: every eligible schedule has real numbers for every field",
           all(E.schedule_complete(tce.BROKER_RATES[k]) for k in keys))
-    check("charges pages: every rate key is either built or listed as skipped",
-          set(keys) | set(skipped) == set(tce.BROKER_RATES))
+    withheld = E.withheld_brokers()
+    check("charges pages: every rate key is built, skipped (incomplete) or withheld (ambiguous rule)",
+          set(keys) | set(skipped) | set(withheld) == set(tce.BROKER_RATES))
+    check("charges pages: kept and withheld sets do not overlap", not (set(keys) & set(withheld)))
     check("charges pages: an incomplete schedule is refused",
           not E.schedule_complete({"brand": "X", "delivery_flat": 0, "delivery_pct": 0, "intraday_flat": 0,
                                    "intraday_pct": 0, "dp_charge": None, "demat_amc": 0}))
     ids = [E.charges_id(k) for k in keys]
     check("charges pages: one URL per page", len(ids) == len(set(ids)), "%s" % ids)
-    for must in ("prostocks", "religare", "alice-blue", "samco", "fyers"):
-        check("charges pages: priority broker %s has a page" % must, must in keys or E.charges_id(must) in ids)
+    for must in ("prostocks", "alice-blue", "fyers", "zerodha", "dhan", "5paisa", "tradejini"):
+        check("charges pages: unambiguous broker %s has a page" % must, must in keys or E.charges_id(must) in ids)
+
+    # ---- withholding: an ambiguous rule gets no page, anywhere ---------------------
+    for k in ("icici-direct", "hdfc-securities", "sharekhan", "motilal-oswal", "yes-securities", "kotak-securities",
+              "samco", "religare", "sbi-securities", "axis-direct", "hdfc-sky", "espresso"):
+        check("withheld: %s has no charges page and a stated reason" % k,
+              k in withheld and withheld[k] and k not in keys and not E.has_page(k) and E.charges_link_html(k) == "")
+    kind = E.rule_kind
+    check("rule_kind: zero, flat and lower_of are told apart",
+          kind(0, 0) == "zero" and kind(20, 0) == "flat" and kind(20, 0.001) == "lower_of" and kind(0, 0.002) == "lower_of")
+    fx = lambda **kw: dict({"brand": "Fx", "delivery_flat": 0.0, "delivery_pct": 0.0, "intraday_flat": 20.0,  # noqa: E731
+                            "intraday_pct": 0.0003, "dp_charge": 15.34, "demat_amc": 0, "tagline": "Flat fee"}, **kw)
+    wr = E._withheld_reasons_for
+    check("withheld fixture: discount-broker cap (Rs 20 or 0.1%) is kept", wr(fx(delivery_flat=20.0, delivery_pct=0.001)) == [])
+    check("withheld fixture: flat fee and zero delivery are kept", wr(fx(delivery_flat=20.0)) == [] and wr(fx()) == [])
+    check("withheld fixture: full-service percentage plus Rs 20 cap is withheld", bool(wr(fx(delivery_flat=20.0, delivery_pct=0.0055))))
+    check("withheld fixture: percentage above 0.1% on intraday is withheld", bool(wr(fx(intraday_pct=0.0025))))
+    check("withheld fixture: zero on every segment (restricted plan signal) is withheld",
+          bool(wr(fx(intraday_flat=0.0, intraday_pct=0.0))))
+    check("withheld fixture: restricted or conditional plan wording is withheld",
+          all(wr(fx(tagline=t)) for t in ("Zero brokerage for young investors", "Rs 0 on loss making trades",
+                                          "Pay only when you profit", "Zero AMC first year")))
+    check("withheld: eligible_keys is the single source (has_page, links, index agree)",
+          all(E.has_page(k) == (k in keys) for k in tce.BROKER_RATES)
+          and all((E.charges_path(k) in E.brokers_index_links_html()) == (k in keys) for k in tce.BROKER_RATES)
+          and all(E.charges_path(k) not in E.brokers_index_links_html() for k in withheld))
+    check("withheld: profile link blocks never point at a withheld page",
+          all(E.charges_path(k) not in E.profile_links_html(E.PROFILE_ALIAS.get(k, k)) for k in withheld
+              if not any(E.PROFILE_ALIAS.get(j, j) == E.PROFILE_ALIAS.get(k, k) for j in keys)))
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:  # a stale page of a withheld broker is removed, a kept one is not
+        for k in ("icici-direct", "zerodha"):
+            d = os.path.join(tmp, "broker", E.charges_id(k), "charges")
+            os.makedirs(d)
+            open(os.path.join(d, "index.html"), "w").write("x")
+        gone = E.remove_withheld_pages(tmp)
+        check("withheld: stale generated page of a withheld broker is removed, a kept broker's page stays",
+              gone == ["icici-direct"] and not os.path.exists(os.path.join(tmp, "broker", "icici-direct", "charges"))
+              and os.path.exists(os.path.join(tmp, "broker", "zerodha", "charges", "index.html")))
 
     # ---- sources: hooks, no inline script, no dashes ---------------------------
     pub = _read(ROOT, "pipeline/publish.py")
@@ -125,8 +165,7 @@ def run(check, ROOT, load):
     by_id = {b["id"]: b for b in built}
 
     # ---- render sample pages in memory ----------------------------------------
-    sample = [k for k in ("prostocks", "religare", "alice-blue", "samco", "fyers", "choice-broking", "hdfc-sky",
-                          "zerodha") if k in keys]
+    sample = [k for k in ("prostocks", "alice-blue", "fyers", "dhan", "zerodha", "5paisa", "tradejini") if k in keys]
     pages = {k: E.render_charges_page(k, by_id, registry, site_url="https://www.brokerlens.in",
                                       generated_on="19 October 2026") for k in sample}
     check("charges pages: sample pages rendered", len(pages) >= 3, "%d" % len(pages))
@@ -136,8 +175,8 @@ def run(check, ROOT, load):
     for k, page in pages.items():
         brand = tce.BROKER_RATES[k]["brand"]
         h1s = re.findall(r"<h1[^>]*>(.*?)</h1>", page, re.S)
-        check("%s: single H1 'brokerage calculator and charges'" % k,
-              len(h1s) == 1 and _html.unescape(h1s[0]) == "%s brokerage calculator and charges" % brand, str(h1s))
+        check("%s: single H1 'brokerage calculator: indicative charges'" % k,
+              len(h1s) == 1 and _html.unescape(h1s[0]) == "%s brokerage calculator: indicative charges" % brand, str(h1s))
         check("%s: canonical points at /broker/%s/charges/" % (k, E.charges_id(k)),
               '<link rel="canonical" href="https://www.brokerlens.in/broker/%s/charges/">' % E.charges_id(k) in page)
         graph = _jsonld(page)
@@ -164,6 +203,32 @@ def run(check, ROOT, load):
               not re.search(r"\b(best|top pick|you should (buy|sell)|recommend(ed|ation)? to (buy|sell))\b", page, re.I))
         check("%s: states the as-of position honestly" % k,
               "19 October 2026" in page and "is not on file" in page)
+        low = _html.unescape(page).lower()
+        tl = re.search(r"<title>(.*?)</title>", page, re.S).group(1).lower()
+        md = re.search(r'<meta name="description" content="(.*?)"', page, re.S)
+        md = _html.unescape(md.group(1)).lower() if md else ""
+        check("%s: never calls the figures a published or verified tariff" % k,
+              "published tariff" not in low and "published %s tariff" % brand.lower() not in low
+              and "verified tariff" not in low and "verified pricing" not in low and "verified charges" not in low)
+        check("%s: says indicative, not verified against the rate card, check date not on file, confirm on tariff page" % k,
+              "indicative schedule" in low and "not verified against" in low and "rate card" in low
+              and "date it was checked is not on file" in low and "tariff page" in low)
+        check("%s: title, H1 and meta description do not promise verified or official charges" % k,
+              "indicative" in tl and "indicative" in low.split("</h1>")[0]
+              and "indicative" in md and "not verified" in md
+              and not any(w in (tl + md) for w in ("official", "published", "verified charges", "actual charges")))
+        faq_text = " ".join(q + " " + a for q, a in _visible_faq(page)).lower()
+        ld_text = json.dumps(_jsonld(page)).lower()
+        check("%s: FAQ and JSON-LD carry the not-verified wording and no published-tariff claim" % k,
+              "not verified against" in faq_text and "not verified against" in ld_text
+              and "published tariff" not in faq_text and "published tariff" not in ld_text)
+        check("%s: DP charge is labelled as including GST in schedule, worked example, FAQ and calculator" % k,
+              page.count("DP charge (includes GST)") >= 4 and "already includes 18% gst" in low
+              and "DP charge (includes GST)" in " ".join(q for q, _a in _visible_faq(page)) + " ".join(
+                  a for _q, a in _visible_faq(page)))
+        check("%s: GST row text does not say the DP charge attracts GST" % k,
+              "gst on brokerage, exchange and sebi charges" in low and "no gst is added on top" in low
+              and "dp charge carries its own gst" in low)
         check("%s: segments not on file are said to be not on file" % k,
               "Futures, options, currency, commodity" in page and "Not on file" in page)
 
@@ -173,10 +238,10 @@ def run(check, ROOT, load):
         return page[i:page.index("Where these numbers", i)]
 
     if by_id and registry:
-        samco = ident_block(pages.get("samco", "Registration and identifiers Where these numbers"))
-        reg = by_id["samco"]["profile"].get("sebi_reg_no")
+        zer = ident_block(pages.get("zerodha", "Registration and identifiers Where these numbers"))
+        reg = (by_id.get("zerodha") or {}).get("profile", {}).get("sebi_reg_no")
         if reg:
-            check("samco: SEBI registration number in identifiers block equals the register's", reg in samco)
+            check("zerodha: SEBI registration number in identifiers block equals the register's", reg in zer)
         ps = ident_block(pages.get("prostocks", "Registration and identifiers Where these numbers"))
         check("prostocks: no invented registration number when none is on file",
               "does not yet hold a matched SEBI registration number" in ps and "INZ" not in ps and "IN-DP" not in ps)
@@ -232,6 +297,19 @@ def run(check, ROOT, load):
         check("%s: worked example == calculator formula == trade-cost engine (Rs 1,00,000)" % k, ok)
     check("self-consistency run over at least three brokers", checked >= 3, "%d" % checked)
 
+    # ---- identical schedules are said to match ------------------------------------
+    for k in keys:
+        peers = E.same_schedule_peers(k)
+        page = pages.get(k) or E.render_charges_page(k, by_id, registry, generated_on="19 October 2026")
+        low = _html.unescape(page)
+        if peers:
+            check("%s: identical-schedule peers (%s) are named on the page" % (k, ", ".join(peers)),
+                  all(p in low for p in peers) and "identical to the one held for" in low)
+        else:
+            check("%s: no identical-schedule note when the schedule is unique" % k, "identical to the one held for" not in low)
+    check("same_schedule_peers: dhan and fyers match each other", "Fyers" in E.same_schedule_peers("dhan")
+          if "dhan" in keys and "fyers" in keys else True)
+
     # ---- the browser formula (broker-charges.js) matches the Python one ----------
     if shutil.which("node") and js_src:
         rng = random.Random(20261019)  # fixed seed, deterministic
@@ -239,7 +317,7 @@ def run(check, ROOT, load):
                  [12500, 12500, "intraday"], [1, 1, "delivery"]]
         cases += [[rng.randrange(0, 5000000), rng.randrange(0, 5000000), rng.choice(["delivery", "intraday"])]
                   for _ in range(400)]
-        for k in [x for x in ("prostocks", "samco", "religare", "zerodha", "hdfc-securities") if x in keys][:5]:
+        for k in [x for x in ("prostocks", "dhan", "alice-blue", "zerodha", "groww") if x in keys][:5]:
             page = pages.get(k) or E.render_charges_page(k, by_id, registry, generated_on="19 October 2026")
             try:
                 got = _node_compute(ROOT, cfg_for(page), cases)
@@ -257,10 +335,14 @@ def run(check, ROOT, load):
         check("broker-charges.js parity run (node not available here, skipped)", True)
 
     # ---- the stock cost page links to the canonical page with the exact anchor ----
-    for k in [x for x in ("prostocks", "samco", "choice-broking") if x in keys]:
+    for k in [x for x in ("prostocks", "zerodha", "alice-blue") if x in keys]:
         stock_page = tce.render_trade_cost_page(k, "RELIANCE", "Reliance Industries Limited", "INE002A01018", 1400.0, "EQ")
         want = '<a href="%s">%s brokerage calculator and charges</a>' % (E.charges_path(k), tce.BROKER_RATES[k]["brand"])
         check("%s: stock cost page links the charges page with exact anchor text" % k, want in stock_page)
+    for k in [x for x in ("samco", "icici-direct", "choice-broking", "hdfc-sky") if x in withheld]:
+        stock_page = tce.render_trade_cost_page(k, "RELIANCE", "Reliance Industries Limited", "INE002A01018", 1400.0, "EQ")
+        check("%s: withheld, so its stock cost page links no charges page" % k,
+              "brokerage calculator and charges" not in stock_page and "/charges/" not in stock_page)
     check("/brokers index links every charges page",
           all(E.charges_path(k) in E.brokers_index_links_html() for k in keys))
     check("broker main page links resolve to built pages",

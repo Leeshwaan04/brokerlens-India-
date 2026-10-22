@@ -3,7 +3,11 @@
 Generates high-intent, authoritative programmatic guides:
   - /ipo/allotment-status/ (Registrar lookup hub & PAN verification guide)
   - /ipo/how-to-apply/ (Master guide: UPI mandate vs ASBA netbanking)
-  - /ipo/[ipo-slug]/apply-via-[broker-id]/ (Step-by-step application walkthroughs)
+  - /ipo/[ipo-slug]/apply-via-[broker-id]/ (Step-by-step application walkthroughs, only for IPOs that are
+    still open or upcoming; for a closed IPO the page says bidding is closed, is noindex,follow and is not
+    returned for the sitemap)
+  - /ipo/[ipo-slug]/allotment-status/ (noindex,follow and not returned for the sitemap once the IPO has
+    listed or has no listing on file)
 
 Structured Data:
   - Schema.org HowTo (with Step details)
@@ -18,7 +22,12 @@ import os
 import re
 from datetime import datetime, timezone
 
-from pipeline import ipo_facts
+try:
+    from . import ipo_facts
+except ImportError:  # run as a script: python3 pipeline/ipo_apply_engine.py
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from pipeline import ipo_facts
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_DIR = os.path.join(ROOT, "site")
@@ -122,7 +131,7 @@ BROKERS = {
             "Find {company} in the list of open issues and click 'Apply'.",
             "Enter your UPI ID (must be linked to your own bank account registered with PAN).",
             "Specify the number of lots. Check the 'Cutoff-price' box to bid at the ceiling price.",
-            "Submit the application and open your UPI app (Google Pay, PhonePe, BHIM) to approve the auto-debit mandate before 5:00 PM."
+            "Submit the application and open your UPI app (Google Pay, PhonePe, BHIM) to approve the auto-debit mandate before the mandate cut-off time."
         ],
         "cta_url": "https://zerodha.com/open-account?c=ZE5729",
         "partner_badge": "BrokerLens Partner"
@@ -245,8 +254,22 @@ BROKERS = {
     }
 }
 
+SPONSORED_LINE = "Sponsored link: BrokerLens may earn a referral fee if you open an account through it."
+ROBOTS_NOINDEX = '<meta name="robots" content="noindex,follow">'
+
+
 def _esc(s):
     return html.escape(str(s or ""), quote=True)
+
+
+def _fill_step(step, company):
+    """Fills the {company} placeholder of a broker step. str.replace, not str.format, so any other brace
+    in a step can never raise or leak."""
+    return str(step).replace("{company}", company)
+
+
+def _sponsored_html(margin="8px 0 0 0"):
+    return f'<p class="xs faint" style="margin:{margin}">{_esc(SPONSORED_LINE)}</p>'
 
 
 def parse_price_band(band_str):
@@ -431,14 +454,19 @@ def render_how_to_apply_master(site_url="https://www.brokerlens.in"):
 
     broker_links = []
     for b_id, b in BROKERS.items():
+        # This page is not about one IPO, so the per-issue placeholder reads "the IPO" (the raw
+        # {company} placeholder used to show on the Dhan and HDFC Securities cards).
+        step_a, step_b = (_fill_step(x, "the IPO") for x in b["steps"][:2])
         broker_links.append(f"""
         <div style="background:var(--bg-raised);padding:16px;border-radius:6px;border:1px solid var(--border)">
           <h3 style="margin:0 0 6px 0;font-size:17px">{_esc(b['brand'])}</h3>
           <p class="xs muted" style="margin:0 0 10px 0">Platform: <strong>{_esc(b['platform'])}</strong> ({_esc(b['app_path'])})</p>
-          <p class="small" style="margin:0 0 12px 0;line-height:1.5">{_esc(b['steps'][0])} {_esc(b['steps'][1])}</p>
+          <p class="small" style="margin:0 0 12px 0;line-height:1.5">{_esc(step_a)} {_esc(step_b)}</p>
           <a href="{b['cta_url']}" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open {b['brand']} Account &rarr;</a>
+          {_sponsored_html("8px 0 0 0")}
         </div>
         """)
+    lim = ipo_facts.SEBI_BID_LIMITS
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -476,17 +504,17 @@ def render_how_to_apply_master(site_url="https://www.brokerlens.in"):
     <h2 style="font-size:18px;margin-top:0">Method 1: UPI Mandate via Stock Broker</h2>
     <p class="small muted">Best for retail investors applying via Zerodha, Groww, Angel One, Upstox, or Dhan.</p>
     <ul style="font-size:13px;line-height:1.6;padding-left:18px">
-      <li><strong>Maximum limit:</strong> ₹5,00,000 per transaction via NPCI UPI.</li>
+      <li><strong>Maximum limit:</strong> {lim['upi']} per application through UPI ({lim['note']}).</li>
       <li><strong>Zero paperwork:</strong> Completely digital flow inside your trading app.</li>
       <li><strong>Fund block:</strong> Money stays in your savings account earning interest until allotment.</li>
-      <li><strong>Cutoff time:</strong> Bidding closes at 5:00 PM on closing day; mandate approval deadline is 5:00 PM next business day.</li>
+      <li><strong>Cutoff time:</strong> Each issue states its bid closing time and its UPI mandate approval deadline. Check the offer document and your broker's bid screen.</li>
     </ul>
   </div>
   <div class="card" style="padding:20px;background:var(--bg-raised)">
     <h2 style="font-size:18px;margin-top:0">Method 2: Net Banking ASBA</h2>
-    <p class="small muted">Best for High Net-Worth Individuals (HNI) bidding above ₹5 Lakh or 3-in-1 accounts.</p>
+    <p class="small muted">Used for bids above the UPI limit of {lim['upi']}, and by investors who prefer a bank block (ASBA) or a 3-in-1 account.</p>
     <ul style="font-size:13px;line-height:1.6;padding-left:18px">
-      <li><strong>Maximum limit:</strong> Unlimited (governed by your bank's NEFT/RTGS limit).</li>
+      <li><strong>Maximum limit:</strong> The UPI cap does not apply to an ASBA bank block. Check your bank's own limits.</li>
       <li><strong>Direct lien:</strong> Bank blocks the funds directly without needing a third-party UPI app.</li>
       <li><strong>Supported banks:</strong> SBI, HDFC Bank, ICICI Bank, Axis Bank, Kotak Mahindra Bank.</li>
       <li><strong>Demat requirement:</strong> Must input your 16-digit CDSL/NSDL BOID manually during application.</li>
@@ -508,12 +536,31 @@ def render_how_to_apply_master(site_url="https://www.brokerlens.in"):
 </html>"""
 
 
+def _closed_text(ipo_record, status, company):
+    """One neutral sentence on why there is nothing to apply for, from dates on file."""
+    b_end = ipo_facts.fmt_date(ipo_record.get("bidding_end"))
+    if status == ipo_facts.STATUS_NO_LISTING:
+        t = ipo_facts.NO_LISTING_NOTE
+        fs = ipo_facts._flag_sentence(ipo_record)
+        return (t + " " + fs) if fs else t
+    if b_end:
+        return "Bidding for %s IPO closed on %s." % (company, b_end)
+    return "Bidding for %s IPO has closed." % company
+
+
 def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="https://www.brokerlens.in"):
-    """Renders /ipo/[ipo-slug]/apply-via-[broker-id]/."""
+    """Renders /ipo/[ipo-slug]/apply-via-[broker-id]/.
+
+    Application steps are written only while the IPO is open or upcoming. Once bidding is over the page says
+    so in a neutral notice, carries no application instruction, is noindex,follow and is not returned for
+    the sitemap (see build_ipo_apply_suite)."""
     sym = ipo_record["symbol"]
-    company = ipo_record.get("company") or sym
+    company = ipo_facts.display_name(ipo_record)
     ipo_slug = sym.lower()
     b_brand = broker_info["brand"]
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    status = ipo_facts.ipo_status(ipo_record, today_iso)
+    open_for_bids = status in ipo_facts.OPEN_STATUSES
 
     pf = ipo_facts.price_facts(ipo_record)
     band_str = ipo_facts.band_text(ipo_record)
@@ -522,64 +569,107 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
     # (Rs 14,500 divided by price) was wrong against prospectus figures and is gone.
     lot_size = ipo_facts.lot_size_on_file(ipo_record)
     min_invest = (lot_size * top) if (lot_size and top) else 0.0
+    lim = ipo_facts.SEBI_BID_LIMITS
 
     canonical = f"{site_url}/ipo/{ipo_slug}/apply-via-{broker_id}/"
-    title = f"How to Apply for {company} IPO in {b_brand}: Step-by-Step UPI Guide | BrokerLens"
-    desc = f"Learn how to apply for {company} IPO on {b_brand} ({broker_info['platform']}). Step-by-step UPI mandate guide, price band, and bidding cutoff time."
+    if open_for_bids:
+        title = f"How to Apply for {company} IPO in {b_brand}: Step-by-Step UPI Guide | BrokerLens"
+        desc = f"Learn how to apply for {company} IPO on {b_brand} ({broker_info['platform']}). Step-by-step UPI mandate guide, price band, and bidding cutoff time."
+        robots_meta = ""
+    else:
+        title = f"{company} IPO on {b_brand}: Bidding Closed | BrokerLens"
+        desc = (f"Bidding for {company} IPO is closed, so there is nothing to apply for. Dates and price on file, "
+                f"and where to check the issue's status.")
+        robots_meta = ROBOTS_NOINDEX
 
-    steps_html = "".join(f"<li>{s.format(company=company)}</li>" for s in broker_info["steps"])
+    steps_html = "".join(f"<li>{_esc(_fill_step(s, company))}</li>" for s in broker_info["steps"]) if open_for_bids else ""
 
     crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/ipo/">IPO</a></li><li class="muted">/</li><li><a href="/ipo/{ipo_slug}/">{sym}</a></li><li class="muted">/</li><li class="muted">Apply via {b_brand}</li></ol></nav>'
 
-    faqs = [
-        (f"Can I apply for {company} IPO using UPI on {b_brand}?",
-         f"Yes, {b_brand} supports 100% digital IPO applications via NPCI UPI 2.0 mandate up to ₹5,00,000 per application."),
-        (f"What is the minimum investment for {company} IPO?",
-         (f"The minimum bid is 1 lot of {lot_size} shares. At the upper price of Rs {ipo_facts.fmt_price(top)}, one lot is Rs {ipo_facts.fmt_price(min_invest)}." if min_invest > 0
-          else f"The minimum bid is 1 lot. BrokerLens has no sourced lot size for {company} IPO, so no rupee minimum is shown. The lot size is printed in the issue prospectus and on the bid screen of {b_brand}." + (f" The price band is {band_str} per share." if band_str else ""))),
-        (f"What happens if my UPI mandate for {company} is delayed?",
-         f"UPI mandates are usually delivered within 15 to 45 minutes of submitting the bid on {b_brand}. If you do not receive the notification, open your UPI app and check the 'Pending Mandates / Autopay' section."),
-        (f"Can I cancel or modify my {company} IPO application on {b_brand}?",
-         f"Yes, you can modify or cancel your bid on {b_brand} anytime before the official bidding window closes at 5:00 PM on the final issue date.")
-    ]
+    min_answer = (f"The minimum bid is 1 lot of {lot_size} shares. At the upper price of Rs {ipo_facts.fmt_price(top)}, one lot is Rs {ipo_facts.fmt_price(min_invest)}." if min_invest > 0
+                  else f"The minimum bid is 1 lot. BrokerLens has no sourced lot size for {company} IPO, so no rupee minimum is shown. The lot size is printed in the issue prospectus and on the bid screen of {b_brand}." + (f" The price band is {band_str} per share." if band_str else ""))
+    if open_for_bids:
+        faqs = [
+            (f"Can I apply for {company} IPO using UPI on {b_brand}?",
+             f"Yes, {b_brand} supports digital IPO applications through a UPI mandate, with a UPI limit of {lim['upi']} per application ({lim['note']})."),
+            (f"What is the minimum investment for {company} IPO?", min_answer),
+            (f"What happens if my UPI mandate for {company} is delayed?",
+             f"UPI mandates are usually delivered within 15 to 45 minutes of submitting the bid on {b_brand}. If you do not receive the notification, open your UPI app and check the 'Pending Mandates / Autopay' section."),
+            (f"Can I cancel or modify my {company} IPO application on {b_brand}?",
+             f"Bids can usually be modified or cancelled on {b_brand} while the bidding window is open. The closing time is stated in the offer document and on the bid screen.")
+        ]
+    else:
+        faqs = [
+            (f"Can I still apply for {company} IPO on {b_brand}?",
+             f"No. {_closed_text(ipo_record, status, company)} Applications cannot be made for this issue."),
+            (f"What is the price of {company} IPO?",
+             (f"The price band on file is {band_str} per share." if band_str else f"No price band or issue price is on file for {company} IPO.")),
+            (f"Where can I check the status of {company} IPO?",
+             f"The IPO page on BrokerLens shows the dates and status on file for {company}. The exchange and the registrar are the official sources for any allotment or listing result."),
+        ]
 
     faq_html = "".join(f'<details class="faq-item"><summary>{_esc(q)}</summary><p>{_esc(a)}</p></details>' for q, a in faqs)
 
-    jsonld = {
-        "@context": "https://schema.org",
-        "@graph": [
-            {
-                "@type": "HowTo",
-                "name": f"How to Apply for {company} IPO on {b_brand}",
-                "description": f"Step-by-step instructions to apply for {company} IPO through {b_brand} Kite/App using UPI auto-debit mandate.",
-                "step": [
-                    {
-                        "@type": "HowToStep",
-                        "position": i + 1,
-                        "name": f"Step {i+1}",
-                        "text": s.format(company=company)
-                    }
-                    for i, s in enumerate(broker_info["steps"])
-                ]
-            },
-            {
-                "@type": "FAQPage",
-                "mainEntity": [
-                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
-                    for q, a in faqs
-                ]
-            },
-            {
-                "@type": "BreadcrumbList",
-                "itemListElement": [
-                    {"@type": "ListItem", "position": 1, "name": "Home", "item": site_url},
-                    {"@type": "ListItem", "position": 2, "name": "IPO", "item": f"{site_url}/ipo/"},
-                    {"@type": "ListItem", "position": 3, "name": sym, "item": f"{site_url}/ipo/{ipo_slug}/"},
-                    {"@type": "ListItem", "position": 4, "name": f"Apply via {b_brand}", "item": canonical}
-                ]
-            }
+    graph = []
+    if open_for_bids:
+        graph.append({
+            "@type": "HowTo",
+            "name": f"How to Apply for {company} IPO on {b_brand}",
+            "description": f"Step-by-step instructions to apply for {company} IPO through {b_brand} Kite/App using UPI auto-debit mandate.",
+            "step": [
+                {
+                    "@type": "HowToStep",
+                    "position": i + 1,
+                    "name": f"Step {i+1}",
+                    "text": _fill_step(s, company)
+                }
+                for i, s in enumerate(broker_info["steps"])
+            ]
+        })
+    graph.append({
+        "@type": "FAQPage",
+        "mainEntity": [
+            {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+            for q, a in faqs
         ]
-    }
+    })
+    graph.append({
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Home", "item": site_url},
+            {"@type": "ListItem", "position": 2, "name": "IPO", "item": f"{site_url}/ipo/"},
+            {"@type": "ListItem", "position": 3, "name": sym, "item": f"{site_url}/ipo/{ipo_slug}/"},
+            {"@type": "ListItem", "position": 4, "name": f"Apply via {b_brand}", "item": canonical}
+        ]
+    })
+    jsonld = {"@context": "https://schema.org", "@graph": graph}
+
+    if open_for_bids:
+        h1 = f"How to Apply for {company} IPO on {b_brand}"
+        intro = (f"Follow this step-by-step walkthrough to submit your application for the <strong>{_esc(company)}</strong> public issue on "
+                 f"{_esc(b_brand)} ({_esc(broker_info['platform'])}) using UPI mandate.")
+        main_block = (
+            '<h2 style="font-size:20px;margin-bottom:14px">Step-by-Step Application Walkthrough</h2>\n'
+            '<div class="card" style="padding:24px;background:var(--bg-raised);margin-bottom:32px">\n'
+            '  <ol style="margin:0;padding-left:22px;line-height:1.8;font-size:15px">\n'
+            f'    {steps_html}\n'
+            '  </ol>\n</div>'
+        )
+        cta_title = f"Don't have a {b_brand} Demat Account?"
+        cta_text = "Open an account online with instant e-KYC to bid for upcoming IPOs."
+    else:
+        h1 = f"{company} IPO on {b_brand}: Bidding Closed"
+        intro = (f"{_esc(_closed_text(ipo_record, status, company))} There are no application steps for this issue.")
+        main_block = (
+            '<div class="card" style="padding:20px;background:var(--bg-raised);margin-bottom:32px;border-left:4px solid var(--accent)">\n'
+            f'  <h2 style="font-size:19px;margin:0 0 8px 0">Bidding for {_esc(company)} IPO is closed</h2>\n'
+            '  <p class="small muted" style="margin:0;line-height:1.6;max-width:72ch">Applications can no longer be made for this issue, so this page '
+            'carries no application instructions. For the dates and status on file, see the '
+            f'<a href="/ipo/{ipo_slug}/">{_esc(company)} IPO page</a>. To apply for a future IPO you need a demat account and a UPI ID; '
+            'see <a href="/ipo/how-to-apply/">how IPO applications work</a>.</p>\n</div>'
+        )
+        cta_title = f"Planning to apply for a future IPO on {b_brand}?"
+        cta_text = "You need a demat account and a UPI ID before an issue opens."
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -589,6 +679,7 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
+{robots_meta}
 <link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">{json.dumps(jsonld, ensure_ascii=False)}</script>
 </head>
@@ -608,9 +699,9 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
 <main class="wrap" style="padding:24px 20px 60px 20px">
 {crumb_html}
 
-<h1 style="margin:20px 0 8px 0;font-size:26px">How to Apply for {company} IPO on {b_brand}</h1>
+<h1 style="margin:20px 0 8px 0;font-size:26px">{_esc(h1)}</h1>
 <p class="muted" style="max-width:75ch;margin:0 0 24px 0;line-height:1.6">
-  Follow this verified step-by-step walkthrough to submit your application for the <strong>{company}</strong> public issue on {b_brand} ({broker_info['platform']}) using UPI mandate.
+  {intro}
 </p>
 
 <div class="card" style="padding:20px;background:var(--bg-raised);margin-bottom:28px;display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px">
@@ -623,8 +714,9 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
     <div style="font-weight:600;font-size:16px">{_esc(f"{lot_size} Shares" if lot_size else "Not on file")}</div>
   </div>
   <div>
-    <div class="xs muted">Retail Bid Limit (SEBI)</div>
-    <div style="font-weight:600;font-size:16px;color:var(--accent)">Up to Rs 2 lakh</div>
+    <div class="xs muted">Retail Bid Limit</div>
+    <div style="font-weight:600;font-size:16px;color:var(--accent)">Up to {lim['retail']}</div>
+    <div class="xs faint">{_esc(lim['note'])}</div>
   </div>
   <div>
     <div class="xs muted">Bidding Opens / Closes</div>
@@ -632,21 +724,17 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
   </div>
 </div>
 
-<h2 style="font-size:20px;margin-bottom:14px">Step-by-Step Application Walkthrough</h2>
-<div class="card" style="padding:24px;background:var(--bg-raised);margin-bottom:32px">
-  <ol style="margin:0;padding-left:22px;line-height:1.8;font-size:15px">
-    {steps_html}
-  </ol>
-</div>
+{main_block}
 
 <div class="card" style="padding:20px;background:var(--bg-raised);margin-bottom:32px">
   <div class="row-between" style="align-items:center;flex-wrap:wrap;gap:16px">
     <div>
-      <h3 style="margin:0 0 6px 0;font-size:18px">Don't have a {b_brand} Demat Account?</h3>
-      <p class="xs muted" style="margin:0">Open an account online with instant e-KYC to bid for upcoming IPOs.</p>
+      <h3 style="margin:0 0 6px 0;font-size:18px">{_esc(cta_title)}</h3>
+      <p class="xs muted" style="margin:0">{_esc(cta_text)}</p>
     </div>
     <a href="{broker_info['cta_url']}" target="_blank" rel="noopener sponsored" class="btn btn-primary">Open {b_brand} Account &rarr;</a>
   </div>
+  {_sponsored_html("10px 0 0 0")}
 </div>
 
 <h2 style="font-size:20px;margin-bottom:16px">Frequently Asked Questions</h2>
@@ -655,7 +743,7 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
 </div>
 
 <p class="small muted">
-  Also see: <a href="/ipo/{ipo_slug}/">{company} IPO Details & Subscription</a> &middot; <a href="/ipo/allotment-status/">Check Allotment Status</a> &middot; <a href="/broker/{broker_id}/">{b_brand} Broker Review</a>
+  Also see: <a href="/ipo/{ipo_slug}/">{_esc(company)} IPO Details & Subscription</a> &middot; <a href="/ipo/allotment-status/">Check Allotment Status</a> &middot; <a href="/broker/{broker_id}/">{b_brand} Broker Review</a>
 </p>
 </main>
 
@@ -925,7 +1013,11 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
     """Renders /ipo/[ipo-slug]/allotment-status/index.html."""
     sym = (ipo_record.get("symbol") or "").strip().upper()
     ipo_slug = sym.lower()
-    company = ipo_record.get("company") or sym
+    company = ipo_facts.display_name(ipo_record)
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    status = ipo_facts.ipo_status(ipo_record, today_iso)
+    # Listed IPOs and IPOs with no listing on file: noindex,follow with a self canonical, not in the sitemap.
+    robots_meta = ROBOTS_NOINDEX if status in ("Listed", ipo_facts.STATUS_NO_LISTING) else ""
     price_band = ipo_facts.band_text(ipo_record) or "Not on file"
     b_start = ipo_facts.fmt_date(ipo_record.get("bidding_start")) or "Announced"
     b_end = ipo_facts.fmt_date(ipo_record.get("bidding_end")) or "Announced"
@@ -945,6 +1037,15 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
     # application acknowledgment and the RHP cover page).
     registrar_list = list(REGISTRARS.values())
 
+    if status in ("Active", "Forthcoming", "Closed"):
+        when_answer = (f"The basis of allotment for {company} is finalized within 1 to 2 business days after the issue closing date ({b_end}). "
+                       f"Check the official registrar portal late evening on the scheduled allotment date.")
+    elif status == ipo_facts.STATUS_NO_LISTING:
+        when_answer = (f"The bidding end date on file for {company} is {b_end}. {ipo_facts.NO_LISTING_NOTE} "
+                       f"The registrar portal or the exchange notice shows the current position of the issue.")
+    else:
+        when_answer = (f"Bidding for {company} closed on {b_end}. The registrar portal or the exchange notice is the "
+                       f"official place to see the allotment result.")
     faq_items = [
         (
             f"How do I check {company} IPO allotment status?",
@@ -952,7 +1053,7 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
         ),
         (
             f"When will {company} IPO allotment be announced?",
-            f"The basis of allotment for {company} is finalized within 1 to 2 business days after the issue closing date ({b_end}). Check the official registrar portal late evening on the scheduled allotment date."
+            when_answer
         ),
         (
             f"What happens if I get zero allotment in {company} IPO?",
@@ -967,6 +1068,13 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
         f'</div>'
         for q, a in faq_items
     )
+
+    if status in ("Active", "Forthcoming"):
+        state_html = ""
+    else:
+        state_html = (f'<div class="card" style="padding:14px 18px;margin-bottom:24px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
+                      f'<div class="small muted">{_esc(_closed_text(ipo_record, status, company))} The registrar and exchange links below are the '
+                      f'official place to check a result; BrokerLens holds no individual results.</div></div>')
 
     schema_jsonld = {
         "@context": "https://schema.org",
@@ -986,7 +1094,7 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
                         "@type": "HowToStep",
                         "position": 2,
                         "name": f"Select {company} from Dropdown",
-                        "text": f"Select '{company}' from the active public issues list."
+                        "text": f"Select '{company}' from the issue dropdown."
                     },
                     {
                         "@type": "HowToStep",
@@ -1023,6 +1131,7 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
 <link rel="canonical" href="{canonical}">
+{robots_meta}
 <link rel="stylesheet" href="/assets/css/app.css">
 <script type="application/ld+json">
 {json.dumps(schema_jsonld, indent=2, ensure_ascii=False)}
@@ -1056,6 +1165,7 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
     </p>
   </header>
 
+  {state_html}
   <div class="card" style="padding:20px;background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;margin-bottom:28px;display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px;">
     <div>
       <div class="xs muted">Price Band</div>
@@ -1145,7 +1255,8 @@ def select_target_ipos(ipo_data, limit_recent_ipos):
 
     for r in current_ipos + upcoming_ipos:
         sym = (r.get("symbol") or "").strip().upper()
-        if sym and sym not in seen_syms:
+        # A debt series published in the IPO feed (SMCG04) gets no IPO apply pages.
+        if sym and sym not in seen_syms and not ipo_facts.is_non_equity_issue(r):
             seen_syms.add(sym)
             target_ipos.append(r)
 
@@ -1211,37 +1322,57 @@ def build_ipo_apply_suite(limit_recent_ipos: int = 50, site_url: str = "https://
             out.write(r_html)
         generated_urls.append(f"/ipo/registrar/{reg_slug}/")
 
+    # The raw feed rows are looked up in the merged IPO records, so the status (and so the page treatment)
+    # is the one every other IPO page uses (a listing date from the past-issues feed wins over a stale
+    # current-issues row).
+    merged = {}
+    try:
+        from pipeline.publish import _ipo_merge
+        merged = {(x.get("symbol") or "").upper(): x for x in _ipo_merge(ipo_data)}
+    except Exception:
+        merged = {}
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
     # 5. Dedicated IPO Allotment Checker Pages (/ipo/[slug]/allotment-status/)
+    # Every page is written, but the returned list (the sitemap) holds only pages that are worth indexing:
+    # the allotment-status page while the IPO is open, upcoming or still inside its listing window, and the
+    # apply-via pages only while the IPO is open or upcoming. Listed IPOs and IPOs with no listing on file
+    # get noindex,follow pages that are left out of the list.
     for r in target_ipos:
         sym = r.get("symbol")
         if not sym:
             continue
+        rec = merged.get(sym.upper()) or r
         ipo_slug = sym.lower()
         ipo_allot_dir = os.path.join(SITE_DIR, "ipo", ipo_slug, "allotment-status")
         os.makedirs(ipo_allot_dir, exist_ok=True)
-        ipo_allot_html = render_individual_ipo_allotment_page(r, site_url=site_url)
+        ipo_allot_html = render_individual_ipo_allotment_page(rec, site_url=site_url)
         with open(os.path.join(ipo_allot_dir, "index.html"), "w", encoding="utf-8") as out:
             out.write(ipo_allot_html)
-        generated_urls.append(f"/ipo/{ipo_slug}/allotment-status/")
+        if not ipo_facts.is_settled(rec, today_iso):
+            generated_urls.append(f"/ipo/{ipo_slug}/allotment-status/")
 
     # 6. IPO x Broker matrix (/ipo/[slug]/apply-via-[broker]/)
     for r in target_ipos:
         sym = r.get("symbol")
         if not sym:
             continue
+        rec = merged.get(sym.upper()) or r
         ipo_slug = sym.lower()
+        indexable = ipo_facts.is_open_for_bids(rec, today_iso)
 
         for b_id, b_info in BROKERS.items():
             page_dir = os.path.join(SITE_DIR, "ipo", ipo_slug, f"apply-via-{b_id}")
             os.makedirs(page_dir, exist_ok=True)
 
-            page_html = render_ipo_broker_apply_page(r, b_id, b_info, site_url=site_url)
+            page_html = render_ipo_broker_apply_page(rec, b_id, b_info, site_url=site_url)
             with open(os.path.join(page_dir, "index.html"), "w", encoding="utf-8") as out:
                 out.write(page_html)
 
-            generated_urls.append(f"/ipo/{ipo_slug}/apply-via-{b_id}/")
+            if indexable:
+                generated_urls.append(f"/ipo/{ipo_slug}/apply-via-{b_id}/")
 
-    print(f"[ipo_apply_engine] Successfully generated {len(generated_urls)} IPO application, registrar & allotment pages across {len(target_ipos)} IPOs!")
+    print(f"[ipo_apply_engine] Successfully generated pages across {len(target_ipos)} IPOs; {len(generated_urls)} indexable URLs returned (listed and no-listing IPOs are noindex and not returned)!")
     return generated_urls
 
 

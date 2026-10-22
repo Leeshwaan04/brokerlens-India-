@@ -2,8 +2,18 @@
 
 One canonical page per broker at /broker/<id>/charges/, for every broker whose
 fee schedule is complete in the trade-cost model (pipeline/trade_cost_engine.py,
-BROKER_RATES). A broker with a missing or non-numeric field is skipped and
-listed by skipped_brokers(); nothing is ever filled in with a guess.
+BROKER_RATES) AND whose encoded brokerage rule is unambiguous (see
+withheld_reasons()). A broker with a missing or non-numeric field is skipped and
+listed by skipped_brokers(); a broker whose rule the model cannot state safely
+(a percentage plan with a rupee cap the model does not support, a restricted or
+conditional plan) is withheld and listed by withheld_brokers(). Nothing is ever
+filled in with a guess. eligible_keys() is the single function every hook uses
+(page writer, sitemap list, stock cost page link, broker profile link, /brokers
+list, hub chips), so the withheld set is honoured everywhere.
+
+The figures are an indicative schedule held in the BrokerLens model. They are NOT
+verified against the broker's own rate card and no check date is on file, and the
+copy says so (the rest of the site shows no pricing it cannot verify).
 
 What a page carries, all of it from data on file:
   - a calculator (equity delivery and equity intraday, the two segments the
@@ -56,6 +66,81 @@ REGISTER_NAMES = {
 
 BROKING_CATS = ("stock_broker", "commodity_broker")
 
+# ----------------------------------------------------------------------------
+# Withholding rule (an unambiguous encoded rule, or no page)
+# ----------------------------------------------------------------------------
+# The model encodes a brokerage rule as (flat, pct). flat=0 and pct=0 is "zero";
+# pct=0 is a flat per-order fee; both set means "lower of flat and pct of order
+# value". That last form is the discount-broker cap ("Rs 20 or 0.1%, whichever is
+# lower") and is only safe to render when the percentage is a discount-broker
+# level. A percentage above CAP_RULE_MAX_PCT is a full-service or regional
+# percentage plan whose Rs 20 cap is not supported by the model (ICICI Direct
+# 0.55%, HDFC Securities 0.50%, Sharekhan 0.30%, Motilal Oswal 0.20% and so on),
+# and rendering "lower of Rs 20 and X%" for it would publish a wrong rupee total.
+CAP_RULE_MAX_PCT = 0.001  # 0.1% of order value, either segment
+
+# Wording in the model's own tagline that marks a restricted or conditional plan
+# (the schedule would only hold for some customers, or only for a period).
+CONDITIONAL_PLAN_MARKERS = {
+    "young investors": "zero brokerage applies to a restricted plan (young investors)",
+    "loss making": "zero brokerage applies only to loss-making trades, which the schedule does not model",
+    "pay only when": "brokerage is conditional on profit, which the schedule does not model",
+    "first year": "a fee waiver that holds for the first year only, which the schedule does not model",
+}
+
+
+def rule_kind(flat, pct):
+    """'zero', 'flat' (fixed fee per order) or 'lower_of' (flat cap with a percentage)."""
+    if flat == 0 and pct == 0:
+        return "zero"
+    if pct == 0:
+        return "flat"
+    return "lower_of"
+
+
+def withheld_reasons(rate_key):
+    """Reasons the page for this rate key must not be published ([] when it may be).
+
+    Pure function of the BROKER_RATES entry, so it is testable on fixtures."""
+    return _withheld_reasons_for(tce.BROKER_RATES.get(rate_key) or {})
+
+
+def _withheld_reasons_for(rates):
+    reasons = []
+    kinds = {}
+    for seg in ("delivery", "intraday"):
+        flat, pct = rates.get(seg + "_flat"), rates.get(seg + "_pct")
+        if not (_is_num(flat) and _is_num(pct)):
+            continue  # incomplete schedules are skipped_brokers()'s business
+        kinds[seg] = rule_kind(flat, pct)
+        if kinds[seg] == "lower_of" and pct > CAP_RULE_MAX_PCT:
+            reasons.append(
+                "%s rule is a %s%% percentage plan with a Rs %s cap that the model does not support" % (
+                    seg, _pct(pct), ("%g" % flat)))
+    if kinds and all(k == "zero" for k in kinds.values()) and len(kinds) == 2:
+        reasons.append("zero brokerage on every segment is a restricted-plan signal, not a standard schedule")
+    tag = (rates.get("tagline") or "").lower()
+    for marker, why in CONDITIONAL_PLAN_MARKERS.items():
+        if marker in tag:
+            reasons.append(why)
+    return reasons
+
+
+def is_withheld(rate_key):
+    return bool(withheld_reasons(rate_key))
+
+
+def withheld_brokers():
+    """{rate_key: [reasons]} for complete schedules whose page is withheld, in model order."""
+    out = {}
+    for k, r in tce.BROKER_RATES.items():
+        if schedule_complete(r):
+            why = _withheld_reasons_for(r)
+            if why:
+                out[k] = why
+    return out
+
+
 _NUM_FIELDS = ("delivery_flat", "delivery_pct", "intraday_flat", "intraday_pct", "dp_charge", "demat_amc")
 
 # Same wording as the other calculator pages (see publish._write_calculator_pages).
@@ -71,8 +156,14 @@ CHARGE_ROWS = (
     ("sebi_charges", "SEBI turnover fee"),
     ("stamp_duty", "Stamp duty (buy side)"),
     ("gst", "GST on brokerage, exchange and SEBI charges"),
-    ("dp_charge", "Depository participant (DP) charge"),
+    ("dp_charge", "DP charge (includes GST)"),
 )
+
+# What every page says about the status of its figures. Kept in one place so the
+# source copy, meta description, FAQ and JSON-LD cannot drift apart.
+STATUS_SHORT = "indicative schedule in the BrokerLens model, not verified against the broker's own rate card"
+CHECKED_NOT_ON_FILE = "The date it was checked is not on file"
+DP_GST_NOTE = "The DP charge already includes 18% GST, so no further GST is added to it"
 
 
 def _esc(s):
@@ -93,8 +184,10 @@ def schedule_complete(rates):
 
 
 def eligible_keys():
-    """Rate keys that get a page, in stable (alphabetical by brand) order."""
-    keys = [k for k, r in tce.BROKER_RATES.items() if schedule_complete(r)]
+    """Rate keys that get a page, in stable (alphabetical by brand) order.
+
+    The ONE list every hook reads: complete schedule and not withheld."""
+    keys = [k for k, r in tce.BROKER_RATES.items() if schedule_complete(r) and not _withheld_reasons_for(r)]
     return sorted(keys, key=lambda k: (tce.BROKER_RATES[k]["brand"].lower(), k))
 
 
@@ -112,7 +205,23 @@ def charges_path(rate_key):
 
 
 def has_page(rate_key):
-    return rate_key in tce.BROKER_RATES and schedule_complete(tce.BROKER_RATES[rate_key])
+    return rate_key in tce.BROKER_RATES and schedule_complete(tce.BROKER_RATES[rate_key]) and not is_withheld(rate_key)
+
+
+def _schedule_signature(rates):
+    return tuple(rates.get(k) for k in _NUM_FIELDS)
+
+
+def same_schedule_peers(rate_key):
+    """Brands of other eligible brokers whose schedule on file is identical field for field.
+
+    Their worked-example tables match apart from the brand name, and the page says so."""
+    me = tce.BROKER_RATES.get(rate_key)
+    if not me:
+        return []
+    sig = _schedule_signature(me)
+    return [tce.BROKER_RATES[k]["brand"] for k in eligible_keys()
+            if k != rate_key and _schedule_signature(tce.BROKER_RATES[k]) == sig]
 
 
 def anchor_text(rate_key):
@@ -264,7 +373,7 @@ def statutory_rows():
             inr(tce.SEBI_TURNOVER_RATE * 10000000, 0), _pct(tce.SEBI_TURNOVER_RATE))),
         ("Stamp duty, equity delivery", "%s%% on the buy value" % _pct(tce.STAMP_DUTY_DELIVERY_BUY)),
         ("Stamp duty, equity intraday", "%s%% on the buy value" % _pct(tce.STAMP_DUTY_INTRADAY_BUY)),
-        ("GST", "%s%% on brokerage, exchange charges and SEBI fee" % _pct(tce.GST_RATE)),
+        ("GST", "%s%% on brokerage, exchange charges and SEBI fee (the DP charge already includes its own GST)" % _pct(tce.GST_RATE)),
     ]
 
 
@@ -291,9 +400,10 @@ def _basis(rates, res):
             inr(tce.SEBI_TURNOVER_RATE * 10000000, 0), inr(total_turnover, 0)),
         "stamp_duty": "%s%% of Rs %s buy value" % (
             _pct(tce.STAMP_DUTY_DELIVERY_BUY if delivery else tce.STAMP_DUTY_INTRADAY_BUY), inr(buy, 0)),
-        "gst": "%s%% of Rs %s (brokerage plus exchange and SEBI charges)" % (
+        "gst": "%s%% of Rs %s (brokerage plus exchange and SEBI charges; the DP charge carries its own GST)" % (
             _pct(tce.GST_RATE), inr(res["brokerage"] + res["exchange_charges"] + res["sebi_charges"])),
-        "dp_charge": ("Charged once when the shares are sold from the demat account, as listed in the schedule on file"
+        "dp_charge": ("Charged once when the shares are sold from the demat account, as listed in the indicative schedule. "
+                      "The figure already includes 18% GST, so none is added to it"
                       if delivery else "Not applicable to intraday trades"),
     }
 
@@ -433,30 +543,40 @@ def _identifiers_html(brand, rate_key, ident):
 # Page
 # ----------------------------------------------------------------------------
 
-def _faqs(brand, rates, ex_del, ex_int, ident):
+def _faqs(brand, rates, ex_del, ex_int, ident, peers=()):
     d_rule = _rule_text(rates["delivery_flat"], rates["delivery_pct"])
     i_rule = _rule_text(rates["intraday_flat"], rates["intraday_pct"])
-    amc = ("%s has no annual maintenance charge (AMC) on its demat account in the schedule on file." % brand
+    confirm = ("This is the indicative schedule held in the BrokerLens model. It has not been verified against %s's own rate card "
+               "and the date it was checked is not on file, so confirm it on the %s tariff page before you rely on it." % (brand, brand))
+    amc = ("The indicative schedule lists no annual maintenance charge (AMC) on a %s demat account." % brand
            if rates["demat_amc"] == 0 else
-           "The schedule on file lists an annual maintenance charge (AMC) of %s per year on a %s demat account." % (
-               rs(rates["demat_amc"]), brand))
+           "The indicative schedule lists an annual maintenance charge (AMC) of %s per year on a %s demat account. "
+           "It has not been verified against the broker's own rate card." % (rs(rates["demat_amc"]), brand))
     faqs = [
-        ("What is the brokerage for equity delivery at %s?" % brand,
-         "%s. This is the schedule on file; confirm it on the %s tariff page before you rely on it." % (d_rule, brand)),
-        ("What is the intraday brokerage at %s?" % brand,
-         "%s. This is the schedule on file; confirm it on the %s tariff page before you rely on it." % (i_rule, brand)),
+        ("Are these %s charges verified against the broker's own tariff?" % brand,
+         "No. The figures are an indicative schedule held in the BrokerLens model. They have not been verified against %s's "
+         "own rate card, and the date they were checked is not on file. Confirm them on the broker's own tariff page." % brand),
+        ("What is the brokerage for equity delivery at %s?" % brand, "%s. %s" % (d_rule, confirm)),
+        ("What is the intraday brokerage at %s?" % brand, "%s. %s" % (i_rule, confirm)),
         ("How much are total charges on a Rs 1,00,000 equity delivery trade at %s?" % brand,
-         "Buying Rs 1,00,000 and selling Rs 1,00,000 of shares on NSE as delivery comes to Rs %s in total charges at %s, "
-         "of which brokerage is Rs %s. This is a worked example, not a quote." % (
-             inr(ex_del["total"]), brand, inr(ex_del["brokerage"]))),
+         "On the indicative schedule, buying Rs 1,00,000 and selling Rs 1,00,000 of shares on NSE as delivery comes to Rs %s in "
+         "total charges at %s, of which brokerage is Rs %s. This is a worked example, not a quote, and the schedule is not "
+         "verified against the broker's own rate card." % (inr(ex_del["total"]), brand, inr(ex_del["brokerage"]))),
         ("How much are total charges on a Rs 1,00,000 intraday trade at %s?" % brand,
-         "Buying Rs 1,00,000 and selling Rs 1,00,000 of shares on NSE as intraday comes to Rs %s in total charges at %s, "
-         "of which brokerage is Rs %s. This is a worked example, not a quote." % (
-             inr(ex_int["total"]), brand, inr(ex_int["brokerage"]))),
+         "On the indicative schedule, buying Rs 1,00,000 and selling Rs 1,00,000 of shares on NSE as intraday comes to Rs %s in "
+         "total charges at %s, of which brokerage is Rs %s. This is a worked example, not a quote, and the schedule is not "
+         "verified against the broker's own rate card." % (inr(ex_int["total"]), brand, inr(ex_int["brokerage"]))),
         ("What is the DP charge at %s?" % brand,
-         "The schedule on file lists a DP charge of %s, applied once when delivery shares are sold from the demat account." % rs(rates["dp_charge"])),
+         "The indicative schedule lists a DP charge (includes GST) of %s, applied once when delivery shares are sold from the "
+         "demat account. The figure already includes 18%% GST, so no further GST is added to it. Confirm the current DP charge "
+         "on the broker's own tariff page." % rs(rates["dp_charge"])),
         ("Is there an annual maintenance charge on a %s demat account?" % brand, amc),
     ]
+    if peers:
+        faqs.append(("Why do the %s figures match another broker's page?" % brand,
+                     "The indicative schedule held in the BrokerLens model for %s is the same, field for field, as the one held for %s, "
+                     "so the worked examples match apart from the name. That is a property of the model, not a finding that the "
+                     "two brokers charge alike." % (brand, ", ".join(peers))))
     if ident["broking"]:
         faqs.append(("What is the SEBI registration number of %s?" % brand,
                      "The SEBI register lists these stock-broking registration numbers: %s. Confirm on SEBI's register before "
@@ -467,7 +587,7 @@ def _faqs(brand, rates, ex_del, ex_int, ident):
                      "account statement, which BrokerLens does not hold." % "; ".join(
                          "%s registration %s" % (dep, no) for dep, no, _e in ident["dps"])))
     faqs.append(("Does this calculator cover futures, options, currency and commodity at %s?" % brand,
-                 "Not yet. The schedule on file for %s covers equity delivery and equity intraday only, so futures, options, "
+                 "Not yet. The indicative schedule for %s covers equity delivery and equity intraday only, so futures, options, "
                  "currency and commodity charges are not calculated here." % brand))
     return faqs
 
@@ -488,13 +608,14 @@ def render_charges_page(rate_key, built_by_id=None, registry=None, site_url="htt
 
     ex_del = compute_charges(rates, WORKED_VALUE, WORKED_VALUE, "delivery")
     ex_int = compute_charges(rates, WORKED_VALUE, WORKED_VALUE, "intraday")
-    faqs = _faqs(brand, rates, ex_del, ex_int, ident)
+    peers = same_schedule_peers(rate_key)
+    faqs = _faqs(brand, rates, ex_del, ex_int, ident, peers)
 
-    h1 = "%s brokerage calculator and charges" % brand
-    title = "%s Brokerage Calculator and Charges | BrokerLens" % brand
+    h1 = "%s brokerage calculator: indicative charges" % brand
+    title = "%s Brokerage Calculator: Indicative Charges | BrokerLens" % brand
     description = (
-        "%s brokerage calculator: equity delivery %s, intraday %s, DP charge %s. Works out STT, exchange fees, SEBI fee, "
-        "stamp duty and GST, with a worked example on a Rs 1,00,000 trade." % (
+        "%s brokerage calculator on an indicative schedule held in the BrokerLens model: delivery %s, intraday %s, DP charge "
+        "%s incl. GST. Not verified against the broker's rate card; check date not on file." % (
             brand, _rule_short(rates["delivery_flat"], rates["delivery_pct"]),
             _rule_short(rates["intraday_flat"], rates["intraday_pct"]), rs(rates["dp_charge"])))[:300]
 
@@ -519,13 +640,13 @@ def render_charges_page(rate_key, built_by_id=None, registry=None, site_url="htt
         '<script src="/assets/js/broker-charges.js" defer></script></head>'), 1)
 
     website = _website(rate_key, profile)
-    website_html = (' Confirm every figure on the <a href="%s" rel="noopener" target="_blank">%s website</a>.' % (
-        _esc(website), _esc(brand))) if website else " Confirm every figure with the broker before you rely on it."
+    website_html = (' Confirm every figure on the <a href="%s" rel="noopener" target="_blank">%s website</a> or its tariff page.' % (
+        _esc(website), _esc(brand))) if website else " Confirm every figure on the broker's own tariff page before you rely on it."
 
     sched_rows = [
         ("Equity delivery brokerage", _esc(_rule_text(rates["delivery_flat"], rates["delivery_pct"]))),
         ("Equity intraday brokerage", _esc(_rule_text(rates["intraday_flat"], rates["intraday_pct"]))),
-        ("DP charge (per sale of delivery shares)", _esc(rs(rates["dp_charge"]))),
+        ("DP charge (includes GST), per sale of delivery shares", _esc(rs(rates["dp_charge"]) + ", already including 18% GST")),
         ("Demat annual maintenance charge (AMC)", _esc(rs(rates["demat_amc"]) + " per year")),
         ("Futures, options, currency, commodity", "Not on file, so not calculated on this page"),
     ]
@@ -548,22 +669,25 @@ def render_charges_page(rate_key, built_by_id=None, registry=None, site_url="htt
         '<button type="button" id="bc-run" class="btn btn-primary" style="margin-top:8px">Calculate charges</button>'
         '<div id="bc-out" aria-live="polite" style="margin-top:16px">%s</div>'
         '<p class="xs faint" style="margin-top:8px">Shown for a Rs %s buy and a Rs %s sell as equity delivery. Change the '
-        'values and press Calculate; the sums run in your browser.</p></div>'
+        'values and press Calculate; the sums run in your browser. The figures use the indicative schedule below, not verified '
+        'against the broker\'s own rate card, and the DP charge already includes 18%% GST.</p></div>'
     ) % (_data_attrs(rates), WORKED_VALUE, WORKED_VALUE, _calc_table_html(ex_del), inr(WORKED_VALUE, 0), inr(WORKED_VALUE, 0))
 
+    peer_note = (" The indicative schedule for %s is identical to the one held for %s, so the tables there match apart from the name." % (
+        brand, ", ".join(peers))) if peers else ""
     worked_html = (
         '<h2 style="margin-top:32px;font-size:18px">Worked example: charges on a Rs 1,00,000 trade at %s</h2>'
         '<p style="max-width:72ch">Buy Rs 1,00,000 of shares and sell Rs 1,00,000 of shares on NSE, the same day or later, '
-        'with no profit or loss. Figures are worked out here from the schedule on file and the statutory rates below.</p>'
+        'with no profit or loss. Figures are worked out here from the indicative schedule in the BrokerLens model and the statutory rates below, and are not verified against the broker\'s own rate card.%s</p>'
         '<h3 style="margin-top:16px;font-size:15px">Equity delivery</h3>%s'
         '<h3 style="margin-top:16px;font-size:15px">Equity intraday</h3>%s'
-    ) % (_esc(brand), _worked_table_html(rates, ex_del), _worked_table_html(rates, ex_int))
+    ) % (_esc(brand), _esc(peer_note), _worked_table_html(rates, ex_del), _worked_table_html(rates, ex_int))
 
     source_html = (
         '<h2 style="margin-top:28px;font-size:18px">Where these numbers come from</h2>'
-        '<p class="small" style="max-width:72ch;line-height:1.6">Brokerage, DP charge and annual maintenance charge come from '
-        'the published %s tariff as held in the BrokerLens trade-cost model, the same schedule behind every %s stock cost page on this '
-        'site. The date this tariff was last checked is not on file, so check it on the broker\'s own tariff page.%s '
+        '<p class="small" style="max-width:72ch;line-height:1.6">Brokerage, DP charge and annual maintenance charge are an '
+        'indicative schedule held in the BrokerLens trade-cost model, the same schedule behind every %s stock cost page on this '
+        'site. It has not been verified against %s\'s own rate card, and the date it was checked is not on file.%s '
         'Statutory rates are the ones in the table below, as held in the same model after the 2024 SEBI and Budget '
         'revisions; a separate effective date for each rate is not on file. The figures on this page were generated on %s.</p>'
         % (_esc(brand), _esc(brand), website_html, _esc(generated_on)))
@@ -573,8 +697,9 @@ def render_charges_page(rate_key, built_by_id=None, registry=None, site_url="htt
         '<ol class="small" style="max-width:72ch;line-height:1.6">'
         '<li>Brokerage is worked out per executed order (one buy, one sell) under the rule in the schedule above.</li>'
         '<li>STT, exchange charges, SEBI fee and stamp duty use the statutory rates in the table below.</li>'
-        '<li>GST is charged on brokerage, exchange charges and the SEBI fee, not on STT or stamp duty.</li>'
-        '<li>The DP charge applies once, when delivery shares are sold. It is taken as listed; no GST is added on top.</li>'
+        '<li>GST is charged on brokerage, exchange charges and the SEBI fee, not on STT, stamp duty or the DP charge.</li>'
+        '<li>The DP charge applies once, when delivery shares are sold. The figure in the schedule already includes 18%% GST, '
+        'so it is taken as listed and no GST is added on top.</li>'
         '<li>Every line is rounded to the paisa before the total is added up.</li></ol>'
         '<h3 style="margin-top:16px;font-size:15px">Statutory rates used</h3>%s'
         '<h3 style="margin-top:16px;font-size:15px">What this does not cover</h3>'
@@ -609,21 +734,44 @@ def render_charges_page(rate_key, built_by_id=None, registry=None, site_url="htt
     body = head + (
         crumb_html
         + '<h1 style="margin-top:0">%s</h1>' % _esc(h1)
-        + '<p class="muted" style="max-width:68ch">On a Rs 1,00,000 equity delivery round trip (buy and sell), the %s schedule on '
-          'file gives total charges of Rs %s, of which brokerage is Rs %s. Use the calculator for your own order values.</p>' % (
+        + '<p class="muted" style="max-width:68ch">On a Rs 1,00,000 equity delivery round trip (buy and sell), the indicative %s '
+          'schedule in the BrokerLens model gives total charges of Rs %s, of which brokerage is Rs %s. That schedule has not been '
+          'verified against the broker\'s own rate card and the date it was checked is not on file, so confirm it on the '
+          'broker\'s own tariff page. Use the calculator for your own order values.</p>' % (
               _esc(brand), inr(ex_del["total"]), inr(ex_del["brokerage"]))
         + P.ibslBanner_html("wide", "broker")
         + calc_html
-        + '<h2 style="margin-top:32px;font-size:18px">%s fee schedule on file</h2>' % _esc(brand) + sched_html
+        + '<h2 style="margin-top:32px;font-size:18px">%s indicative fee schedule (BrokerLens model, not verified)</h2>' % _esc(brand) + sched_html
         + worked_html
         + _identifiers_html(brand, rate_key, ident)
         + source_html + how_html + faq_html + more_html
         + '<p class="xs faint" style="margin-top:20px">%s</p>' % _esc(DISCLAIMER)
     )
     body += P._REGISTRY_PAGE_FOOT % {"source_note": P._source_note(
-        "This page works out charges from the broker tariff and statutory rates held in the BrokerLens trade-cost model, "
-        "plus SEBI-register numbers where matched.")}
+        "This page works out charges from an indicative broker schedule and statutory rates held in the BrokerLens trade-cost "
+        "model, not verified against the broker's own rate card, plus SEBI-register numbers where matched.")}
     return body
+
+
+def remove_withheld_pages(site_dir):
+    """Delete a previously generated charges page of a broker that is now withheld, so a stale
+    page cannot stay reachable after the rule changed. Only removes <site>/broker/<id>/charges/
+    when it holds nothing but the generated index.html. Returns the ids removed."""
+    removed = []
+    keep = {charges_id(k) for k in eligible_keys()}
+    for k in tce.BROKER_RATES:
+        cid = charges_id(k)
+        if cid in keep:
+            continue
+        d = os.path.join(site_dir, "broker", cid, "charges")
+        try:
+            if os.path.isdir(d) and os.listdir(d) == ["index.html"]:
+                os.remove(os.path.join(d, "index.html"))
+                os.rmdir(d)
+                removed.append(cid)
+        except OSError:
+            pass
+    return removed
 
 
 def build_broker_charges_pages(built, registry=None, site_url="https://www.brokerlens.in", site_dir=None):
@@ -643,7 +791,10 @@ def build_broker_charges_pages(built, registry=None, site_url="https://www.broke
         os.makedirs(dest, exist_ok=True)
         P._write_text(os.path.join(dest, "index.html"), page)
         urls.append(charges_path(k))
+    removed = remove_withheld_pages(site_dir)
     skipped = skipped_brokers()
+    if removed:
+        P.log("broker charges pages: removed %d stale page(s) of withheld brokers: %s" % (len(removed), ", ".join(removed)), "ok")
     P.log("broker charges pages: %d written%s" % (
         len(urls), ("; skipped (incomplete schedule): %s" % ", ".join(skipped)) if skipped else ""), "ok")
     return urls

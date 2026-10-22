@@ -113,7 +113,7 @@ trade of the plan (doorway risk on a YMYL topic), but it will cost a handful of 
 
 Wording on pages that stay or go noindex:
 
-- Verified pages keep their original title and H1. They say "Head office address on file" only when
+- Verified pages with a street address on file in that city keep the original "Branch ... Address, Phone, Demat & KYC Services" title and H1 (24 of 30). The 6 verified pages with no street address on file use the neutral title (see section 8). They say "Head office address on file" only when
   the curated street address names that city, otherwise "City listed on the SEBI register" or
   "Head office city on file" with "a street address in this city is not on file". Walk-in service is
   never claimed.
@@ -197,3 +197,53 @@ Day 3 to 5 (re-check, no new requests)
   pair pages is a separate question this change does not answer.
 - Sitemap wave 1 grows by about 40 ETF URLs. The existing offline QA still passes its shard-name
   check because the ETFs ride in `stocks-top`.
+
+## 8. Phase 1 review follow-ups (branch area)
+
+Changes made after the independent review of the Phase 1 merge:
+
+- **`/branches/` master hub** (indexable, core sitemap): title is now "Stock Broker Office Status by
+  City in India: What Is on File", the H1 is "Stock Broker Office Status by City: What Is on File",
+  and the meta description says city pages show a registered or head-office city and helpline "where
+  one is on file" and that "No branch list is claimed". It no longer promises branch offices,
+  authorised-person desks or addresses.
+- **Verified city pages without a street address** (`address_ok` false: Upstox, 5paisa, Fyers,
+  Geojit and Axis Direct in Mumbai, Paytm Money in Bengaluru): title is "<Brand> in <City>:
+  Registered City, Helpline and KYC Support", and the meta says no street address is on file. The
+  words "Branch", "Address, Phone" and "Find office contact details" are used only on the 24 verified
+  pages where the curated street address names that city.
+- **Stock page titles** (`pipeline/price_target_section.py`): "Limited" and "Ltd" are stripped from
+  the display name (same rule as `ipo_facts._short_name`, copied to avoid an import) and the
+  " | BrokerLens" suffix is dropped when the title would pass 70 characters. The what-if calculator
+  phrase stays. The FAQ strings pinned by `tests/qa_e2e.py` are unchanged ("for 2026, 2027 or 2030",
+  "does not publish price targets or forecasts"). Before this change 2,593 of 2,593 built stock
+  titles were over 60 characters (median 85); the built pages shrink only after the next full build.
+- **Slash forms**: `fund_compare_engine.py` (3 templates) and `sip_calculator_engine.py` link
+  `/ipo/`, `/calculators/` and `/news/` (the canonical forms in the core sitemap), not the slashless
+  URLs. The 925 SIP pages and all fund compare pages change on the next build.
+- **Sitemap shards**: a URL that appears in the core shard and again in a later wave shard
+  (`/calculators/sip/`, `/ipo/subscription/`, `/branches/`) is now written once, in the first shard
+  (`pipeline/publish.py`, `_first_time`). Nothing changes at wave 1. The "URLs submitted" log
+  counts unique URLs.
+- **Mobile tables**: `.table-scroll` in `site/assets/css/app.css` is again horizontally scrollable
+  (`overflow-x: auto; overflow-y: hidden; max-width: 100%`). A later rule had set `overflow: hidden`,
+  which clipped IPO hub, upcoming and archive tables (775 to 1019 px wide) in a 340 px box so listing
+  gain, CMP and the Details button could not be reached. Rounded corners still clip, and a soft edge
+  shadow (theme token based, light and dark) shows on a side that has more to scroll to. Checked in a
+  340 px browser viewport: the box scrolls (885 px content in 306 px) and the page does not widen.
+  Needs a rebuild to reach built pages (the build re-stamps `app.css`).
+- **Stale `app.js` stamp**: not a code defect. `_stamp_asset_versions()` hashes file content, so a
+  full build after the last JS or CSS edit re-stamps every page. Run one final build and confirm the
+  stamps; the new check flags any page written after an edit that still carries an old stamp.
+
+Permanent checks added in `tests/qa_extra_indexation.py` and `tests/qa_extra_pricetarget.py`:
+
+- every URL in every `site/sitemaps/` shard maps to a built page that is self-canonical and has no
+  noindex, with no URL listed twice (skips when no shards are built);
+- master hub wording, neutral wording on verified pages without an address, the longer title only
+  with an address, and slash-form hub links in the owned templates;
+- no `.table-scroll` rule sets `overflow` or `overflow-x` to hidden, the last one leaves it
+  scrollable, and the scroll-hint shadows use theme tokens;
+- stock title shortening and the 70-character brand-suffix rule;
+- a title length distribution log for the registry, IPO and stock families (reports only, always
+  passes), so budgets can be tracked. Today: registry median 105, IPO median 89, stock median 85.

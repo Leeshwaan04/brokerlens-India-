@@ -106,7 +106,7 @@ def render_sip_scenario_page(amount: int, years: int, site_url="https://www.brok
         </tr>
         """)
 
-    crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/calculators">Calculators</a></li><li class="muted">/</li><li><a href="/calculators/sip/">SIP Scenarios</a></li><li class="muted">/</li><li class="muted">₹{amount:,}/mo for {years}Y</li></ol></nav>'
+    crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/calculators/">Calculators</a></li><li class="muted">/</li><li><a href="/calculators/sip/">SIP Scenarios</a></li><li class="muted">/</li><li class="muted">₹{amount:,}/mo for {years}Y</li></ol></nav>'
 
     faqs = [
         (f"How much will ₹{amount:,} invested monthly in SIP become after {years} years?",
@@ -141,7 +141,7 @@ def render_sip_scenario_page(amount: int, years: int, site_url="https://www.brok
                 "@type": "BreadcrumbList",
                 "itemListElement": [
                     {"@type": "ListItem", "position": 1, "name": "Home", "item": site_url},
-                    {"@type": "ListItem", "position": 2, "name": "Calculators", "item": f"{site_url}/calculators"},
+                    {"@type": "ListItem", "position": 2, "name": "Calculators", "item": f"{site_url}/calculators/"},
                     {"@type": "ListItem", "position": 3, "name": "SIP Scenarios", "item": f"{site_url}/calculators/sip/"},
                     {"@type": "ListItem", "position": 4, "name": f"₹{amount:,}/mo for {years}Y", "item": canonical}
                 ]
@@ -289,7 +289,7 @@ def render_sip_scenario_page(amount: int, years: int, site_url="https://www.brok
 </div>
 
 <p class="small muted">
-  Explore other durations: <a href="/calculators/sip/">View All SIP Scenarios</a> &middot; <a href="/calculators">All Financial Calculators</a> &middot; <a href="/funds/">Mutual Funds Directory</a>
+  Explore other durations: <a href="/calculators/sip/">View All SIP Scenarios</a> &middot; <a href="/calculators/">All Financial Calculators</a> &middot; <a href="/funds/">Mutual Funds Directory</a>
 </p>
 </main>
 
@@ -332,7 +332,7 @@ def render_sip_hub(all_scenarios, site_url="https://www.brokerlens.in"):
         </div>
         """)
 
-    crumb_html = '<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/calculators">Calculators</a></li><li class="muted">/</li><li class="muted">SIP Scenarios</li></ol></nav>'
+    crumb_html = '<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/calculators/">Calculators</a></li><li class="muted">/</li><li class="muted">SIP Scenarios</li></ol></nav>'
 
     jsonld = {
         "@context": "https://schema.org",
@@ -347,7 +347,7 @@ def render_sip_hub(all_scenarios, site_url="https://www.brokerlens.in"):
                 "@type": "BreadcrumbList",
                 "itemListElement": [
                     {"@type": "ListItem", "position": 1, "name": "Home", "item": site_url},
-                    {"@type": "ListItem", "position": 2, "name": "Calculators", "item": f"{site_url}/calculators"},
+                    {"@type": "ListItem", "position": 2, "name": "Calculators", "item": f"{site_url}/calculators/"},
                     {"@type": "ListItem", "position": 3, "name": "SIP Scenarios", "item": canonical}
                 ]
             }
@@ -391,7 +391,7 @@ def render_sip_hub(all_scenarios, site_url="https://www.brokerlens.in"):
 
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">All calculations are based on standard financial compounding formulas. Past mutual fund performance is not an indicator of future returns.</p>
-  <p class="small"><a href="/calculators">All Calculators</a> &middot; <a href="/compare">Compare Brokers</a> &middot; <a href="/trade-costs/">Trade Costs</a> &middot; <a href="/">BrokerLens Home</a></p>
+  <p class="small"><a href="/calculators/">All Calculators</a> &middot; <a href="/compare">Compare Brokers</a> &middot; <a href="/trade-costs/">Trade Costs</a> &middot; <a href="/">BrokerLens Home</a></p>
 </div></footer>
 </body>
 </html>"""

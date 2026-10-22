@@ -16,8 +16,38 @@ Group membership is therefore permanent for a URL. Changing a slug moves it betw
 
 | Group | Title pattern |
 |---|---|
-| A | `{Name}: SEBI Registration No. {number}, Status and Segments \| BrokerLens` |
-| B | `Is {Name} SEBI Registered? Registration No. {number} ({category})` |
+| A | `{Name}: SEBI Registration No. {number}, Validity and Exchanges \| BrokerLens` (shortened, see below) |
+| B | `Is {Name} SEBI Registered? Registration No. {number} ({category})` (shortened, see below) |
+
+The word "Segments" is no longer used: the register list holds exchange names and a validity
+string only, so the page cannot promise segments.
+
+### Length budget (shortening ladder)
+
+Search results show about 60 characters, so the registration number must sit inside the first
+60 characters and the whole title within about 70 (code: 72, `_TITLE_MAX`, `_TITLE_REG_BY = 60`).
+`make_title` walks a ladder and takes the first rung that fits both limits; the ladder only ever
+drops words, never the number:
+
+* A: full name plus brand, then full name without ` | BrokerLens`, then the short name (legal
+  suffix Private Limited / Pvt. Ltd. / Limited / Ltd. removed) with the tail, then
+  `{Short}: SEBI Registration No. {number}`, then `{Short}: SEBI Reg. No. {number}`.
+* B: full name with category, then the short name with category, then the short name without the
+  category, then `Is {Short} SEBI Registered? No. {number}`.
+
+On the 2026-10-02 register (1,792 page models) the mean title length fell from 105 to about 58
+characters, 95 percent are 72 characters or fewer and 76 percent keep the number inside the first
+60. Because the tail only survives when the name is short, most group A titles read
+`{Name}: SEBI Registration No. {number}`; the A versus B contrast is therefore mainly
+statement versus question. Both patterns are checked in `tests/qa_extra_registry.py`.
+
+### Expired entries always use the non-question title
+
+When the register's own validity end date is before the as-of date (`_end_before_asof`), the page
+uses the group A pattern whatever its crc32 group, because a question title that invites a "Yes"
+would be misleading. The model keeps `title_group` (the crc32 group) and adds `title_pattern`
+(the pattern actually used). Exclude these pages (4 on the 2026-10-02 register) from the group
+comparison, or compare on `title_pattern`.
 
 * `{Name}` is the proper-cased legal name (all-caps register names are title-cased; names that
   already contain lower-case letters are left alone; single initials such as R.L.P., listed
@@ -29,7 +59,10 @@ Group membership is therefore permanent for a URL. Changing a slug moves it betw
   derived from which register list the row was pulled from.
 * Meta description (both groups):
   `Yes, {Name} is listed in the SEBI register. Registration {number}, {category}, {exchanges}, effective {date}. Register as of {date}.`
-  "Yes" is only ever written for a row that exists in the register file. Exchanges are the
+  "Yes" is only ever written for a row that exists in the register file and whose listed end
+  date is not before the as-of date. Otherwise the meta reads
+  `{Name} appears in the SEBI register list; the validity end date listed is {end date}; check SEBI. Registration {number}, {category}, {exchanges}. Register as of {date}.`
+  and FAQ 1 becomes "Does {Name} appear in the SEBI register list?" with a neutral answer. Exchanges are the
   trading exchanges listed on file (clearing corporations only when no exchange is listed);
   any part not on file is omitted. No claim of safety or quality is made anywhere.
 
@@ -72,6 +105,13 @@ sitemap URL under `/sebi-registry/`. Build the page filter in Search Console fro
    (they canonicalise away).
 
 ## What the pages will not say
+
+No email address or telephone number (not in the page, not in structured data, not in
+`registry.json`): the register's contact fields are not republished, and a street address is shown
+only for clearly corporate legal names (Limited, Ltd, Private, Pvt, LLP, LLC, Bank, Corporation,
+Company, Inc, PLC), never for individuals or "& Co" firms. Every page links the official SEBI
+register list for its category instead. FAQ and structured-data wording says "as of BrokerLens's
+pull of the register on {date}" because the register carries no date of its own.
 
 No current good standing ("valid", "active") beyond quoting the register's own validity
 text with its as-of date; no safety, quality or ranking claims; no complaint tables, no

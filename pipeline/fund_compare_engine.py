@@ -281,9 +281,9 @@ def _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url, same_categ
       <a href="/brokers">Brokers</a>
       <a href="/trade-costs/">Trade Costs</a>
       <a href="/compare" class="active">Compare</a>
-      <a href="/ipo">IPOs</a>
-      <a href="/calculators">Calculators</a>
-      <a href="/news">News</a>
+      <a href="/ipo/">IPOs</a>
+      <a href="/calculators/">Calculators</a>
+      <a href="/news/">News</a>
     </div>
   </div>
 </nav>
@@ -504,9 +504,9 @@ def _render_category_hub(cat_key, cat_meta, funds, site_url):
       <a href="/brokers">Brokers</a>
       <a href="/trade-costs/">Trade Costs</a>
       <a href="/compare">Compare</a>
-      <a href="/ipo">IPOs</a>
-      <a href="/calculators">Calculators</a>
-      <a href="/news">News</a>
+      <a href="/ipo/">IPOs</a>
+      <a href="/calculators/">Calculators</a>
+      <a href="/news/">News</a>
     </div>
   </div>
 </nav>
@@ -623,9 +623,9 @@ def _render_master_compare_hub(comparisons_by_cat, site_url):
       <a href="/brokers">Brokers</a>
       <a href="/trade-costs/">Trade Costs</a>
       <a href="/compare" class="active">Compare</a>
-      <a href="/ipo">IPOs</a>
-      <a href="/calculators">Calculators</a>
-      <a href="/news">News</a>
+      <a href="/ipo/">IPOs</a>
+      <a href="/calculators/">Calculators</a>
+      <a href="/news/">News</a>
     </div>
   </div>
 </nav>

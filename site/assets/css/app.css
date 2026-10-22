@@ -1421,11 +1421,29 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
   text-decoration: none;
 }
 
+/* Wide tables must scroll sideways inside the card on a phone. This rule used to set
+   overflow: hidden, which clipped the right-hand columns (listing gain, CMP, Details) with
+   no way to reach them. overflow-y stays hidden so the rounded corners still clip.
+   The two local-attachment gradients cover the edge shadows once you reach that edge, so a
+   shadow shows only on a side that has more content to scroll to (a scroll hint). */
 .table-scroll {
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
-  background: var(--bg-raised);
-  overflow: hidden;
+  background-color: var(--bg-raised);
+  background-image:
+    linear-gradient(to right, var(--bg-raised), var(--bg-raised)),
+    linear-gradient(to left, var(--bg-raised), var(--bg-raised)),
+    linear-gradient(to right, color-mix(in srgb, var(--text) 16%, transparent), transparent),
+    linear-gradient(to left, color-mix(in srgb, var(--text) 16%, transparent), transparent);
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-size: 24px 100%, 24px 100%, 12px 100%, 12px 100%;
+  background-attachment: local, local, scroll, scroll;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), var(--shadow-sm);
 }
 

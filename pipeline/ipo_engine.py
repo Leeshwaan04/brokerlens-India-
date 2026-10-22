@@ -2,9 +2,10 @@
 
 Provides NSE-sourced IPO analysis:
   - SEBI application categories; a lot size is shown only when it is sourced (never estimated).
-  - Real-time post-listing returns: Issue Price vs Listing Day Open vs Current Market Price (CMP).
-  - Listing Day Gains/Losses (% and Rs) + Total Return Since Listing.
-  - Live subscription tracking across QIB, NII, and Retail quotas.
+  - Post-listing returns: Issue Price vs Listing Day Open vs Current Market Price (CMP), where the
+    exchange price history on file covers them.
+  - Listing-day open versus issue price (% and Rs) + total return since the issue.
+  - Overall subscription multiple as a dated snapshot (no category split is on file, none is estimated).
   - Registrar details with direct online allotment checking links.
   - Zero external npm/pip dependencies; stdlib Python.
   - Zero em dashes or en dashes anywhere.
@@ -18,7 +19,12 @@ import os
 import re
 from datetime import datetime, timezone, timedelta
 
-from pipeline import ipo_facts
+try:
+    from . import ipo_facts
+except ImportError:  # run as a script
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from pipeline import ipo_facts
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_DIR = os.path.join(ROOT, "site")
@@ -50,38 +56,46 @@ def _long_date(d_str):
 def _add_working_days(iso, n):
     """Date n weekdays after iso (Mon-Fri only). Exchange holidays are not known
     here, so callers label the result indicative ("expected on or around")."""
-    try:
-        d = datetime.strptime(iso, "%Y-%m-%d")
-    except (TypeError, ValueError):
-        return None
-    added = 0
-    while added < n:
-        d += timedelta(days=1)
-        if d.weekday() < 5:
-            added += 1
-    return d.strftime("%Y-%m-%d")
+    return ipo_facts.add_working_days(iso, n)
 
 
 def _stage_banner(status, r, today_iso, as_of_iso=None):
     """A one-glance status line with the dates that matter at this stage. The
     T+3 listing date is SEBI's rule (listing within three working days of the
-    issue closing), shown as expected on or around that date, never as a fact."""
+    issue closing), shown as expected on or around that date, never as a fact, and only
+    while the issue is still inside that window. An issue with no listing on file never
+    shows the timeline or says a listing is awaited."""
     b_start, b_end = r.get("bidding_start") or "", r.get("bidding_end") or ""
-    listing = r.get("listing_date") or ""
-    if status == "Listed" and listing:
-        head, tone = "Listed on %s" % _long_date(listing), "var(--green)"
-        detail = "Listing-day and current figures below are from NSE's own candles, shown only where the price history on file covers them."
+    listing = ipo_facts.reliable_listing_date(r)
+    ld_state = ipo_facts.listing_date_state(r)
+    steps = ""
+    if status == "Listed":
+        if listing:
+            head, tone = "Listed on %s" % _long_date(listing), "var(--green)"
+            detail = "Listing-day and current figures below are from NSE's own candles, shown only where the price history on file covers them."
+        else:
+            head, tone = "Listed, per the exchange feed", "var(--green)"
+            detail = ipo_facts.LISTING_INCONSISTENT + "."
     elif status == "Active":
         head, tone = "Bidding is open" + ((", closes %s" % _long_date(b_end)) if b_end else ""), "var(--accent)"
         detail = "Basis of allotment, refunds and listing follow after the issue closes."
     elif status == "Forthcoming":
         head, tone = "Opens %s" % _long_date(b_start) if b_start else "Announced, dates to follow", "var(--text)"
         detail = "Dates and price band are as announced by the issuer and can change."
+    elif status == ipo_facts.STATUS_NO_LISTING:
+        flag = ipo_facts.name_flag(r)
+        if flag:
+            head = "Marked %s in the exchange feed" % ("as a withdrawal window" if flag == "withdrawal window" else flag)
+        else:
+            head = "Bidding closed" + ((" on %s" % _long_date(b_end)) if b_end else "")
+        tone = "var(--text)"
+        detail = ipo_facts.NO_LISTING_NOTE
+        if ld_state == "inconsistent":
+            detail += " " + ipo_facts.LISTING_INCONSISTENT + "."
     else:
         head, tone = "Bidding closed" + ((" on %s" % _long_date(b_end)) if b_end else ""), "var(--text)"
         detail = "Awaiting basis of allotment and listing."
-    steps = ""
-    if b_end and status != "Listed":
+    if b_end and status in ("Active", "Forthcoming", "Closed"):
         t1, t2, t3 = (_add_working_days(b_end, k) for k in (1, 2, 3))
         if t1 and t2 and t3:
             steps = (
@@ -158,27 +172,31 @@ def compute_listing_performance(symbol, effective_issue_price, equity_history, l
     return out
 
 
+def _signed_move(pct, inr):
+    """'+2.0% (+Rs 3.00)' or '-10.0% (-Rs 11.00)': the sign sits in front of both numbers."""
+    sg = "+" if pct >= 0 else "-"
+    return "%s%.1f%% (%sRs %s)" % (sg, abs(pct), sg, "{:,.2f}".format(abs(inr)))
+
+
 def render_performance_card(perf, sym_slug):
-    """Renders real-time post-listing returns card."""
+    """Renders the post-listing returns card (issue price, listing-day open, latest close)."""
     if not perf or not perf.get("has_current_data"):
         return ""
     has_ld = bool(perf.get("has_listing_data"))
 
     lg_pct = perf["listing_gain_pct"] if has_ld else 0.0
     lg_cls = "var(--green)" if lg_pct >= 0 else "var(--red)"
-    lg_sign = "+" if lg_pct >= 0 else ""
 
     cg_pct = perf["current_gain_pct"]
     cg_cls = "var(--green)" if cg_pct >= 0 else "var(--red)"
-    cg_sign = "+" if cg_pct >= 0 else ""
 
     if has_ld:
-        badge_label = "Listing Day Gainer" if lg_pct >= 0 else "Listing Discount"
+        badge_label = "Listing Open Above Issue" if lg_pct >= 0 else "Listing Open Below Issue"
         badge_cls = "badge-up" if lg_pct >= 0 else "badge-warn"
         sub_note = "Verified exchange performance tracked from official NSE listing day open to current market close."
         listing_cell = (f'<div class="xs muted">Listing Day Open</div>'
                         f'<div style="font-size:18px;font-weight:700;margin-top:4px">Rs {perf["listing_open"]:,.2f}</div>'
-                        f'<div class="xs" style="color:{lg_cls};font-weight:600">{lg_sign}{lg_pct:.1f}% ({lg_sign}Rs {perf["listing_gain_inr"]:,.2f})</div>')
+                        f'<div class="xs" style="color:{lg_cls};font-weight:600">{_signed_move(lg_pct, perf["listing_gain_inr"])} vs issue price</div>')
     else:
         badge_label, badge_cls = "Since Issue", ""
         sub_note = ("Latest close versus the issue price. The listing-day candle is before the price history BrokerLens holds, "
@@ -215,7 +233,7 @@ def render_performance_card(perf, sym_slug):
         <div style="padding:12px;background:var(--bg);border-radius:6px">
           <div class="xs muted">Latest Close (as of {_esc(_long_date(perf['cmp_date']))})</div>
           <div style="font-size:18px;font-weight:700;margin-top:4px">Rs {perf['cmp']:,.2f}</div>
-          <div class="xs" style="color:{cg_cls};font-weight:600">{cg_sign}{cg_pct:.1f}% ({cg_sign}Rs {perf['current_gain_inr']:,.2f})</div>
+          <div class="xs" style="color:{cg_cls};font-weight:600">{_signed_move(cg_pct, perf['current_gain_inr'])} vs issue price</div>
         </div>
         <div style="padding:12px;background:var(--bg);border-radius:6px">
           <div class="xs muted">{range_label}</div>
@@ -231,37 +249,51 @@ def render_performance_card(perf, sym_slug):
     """
 
 
-def render_subscription_card(r):
-    """Renders real-time subscription bidding multiple for open/active IPOs."""
-    sub_val = r.get("times_subscribed")
-    if sub_val is None:
-        return ""
+def render_subscription_card(r, status=None, as_of_iso=None):
+    """Overall subscription multiple as a dated snapshot.
 
-    try:
-        sub_flt = float(sub_val)
-    except (ValueError, TypeError):
+    The multiple is read from the current-issue feed on the feed date. While bidding is open it is labelled
+    with that date. Once the close date has passed, a figure taken before the close is shown only as a
+    snapshot taken while bidding was open, never as the result of the issue. No category split is on file."""
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    as_of_iso = as_of_iso or ipo_facts.data_as_of(today_iso)
+    status = status or ipo_facts.ipo_status(r, today_iso)
+    info = ipo_facts.subscription_info(r, status, as_of_iso)
+    if info is None:
         return ""
-
     shares_offered = float(r.get("shares_offered") or 0.0)
     shares_bid = float(r.get("shares_bid") or 0.0)
-
+    d = _esc(ipo_facts.fmt_date(info["as_of"]))
+    if info["final"]:
+        badge, title = "Bidding Demand", "Overall Subscription (Exchange Figure)"
+        note = "Overall subscription from the exchange public-issue feed."
+        label = "Total Subscribed"
+    elif info["open_now"]:
+        badge, title = "Bidding Demand", "Overall Subscription Snapshot"
+        note = "Snapshot from the exchange public-issue feed as of %s, while bidding is open. The multiple changes until the issue closes." % d
+        label = "Total Subscribed (as of %s)" % d
+    else:
+        badge, title = "Snapshot", "Subscription Snapshot, Bidding Was Open"
+        note = ("Snapshot from the exchange public-issue feed as of %s, while bidding was open. Bidding has closed since, "
+                "so this is not the final subscription multiple, which is not on file." % d)
+        label = "Snapshot (as of %s)" % d
     return f"""
     <div class="card" style="margin-top:24px;padding:22px;background:var(--bg-raised);border-left:4px solid var(--accent)">
       <div class="row-between" style="align-items:center;flex-wrap:wrap;gap:10px">
         <div>
-          <span class="badge badge-up">Live Bidding Demand</span>
-          <h2 style="margin:8px 0 2px 0;font-size:18px">Official Exchange Subscription Figures</h2>
-          <p class="muted small" style="margin:0">Exchange-published bidding data updated directly from NSE public-issue feeds. BrokerLens does not receive a QIB/NII/Retail category breakdown and does not estimate one.</p>
+          <span class="badge badge-up">{badge}</span>
+          <h2 style="margin:8px 0 2px 0;font-size:18px">{title}</h2>
+          <p class="muted small" style="margin:0">{note} BrokerLens does not receive a QIB/NII/Retail category breakdown and does not estimate one.</p>
         </div>
         <div class="right">
-          <div class="xs muted">Total Subscribed</div>
-          <div style="font-size:26px;font-weight:700;color:var(--accent)">{sub_flt:.2f}x</div>
+          <div class="xs muted">{label}</div>
+          <div style="font-size:26px;font-weight:700;color:var(--accent)">{info['value']:.2f}x</div>
         </div>
       </div>
 
       <div class="grid g2" style="margin-top:18px;gap:12px">
         <div style="padding:12px;background:var(--bg);border-radius:6px">
-          <div class="xs muted">Total Shares Bid</div>
+          <div class="xs muted">Shares Bid (as of {d})</div>
           <div style="font-size:18px;font-weight:700;margin-top:4px">{shares_bid:,.0f}</div>
         </div>
         <div style="padding:12px;background:var(--bg);border-radius:6px">
@@ -289,6 +321,7 @@ def render_lot_size_table(r, pf):
     else:
         line = ("Lot size for this issue is not on file here. It is printed in the issue prospectus and on your broker's bid screen, "
                 "so BrokerLens shows none rather than an estimate.")
+    lim = ipo_facts.SEBI_BID_LIMITS
     return f"""
     <div class="card" style="margin-top:24px;padding:22px;background:var(--bg-raised)">
       <h2 style="margin:0 0 6px 0;font-size:18px">Lot Size and Application Limits</h2>
@@ -296,15 +329,16 @@ def render_lot_size_table(r, pf):
       <div class="table-scroll">
         <table class="data">
           <thead>
-            <tr><th>Application Category</th><th>Application Size (SEBI)</th></tr>
+            <tr><th>Application Category</th><th>Application Size</th></tr>
           </thead>
           <tbody>
-            <tr><td><strong>Retail individual</strong></td><td>Up to Rs 2 lakh</td></tr>
-            <tr><td><strong>Small HNI (sNII)</strong></td><td>Above Rs 2 lakh and up to Rs 10 lakh</td></tr>
-            <tr><td><strong>Big HNI (bNII)</strong></td><td>Above Rs 10 lakh</td></tr>
+            <tr><td><strong>Retail individual</strong></td><td>Up to {lim['retail']}</td></tr>
+            <tr><td><strong>Small HNI (sNII)</strong></td><td>Above {lim['retail']} and up to {lim['snii']}</td></tr>
+            <tr><td><strong>Big HNI (bNII)</strong></td><td>Above {lim['snii']}</td></tr>
           </tbody>
         </table>
       </div>
+      <p class="xs faint" style="margin:10px 0 0 0">Category limits: {lim['note']}.</p>
     </div>
     """
 
@@ -317,30 +351,38 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
     # IBSL is a broker banner, so it takes the place of 5paisa here and the page keeps three sponsored blocks.
     _five_b = "" if ibsl_wide_html else fivepaisa_banner_html
     symbol = r["symbol"].upper()
-    company = r.get("company") or symbol
+    company = ipo_facts.display_name(r)
     slug = symbol.lower()
     canonical = f"{site_url}/ipo/{slug}/"
-
-    # One reading of the stored price fields feeds the title, meta, facts card, FAQs and
-    # performance numbers, so they cannot disagree. Band low and high come from the stored
-    # price band; an issue price outside that band is treated as a data fault and ignored.
-    pf = ipo_facts.price_facts(r)
-    perf = compute_listing_performance(symbol, pf["issue_price"] or 0.0, equity_history, r.get("listing_date"))
 
     today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     as_of_iso = ipo_facts.data_as_of(today_iso)
     status = ipo_facts.ipo_status(r, today_iso)
-    candle = ipo_facts.listing_candle(symbol, r.get("listing_date"), equity_history) if status == "Listed" else None
+    non_equity = ipo_facts.is_non_equity_issue(r)
+    open_for_bids = status in ipo_facts.OPEN_STATUSES
+
+    # One reading of the stored price fields feeds the title, meta, facts card, FAQs and
+    # performance numbers, so they cannot disagree. Band low and high come from the stored
+    # price band; an issue price outside that band is treated as a data fault and ignored.
+    # A listing date that contradicts the bidding dates is never used for a listing-day figure.
+    pf = ipo_facts.price_facts(r)
+    good_ld = ipo_facts.reliable_listing_date(r)
+    perf = compute_listing_performance(symbol, pf["issue_price"] or 0.0, equity_history, good_ld)
+    candle = ipo_facts.listing_candle(symbol, good_ld, equity_history) if status == "Listed" else None
 
     # Title and meta A/B split by zlib.crc32(slug) % 2 (see ipo_facts.title_group and
     # docs/IPO_TITLE_TEST.md). The latest-close figure stays in the body, never here.
     title = ipo_facts.build_title(r, pf, status)
     description = ipo_facts.build_description(r, pf, status, candle=candle, has_latest_close=bool(perf.get("has_current_data")))
+    if non_equity:
+        title = "%s (%s) Public Issue Dates and Price | %s" % (ipo_facts._short_name(company, symbol), symbol, ipo_facts.BRAND)
+        description = ("%s (%s) public issue: dates and price from the exchange feed. It is not presented as an equity IPO. "
+                       "Status: %s." % (company, symbol, status))[:295]
 
     facts_html = ipo_facts.render_facts_card(r, pf, status, candle, as_of_iso, company)
     gmp_html = ipo_facts.render_gmp_section(r, pf, status, candle, perf, company)
     perf_html = render_performance_card(perf, slug)
-    sub_html = render_subscription_card(r)
+    sub_html = render_subscription_card(r, status, as_of_iso)
     lot_html = render_lot_size_table(r, pf)
 
     faqs = ipo_facts.build_faqs(r, pf, status, candle, perf, company, as_of_iso)
@@ -356,7 +398,7 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         "@graph": [
             {
                 "@type": "FinancialProduct",
-                "name": f"{company} IPO",
+                "name": f"{company} IPO" if not non_equity else f"{company} ({symbol}) public issue",
                 "url": canonical,
                 "description": description,
             },
@@ -377,11 +419,15 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         "canonical": _esc(canonical),
         "jsonld": json.dumps(jsonld, ensure_ascii=False),
     }
+    if non_equity:
+        # not an equity IPO: keep it out of the index (the self canonical stays)
+        body = body.replace("</head>", '<meta name="robots" content="noindex,follow">\n</head>', 1)
 
     # The per-broker apply pages exist only for current, upcoming and the most recent IPOs
-    # (see build_ipo_apply_suite). Link them only where they exist, so no page links a 404.
+    # (see build_ipo_apply_suite), and only open or upcoming issues can still be applied for. Link them only
+    # where they exist and the issue is open, so no page links a 404 or tells a visitor to apply for a closed issue.
     apply_html = ""
-    if ipo_facts.has_apply_pages(slug):
+    if open_for_bids and not non_equity and ipo_facts.has_apply_pages(slug):
         _brokers = (("zerodha", "Zerodha Kite"), ("groww", "Groww"), ("angel-one", "Angel One"),
                     ("upstox", "Upstox"), ("dhan", "Dhan"))
         _links = "".join(
@@ -397,12 +443,60 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
     sec_label = {"SME": "SME Emerge", "EQ": "Mainboard Equity"}.get(r.get("security_type"), "")
     sec_prefix = f"{sec_label} &bull; " if sec_label else ""
 
+    if non_equity:
+        h1 = f'{_esc(company)} <span class="muted" style="font-size:18px">({_esc(symbol)}) public issue</span>'
+        type_note = (f'<div class="card" style="padding:14px;margin:0 0 16px 0;border-left:3px solid var(--accent)">'
+                     f'<div style="font-weight:700">Not presented as an equity IPO</div>'
+                     f'<div class="small muted" style="margin-top:2px">{_esc(ipo_facts.non_equity_note(r))}</div></div>')
+    else:
+        h1 = f'{_esc(company)} IPO <span class="muted" style="font-size:18px">({_esc(symbol)})</span>'
+        type_note = ""
+
+    # Allotment lookups make no sense for an issue the exchange feed marks withdrawn or postponed.
+    show_allot = not (status == ipo_facts.STATUS_NO_LISTING and ipo_facts.name_flag(r))
+    allot_html = ""
+    if show_allot:
+        allot_html = (
+            f'<div class="card" style="margin-top:20px;padding:20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
+            f'<div class="section-title"><h2 style="margin:0;font-size:16px">Check Official {_esc(company)} Allotment Status Online</h2></div>'
+            f'<p class="muted small" style="margin:4px 0 14px 0">Direct allotment search portals across India\'s primary registrar platforms (PAN / Application / DP Client ID):</p>'
+            f'<div style="display:flex;flex-wrap:wrap;gap:8px">'
+            f'<a class="btn btn-outline small" href="https://linkintime.co.in/initial_offer/public-issues.html" target="_blank" rel="noopener noreferrer">Link Intime &rarr;</a>'
+            f'<a class="btn btn-outline small" href="https://kosmic.kfintech.com/ipostatus/" target="_blank" rel="noopener noreferrer">KFintech &rarr;</a>'
+            f'<a class="btn btn-outline small" href="https://www.bigshareonline.com/ipo_Allotment.html" target="_blank" rel="noopener noreferrer">Bigshare Services &rarr;</a>'
+            f'<a class="btn btn-outline small" href="https://www.skylinerta.com/ipo.php" target="_blank" rel="noopener noreferrer">Skyline RTA &rarr;</a>'
+            f'<a class="btn btn-primary small" href="/ipo/allotment-status/">BrokerLens Allotment Guide &rarr;</a>'
+            f'</div></div>'
+        )
+
+    if open_for_bids:
+        aff_h2 = "Apply for IPOs online with top SEBI-registered brokers"
+        aff_p = "Open a free Demat account in 5 minutes with India's leading brokers and submit your IPO bid seamlessly via UPI."
+    else:
+        aff_h2 = "Be ready for the next IPO"
+        aff_p = ("Bidding for this issue is over. To apply for a future IPO you need a demat account and a UPI ID. "
+                 "These brokers are sponsored partners.")
+
+    related_links = []
+    if status == "Listed" and perf.get("has_current_data"):
+        related_links.append(f'<a href="/stock/{slug}/"><strong>{_esc(company)}</strong> NSE listing details &rarr;</a>')
+    related_links.append('<a href="/ipo/upcoming/">Upcoming IPOs &rarr;</a>')
+    related_links.append('<a href="/ipo/archive/">More listed IPOs &rarr;</a>')
+    related_links.append('<a href="/ipo/">IPO tracker hub &rarr;</a>')
+    related_html = (
+        f'<div class="card" style="margin-top:24px;padding:16px 20px;background:var(--bg-raised)">'
+        f'<div class="section-title"><h3 style="margin:0;font-size:15px">Related IPO and Market Links</h3></div>'
+        f'<div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:8px;font-size:14px">{" &bull; ".join(related_links)}</div>'
+        f'</div>'
+    )
+
     body += (
         crumb_html
         + f'<div style="margin-top:10px">'
-        + f'<h1 style="margin:0 0 6px 0;font-size:26px">{_esc(company)} IPO <span class="muted" style="font-size:18px">({_esc(symbol)})</span></h1>'
+        + f'<h1 style="margin:0 0 6px 0;font-size:26px">{h1}</h1>'
         + f'<p class="muted small" style="margin:0 0 16px 0">{sec_prefix}Sourced directly from official NSE public-issue disclosures.</p>'
         + _stage_banner(status, r, today_iso, as_of_iso)
+        + type_note
         + f'</div>'
         + facts_html
         + perf_html
@@ -411,22 +505,14 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         + lot_html
         + ibsl_wide_html
         + apply_html
-        + f'<div class="card" style="margin-top:20px;padding:20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
-        + f'<div class="section-title"><h2 style="margin:0;font-size:16px">Check Official {_esc(company)} Allotment Status Online</h2></div>'
-        + f'<p class="muted small" style="margin:4px 0 14px 0">Direct allotment search portals across India\'s primary registrar platforms (PAN / Application / DP Client ID):</p>'
-        + f'<div style="display:flex;flex-wrap:wrap;gap:8px">'
-        + f'<a class="btn btn-outline small" href="https://linkintime.co.in/initial_offer/public-issues.html" target="_blank" rel="noopener noreferrer">Link Intime &rarr;</a>'
-        + f'<a class="btn btn-outline small" href="https://kosmic.kfintech.com/ipostatus/" target="_blank" rel="noopener noreferrer">KFintech &rarr;</a>'
-        + f'<a class="btn btn-outline small" href="https://www.bigshareonline.com/ipo_Allotment.html" target="_blank" rel="noopener noreferrer">Bigshare Services &rarr;</a>'
-        + f'<a class="btn btn-outline small" href="https://www.skylinerta.com/ipo.php" target="_blank" rel="noopener noreferrer">Skyline RTA &rarr;</a>'
-        + f'<a class="btn btn-primary small" href="/ipo/allotment-status/">BrokerLens Allotment Guide &rarr;</a>'
-        + f'</div></div>'
+        + allot_html
         + f'<div class="aff-block" style="margin-top:24px">'
-        + f'<div class="section-title"><h2>Apply for IPOs online with top SEBI-registered brokers</h2></div>'
-        + f'<p class="muted small" style="margin-top:4px">Open a free Demat account in 5 minutes with India\'s leading brokers and submit your IPO bid seamlessly via UPI.</p>'
+        + f'<div class="section-title"><h2>{_esc(aff_h2)}</h2></div>'
+        + f'<p class="muted small" style="margin-top:4px">{_esc(aff_p)}</p>'
         + f'<div class="grid g3 aff-pair" style="margin-top:14px">{affiliate_banner_html}{_five_b}{jiraaf_banner_html}</div></div>'
         + f'<h2 style="margin-top:28px;font-size:18px">Frequently Asked Questions</h2>'
         + f'<div style="max-width:70ch">{faq_html}</div>'
+        + related_html
     )
 
     body += foot_template % {
@@ -440,19 +526,19 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
 
 
 def _classify_ipos(records, today_iso):
-    """(active, forthcoming, awaiting_listing) by the same rules as the hub: awaiting means
-    bidding closed in the last 14 days and no listing date on record."""
-    cutoff = (datetime.strptime(today_iso, "%Y-%m-%d") - timedelta(days=14)).strftime("%Y-%m-%d")
+    """(active, forthcoming, awaiting_listing) by the same status rules as every IPO page. Awaiting means
+    bidding has closed and the issue is still inside its SEBI T+3 listing window with no listing yet.
+    Issues past that window, withdrawn or postponed issues, and non-equity issues are in none of the three."""
     active, forthcoming, awaiting = [], [], []
     for r in records:
-        b_start, b_end = r.get("bidding_start") or "", r.get("bidding_end") or ""
-        if r.get("listing_date") or r.get("status") == "Listed":
+        if ipo_facts.is_non_equity_issue(r):
             continue
-        if r.get("status") == "Active" or (b_start and b_end and b_start <= today_iso <= b_end):
+        st = ipo_facts.ipo_status(r, today_iso)
+        if st == "Active":
             active.append(r)
-        elif r.get("status") == "Forthcoming" or (b_start and b_start > today_iso):
+        elif st == "Forthcoming":
             forthcoming.append(r)
-        elif b_end and cutoff <= b_end < today_iso:
+        elif st == "Closed":
             awaiting.append(r)
     return active, forthcoming, awaiting
 
@@ -477,7 +563,7 @@ def build_ipo_event_feeds(records, site_url="https://www.brokerlens.in"):
     events.sort(key=lambda e: (e[0], e[2].get("symbol", "")))
 
     def title(kind, r):
-        co = r.get("company") or r.get("symbol")
+        co = ipo_facts.display_name(r)
         return {"opens": f"{co} IPO opens for bidding", "closes": f"{co} IPO closes (last day to bid)",
                 "listing": f"{co} IPO: listing expected on or around this date"}[kind]
 
@@ -543,54 +629,67 @@ def _follow_card_html():
     )
 
 
+def _rs(x):
+    """One price format for every table cell: Rs 405.00, Rs 78.00."""
+    return "Rs {:,.2f}".format(x)
+
+
+def _type_chip(r):
+    return {"SME": "SME", "EQ": "Mainboard"}.get(r.get("security_type"), "")
+
+
+def _freshness_line(as_of_iso, today_iso):
+    """'Data as of 2 Oct 2026.' plus a plain warning when the feed on file is more than 2 days old."""
+    line = "Data as of %s." % ipo_facts.fmt_date(as_of_iso)
+    age = ipo_facts.data_age_days(as_of_iso, today_iso)
+    if age > 2:
+        line += (" This NSE feed snapshot is %d days old, so the open and upcoming counts reflect that date. "
+                 "Check the exchange for anything newer." % age)
+    return line
+
+
 def render_enhanced_ipo_hub(records, equity_history, head_template, foot_template,
                             breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in", upcoming=False, ibsl_html=""):
-    """Renders the enhanced /ipo/ hub with real-time active, upcoming, and listed returns."""
+    """Renders the enhanced /ipo/ hub: open, upcoming and recently listed IPOs, with the date of the NSE
+    feed behind the numbers."""
     today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    active = []
-    forthcoming = []
-    listed_candidates = []
+    as_of_iso = ipo_facts.data_as_of(today_iso)
+    # Non-equity public issues (debt series such as SMCG04) are not IPOs: kept out of every list here.
+    records = ipo_facts.ipo_records_only(records)
+    active, forthcoming, awaiting_all, listed_candidates = [], [], [], []
 
     for r in records:
-        status = r.get("status")
-        b_start = r.get("bidding_start") or ""
-        b_end = r.get("bidding_end") or ""
-        l_date = r.get("listing_date") or ""
-
-        if status in ("Listed", "Closed") or l_date or (b_end and b_end < today_iso):
-            listed_candidates.append(r)
-        elif status == "Active" or (b_start and b_end and b_start <= today_iso <= b_end):
+        st = ipo_facts.ipo_status(r, today_iso)
+        if st == "Active":
             active.append(r)
-        elif status == "Forthcoming" or (b_start and b_start > today_iso):
+        elif st == "Forthcoming":
             forthcoming.append(r)
-        else:
+        elif st == "Closed":
+            awaiting_all.append(r)
+        elif st == "Listed" and ipo_facts.reliable_listing_date(r):
             listed_candidates.append(r)
+        # No listing on file, and listed records whose listing date looks inconsistent, are not
+        # shown as listings here. Their own pages carry the facts.
 
-    # Process recently listed with performance
-    listed_with_perf = []
-    for r in listed_candidates:
+    # Recently listed, newest listing first, with performance where the price history on file covers it
+    listed_candidates.sort(key=ipo_facts.reliable_listing_date, reverse=True)
+    recent_listed = []
+    for r in listed_candidates[:40]:
         sym = r.get("symbol", "").upper()
         _ip = ipo_facts.price_facts(r)["issue_price"] or 0.0
-        perf = compute_listing_performance(sym, _ip, equity_history, r.get("listing_date"))
         row_dict = dict(r)
-        row_dict["perf"] = perf
-        listed_with_perf.append(row_dict)
-
-    def _has_listed(r):
-        return bool((r.get("perf") or {}).get("has_listing_data") or r.get("listing_date"))
-    recent_listed = [r for r in listed_with_perf if _has_listed(r)][:40]
-    # Bidding has closed but there is no listing yet: shown on their own, never as "listed".
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=14)).strftime("%Y-%m-%d")
-    awaiting = sorted(
-        [r for r in listed_with_perf if not _has_listed(r) and (r.get("bidding_end") or "") >= cutoff],
-        key=lambda r: r.get("bidding_end") or "", reverse=True)[:15]
+        row_dict["perf"] = compute_listing_performance(sym, _ip, equity_history, ipo_facts.reliable_listing_date(r))
+        recent_listed.append(row_dict)
+    # Bidding has closed and the issue is still inside the SEBI T+3 window: shown on its own, never as "listed".
+    awaiting = sorted(awaiting_all, key=lambda r: r.get("bidding_end") or "", reverse=True)[:15]
 
     canonical = f"{site_url}/ipo/upcoming/" if upcoming else f"{site_url}/ipo/"
-    title = "IPO Tracker: Live Subscription, Listing Gains, Upcoming & Open IPOs | BrokerLens"
+    title = "IPO Tracker: Open and Upcoming IPOs, Price Bands and Listing Results | BrokerLens"
     description = (
-        f"{len(active)} IPOs open for bidding, {len(forthcoming)} upcoming, and real-time post-listing returns "
-        f"tracked from NSE's public disclosures: price band, dates, subscription and listing day gain analysis."
+        f"IPO dates, price bands and listing-day results for NSE mainboard and SME issues, from NSE's public disclosures. "
+        f"{len(active)} open for bidding and {len(forthcoming)} upcoming as of {ipo_facts.fmt_date(as_of_iso)}."
     )[:295]
+    fresh = _freshness_line(as_of_iso, today_iso)
 
     def render_active_table(rows):
         if not rows:
@@ -603,7 +702,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
               <th>Status</th>
               <th class="right">Price Band</th>
               <th class="right">Bidding Window</th>
-              <th class="right">Live Demand</th>
+              <th class="right">Subscription (dated)</th>
               <th class="center">Action</th>
             </tr>
           </thead>
@@ -612,11 +711,15 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         for r in rows:
             sym = r["symbol"].upper()
             slug = sym.lower()
-            co = r.get("company") or sym
+            co = ipo_facts.display_name(r)
             p_str = ipo_facts.band_text(r) or "Not on file"
             dates = ipo_facts.date_range_text(r.get("bidding_start"), r.get("bidding_end")) or "Not on file"
-            sub_val = r.get("times_subscribed")
-            sub_str = f"{float(sub_val):.2f}x" if sub_val is not None else "Bidding Open"
+            info = ipo_facts.subscription_info(r, "Active", as_of_iso)
+            if info:
+                sub_str = "%.2fx" % info["value"]
+                sub_note = '<span class="xs faint" style="display:block">as of %s</span>' % _esc(ipo_facts.fmt_date(info["as_of"]))
+            else:
+                sub_str, sub_note = "Not on file", ""
             chance_html = ""   # no allotment-odds estimate: the category split behind it is not published per bid
 
             out += f"""
@@ -625,7 +728,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
               <td><span class="badge badge-up">Active Now</span></td>
               <td class="right num">{_esc(p_str)}</td>
               <td class="right small">{_esc(dates)}</td>
-              <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="{_esc(sym)}">{_esc(sub_str)}{chance_html}</td>
+              <td class="right num font-semibold" style="color:var(--accent)" data-ipo-demand="{_esc(sym)}">{_esc(sub_str)}{sub_note}{chance_html}</td>
               <td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">Details & Bidding &rarr;</a></td>
             </tr>
             """
@@ -652,7 +755,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         for r in rows:
             sym = r["symbol"].upper()
             slug = sym.lower()
-            co = r.get("company") or sym
+            co = ipo_facts.display_name(r)
             p_str = ipo_facts.band_text(r) or "Announced"
             d_start = _long_date(r.get("bidding_start")) or "Announced Soon"
             d_end = _long_date(r.get("bidding_end")) or "Announced Soon"
@@ -680,7 +783,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
               <th>Listing Date</th>
               <th class="right">Issue Price</th>
               <th class="right">Listing Day Open</th>
-              <th class="right">Listing Gain</th>
+              <th class="right">Listing Open vs Issue Price</th>
               <th class="right">Current Price (CMP)</th>
               <th class="right">Total Return</th>
               <th class="center">Stock</th>
@@ -691,36 +794,41 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         for r in rows:
             sym = r["symbol"].upper()
             slug = sym.lower()
-            co = r.get("company") or sym
+            co = ipo_facts.display_name(r)
             perf = r.get("perf") or {}
-            d_list = _long_date(r.get("listing_date") or perf.get("listing_date")) or "-"
-            
-            ip_val = ipo_facts.price_facts(r)["issue_price"]
-            ip_str = (f"Rs {perf['issue_price']:,.2f}" if perf.get("has_current_data")
-                      else (f"Rs {ipo_facts.fmt_price(ip_val)}" if ip_val else (ipo_facts.band_text(r) or "-")))
-            lo_str = lg_str = cmp_str = cg_str = "-"
+            d_list = _long_date(ipo_facts.reliable_listing_date(r)) or "Not on file"
+            chip = _type_chip(r)
+            sub_label = f"{_esc(sym)} &middot; {chip}" if chip else _esc(sym)
+
+            pf_r = ipo_facts.price_facts(r)
+            ip_val = pf_r["issue_price"] or pf_r["single"]
+            ip_str = _rs(ip_val) if ip_val else "Not on file"
+            lo_str = lg_str = cmp_str = cg_str = "Not on file"
             if perf.get("has_listing_data"):
-                lo_str = f"Rs {perf['listing_open']:,.2f}"
+                lo_str = _rs(perf["listing_open"])
                 lg_pct = perf["listing_gain_pct"]
                 lg_cls = "var(--green)" if lg_pct >= 0 else "var(--red)"
                 lg_str = f"<span style='color:{lg_cls};font-weight:600'>{lg_pct:+.1f}%</span>"
             if perf.get("has_current_data"):
-                cmp_str = f"Rs {perf['cmp']:,.2f}"
+                cmp_str = _rs(perf["cmp"])
                 cg_pct = perf["current_gain_pct"]
                 cg_cls = "var(--green)" if cg_pct >= 0 else "var(--red)"
                 cg_str = f"<span style='color:{cg_cls};font-weight:600'>{cg_pct:+.1f}%</span>"
-            stock_link = (f'<a href="/stock/{slug}/" class="btn btn-xs">Live &rarr;</a>' if perf.get("has_current_data")
+            stock_link = (f'<a href="/stock/{slug}/" class="btn btn-xs">Stock &rarr;</a>' if perf.get("has_current_data")
                           else f'<a href="/ipo/{slug}/" class="btn btn-xs">View &rarr;</a>')
+            if perf.get("has_listing_data") or perf.get("has_current_data"):
+                mid = (f'<td class="right num">{lo_str}</td><td class="right num">{lg_str}</td>'
+                       f'<td class="right num">{cmp_str}</td><td class="right num">{cg_str}</td>')
+            else:
+                # one note instead of four empty cells
+                mid = '<td class="small faint" colspan="4">Listing-day and current prices are not on file</td>'
 
             out += f"""
             <tr>
-              <td><strong><a href="/ipo/{slug}/">{_esc(co)}</a></strong> <span class="xs faint">{_esc(sym)}</span></td>
+              <td><strong><a href="/ipo/{slug}/">{_esc(co)}</a></strong> <span class="xs faint">{sub_label}</span></td>
               <td class="small">{_esc(d_list)}</td>
-              <td class="right num">{ip_str}</td>
-              <td class="right num">{lo_str}</td>
-              <td class="right num">{lg_str}</td>
-              <td class="right num">{cmp_str}</td>
-              <td class="right num">{cg_str}</td>
+              <td class="right num">{_esc(ip_str)}</td>
+              {mid}
               <td class="center">{stock_link}</td>
             </tr>
             """
@@ -737,80 +845,84 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
             sym = r["symbol"].upper()
             slug = sym.lower()
             exp = _add_working_days(r.get("bidding_end"), 3)
-            out += (f'<tr><td><strong><a href="/ipo/{slug}/">{_esc(r.get("company") or sym)}</a></strong> '
+            out += (f'<tr><td><strong><a href="/ipo/{slug}/">{_esc(ipo_facts.display_name(r))}</a></strong> '
                     f'<span class="xs faint">{_esc(sym)}</span></td>'
                     f'<td class="right num">{_esc(ipo_facts.band_text(r) or "Announced")}</td>'
-                    f'<td class="right small">{_esc(_long_date(r.get("bidding_end")) or "-")}</td>'
-                    f'<td class="right small">{_esc(_long_date(exp) if exp else "-")}</td>'
+                    f'<td class="right small">{_esc(_long_date(r.get("bidding_end")) or "Not on file")}</td>'
+                    f'<td class="right small">{_esc(_long_date(exp) if exp else "Not on file")}</td>'
                     f'<td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">Allotment &amp; timeline &rarr;</a></td></tr>')
         return out + "</tbody></table></div><p class=\"xs faint\" style=\"margin-top:6px\">SEBI requires listing within three working days of the issue closing; the date shown skips weekends only, so the exchange notice is the final word.</p>"
 
     faqs = [
         ("Does BrokerLens show IPO grey market premium (GMP)?",
          "No. GMP is an unregulated, off-exchange informal estimate with no regulatory oversight. BrokerLens publishes strictly verified, exchange-disclosed data only."),
-        ("How are IPO listing gains and total returns computed on this page?",
-         "Listing gains are calculated using the opening trade price on the official exchange listing day versus the final offer cut-off issue price. Total returns track current market price (CMP) derived from official NSE closing candles against the IPO issue price."),
+        ("How are IPO listing results and total returns computed on this page?",
+         "The listing result compares the opening trade price on the official exchange listing day with the issue price, and is shown only where the exchange price history on file covers that day. Total return compares the latest NSE closing price with the IPO issue price."),
         ("What is the difference between Mainboard and SME IPOs?",
          "Mainboard IPOs list on the main exchange boards with larger issue sizes. SME IPOs list on the SME platforms (NSE Emerge or BSE SME) and are generally smaller issues. The lot size for each issue is stated in its prospectus."),
         ("Does BrokerLens recommend applying to any IPO?",
          "No. BrokerLens does not recommend any IPO, stock or broker. This page states public facts only; it is not investment advice, and BrokerLens is not a SEBI-registered investment adviser or research analyst."),
     ]
 
-    faq_html = "".join(
-        f'<details class="faq-item"><summary>{_esc(q)}</summary><p>{_esc(a)}</p></details>'
-        for q, a in faqs
-    )
+    def faq_block(items):
+        return "".join(f'<details class="faq-item"><summary>{_esc(q)}</summary><p>{_esc(a)}</p></details>' for q, a in items)
 
-    crumb_html, crumb_jsonld = breadcrumb_fn([("BrokerLens", "/"), ("IPO", None)])
-    jsonld = {
-        "@context": "https://schema.org",
-        "@graph": [
-            {
-                "@type": "FAQPage",
-                "mainEntity": [
-                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
-                    for q, a in faqs
-                ]
-            },
-            crumb_jsonld,
-        ]
-    }
+    def faq_ld(items):
+        return {"@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in items]}
 
     if upcoming:
         n_open, n_soon = len(active), len(forthcoming)
-        u_title = "Upcoming IPOs in India: Open Now, Opening Soon & Listing This Week | BrokerLens"
+        u_faqs = [
+            ("How do I see which IPOs are open or opening soon?",
+             "The sections on this page list issues open for bidding and issues opening soon, taken from NSE's public-issue disclosures. "
+             "%s Dates and price bands are as announced by the issuers and can change." % fresh),
+            ("What is a price band?",
+             "A price band is the range within which investors can bid for an IPO. The final issue price is fixed within the band after bidding closes."),
+            ("When are IPO dates announced?",
+             "Issuers announce the opening and closing dates and the price band before bidding opens. An issue appears on this page once it is in NSE's public-issue disclosures."),
+            ("How can I follow IPO dates without an account?",
+             "Add the calendar file (.ics) to your calendar app or subscribe to the RSS feed linked on this page. Both carry dates only."),
+            ("Does BrokerLens recommend applying to any IPO?",
+             "No. BrokerLens does not recommend any IPO, stock or broker. This page states public facts only and is not investment advice."),
+        ]
+        u_title = "Upcoming IPOs in India: Open Now and Opening Soon | BrokerLens"
         u_desc = (f"{n_open} IPO{'s' if n_open != 1 else ''} open for bidding and {n_soon} opening soon, with dates, price bands "
-                  f"and the SEBI listing timeline, from official NSE disclosures. Updated {_long_date(today_iso)}.")[:295]
+                  f"and the SEBI listing timeline, from NSE disclosures. Data as of {_long_date(as_of_iso)}.")[:295]
         crumb_html, crumb_jsonld = breadcrumb_fn([("BrokerLens", "/"), ("IPO", "/ipo/"), ("Upcoming IPOs", None)])
         u_jsonld = {"@context": "https://schema.org", "@graph": [
             {"@type": "ItemList", "name": "Upcoming and open IPOs", "url": canonical,
              "itemListElement": [{"@type": "ListItem", "position": i + 1, "url": f"{site_url}/ipo/{r['symbol'].lower()}/",
-                                  "name": r.get("company") or r["symbol"]} for i, r in enumerate(active + forthcoming)]},
-            {"@type": "FAQPage", "mainEntity": [
-                {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faqs]},
+                                  "name": ipo_facts.display_name(r)} for i, r in enumerate(active + forthcoming)]},
+            faq_ld(u_faqs),
             crumb_jsonld]}
         body = head_template % {"title": _esc(u_title), "description": _esc(u_desc), "canonical": _esc(canonical),
                                 "jsonld": json.dumps(u_jsonld, ensure_ascii=False)}
         body += (
             crumb_html
             + '<h1 style="margin-top:0">Upcoming IPOs in India</h1>'
-            + f'<p class="muted" style="max-width:75ch">Mainboard and SME issues from NSE\'s public-issue disclosures, updated {_esc(_long_date(today_iso))}. '
+            + f'<p class="muted" style="max-width:75ch">Mainboard and SME issues from NSE\'s public-issue disclosures. {_esc(fresh)} '
               'Dates and price bands are as announced by the issuers and can change; this page states facts only and is not a recommendation to apply.</p>'
             + '<div style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 8px 0">'
             + '<a href="/ipo/allotment-status/" class="btn btn-primary small">Check allotment status &rarr;</a>'
             + '<a href="/ipo/how-to-apply/" class="btn btn-outline small">How to apply via UPI &rarr;</a>'
-            + '<a href="/ipo/" class="btn btn-outline small">IPO tracker and listing gains &rarr;</a></div>'
+            + '<a href="/ipo/" class="btn btn-outline small">IPO tracker and listing results &rarr;</a></div>'
             + _follow_card_html()
             + ibsl_html
             + '<div class="section-title" style="margin-top:20px"><h2>Open for bidding now</h2></div>' + render_active_table(active)
             + '<div class="section-title" style="margin-top:28px"><h2>Opening soon</h2></div>' + render_upcoming_table(forthcoming)
             + ('<div class="section-title" style="margin-top:28px"><h2>Closed, awaiting listing</h2></div>' + render_awaiting_table(awaiting) if awaiting else "")
             + '<h2 style="margin-top:32px;font-size:18px">Frequently Asked Questions</h2>'
-            + f'<div style="max-width:70ch">{faq_html}</div>'
+            + f'<div style="max-width:70ch">{faq_block(u_faqs)}</div>'
         )
         body += foot_template % {"source_note": source_note_fn(
             "This page's dates, price bands and subscription figures are NSE's own public-issue disclosures.")}
         return body
+
+    crumb_html, crumb_jsonld = breadcrumb_fn([("BrokerLens", "/"), ("IPO", None)])
+    jsonld = {"@context": "https://schema.org", "@graph": [faq_ld(faqs), crumb_jsonld]}
+    first_year = ipo_facts.earliest_year(records)
+    since_txt = f"NSE issues on file since {first_year}" if first_year else "NSE issues on file"
 
     body = head_template % {
         "title": _esc(title),
@@ -822,12 +934,13 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
     body += (
         crumb_html
         + '<h1 style="margin-top:0">IPO Tracker & Performance Hub</h1>'
-        + '<p class="muted" style="max-width:75ch">Mainboard and SME IPOs tracked directly from official NSE disclosures and SEBI prospectuses: price bands, dates, live bidding subscription, and verified post-listing gains. No grey market premium, no speculative recommendations &bull; <a href="/methodology" data-link>see methodology</a>.</p>'
+        + '<p class="muted" style="max-width:75ch">Mainboard and SME IPOs tracked from official NSE disclosures: price bands, dates, dated subscription snapshots, and post-listing results where the exchange price history on file covers them. No grey market premium, no speculative recommendations &bull; <a href="/methodology" data-link>see methodology</a>.</p>'
+        + f'<p class="small muted" style="max-width:75ch;margin-top:-6px">{_esc(fresh)}</p>'
         + f'<div class="grid g4" style="margin:20px 0 24px 0;gap:12px">'
         + f'<div class="card" style="padding:14px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
         + f'<div class="xs muted">Active for Bidding</div>'
         + f'<div style="font-size:22px;font-weight:700;color:var(--accent);margin-top:4px">{len(active)} Issues Open</div>'
-        + f'<div class="xs faint">Live exchange bidding</div>'
+        + f'<div class="xs faint">As of {_esc(ipo_facts.fmt_date(as_of_iso))}</div>'
         + f'</div>'
         + f'<div class="card" style="padding:14px;background:var(--bg-raised);border-left:3px solid var(--text-bright)">'
         + f'<div class="xs muted">Upcoming IPOs</div>'
@@ -837,7 +950,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         + f'<div class="card" style="padding:14px;background:var(--bg-raised);border-left:3px solid var(--green)">'
         + f'<div class="xs muted">Tracked Listings</div>'
         + f'<div style="font-size:22px;font-weight:700;color:var(--green);margin-top:4px">{len(records):,} Total</div>'
-        + f'<div class="xs faint">Historical issues since 2003</div>'
+        + f'<div class="xs faint">{_esc(since_txt)}</div>'
         + f'</div>'
         + f'<div class="card" style="padding:14px;background:var(--bg-raised);border-left:3px solid var(--blue, #3b82f6)">'
         + f'<div class="xs muted">Allotment Tools</div>'
@@ -860,11 +973,11 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         + '<div class="section-title" style="margin-top:32px"><h2>Upcoming IPOs (Announced Dates & Price Bands)</h2></div>'
         + render_upcoming_table(forthcoming)
         + ('<div class="section-title" style="margin-top:32px"><h2>Closed, Awaiting Listing</h2></div>' + render_awaiting_table(awaiting) if awaiting else "")
-        + '<div class="section-title" style="margin-top:32px"><h2>Recently Listed IPOs: Listing Day Gains & Current Performance</h2></div>'
+        + '<div class="section-title" style="margin-top:32px"><h2>Recently Listed IPOs: Listing Day Open vs Issue Price & Current Performance</h2></div>'
         + render_listed_table(recent_listed)
-        + f'<p class="xs faint" style="margin-top:14px"><a href="/ipo/archive/">Browse the full historical archive ({len(records):,} IPOs since 2003) &rarr;</a></p>'
+        + f'<p class="xs faint" style="margin-top:14px"><a href="/ipo/archive/">Browse the full historical archive ({len(records):,} IPOs on file) &rarr;</a></p>'
         + '<h2 style="margin-top:32px;font-size:18px">Frequently Asked Questions</h2>'
-        + f'<div style="max-width:70ch">{faq_html}</div>'
+        + f'<div style="max-width:70ch">{faq_block(faqs)}</div>'
     )
 
     body += foot_template % {
@@ -878,12 +991,22 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
 
 def render_enhanced_ipo_archive(records, equity_history, head_template, foot_template,
                                 breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in"):
-    """Renders the full /ipo/archive/ page with listing gains and post-listing performance."""
+    """Renders the full /ipo/archive/ page: every IPO record on file, with listing-day results where the
+    exchange price history on file covers them."""
     canonical = f"{site_url}/ipo/archive/"
-    title = f"Full IPO Archive Since 2003 ({len(records):,} Issues) | BrokerLens"
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    as_of_iso = ipo_facts.data_as_of(today_iso)
+    records = ipo_facts.ipo_records_only(records)
+    n = len(records)
+    y0 = ipo_facts.earliest_year(records)
+    ys = [d.year for d in (ipo_facts._parse(r.get("bidding_end")) for r in records) if d]
+    y1 = max(ys) if ys else None
+    span = f"{y0} to {y1}" if (y0 and y1 and y0 != y1) else (str(y0) if y0 else "")
+    title = f"IPO Archive: {n:,} NSE Issues on File" + (f", {span}" if span else "") + " | BrokerLens"
     description = (
-        f"Complete historical archive of {len(records):,} NSE mainboard and SME IPOs since 2003: "
-        f"Issue prices, listing dates, listing day gains, and post-listing return performance."
+        f"Archive of {n:,} NSE mainboard and SME IPO records on file" + (f" ({span})" if span else "") +
+        f": issue prices, bidding and listing dates, and listing-day results where the exchange price history on file covers them. "
+        f"Data as of {ipo_facts.fmt_date(as_of_iso)}."
     )[:295]
 
     crumb_html, crumb_jsonld = breadcrumb_fn([("BrokerLens", "/"), ("IPO", "/ipo/"), ("Archive", None)])
@@ -899,7 +1022,7 @@ def render_enhanced_ipo_archive(records, equity_history, head_template, foot_tem
                         "@type": "ListItem",
                         "position": i + 1,
                         "url": f"{site_url}/ipo/{r['symbol'].lower()}/",
-                        "name": r.get("company") or r["symbol"],
+                        "name": ipo_facts.display_name(r),
                     }
                     for i, r in enumerate(records[:100])
                 ]
@@ -912,13 +1035,22 @@ def render_enhanced_ipo_archive(records, equity_history, head_template, foot_tem
     for r in records:
         sym = r["symbol"].upper()
         slug = sym.lower()
-        co = r.get("company") or sym
-        status = r.get("status", "Closed")
-        _ip = ipo_facts.price_facts(r)["issue_price"] or 0.0
-        perf = compute_listing_performance(sym, _ip, equity_history, r.get("listing_date"))
+        co = ipo_facts.display_name(r)
+        status = ipo_facts.ipo_status(r, today_iso)
+        pf_r = ipo_facts.price_facts(r)
+        _ip = pf_r["issue_price"] or 0.0
+        good_ld = ipo_facts.reliable_listing_date(r)
+        perf = compute_listing_performance(sym, _ip, equity_history, good_ld)
 
-        d_str = _long_date(r.get("listing_date") or r.get("bidding_end") or perf.get("listing_date")) or "-"
-        ip_str = f"Rs {ipo_facts.fmt_price(_ip)}" if _ip > 0 else (ipo_facts.band_text(r) or "-")
+        closed_str = _long_date(r.get("bidding_end")) or "-"
+        if good_ld:
+            list_str = _long_date(good_ld)
+        elif ipo_facts.listing_date_state(r) == "inconsistent":
+            list_str = "Inconsistent in feed"
+        else:
+            list_str = "-"
+        ip_show = _ip or pf_r["single"]
+        ip_str = _rs(ip_show) if ip_show else "-"
 
         gain_str = cmp_str = "-"
         if perf.get("has_listing_data"):
@@ -926,19 +1058,20 @@ def render_enhanced_ipo_archive(records, equity_history, head_template, foot_tem
             lg_cls = "var(--green)" if lg_pct >= 0 else "var(--red)"
             gain_str = f"<span style='color:{lg_cls};font-weight:600'>{lg_pct:+.1f}%</span>"
         if perf.get("has_current_data"):
-            cmp_str = f"Rs {perf['cmp']:,.1f}"
+            cmp_str = _rs(perf["cmp"])
 
-        sub_val = r.get("times_subscribed")
-        sub_str = f"{float(sub_val):.2f}x" if sub_val is not None else "-"
+        info = ipo_facts.subscription_info(r, status, as_of_iso)
+        sub_str = f"{info['value']:.2f}x" if (info and info["final"]) else "-"
 
         rows_html += f"""
         <tr>
           <td><strong><a href="/ipo/{slug}/">{_esc(co)}</a></strong> <span class="xs faint">{_esc(sym)}</span></td>
           <td><span class="badge">{_esc(status)}</span></td>
-          <td class="right num">{ip_str}</td>
-          <td class="small">{_esc(d_str)}</td>
+          <td class="right num">{_esc(ip_str)}</td>
+          <td class="small">{_esc(closed_str)}</td>
+          <td class="small">{_esc(list_str)}</td>
           <td class="right num">{gain_str}</td>
-          <td class="right num">{cmp_str}</td>
+          <td class="right num">{_esc(cmp_str)}</td>
           <td class="right num font-semibold">{sub_str}</td>
         </tr>
         """
@@ -953,10 +1086,13 @@ def render_enhanced_ipo_archive(records, equity_history, head_template, foot_tem
     body += (
         crumb_html
         + '<h1 style="margin-top:0">Full IPO Historical Archive</h1>'
-        + f'<p class="muted" style="max-width:75ch">Complete database of {len(records):,} mainboard and SME IPOs from official NSE public-issue disclosures since 2003. Includes historical issue prices, listing day returns, and current trading performance. <a href="/ipo/" data-link>&larr; Back to active & upcoming IPOs</a></p>'
+        + f'<p class="muted" style="max-width:75ch">{n:,} mainboard and SME IPO records on file from official NSE public-issue disclosures'
+          + (f', {_esc(span)}' if span else '')
+          + '. Earlier years are thin because the archive holds only what the NSE feed carries. Listing-day results and current prices appear only where the exchange price history on file covers them; a dash (-) means the value is not on file. '
+          + f'Data as of {_esc(ipo_facts.fmt_date(as_of_iso))}. <a href="/ipo/" data-link>&larr; Back to active & upcoming IPOs</a></p>'
         + '<div class="table-scroll" style="margin-top:20px"><table class="data"><thead><tr>'
         + '<th>Company & Symbol</th><th>Status</th><th class="right">Issue Price</th>'
-        + '<th>Date</th><th class="right">Listing Day Gain</th><th class="right">Current Price</th><th class="right">Subscribed</th>'
+        + '<th>Bidding Closed</th><th>Listing Date</th><th class="right">Listing Open vs Issue Price</th><th class="right">Current Price</th><th class="right">Final Subscription</th>'
         + '</tr></thead><tbody>'
         + rows_html
         + '</tbody></table></div>'

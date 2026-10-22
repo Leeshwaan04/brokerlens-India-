@@ -106,9 +106,35 @@ def run(check, ROOT, load):
           and not re.search(r"yahoo|google finance|moneycontrol|tradingview|screener|bloomberg", " ".join(a for _q, a in faqs).lower()))
 
     t = pts.stock_title("Acme Ltd", "ACME")
-    check("pricetarget: title keeps 'Name (SYM): ... | BrokerLens', covers the query, within length, no dashes",
-          t.startswith("Acme Ltd (ACME): ") and t.endswith(" | BrokerLens") and "What-If" in t and len(t) <= 78
-          and not any(d in t for d in DASHES), t)
+    check("pricetarget: title strips 'Ltd', keeps 'Name (SYM): ... | BrokerLens', covers the query, within 70, no dashes",
+          t == "Acme (ACME): Share Price and What-If Calculator | BrokerLens" and "Ltd" not in t
+          and len(t) <= 70 and not any(d in t for d in DASHES), t)
+    t2 = pts.stock_title("Reliance Industries Limited", "RELIANCE")
+    t3 = pts.stock_title("Housing Development Finance Corporation Limited", "HDFC")
+    check("pricetarget: 'Limited' is stripped and the brand suffix is dropped when the title would pass 70 characters",
+          t2 == "Reliance Industries (RELIANCE): Share Price and What-If Calculator" and "Limited" not in t2
+          and len(t2) <= 70 and "BrokerLens" not in t2 and "What-If Calculator" in t3 and "Limited" not in t3, t2 + " / " + t3)
+    check("pricetarget: short_company_name keeps the name when stripping would leave nothing, and strips Ltd.",
+          pts.short_company_name("Limited", "X") == "Limited" and pts.short_company_name("Bajaj Finance Ltd.", "BAJ") == "Bajaj Finance"
+          and pts.short_company_name("", "ABC") == "ABC" and pts.short_company_name(None, "") == "")
+    try:
+        from pipeline import ipo_facts as _ipf
+        same = all(pts.short_company_name(n, "S") == _ipf._short_name(n, "S")
+                   for n in ("Acme Limited", "Acme Ltd", "Acme Ltd.", "Acme", "Limited", "Foo Limited Partnership"))
+        check("pricetarget: short_company_name agrees with ipo_facts._short_name", same)
+    except Exception as exc:  # pragma: no cover
+        check("pricetarget: short_company_name agrees with ipo_facts._short_name (not applicable: %s)" % exc, True)
+    check("pricetarget: stock page title is built from the shortened name in publish.py",
+          "title = _price_target_title(name, symbol)" in pub)
+    page_t = _read(ROOT, "site", "stock", "itc", "index.html")
+    if page_t is None:
+        check("pricetarget: built stock title within budget (not applicable: no built page in this tree)", True)
+    else:
+        mt = re.search(r"<title>([^<]*)</title>", page_t)
+        ttl = mt.group(1) if mt else ""
+        # A tree built before this change may still carry the long form; only fail on a malformed title.
+        check("pricetarget: built /stock/itc/ title keeps the what-if phrase and the symbol",
+              "What-If" in ttl and "(ITC)" in ttl and not any(d in ttl for d in DASHES), ttl)
     d = pts.stock_description("Acme Ltd", "ACME")
     check("pricetarget: meta description states no targets are published and has no dashes",
           "publishes no price targets" in d and not any(x in d for x in DASHES), d)

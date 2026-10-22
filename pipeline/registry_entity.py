@@ -23,6 +23,15 @@ Honesty rules baked in here
   register as of <date>".
 * Grouping is conservative: an ambiguous name (different cities or pincodes,
   or two broker numbers under one name) is never merged.
+* Personal data: the register's email address and telephone number are never
+  published (not in the page body, not in structured data). A street address
+  is shown only when the legal name is clearly a company or institution (see
+  _is_corporate); for individuals and unclear names only the registration
+  facts are shown, with a link to the official SEBI register instead.
+* Where the register's own validity end date is earlier than the as-of date,
+  the title, meta description and first FAQ never say "Yes" and never ask
+  "Is X SEBI registered?": they state that the name appears in the register
+  list, give the end date listed, and say to check SEBI.
 
 Public API (used from pipeline/publish.py)
 ------------------------------------------
@@ -41,6 +50,15 @@ SEBI_HOME = "https://www.sebi.gov.in/"
 SCORES_URL = "https://scores.sebi.gov.in/"
 NSE_HOME = "https://www.nseindia.com/"
 BSE_HOME = "https://www.bseindia.com/"
+# Official SEBI register list pages, one per category. Same URL pattern and
+# intmId values as pipeline/sources/sebi.py (_shell, CATEGORIES).
+SEBI_REGISTER_URL = "https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=%d"
+_REGISTER_INTM_ID = {"stock_broker": 1, "commodity_broker": 2, "dp_cdsl": 18, "dp_nsdl": 19}
+
+# Title budget: the registration number should sit inside the first
+# _TITLE_REG_BY characters and the whole title within _TITLE_MAX (about 70) where possible.
+_TITLE_MAX = 72
+_TITLE_REG_BY = 60
 
 # ------------------------------------------------------------------ names
 
@@ -115,6 +133,30 @@ def norm_name(name):
         if t:
             out.append(t)
     return " ".join(out)
+
+
+_CORP_TOKENS = {
+    "limited", "ltd", "private", "pvt", "llp", "llc", "bank", "corporation", "corp",
+    "company", "inc", "incorporated", "plc",
+}
+_LEGAL_SUFFIX_RE = re.compile(
+    r"[\s,]+(?:private\s+limited|pvt\.?\s*ltd\.?|limited|ltd\.?)\s*$", re.I)
+
+
+def _is_corporate(name):
+    """True only when the legal name clearly belongs to a company or institution.
+
+    A corporate form word (Limited, Ltd, Private, Pvt, LLP, LLC, Bank,
+    Corporation, Company, Inc, PLC) must be present. Individuals, proprietors,
+    partnership firms ("& Co") and anything unclear are not corporate."""
+    return bool(set(norm_name(name).split()) & _CORP_TOKENS)
+
+
+def _short_name(display):
+    """Display name without a trailing Private Limited / Pvt. Ltd. / Limited / Ltd.
+    (kept when stripping would leave nothing)."""
+    out = _LEGAL_SUFFIX_RE.sub("", display or "").strip(" ,")
+    return out or display
 
 
 # ------------------------------------------------------------------ dates
@@ -256,6 +298,7 @@ def _member(row, detail):
             vtexts.append(v)
     earliest, latest, vrow = _dates_summary(vtexts)
     exch = row.get("exchanges") or detail.get("exchanges") or []
+    corporate = _is_corporate(row.get("name") or detail.get("legal_name") or "")
     return {
         "slug": row.get("slug"),
         "name": row.get("name") or "Unnamed entity",
@@ -266,8 +309,10 @@ def _member(row, detail):
         "exchanges": exch,
         "xs": exchange_summary(exch),
         "earliest": earliest, "effective": latest, "validity": vrow,
-        "email": detail.get("email"), "phone": detail.get("telephone"),
-        "address": detail.get("address"), "city": row.get("city") or detail.get("city"),
+        # email and telephone are deliberately not carried into the model.
+        "corporate": corporate, "cats": list(cats),
+        "address": detail.get("address") if corporate else None,
+        "city": row.get("city") or detail.get("city"),
         "norm": norm_name(row.get("name") or ""),
     }
 
@@ -348,11 +393,43 @@ def title_group(slug):
     return "AB"[zlib.crc32((slug or "").encode("utf-8")) % 2]
 
 
-def make_title(m):
-    if title_group(m["slug"]) == "A":
-        return "%s: SEBI Registration No. %s, Status and Segments | BrokerLens" % (m["display"], m["reg"])
+def _fit(candidates):
+    """Pick a title from candidates ordered longest to shortest: the first whose
+    registration number ends inside the first _TITLE_REG_BY characters and whose
+    whole length is within _TITLE_MAX; else the last (shortest) candidate."""
+    for text, reg in candidates:
+        if len(text) <= _TITLE_MAX and text.find(reg) + len(reg) <= _TITLE_REG_BY:
+            return text
+    return candidates[-1][0]
+
+
+def title_pattern(m, asof=None):
+    """"A" or "B": the pattern actually used. Equal to title_group(slug) except
+    that a registration whose listed end date is before the as-of date always
+    gets the non-question pattern A."""
+    if _end_before_asof(m, asof):
+        return "A"
+    return title_group(m["slug"])
+
+
+def make_title(m, asof=None):
+    reg, full, short = m["reg"], m["display"], _short_name(m["display"])
+    if title_pattern(m, asof) == "A":
+        core = "SEBI Registration No. %s, Validity and Exchanges" % reg
+        return _fit([
+            ("%s: %s | BrokerLens" % (full, core), reg),
+            ("%s: %s" % (full, core), reg),
+            ("%s: %s" % (short, core), reg),
+            ("%s: SEBI Registration No. %s" % (short, reg), reg),
+            ("%s: SEBI Reg. No. %s" % (short, reg), reg),
+        ])
     cat = re.sub(r"\s*\(([^()]*)\)$", r", \1", m["category"])      # avoid nested brackets in the title
-    return "Is %s SEBI Registered? Registration No. %s (%s)" % (m["display"], m["reg"], cat)
+    return _fit([
+        ("Is %s SEBI Registered? Registration No. %s (%s)" % (full, reg, cat), reg),
+        ("Is %s SEBI Registered? Registration No. %s (%s)" % (short, reg, cat), reg),
+        ("Is %s SEBI Registered? Registration No. %s" % (short, reg), reg),
+        ("Is %s SEBI Registered? No. %s" % (short, reg), reg),
+    ])
 
 
 def make_description(m, asof):
@@ -360,9 +437,14 @@ def make_description(m, asof):
     ex = m["xs"]["trading"] or (m["xs"]["trading"] + m["xs"]["clearing"] + m["xs"]["other"])
     if ex:
         bits.append(", ".join(ex))
-    if m["effective"]:
-        bits.append("effective %s" % m["effective"])
-    text = "Yes, %s is listed in the SEBI register. %s." % (m["display"], ", ".join(bits))
+    if _end_before_asof(m, asof):
+        end = (m["validity"] or {}).get("end")
+        text = ("%s appears in the SEBI register list; the validity end date listed is %s; check SEBI. %s."
+                % (m["display"], end, ", ".join(bits)))
+    else:
+        if m["effective"]:
+            bits.append("effective %s" % m["effective"])
+        text = "Yes, %s is listed in the SEBI register. %s." % (m["display"], ", ".join(bits))
     if asof:
         text += " Register as of %s." % asof
     return text
@@ -386,7 +468,7 @@ def _end_before_asof(m, asof):
 
 
 def _asof_clause(asof):
-    return ("as of the register dated %s" % asof) if asof else \
+    return ("as of BrokerLens's pull of the register on %s" % asof) if asof else \
         "per the register file BrokerLens holds (its date is not on file)"
 
 
@@ -394,9 +476,17 @@ def make_faq(m, group, asof):
     name, reg = m["display"], m["reg"]
     others = [o for o in group if o is not m]
     clause = _asof_clause(asof)
-    a1 = ("Yes. %s is listed in the SEBI register of recognised intermediaries as %s, "
-          "registration number %s, %s. BrokerLens does not rate or recommend any intermediary."
-          % (name, m["phrase"], reg, clause))
+    if _end_before_asof(m, asof):
+        q1 = "Does %s appear in the SEBI register list?" % name
+        a1 = ("%s appears in the SEBI register list as %s, registration number %s, %s. The validity end "
+              "date listed is %s, which is earlier than that pull date, so check the current position "
+              "with SEBI. BrokerLens does not rate or recommend any intermediary."
+              % (name, m["phrase"], reg, clause, (m["validity"] or {}).get("end")))
+    else:
+        q1 = "Is %s SEBI registered?" % name
+        a1 = ("Yes. %s is listed in the SEBI register of recognised intermediaries as %s, "
+              "registration number %s, %s. BrokerLens does not rate or recommend any intermediary."
+              % (name, m["phrase"], reg, clause))
     a2 = "The SEBI registration number of %s in the register is %s (%s)." % (name, reg, m["category"])
     if others:
         a2 += " Other registrations listed under the same legal name: %s." % "; ".join(
@@ -408,13 +498,13 @@ def make_faq(m, group, asof):
     elif vp:
         a3 = "The register lists the validity of %s as %s%s, %s." % (reg, vp, eff, clause)
         if _end_before_asof(m, asof):
-            a3 += " The end date listed is earlier than the register date, so confirm the current position with SEBI."
+            a3 += " The end date listed is earlier than that pull date, so confirm the current position with SEBI."
     else:
         a3 = "The register file BrokerLens holds does not list a validity for %s, %s." % (reg, clause)
     a3 += (" This reflects the register list only and is not a live status check, "
            "so confirm the current position on the SEBI website before relying on it.")
     return [
-        ("Is %s SEBI registered?" % name, a1),
+        (q1, a1),
         ("What is %s's registration number?" % name, a2),
         ("Is the registration valid?", a3),
     ]
@@ -456,12 +546,38 @@ def _dates_html(m):
     return s
 
 
+def register_url(m):
+    """Official SEBI register list page for this registration's category, or None."""
+    cats = m.get("cats") or []
+    reg = (m.get("reg") or "").upper()
+    for c in ("stock_broker", "commodity_broker"):
+        if c in cats:
+            return SEBI_REGISTER_URL % _REGISTER_INTM_ID[c]
+    if reg.startswith("INZ"):
+        return SEBI_REGISTER_URL % _REGISTER_INTM_ID["stock_broker"]
+    if "dp_cdsl" in cats and "dp_nsdl" not in cats:
+        return SEBI_REGISTER_URL % _REGISTER_INTM_ID["dp_cdsl"]
+    if "dp_nsdl" in cats and "dp_cdsl" not in cats:
+        return SEBI_REGISTER_URL % _REGISTER_INTM_ID["dp_nsdl"]
+    return None
+
+
+def _register_label(m):
+    return {"stock_broker": "stock brokers", "dp_cdsl": "depository participants (CDSL)",
+            "dp_nsdl": "depository participants (NSDL)"}.get(m["kind"], "recognised intermediaries")
+
+
 def _verify_html(m):
     items = [
         '<li>Open the SEBI website (<a href="%s" rel="noopener" target="_blank">sebi.gov.in</a>) and search the '
         'recognised intermediaries list for registration number %s. The name, number and category should match this page.</li>'
         % (SEBI_HOME, esc(m["reg"]))
     ]
+    reg_url = register_url(m)
+    if reg_url:
+        items.append('<li>The register list for this category is on the SEBI site: '
+                     '<a href="%s" rel="noopener" target="_blank">SEBI list of %s</a>.</li>'
+                     % (_attr(reg_url), esc(_register_label(m))))
     xs = m["xs"]["trading"] + m["xs"]["clearing"]
     links = []
     if "NSE" in xs:
@@ -538,12 +654,15 @@ def render_main(m, group, asof, faq, site_url):
     if vp and vp != "Perpetual" and _end_before_asof(m, asof):
         rows.append(_row("Note", "The validity end date listed is earlier than the register date. Confirm the "
                                  "current position with SEBI."))
-    if m["address"]:
+    if m["address"]:                                   # corporate legal names only (see _member)
         rows.append(_row("Address per register", esc(m["address"])))
-    if m["email"]:
-        rows.append(_row("Email per register", esc(m["email"])))
-    if m["phone"]:
-        rows.append(_row("Telephone per register", esc(m["phone"])))
+    reg_url = register_url(m)
+    rows.append(_row("Official SEBI register",
+                     '<a href="%s" rel="noopener" target="_blank">SEBI list of %s</a>. Email and telephone '
+                     'are not republished here.' % (_attr(reg_url), esc(_register_label(m)))
+                     if reg_url else
+                     '<a href="%s" rel="noopener" target="_blank">sebi.gov.in</a>. Email and telephone '
+                     'are not republished here.' % SEBI_HOME))
     html.append('<div class="section-title"><h2>Registration snapshot</h2></div>')
     html.append('<div class="card" style="margin-top:8px;padding:16px">%s</div>' % "".join(rows))
     html.append('<p class="xs faint" style="margin-top:8px">%s Source: SEBI recognised-intermediary register. '
@@ -565,7 +684,9 @@ def build_models(reg_rows, details, asof, site_url):
     """One model per reg_row, in the same order.
 
     model keys: slug, display, title, description, canonical, main_html, org_jsonld,
-    faq_jsonld, title_group, primary_slug, faq."""
+    faq_jsonld, title_group (the crc32 experiment group), title_pattern (the pattern
+    actually used: A for any page whose listed end date is before the as-of date),
+    primary_slug, faq."""
     pairs = _pair_details(reg_rows, details)
     members = [_member(r, d) for r, d in zip(reg_rows, pairs)]
     groups, _amb = group_members(members)
@@ -585,15 +706,16 @@ def build_models(reg_rows, details, asof, site_url):
         org = {"@type": "Organization", "name": m["display"], "url": canonical, "identifier": m["reg"]}
         if m["trade_name"] and norm_name(m["trade_name"]) != m["norm"]:
             org["alternateName"] = proper_case(m["trade_name"])
-        if m["city"]:
+        if m["city"] and m["corporate"]:
             org["address"] = {"@type": "PostalAddress", "addressLocality": m["city"], "addressCountry": "IN"}
         faq_ld = {"@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q,
              "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}
         models.append({
             "slug": m["slug"], "display": m["display"],
-            "title": make_title(m), "description": make_description(m, asof),
+            "title": make_title(m, asof), "description": make_description(m, asof),
             "canonical": canonical, "title_group": title_group(m["slug"]),
+            "title_pattern": title_pattern(m, asof),
             "primary_slug": primary["slug"], "faq": faq,
             "org_jsonld": org, "faq_jsonld": faq_ld,
             "main_html": render_main(m, g, asof, faq, site_url),

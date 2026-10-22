@@ -1059,7 +1059,8 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
     basis_text = _BASIS_TEXT.get(ver["basis"], "").format(brand=brand)
     hq_addr = meta["hq_address"]
 
-    if verified:
+    if verified and is_hq:
+        # A street address in this city is on file: the full directory wording is true.
         title = f"{brand} Branch in {c_name}, {state}: Address, Phone, Demat & KYC Services"
         desc = (
             f"Looking for {brand} branch in {c_name}, {state}? Find office contact details, "
@@ -1068,13 +1069,22 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
         h1 = f"{brand} Branch in {c_name}, {state}"
         lead = (f"{city_data['desc']} Guide to the {brand} address on file, customer care helpline, "
                 f"Depository Participant details, offline KYC and physical share dematerialisation for {c_name}.")
-        if is_hq:
-            office_type = "Head office address on file"
-            address_display = hq_addr
-        else:
-            office_type = _BASIS_LABEL[ver["basis"]]
-            address_display = (f"{c_name} is {basis_text}. A street address in {c_name} is not on file. "
-                               f"Check {brand}'s own website for current office details.")
+        office_type = "Head office address on file"
+        address_display = hq_addr
+    elif verified:
+        # The city is on file (register or head-office city) but no street address is:
+        # no "Branch", "Address" or "Phone" promise in the title, meta, H1 or lead.
+        title = f"{brand} in {c_name}: Registered City, Helpline and KYC Support"
+        desc = (
+            f"{c_name} is {basis_text}. No street address in {c_name} is on file with BrokerLens. "
+            f"Office status, DP ID ({meta['demat_id']}), how offline KYC and physical share demat (DRF) work."
+        )[:295]
+        h1 = f"{brand} in {c_name}, {state}"
+        lead = (f"{city_data['desc']} Office status for {brand} in {c_name}, customer care helpline, "
+                f"Depository Participant details, offline KYC and physical share dematerialisation.")
+        office_type = _BASIS_LABEL[ver["basis"]]
+        address_display = (f"{c_name} is {basis_text}. A street address in {c_name} is not on file. "
+                           f"Check {brand}'s own website for current office details.")
     else:
         title = f"{brand} in {c_name}: Office Status, KYC and Demat Support"
         desc = (
@@ -1864,10 +1874,10 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
 def _render_master_branches_hub(site_url):
     """Renders /branches/index.html (Master Hub)."""
     canonical = f"{site_url}/branches/"
-    title = "Stock Broker Branches in India: City Directories, Demat Hubs & Local KYC Desks"
+    title = "Stock Broker Office Status by City in India: What Is on File"
     desc = (
-        "Find stock broker branch offices, authorized person desks, and depository participant centers across "
-        "all major Indian cities. Covers Zerodha, Angel One, Motilal Oswal, Sharekhan, ICICI Direct, and more."
+        "City pages for tracked stock brokers, showing the registered or head-office city and customer care "
+        "helpline where one is on file, and how offline KYC works. No branch list is claimed."
     )[:295]
 
     broker_cards = "".join(
@@ -1945,7 +1955,7 @@ def _render_master_branches_hub(site_url):
   </div>
 
   <header style="margin-bottom:28px;">
-    <h1 style="font-size:30px;line-height:1.2;margin:0 0 10px 0;">Stock Broker Branches & Local Support Desks in India</h1>
+    <h1 style="font-size:30px;line-height:1.2;margin:0 0 10px 0;">Stock Broker Office Status by City: What Is on File</h1>
     <p class="lead muted" style="font-size:15px;line-height:1.6;max-width:76ch;">
       City pages for {len(BROKER_BRANCH_METADATA)} brokers across {len(CITIES)} financial cities. A city page states an office address or registered city only where one is on file; otherwise it says that no office is on file.
     </p>

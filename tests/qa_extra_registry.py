@@ -61,12 +61,23 @@ def _fixture():
          [], None),
         ("old-dp-limited", "OLD DP LIMITED", "IN-DP-9-2015", ["dp_cdsl"], [], None,
          ["Jun 12, 1997 - Jun 11, 2022"], None),
+        ("a-swaminathan", "A SWAMINATHAN", "INZ000100007", ["stock_broker"], [NSE], "Madurai",
+         ["Jan 01, 2012 - Perpetual"], "pla.swaminathan@gmail.com"),
+        ("ramesh-shah-co", "RAMESH SHAH & CO", "INZ000100008", ["stock_broker"], [BSE], "Surat",
+         ["Jan 01, 2012 - Perpetual"], "rshah@example.test"),
+        ("zenith-bank", "ZENITH BANK", "IN-DP-77-2016", ["dp_nsdl"], [], "Mumbai",
+         ["Jan 01, 2016 - Perpetual"], "ops@zenith.example"),
+        ("the-extraordinarily-long-named-securities-and-wealth-management-private-limited",
+         "THE EXTRAORDINARILY LONG NAMED SECURITIES AND WEALTH MANAGEMENT PRIVATE LIMITED", "INZ000100009",
+         ["stock_broker"], [NSE], "Pune", ["Jan 01, 2012 - Perpetual"], None),
+        ("fresh-end-limited", "FRESH END LIMITED", "IN-DP-55-2015", ["dp_cdsl"], [], None,
+         ["Jan 01, 2015 - Sep 22, 2026"], None),
     ]
     rows, details = [], []
     for slug, name, reg, cats, exch, city, vals, email in spec:
         rows.append(_row(slug, name, reg, cats, exch, city, vals[0] if vals else None))
         details.append(_detail(name, reg, cats, exch, vals, address="1 Test Road, %s" % (city or "Nowhere"),
-                               email=email, city=city))
+                               email=email, phone="9101141441150", city=city))
     return rows, details
 
 
@@ -171,18 +182,113 @@ def run(check, ROOT, load):
           "earlier than the register date" in old["main_html"] and "Jun 11, 2022" in old["main_html"]
           and "is valid" not in old["main_html"].lower())
 
+    # ---- end date before the as-of date: neutral wording everywhere (review Rule[2], SEO[4])
+    asof_fx = "Oct 02, 2026"
+    for slug in ("old-dp-limited", "fresh-end-limited"):
+        mo = mb[slug]
+        d, a1 = mo["description"], mo["faq"][0]
+        check("registry: %s (end before as-of) has no 'Yes' in meta, FAQ1 or title and no 'Is X SEBI Registered?'" % slug,
+              not d.startswith("Yes") and "Yes" not in d and not a1[1].startswith("Yes")
+              and "SEBI registered?" not in a1[0] and not mo["title"].startswith("Is ")
+              and "SEBI Registered?" not in mo["title"] and mo["title_pattern"] == "A",
+              d + " | " + mo["title"])
+        check("registry: %s meta is the neutral 'appears in the SEBI register list ... check SEBI' sentence" % slug,
+              "appears in the SEBI register list; the validity end date listed is" in d and "check SEBI." in d
+              and a1[0].startswith("Does ") and "appears in the SEBI register list" in a1[1]
+              and "check the current position with SEBI" in a1[1], d)
+    check("registry: neutral wording shows the listed end date",
+          "Jun 11, 2022" in mb["old-dp-limited"]["description"] and "Sep 22, 2026" in mb["fresh-end-limited"]["description"])
+    check("registry: an end date after the as-of date and a perpetual validity keep the normal wording",
+          mb["acme-broking-private-limited"]["description"].startswith("Yes, ")
+          and mb["acme-broking-private-limited"]["faq"][0][0].startswith("Is ")
+          and not re_ent._end_before_asof({"validity": {"end": "Perpetual"}}, asof_fx)
+          and not re_ent._end_before_asof({"validity": {"end": "Oct 02, 2026"}}, asof_fx)
+          and re_ent._end_before_asof({"validity": {"end": "Oct 01, 2026"}}, asof_fx))
+    check("registry: neutral FAQ and JSON-LD stay equal to the visible text",
+          all(_faq_pairs(mb[s_]["main_html"])[0] == (mb[s_]["faq"][0][0], mb[s_]["faq"][0][1])
+              and mb[s_]["faq_jsonld"]["mainEntity"][0]["acceptedAnswer"]["text"] == mb[s_]["faq"][0][1]
+              for s_ in ("old-dp-limited", "fresh-end-limited")))
+
+    # ---- BrokerLens's pull date wording (review Rule[6])
+    all_faq = " ".join(a for mm in models for _q, a in mm["faq"])
+    all_ld = json.dumps([mm["faq_jsonld"] for mm in models])
+    check("registry: FAQ and JSON-LD say 'BrokerLens's pull of the register on <date>', never 'register dated'",
+          "register dated" not in all_faq and "register dated" not in all_ld
+          and "as of BrokerLens's pull of the register on Oct 02, 2026" in all_faq
+          and "as of BrokerLens's pull of the register on Oct 02, 2026" in all_ld
+          and "register dated" not in src)
+
+    # ---- privacy: no email or phone anywhere, address only for corporate names (review Rule[1], Merge[4])
+    contact_vals = ["pla.swaminathan@gmail.com", "9101141441150", "a@acme.example", "rshah@example.test",
+                    "ops@zenith.example"]
+    blob = json.dumps([{k: v for k, v in mm.items()} for mm in models], default=str)
+    check("registry: no email or telephone value appears in any model, page body or structured data",
+          not any(v in blob for v in contact_vals)
+          and not any("@" in mm["main_html"] for mm in models)
+          and not any(w in mm["main_html"] for mm in models for w in ("Email per register", "Telephone per register")))
+    check("registry: the module no longer reads email or telephone from the register record",
+          '"email"' not in src and '"phone"' not in src and 'get("telephone")' not in src and 'get("email")' not in src)
+    check("registry: _is_corporate accepts company and institution names, rejects individuals and unclear names",
+          all(re_ent._is_corporate(n) for n in (
+              "ACME BROKING PVT. LTD.", "Foo Securities Private Limited", "QE Securities LLP", "HDFC BANK",
+              "Zenith Bank", "Some Corporation", "Indian Business Trade INC", "X Company", "Y Financial Services Limited"))
+          and not any(re_ent._is_corporate(n) for n in (
+              "A SWAMINATHAN", "AMIT SAHITA", "RAMESH SHAH & CO", "HIMANSHU GOVINDLAL MEHTA", "", None)))
+    check("registry: address row appears for a company and an institution",
+          "Address per register" in mb["acme-broking-private-limited"]["main_html"]
+          and "1 Test Road, Mumbai" in mb["acme-broking-private-limited"]["main_html"]
+          and "Address per register" in mb["zenith-bank"]["main_html"])
+    ind, firm = mb["a-swaminathan"], mb["ramesh-shah-co"]
+    check("registry: an individual or a '& Co' firm shows no address, no city in JSON-LD, no contact data",
+          "Address per register" not in ind["main_html"] and "Test Road" not in ind["main_html"]
+          and "Address per register" not in firm["main_html"] and "Test Road" not in firm["main_html"]
+          and "address" not in ind["org_jsonld"] and "address" not in firm["org_jsonld"]
+          and "address" in mb["acme-broking-private-limited"]["org_jsonld"])
+    check("registry: every page links the official SEBI register list for its category",
+          "doRecognisedFpi=yes&amp;intmId=1\"" in mb["a-swaminathan"]["main_html"]
+          and "doRecognisedFpi=yes&amp;intmId=2\"" in mb["acme-broking-private-limited"]["main_html"]
+          and "doRecognisedFpi=yes&amp;intmId=18\"" in mb["old-dp-limited"]["main_html"]
+          and "doRecognisedFpi=yes&amp;intmId=19\"" in mb["zenith-bank"]["main_html"]
+          and all("Official SEBI register" in mm["main_html"] and "sebi.gov.in" in mm["main_html"] for mm in models)
+          and "Email and telephone are not republished here" in ind["main_html"])
+    sebi_src = open(os.path.join(ROOT, "pipeline", "sources", "sebi.py"), encoding="utf-8").read()
+    check("registry: the official register URL pattern and category ids match pipeline/sources/sebi.py",
+          "OtherAction.do?doRecognisedFpi=yes&intmId=%d" in sebi_src
+          and re_ent.SEBI_REGISTER_URL.startswith("https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=")
+          and re_ent._REGISTER_INTM_ID == {"stock_broker": 1, "commodity_broker": 2, "dp_cdsl": 18, "dp_nsdl": 19}
+          and all('"%s": %d' % (k, v) in sebi_src for k, v in re_ent._REGISTER_INTM_ID.items()))
+
     # ---- titles and meta
     ok_split = True
     for mm in models:
-        a = re_ent.title_group(mm["slug"]) == "A"
-        ok_split &= (zlib.crc32(mm["slug"].encode()) % 2 == 0) == a
+        grp = re_ent.title_group(mm["slug"])
+        ok_split &= (zlib.crc32(mm["slug"].encode()) % 2 == 0) == (grp == "A") and mm["title_group"] == grp
         reg = [r["reg"] for r in rows if r["slug"] == mm["slug"]][0]
-        ok_split &= reg in mm["title"]
-        if a:
-            ok_split &= mm["title"].endswith(", Status and Segments | BrokerLens") and "SEBI Registration No. %s" % reg in mm["title"]
+        ok_split &= reg in mm["title"] and "Segments" not in mm["title"]
+        if mm["title_pattern"] == "A":
+            ok_split &= (not mm["title"].startswith("Is ")) and bool(re.search(r"SEBI Reg(istration|\.) No\. %s" % re.escape(reg), mm["title"]))
         else:
-            ok_split &= mm["title"].startswith("Is ") and "SEBI Registered? Registration No. %s (" % reg in mm["title"]
-    check("registry: titles follow the A/B rule by zlib.crc32(slug) % 2 and keep the registration number", ok_split)
+            ok_split &= grp == "B" and mm["title"].startswith("Is ") and "SEBI Registered? " in mm["title"]
+    check("registry: titles follow the A/B rule by zlib.crc32(slug) % 2, keep the registration number, never say Segments", bool(ok_split))
+    for g_slug in ("x", "y", "z", "w", "v", "u", "t", "s"):
+        if re_ent.title_group(g_slug) == "A":
+            tt = re_ent.make_title({"slug": g_slug, "display": "Foo Ltd", "reg": "INZ000000001", "category": "Stock broker",
+                                    "validity": {"perpetual": True}}, "Oct 02, 2026")
+            check("registry: short name gets the full A title without Segments (%s)" % tt,
+                  tt == "Foo Ltd: SEBI Registration No. INZ000000001, Validity and Exchanges" and len(tt) <= 72, tt)
+            break
+    long_m = mb["the-extraordinarily-long-named-securities-and-wealth-management-private-limited"]
+    check("registry: a very long legal name falls to the compact title: no legal suffix, number kept, no brand tail",
+          "Private Limited" not in long_m["title"] and "INZ000100009" in long_m["title"]
+          and "BrokerLens" not in long_m["title"] and len(long_m["title"]) <= 100, long_m["title"])
+    check("registry: title shortening drops the Limited suffix and brand only when needed, never the number",
+          re_ent._short_name("Foo Securities Private Limited") == "Foo Securities"
+          and re_ent._short_name("R.L.P. Securities Pvt. Ltd.") == "R.L.P. Securities"
+          and re_ent._short_name("QE Securities LLP") == "QE Securities LLP"
+          and re_ent._short_name("Limited") == "Limited")
+    pat_src = src.split("def make_title", 1)[1].split("def make_description", 1)[0]
+    check("registry: title source has no Segments wording and fixes the length budget",
+          "Segments" not in pat_src and "_TITLE_MAX = 72" in src and "_TITLE_REG_BY = 60" in src)
     check("registry: both title groups occur", {mm["title_group"] for mm in models} == {"A", "B"})
     check("registry: meta description follows the agreed pattern",
           m["description"].startswith("Yes, Acme Broking Private Limited is listed in the SEBI register. Registration INZ000100001, Stock broker, NSE, BSE, MCX, effective Mar 01, 2024.")
@@ -286,3 +392,28 @@ def run(check, ROOT, load):
           all(not rm[rm[s]["primary"]].get("primary") for s in rm if rm[s].get("primary")))
     check("registry (real data): no title contains 'Commodity broker' or a dash",
           not any("Commodity broker" in x["title"] or any(d in x["title"] for d in DASHES) for x in rmodels if x))
+    # review fixes on the real register (Rule[1], Rule[2], SEO[3], Rule[6])
+    expired_all = [x for x in rmodels if x and "validity end date listed is" in x["description"]]
+    check("registry (real data): no page with an end date before the as-of date says Yes or asks 'Is X SEBI Registered?'",
+          all(not x["description"].startswith("Yes") and not x["faq"][0][1].startswith("Yes")
+              and not x["title"].startswith("Is ") and "SEBI registered?" not in x["faq"][0][0]
+              for x in expired_all), "%d neutral pages" % len(expired_all))
+    check("registry (real data): every neutral page body also carries the end-before-register warning",
+          all("earlier than the register date" in x["main_html"] for x in expired_all))
+    check("registry (real data): no email, no telephone and no personal mailbox is rendered on any page",
+          not any("@" in x["main_html"] or "Email per register" in x["main_html"]
+                  or "Telephone per register" in x["main_html"] for x in rmodels if x))
+    corp_name = {r["slug"]: re_ent._is_corporate(r["name"]) for r in rrows}
+    check("registry (real data): an address row is shown only for corporate legal names",
+          all(("Address per register" not in x["main_html"]) or corp_name[x["slug"]] for x in rmodels if x))
+    check("registry (real data): structured data holds no phone, email or street address",
+          not any(re.search(r"telephone|email|streetAddress", json.dumps([x["org_jsonld"], x["faq_jsonld"]]), re.I)
+                  for x in rmodels if x))
+    check("registry (real data): no title says Segments, none exceeds 120 characters, and most keep the number in the first 70",
+          not any("Segments" in x["title"] for x in rmodels if x)
+          and max(len(x["title"]) for x in rmodels if x) <= 120
+          and sum(1 for x, r in zip(rmodels, rrows) if x and x["title"].find(r["reg"]) + len(r["reg"]) <= 70)
+          >= 0.9 * len(rmodels))
+    check("registry (real data): no FAQ or JSON-LD uses the phrase 'register dated'",
+          not any("register dated" in a for x in rmodels if x for _q, a in x["faq"]))
+

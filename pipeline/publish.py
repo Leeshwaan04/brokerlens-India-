@@ -2510,6 +2510,16 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             '</div>'
         ) % (_esc(symbol), _esc(name))
 
+        jio_callout_html = ""
+        if slug == "jiofin":
+            jio_callout_html = (
+                '<div class="card" style="margin-top:20px;padding:16px 20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
+                '<div style="font-weight:700">Upcoming Reliance Jio Infocomm IPO</div>'
+                '<p class="small muted" style="margin:4px 0 10px 0">Tracking the Reliance Jio telecom IPO? View expected valuation, timeline, DRHP status and demat account application steps.</p>'
+                '<a class="btn btn-primary btn-xs" href="/ipo/jio/">View Reliance Jio IPO Details &rarr;</a>'
+                '</div>'
+            )
+
         perf_html, perf = _stock_perf(history, _EQUITY_BREAKS.get(symbol.upper()))
         faqs = stock_faqs(name, symbol, c, member_of, match, price_row, perf)
         faq_html = "".join(
@@ -2575,6 +2585,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             + actions_html
             + peers_html
             + compare_html
+            + jio_callout_html
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
         )
@@ -4821,6 +4832,26 @@ def _ipo_merge(ipo_data):
         })
 
     today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    curated_path = os.path.join(ROOT, "data", "manual", "curated_ipos.json")
+    if os.path.exists(curated_path):
+        try:
+            with open(curated_path, "r", encoding="utf-8") as fh:
+                for r in json.load(fh) or []:
+                    sym = r.get("symbol")
+                    if sym and sym not in by_symbol:
+                        by_symbol[sym] = {
+                            "symbol": sym,
+                            "company": r.get("company"),
+                            "price_band": r.get("price_band"),
+                            "issue_size_shares": r.get("issue_size_shares"),
+                            "bidding_start": r.get("bidding_start"),
+                            "bidding_end": r.get("bidding_end"),
+                            "status": r.get("status", "Forthcoming"),
+                            "security_type": r.get("security_type", "EQ"),
+                        }
+        except Exception:
+            pass
+
     for row in by_symbol.values():
         b_end = row.get("bidding_end") or ""
         b_start = row.get("bidding_start") or ""
@@ -7374,7 +7405,10 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
 
     # 3. IPOs SITEMAP
     ipo_entries = []
+    from . import ipo_facts as _ipofacts
     for r in (ipo_records or []):
+        if _ipofacts.is_non_equity_issue(r):
+            continue
         freq = "daily" if r.get("status") in ("Active", "Forthcoming") else "monthly"
         ipo_entries.append(
             "<url><loc>%s/ipo/%s/</loc><lastmod>%s</lastmod><changefreq>%s</changefreq></url>"
@@ -7573,13 +7607,30 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     _fake_lastmod = "<lastmod>%s</lastmod>" % today
     _changefreq = re.compile(r"<changefreq>[^<]*</changefreq>")
 
+    # A hub URL such as /calculators/sip/ is listed by the core shard and also by its own
+    # family shard; once a later wave is submitted that would put one loc in two files.
+    # Keep the first occurrence (core is written first) and drop repeats from later shards.
+    _seen_locs = set()
+    _loc_re = re.compile(r"<loc>([^<]*)</loc>")
+
+    def _first_time(entry):
+        m = _loc_re.search(entry)
+        if not m:
+            return True
+        if m.group(1) in _seen_locs:
+            return False
+        _seen_locs.add(m.group(1))
+        return True
+
     for name, entries in sub_sitemaps:
         if not entries:
             continue
         if SITEMAP_WAVES.get(name, 2) > current_wave:
             held_back[name] = len(entries)
             continue
-        entries = [_changefreq.sub("", e).replace(_fake_lastmod, "") for e in entries]
+        entries = [_changefreq.sub("", e).replace(_fake_lastmod, "") for e in entries if _first_time(e)]
+        if not entries:
+            continue
         total_chunks = math.ceil(len(entries) / CHUNK_LIMIT) or 1
         for i in range(total_chunks):
             chunk = entries[i * CHUNK_LIMIT : (i + 1) * CHUNK_LIMIT]
@@ -7612,7 +7663,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         + "\n</sitemapindex>"
     )
     _write_text(os.path.join(SITE_DATA, "..", "sitemap.xml"), index_xml)
-    submitted = sum(len(e) for n, e in sub_sitemaps if SITEMAP_WAVES.get(n, 2) <= current_wave)
+    submitted = len(_seen_locs)  # unique URLs actually written, repeats across shards excluded
     log("sitemap index: %d sub-sitemaps, %d URLs submitted (wave %d); %d URLs held back in %s" % (
         len(sitemap_index_entries), submitted, current_wave, sum(held_back.values()),
         ", ".join("%s=%d" % kv for kv in sorted(held_back.items())) or "none"), "ok")
