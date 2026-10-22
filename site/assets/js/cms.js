@@ -191,8 +191,8 @@ function renderLogin(container) {
       const computedHash = await sha256(passVal);
 
       if (isUserValid && computedHash === MASTER_PASS_HASH) {
-        const dummyToken = 'bl_auth_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-        setStoredToken(dummyToken);
+        const sessionAuthToken = 'bl_auth_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        setStoredToken(sessionAuthToken);
         await renderDashboard(container);
       } else {
         errBox.textContent = 'Invalid Admin ID or Password. Access denied.';
