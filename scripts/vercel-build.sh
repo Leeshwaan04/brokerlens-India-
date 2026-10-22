@@ -33,3 +33,4 @@ export PUBLISH_MODE=production
 # untouched rather than failing the deploy.
 "$PY" -m pipeline.run complaints || true
 "$PY" -m pipeline.run build
+"$PY" scripts/export_gsc_live.py || true

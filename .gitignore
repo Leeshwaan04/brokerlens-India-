@@ -33,6 +33,9 @@ site/*
 !site/vercel.json
 !site/sitemap.xml
 !site/sitemaps/
+!site/data/
+site/data/*
+!site/data/gsc_live.json
 
 # Personal data. Leads are DPDP-regulated and must never reach a repo.
 data/leads/

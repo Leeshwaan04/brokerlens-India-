@@ -1,0 +1,487 @@
+{
+  "status": "ok",
+  "verified_live": true,
+  "source": "Google Search Console API",
+  "property": "sc-domain:brokerlens.in",
+  "auth_method": "OAuth2 Service Account (secrets/gsc-service-account.json)",
+  "report_date": "2026-10-22",
+  "totals_28d": {
+    "clicks": 516,
+    "impressions": 58511,
+    "ctr_pct": 0.88,
+    "avg_position": 17.3,
+    "date_range_start": "2026-09-21",
+    "date_range_end": "2026-10-19"
+  },
+  "daily_history": [
+    {
+      "date": "2026-09-20",
+      "clicks_28d": 8,
+      "impressions_28d": 5156,
+      "submitted": 9500,
+      "indexed": 0
+    },
+    {
+      "date": "2026-09-21",
+      "clicks_28d": 8,
+      "impressions_28d": 6479,
+      "submitted": 9497,
+      "indexed": 0
+    },
+    {
+      "date": "2026-09-22",
+      "clicks_28d": 9,
+      "impressions_28d": 7682,
+      "submitted": 9516,
+      "indexed": 0
+    },
+    {
+      "date": "2026-09-23",
+      "clicks_28d": 11,
+      "impressions_28d": 8503,
+      "submitted": 9507,
+      "indexed": 0
+    },
+    {
+      "date": "2026-09-24",
+      "clicks_28d": 17,
+      "impressions_28d": 10177,
+      "submitted": 9518,
+      "indexed": 0
+    },
+    {
+      "date": "2026-09-25",
+      "clicks_28d": 24,
+      "impressions_28d": 12061,
+      "submitted": 9518,
+      "indexed": 0
+    },
+    {
+      "date": "2026-09-26",
+      "clicks_28d": 35,
+      "impressions_28d": 13843,
+      "submitted": 9518,
+      "indexed": 0
+    },
+    {
+      "date": "2026-09-27",
+      "clicks_28d": 49,
+      "impressions_28d": 16556,
+      "submitted": 9518,
+      "indexed": 0
+    },
+    {
+      "date": "2026-09-28",
+      "clicks_28d": 59,
+      "impressions_28d": 18191,
+      "submitted": 9518,
+      "indexed": 0
+    },
+    {
+      "date": "2026-09-29",
+      "clicks_28d": 59,
+      "impressions_28d": 19384,
+      "submitted": 9518,
+      "indexed": 0
+    },
+    {
+      "date": "2026-09-30",
+      "clicks_28d": 65,
+      "impressions_28d": 20729,
+      "submitted": 9518,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-01",
+      "clicks_28d": 72,
+      "impressions_28d": 23109,
+      "submitted": 9518,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-02",
+      "clicks_28d": 78,
+      "impressions_28d": 24995,
+      "submitted": 9518,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-06",
+      "clicks_28d": 102,
+      "impressions_28d": 31717,
+      "submitted": 9518,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-07",
+      "clicks_28d": 107,
+      "impressions_28d": 33093,
+      "submitted": 41132,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-08",
+      "clicks_28d": 112,
+      "impressions_28d": 35918,
+      "submitted": 41132,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-09",
+      "clicks_28d": 121,
+      "impressions_28d": 37973,
+      "submitted": 41132,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-10",
+      "clicks_28d": 121,
+      "impressions_28d": 37973,
+      "submitted": 41132,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-11",
+      "clicks_28d": 140,
+      "impressions_28d": 41231,
+      "submitted": 41132,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-12",
+      "clicks_28d": 153,
+      "impressions_28d": 42509,
+      "submitted": 234693,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-13",
+      "clicks_28d": 166,
+      "impressions_28d": 43562,
+      "submitted": 254758,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-14",
+      "clicks_28d": 179,
+      "impressions_28d": 44831,
+      "submitted": 254758,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-15",
+      "clicks_28d": 206,
+      "impressions_28d": 46815,
+      "submitted": 254775,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-16",
+      "clicks_28d": 257,
+      "impressions_28d": 49283,
+      "submitted": 254775,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-17",
+      "clicks_28d": 288,
+      "impressions_28d": 51732,
+      "submitted": 254778,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-18",
+      "clicks_28d": 357,
+      "impressions_28d": 52371,
+      "submitted": 114966,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-19",
+      "clicks_28d": 408,
+      "impressions_28d": 54462,
+      "submitted": 114996,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-20",
+      "clicks_28d": 455,
+      "impressions_28d": 55769,
+      "submitted": 3954,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-21",
+      "clicks_28d": 497,
+      "impressions_28d": 57049,
+      "submitted": 3954,
+      "indexed": 0
+    },
+    {
+      "date": "2026-10-22",
+      "clicks_28d": 516,
+      "impressions_28d": 58511,
+      "submitted": 3954,
+      "indexed": 0
+    }
+  ],
+  "top_queries": [
+    {
+      "query": "pashupati cotspin share price target 2030",
+      "clicks": 13,
+      "impressions": 233,
+      "ctr": 5.58,
+      "position": 4.6
+    },
+    {
+      "query": "jaykay enterprises share price target 2030",
+      "clicks": 10,
+      "impressions": 34,
+      "ctr": 29.41,
+      "position": 4.9
+    },
+    {
+      "query": "money view share price target 2027",
+      "clicks": 9,
+      "impressions": 83,
+      "ctr": 10.84,
+      "position": 1.9
+    },
+    {
+      "query": "brokerlens",
+      "clicks": 6,
+      "impressions": 9,
+      "ctr": 66.67,
+      "position": 1
+    },
+    {
+      "query": "azad india mobility share price target 2030",
+      "clicks": 4,
+      "impressions": 105,
+      "ctr": 3.81,
+      "position": 3.4
+    },
+    {
+      "query": "mon100 share price target 2030",
+      "clicks": 4,
+      "impressions": 22,
+      "ctr": 18.18,
+      "position": 4.9
+    },
+    {
+      "query": "cupid share price target 2026",
+      "clicks": 3,
+      "impressions": 298,
+      "ctr": 1.01,
+      "position": 6.8
+    },
+    {
+      "query": "oswal greentech share price target 2030",
+      "clicks": 3,
+      "impressions": 12,
+      "ctr": 25.0,
+      "position": 3.2
+    },
+    {
+      "query": "pankaj mangaldas securities pvt. ltd",
+      "clicks": 3,
+      "impressions": 126,
+      "ctr": 2.38,
+      "position": 6.4
+    },
+    {
+      "query": "ved power share price target 2027",
+      "clicks": 3,
+      "impressions": 12,
+      "ctr": 25.0,
+      "position": 1.6
+    },
+    {
+      "query": "ardee industries share price 2030",
+      "clicks": 2,
+      "impressions": 16,
+      "ctr": 12.5,
+      "position": 1.6
+    },
+    {
+      "query": "broker lens",
+      "clicks": 2,
+      "impressions": 7,
+      "ctr": 28.57,
+      "position": 2.7
+    },
+    {
+      "query": "idbi share price target 2040",
+      "clicks": 2,
+      "impressions": 23,
+      "ctr": 8.7,
+      "position": 1.7
+    },
+    {
+      "query": "kfintech share price ipo",
+      "clicks": 2,
+      "impressions": 112,
+      "ctr": 1.79,
+      "position": 9.7
+    },
+    {
+      "query": "media matrix share price target 2030",
+      "clicks": 2,
+      "impressions": 6,
+      "ctr": 33.33,
+      "position": 2.2
+    },
+    {
+      "query": "onix solar share price target 2030",
+      "clicks": 2,
+      "impressions": 6,
+      "ctr": 33.33,
+      "position": 2.3
+    },
+    {
+      "query": "radhika jeweltech share price target 2030",
+      "clicks": 2,
+      "impressions": 11,
+      "ctr": 18.18,
+      "position": 6
+    },
+    {
+      "query": "shanti gold share price target 2030",
+      "clicks": 2,
+      "impressions": 30,
+      "ctr": 6.67,
+      "position": 9.1
+    },
+    {
+      "query": "walchandnagar share price target 2030",
+      "clicks": 2,
+      "impressions": 5,
+      "ctr": 40.0,
+      "position": 3.8
+    },
+    {
+      "query": "xtranet technologies share price target 2030",
+      "clicks": 2,
+      "impressions": 14,
+      "ctr": 14.29,
+      "position": 4.3
+    },
+    {
+      "query": "adroit stock",
+      "clicks": 1,
+      "impressions": 1,
+      "ctr": 100,
+      "position": 6
+    },
+    {
+      "query": "alkyl amines share price target 2030",
+      "clicks": 1,
+      "impressions": 6,
+      "ctr": 16.67,
+      "position": 2.3
+    },
+    {
+      "query": "allcargo logistics share price target 2026",
+      "clicks": 1,
+      "impressions": 12,
+      "ctr": 8.33,
+      "position": 4.3
+    },
+    {
+      "query": "anush shares and securities pvt ltd",
+      "clicks": 1,
+      "impressions": 15,
+      "ctr": 6.67,
+      "position": 6.4
+    },
+    {
+      "query": "apar industries share price target 2030",
+      "clicks": 1,
+      "impressions": 33,
+      "ctr": 3.03,
+      "position": 5.2
+    }
+  ],
+  "sitemaps": [
+    {
+      "path": "https://www.brokerlens.in/sitemap.xml",
+      "lastDownloaded": "2026-10-21T07:27:01.877Z",
+      "warnings": "0",
+      "errors": "0",
+      "submitted": "3954",
+      "indexed": "0"
+    }
+  ],
+  "spot_checks": {
+    "https://www.brokerlens.in/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-21T20:42:58Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/brokers": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-22T04:30:40Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/sources": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/methodology": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-09-15T11:10:34Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/broker/zerodha/": {
+      "coverageState": "Soft 404",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": "2026-10-13T04:36:46Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/stock/20microns/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-20T09:52:19Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/etf/niftybees/": {
+      "coverageState": "URL is unknown to Google",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/calculators/sip-calculator/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-15T03:02:11Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/brokers-by/type/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/crypto/btc/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-14T17:57:07Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    }
+  }
+}

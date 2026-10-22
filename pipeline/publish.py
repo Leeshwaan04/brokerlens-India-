@@ -636,10 +636,20 @@ def build():
     build_crypto_ticker()
     build_crypto_history()
     build_market_movers()
+    _export_gsc_live()
     _restamp_js_media()
     _restamp_js_imports()
     _restamp_index_html_assets()
     return overview
+
+
+def _export_gsc_live():
+    """Export real Google Search Console data from reports/gsc to site/data/gsc_live.json."""
+    try:
+        from scripts import export_gsc_live
+        export_gsc_live.main()
+    except Exception as exc:
+        log("GSC live data export skipped or failed: %s" % exc, "warn")
 
 
 def _restamp_index_html_assets():
