@@ -596,6 +596,8 @@ def build():
     _write_ipo_hub(ipo_records, equity_history=equity_history)
     _write_ipo_archive(ipo_records, equity_history=equity_history)
     _write_ipo_upcoming(ipo_records, equity_history=equity_history)
+    _write_ipo_sme(ipo_records, equity_history=equity_history)
+    _write_ipo_gmp(ipo_records, equity_history=equity_history)
     from .news_engine import write_news_suite
     _news_count, news_articles = write_news_suite(ingest, SITE_URL)
     from .trade_cost_engine import build_trade_cost_pages
@@ -4944,7 +4946,7 @@ def _write_ipo_pages(records, equity_history=None):
         os.makedirs(dest_dir, exist_ok=True)
         _write_text(os.path.join(dest_dir, "index.html"), body)
         written += 1
-    keep_ipo_slugs = {r["symbol"].lower() for r in records} | {"archive", "upcoming", "allotment-status", "how-to-apply", "registrars", "registrar", "subscription", "allotment"}
+    keep_ipo_slugs = {r["symbol"].lower() for r in records} | {"archive", "upcoming", "allotment-status", "how-to-apply", "registrars", "registrar", "subscription", "allotment", "sme", "gmp"}
     pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "ipo"), keep_ipo_slugs)
     log("IPO pages: %d written%s" % (written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
 
@@ -5009,6 +5011,44 @@ def _write_ipo_archive(records, equity_history=None):
     os.makedirs(dest_dir, exist_ok=True)
     _write_text(os.path.join(dest_dir, "index.html"), body)
     log("IPO archive: written, %d rows with listing returns" % len(records), "ok")
+
+
+def _write_ipo_sme(records, equity_history=None):
+    """/ipo/sme/ - dedicated hub for NSE Emerge and BSE SME public issues."""
+    from .ipo_engine import render_sme_ipo_hub
+    body = render_sme_ipo_hub(
+        records=records,
+        equity_history=equity_history,
+        head_template=_REGISTRY_PAGE_HEAD,
+        foot_template=_REGISTRY_PAGE_FOOT,
+        ibsl_html=ibslBanner_html("wide", "ipo"),
+        breadcrumb_fn=_breadcrumb,
+        source_note_fn=_source_note,
+        site_url=SITE_URL,
+    )
+    dest_dir = os.path.join(ROOT, "site", "ipo", "sme")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("IPO SME hub: written with 1-lot trading rules and liquidity disclosures", "ok")
+
+
+def _write_ipo_gmp(records, equity_history=None):
+    """/ipo/gmp/ - central Grey Market Premium tracker board with strict safeguards."""
+    from .ipo_engine import render_gmp_hub
+    body = render_gmp_hub(
+        records=records,
+        equity_history=equity_history,
+        head_template=_REGISTRY_PAGE_HEAD,
+        foot_template=_REGISTRY_PAGE_FOOT,
+        ibsl_html=ibslBanner_html("wide", "ipo"),
+        breadcrumb_fn=_breadcrumb,
+        source_note_fn=_source_note,
+        site_url=SITE_URL,
+    )
+    dest_dir = os.path.join(ROOT, "site", "ipo", "gmp")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("IPO GMP tracker: written with transparent indicative quotes & mandatory safeguards", "ok")
 
 
 def _write_crypto_hub(coins):
@@ -7616,7 +7656,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         "/", "/brokers", "/leaderboards", "/compare", "/find-broker/", "/calculator", "/calculators/",
         "/registry", "/algo", "/methodology", "/sources", "/stocks/", "/funds-by/", "/etfs/", "/crypto/",
         "/ipo/", "/ipo/upcoming/", "/ipo/archive/", "/ipo/allotment-status/", "/ipo/how-to-apply/", "/ipo/registrars/",
-        "/ipo/subscription/", "/ipo/allotment/",
+        "/ipo/subscription/", "/ipo/allotment/", "/ipo/sme/", "/ipo/gmp/",
         "/trade-costs/", "/compare/stocks/", "/compare/mutual-funds/", "/calculators/sip/",
         "/branches/", "/news/", "/about", "/editorial-policy", "/contact",
         "/privacy-policy", "/terms-of-service"

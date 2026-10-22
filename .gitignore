@@ -13,6 +13,13 @@ site/*
 !site/find-broker/
 !site/match/
 !site/cms/
+!site/ipo/
+site/ipo/*
+!site/ipo/index.html
+!site/ipo/sme/
+!site/ipo/sme/**
+!site/ipo/gmp/
+!site/ipo/gmp/**
 !site/contact/
 !site/editorial-policy/
 !site/assets/

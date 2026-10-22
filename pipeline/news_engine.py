@@ -351,6 +351,274 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
             "related_symbol": sym,
         })
 
+    # Load manual GMP data if available
+    gmp_data = {}
+    gmp_path = os.path.join(ROOT, "data", "manual", "ipo_gmp.json")
+    if os.path.exists(gmp_path):
+        try:
+            with open(gmp_path, "r", encoding="utf-8") as f:
+                gmp_data = json.load(f)
+        except Exception:
+            gmp_data = {}
+
+    gmp_rows = []
+    for gsym, ginfo in gmp_data.items():
+        gname = ginfo.get("company_name", gsym)
+        g_val = ginfo.get("gmp_inr", 0)
+        g_pct = ginfo.get("expected_gain_pct", 0)
+        g_price = ginfo.get("estimated_listing_price", 0)
+        g_band = ginfo.get("price_band", "-")
+        g_trend = ginfo.get("trend", "stable")
+        g_updated = ginfo.get("recorded_at", today_iso)[:10]
+        g_kostak = ginfo.get("kostak_inr", 0)
+        g_trend_icon = "&uarr;" if g_trend == "up" else ("&darr;" if g_trend == "down" else "&rarr;")
+        g_trend_color = "var(--up)" if g_trend == "up" else ("var(--down)" if g_trend == "down" else "var(--text)")
+        gmp_rows.append(
+            f'<tr>'
+            f'<td><strong>{_esc(gname)}</strong><br><span class="xs muted">{_esc(gsym)}</span></td>'
+            f'<td class="num">{_esc(g_band)}</td>'
+            f'<td class="num" style="color:var(--up);font-weight:700">+Rs {g_val:,} ({g_pct:.1f}%)</td>'
+            f'<td class="num">Rs {g_price:,}</td>'
+            f'<td class="num">Rs {g_kostak:,}</td>'
+            f'<td style="text-align:center;color:{g_trend_color}">{g_trend_icon} {_esc(g_trend.capitalize())}</td>'
+            f'<td class="xs muted" style="text-align:right">{_esc(g_updated)}</td>'
+            f'</tr>'
+        )
+    gmp_table_html = "".join(gmp_rows) if gmp_rows else '<tr><td colspan="7" class="muted">No active GMP quotes recorded today.</td></tr>'
+
+    # Daily Live IPO GMP Bulletin
+    gmp_article_slug = "ipo-gmp-today-live-grey-market-premium-rates"
+    gmp_article_title = "IPO GMP Today: Live Grey Market Premium Rates, Kostak Rates and Expected Listing Gains"
+    gmp_article_desc = (
+        f"Daily IPO GMP tracker for {today_str}. Review latest grey market premiums, Kostak rates, "
+        f"and estimated listing prices across Mainboard and SME IPOs with regulatory safeguards."
+    )[:300]
+    gmp_article_body = f"""
+    <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+      Grey market premium (GMP) tracking provides an informal gauge of investor sentiment ahead of official public issue
+      listing on the National Stock Exchange (NSE) and Bombay Stock Exchange (BSE). Below are the latest timestamped dealer
+      quotes and expected listing figures on record as of {today_str}.
+    </p>
+
+    <div class="card" style="margin:20px 0;padding:16px;background:var(--bg-raised);border-left:4px solid var(--accent)">
+      <div style="font-weight:700;font-size:14px;color:var(--text)">SEBI Regulatory Disclosures &amp; Investor Safeguards</div>
+      <p class="xs muted" style="margin:6px 0 0 0;line-height:1.6">
+        Grey market premiums reflect unofficial dealer-to-dealer transactions conducted outside SEBI-regulated exchanges.
+        BrokerLens tracks these figures purely for educational transparency. Grey market prices do not represent an official
+        guarantee of listing performance. Official price discovery occurs exclusively through the special pre-open auction
+        on the listing morning between 9:00 AM and 9:45 AM IST on NSE and BSE.
+      </p>
+    </div>
+
+    <div class="section-title"><h2>Current IPO Grey Market Premium Board ({today_str})</h2></div>
+    <div class="table-scroll" style="margin:16px 0">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th class="num">Issue Price Band</th>
+            <th class="num">Estimated GMP</th>
+            <th class="num">Estimated Listing</th>
+            <th class="num">Kostak Rate</th>
+            <th style="text-align:center">Trend</th>
+            <th style="text-align:right">Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {gmp_table_html}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-title"><h2>Understanding Grey Market Terminology</h2></div>
+    <ul>
+      <li><strong>Grey Market Premium (GMP):</strong> The informal premium over the public issue price that buyers are willing to pay per share before official exchange listing.</li>
+      <li><strong>Kostak Rate:</strong> The fixed lump-sum profit paid to an IPO applicant for selling their application rights to a third party, regardless of whether shares are allotted.</li>
+      <li><strong>Subject to Sauda (SS):</strong> An agreement where the seller receives a negotiated profit only if shares are actually allotted to the application.</li>
+    </ul>
+
+    <div class="section-title"><h2>How to Prepare Your Demat Account for Upcoming IPOs</h2></div>
+    <p>
+      Whether an issue commands a high or low GMP, participating in an IPO requires an active SEBI-registered Demat account
+      with UPI ASBA capabilities. Investors can open accounts with zero account opening fees across India's leading discount brokers:
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0">
+      <a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="btn btn-primary small">Open Zerodha Kite Account &rarr;</a>
+      <a href="https://dhan.co/?ref=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Dhan Account &rarr;</a>
+      <a href="https://www.angelone.in/open-demat-account?referral=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Angel One Account &rarr;</a>
+      <a href="https://upstox.com/open-account/?f=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Upstox Account &rarr;</a>
+    </div>
+
+    <div class="card" style="margin-top:20px;padding:16px;border-left:4px solid var(--accent)">
+      <p style="margin:0"><strong>Interactive IPO Tools:</strong> Explore the complete
+      <a href="/ipo/gmp/" data-link>Real-Time IPO GMP Tracker</a> &middot;
+      <a href="/ipo/sme/" data-link>NSE Emerge &amp; BSE SME Hub</a> &middot;
+      <a href="/ipo/upcoming/" data-link>Upcoming IPO Calendar</a> &middot;
+      <a href="/ipo/allotment-status/" data-link>Check Allotment Status Online</a>.</p>
+    </div>
+    """
+    articles.append({
+        "slug": gmp_article_slug,
+        "title": gmp_article_title,
+        "description": gmp_article_desc,
+        "date": today_iso,
+        "date_str": today_str,
+        "category": "IPO Bulletin",
+        "category_badge": "badge-up",
+        "type": "NewsArticle",
+        "read_time": "4 min read",
+        "body_html": gmp_article_body,
+    })
+
+    # SME IPO Guide & Trading Rules
+    sme_article_slug = "sme-ipo-market-roundup-nse-emerge-bse-sme-trading-rules"
+    sme_article_title = "SME IPO Investment Guide: NSE Emerge and BSE SME Trading Rules, Lot Sizes and Market Maker Safeguards"
+    sme_article_desc = (
+        "Comprehensive guide to investing in Indian SME IPOs on NSE Emerge and BSE SME. Understand 1-lot "
+        "mandatory trading sizes, minimum application thresholds, liquidity considerations, and risk frameworks."
+    )[:300]
+    sme_article_body = """
+    <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+      Small and Medium Enterprise (SME) IPOs on the <strong>NSE Emerge</strong> and <strong>BSE SME</strong> platforms have
+      witnessed unprecedented retail and HNI subscription multiples in recent quarters. However, investing in SME public issues
+      carries fundamentally different rules, liquidity dynamics, and risk parameters compared to Mainboard IPOs.
+    </p>
+
+    <div class="section-title"><h2>1. The Mandatory 1-Lot Trading Rule</h2></div>
+    <p>
+      The single most important distinction between Mainboard and SME equities is the secondary market trading unit.
+      On the mainboard (NSE/BSE), once a company lists, retail investors can buy or sell as little as 1 individual share.
+      On the SME platform, SEBI mandates that <strong>shares must be traded in standardized minimum lots</strong>
+      (typically 1,000, 1,200, 2,000, or 3,000 shares per lot, depending on the share price).
+    </p>
+    <p>
+      This means an investor who receives an allotment of 2,000 shares cannot exit 500 shares; they must place an order
+      for the entire 2,000-share lot. Investors must ensure adequate liquidity in their trading ledger before taking positions.
+    </p>
+
+    <div class="section-title"><h2>2. High Application Minimums (Rs 1 Lakh to Rs 1.25 Lakh+)</h2></div>
+    <p>
+      To ensure that only informed investors with suitable risk appetite participate in early-stage growth companies,
+      SEBI sets the minimum application size for SME IPOs at approximately Rs 1,00,000 or higher.
+      Retail individual investors are restricted to a maximum application size of Rs 2,00,000 (typically 1 or at most 2 lots),
+      while Non-Institutional Investors (NII / HNI) apply in tiers above Rs 2 Lakh.
+    </p>
+
+    <div class="section-title"><h2>3. The Role of Market Makers</h2></div>
+    <p>
+      Under SEBI (ICDR) Regulations, every SME IPO issuer is legally required to appoint an institutional Market Maker
+      for a minimum duration of <strong>three years</strong> post-listing. The Market Maker is obligated to provide two-way
+      continuous buy and sell quotes on the exchange order book with a maximum permitted bid-ask spread (typically 1% to 2%)
+      to maintain baseline liquidity and prevent trading halts.
+    </p>
+
+    <div class="section-title"><h2>4. Key Risk Considerations for Retail Investors</h2></div>
+    <ul>
+      <li><strong>Lower Reporting Frequency:</strong> SME companies disclose audited financial results on a half-yearly basis, unlike mainboard companies which report quarterly earnings.</li>
+      <li><strong>Circuit Filter Restraints:</strong> SME stocks frequently trade under strict 5% or 10% daily price bands, which can limit immediate order execution during severe corrections.</li>
+      <li><strong>Migration to Mainboard:</strong> An SME listed company can migrate to the mainboard exchange after 2 years of listing, provided its paid-up capital exceeds Rs 10 Crore and net worth meets exchange eligibility criteria.</li>
+    </ul>
+
+    <div class="section-title"><h2>5. How to Apply for SME IPOs Online</h2></div>
+    <p>
+      Retail investors can apply for SME IPOs directly through online discount broker portals using UPI 2.0 ASBA:
+    </p>
+    <ol style="line-height:1.7;margin-bottom:20px">
+      <li>Log into your broker app (Zerodha Kite, Groww, Angel One, Upstox, or Dhan).</li>
+      <li>Navigate to the IPO section and select the active SME issue marked with the SME Emerge badge.</li>
+      <li>Choose the application lot (1 Lot for standard retail bidding).</li>
+      <li>Enter your UPI handle and approve the ASBA mandate in your UPI application before 5:00 PM on closing day.</li>
+    </ol>
+
+    <div class="card" style="margin-top:20px;padding:16px;border-left:4px solid var(--accent)">
+      <p style="margin:0"><strong>Explore SME Hub:</strong> Browse all active, upcoming, and listed SME issues on the
+      <a href="/ipo/sme/" data-link>BrokerLens SME IPO Hub</a> or check grey market sentiment on the
+      <a href="/ipo/gmp/" data-link>IPO GMP Board</a>.</p>
+    </div>
+    """
+    articles.append({
+        "slug": sme_article_slug,
+        "title": sme_article_title,
+        "description": sme_article_desc,
+        "date": today_iso,
+        "date_str": today_str,
+        "category": "Blog & Guide",
+        "category_badge": "badge-verified",
+        "type": "BlogPosting",
+        "read_time": "6 min read",
+        "body_html": sme_article_body,
+    })
+
+    # Upcoming IPO Pipeline & DRHP Tracker
+    pipeline_article_slug = "upcoming-ipos-in-india-pipeline-dates-expected-issue-size"
+    pipeline_article_title = "Upcoming IPOs in India 2026: Expected Issue Dates, DRHP Filings and Sector Pipeline"
+    pipeline_article_desc = (
+        "Complete pipeline of upcoming IPOs in India. Track DRHP filings with SEBI, expected issue sizes, "
+        "dates, and sector-wise public offerings across tech, financial services, and retail."
+    )[:300]
+    pipeline_article_body = """
+    <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+      India's primary capital markets continue to attract high-quality corporate listings across new-age tech,
+      financial institutions, logistics, and renewable energy. Retail investors and market participants can review
+      the forward pipeline of upcoming public issues currently progressing through the SEBI regulatory review lifecycle.
+    </p>
+
+    <div class="section-title"><h2>1. High-Profile Upcoming IPOs in the Pipeline</h2></div>
+    <ul>
+      <li><strong>National Securities Depository Limited (NSDL):</strong> India's pioneering depository is planning an offer for sale (OFS) of up to 5.72 Crore equity shares, sponsored by IDBI Bank and NSE.</li>
+      <li><strong>Reliance Jio Infocomm:</strong> India's largest telecom and digital infrastructure provider, expected to represent one of the country's largest public offerings.</li>
+      <li><strong>Tata Sons / Tata Group Ventures:</strong> Continued capital-market listings across key Tata subsidiaries following the milestone listing of Tata Technologies.</li>
+      <li><strong>HDB Financial Services:</strong> The retail NBFC arm of HDFC Bank, preparing for a milestone public listing to meet RBI upper-layer scale-based regulatory mandates.</li>
+      <li><strong>Ather Energy:</strong> High-growth electric two-wheeler manufacturer expanding production capacity and R&amp;D through a combined fresh issue and OFS.</li>
+      <li><strong>boAt (Imagine Marketing):</strong> Consumer audio and wearables brand looking to tap public markets for domestic manufacturing expansion.</li>
+    </ul>
+
+    <div class="section-title"><h2>2. The Journey from DRHP to Stock Exchange Listing</h2></div>
+    <ol style="line-height:1.7;margin-bottom:20px">
+      <li><strong>Draft Red Herring Prospectus (DRHP):</strong> The company submits its detailed draft document with SEBI, detailing financials, business risks, and promoter holdings.</li>
+      <li><strong>SEBI Observation Letter:</strong> SEBI reviews disclosures, seeks clarifications, and issues an observation letter (typically valid for 12 months).</li>
+      <li><strong>Red Herring Prospectus (RHP):</strong> The company files its finalized prospectus with the Registrar of Companies (RoC), specifying bidding dates and anchor investor allocations.</li>
+      <li><strong>Price Band Announcement:</strong> 2 working days before issue opening, the company announces its price band and lot size in national newspapers and exchange circulars.</li>
+      <li><strong>Public Bidding &amp; Allotment:</strong> 3-day bidding window, followed by T+1 basis of allotment and T+3 listing on NSE and BSE.</li>
+    </ol>
+
+    <div class="section-title"><h2>3. Steps to Get Ready for Bidding</h2></div>
+    <p>
+      Because high-profile IPOs often experience heavy bidding volume on their opening day, completing your Demat setup
+      in advance ensures uninterrupted UPI ASBA participation:
+    </p>
+    <ul>
+      <li>Ensure your bank account has a UPI ID enabled with an authorized bank that supports the Rs 5 Lakh IPO ASBA limit.</li>
+      <li>Verify that the PAN registered on your Demat account exactly matches the PAN on your bank account to prevent mandate disqualification.</li>
+      <li>Open Demat accounts with zero-brokerage partners for instant digital order submission:</li>
+    </ul>
+
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0">
+      <a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="btn btn-primary small">Open Zerodha Demat &rarr;</a>
+      <a href="https://dhan.co/?ref=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Dhan Demat &rarr;</a>
+      <a href="https://www.angelone.in/open-demat-account?referral=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Angel One Demat &rarr;</a>
+      <a href="https://upstox.com/open-account/?f=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Upstox Demat &rarr;</a>
+    </div>
+
+    <div class="card" style="margin-top:20px;padding:16px;border-left:4px solid var(--accent)">
+      <p style="margin:0"><strong>Stay Informed:</strong> Track all upcoming issues with dates and issue prices on the
+      <a href="/ipo/upcoming/" data-link>Upcoming IPO Calendar</a> and check latest grey market sentiment on the
+      <a href="/ipo/gmp/" data-link>IPO GMP Tracker</a>.</p>
+    </div>
+    """
+    articles.append({
+        "slug": pipeline_article_slug,
+        "title": pipeline_article_title,
+        "description": pipeline_article_desc,
+        "date": today_iso,
+        "date_str": today_str,
+        "category": "IPO Bulletin",
+        "category_badge": "badge-up",
+        "type": "NewsArticle",
+        "read_time": "5 min read",
+        "body_html": pipeline_article_body,
+    })
+
     # =========================================================================
     # 3. EDUCATIONAL BLOGS & PRACTICAL INVESTOR GUIDES
     # =========================================================================

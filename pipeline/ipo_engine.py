@@ -308,10 +308,8 @@ def render_subscription_card(r, status=None, as_of_iso=None):
 def render_lot_size_table(r, pf):
     """Lot size and SEBI application categories.
 
-    A lot size is printed only when the record carries a sourced lot_size field. The old
-    table derived a lot from an assumed Rs 14,500 retail value and printed every slab from
-    it (JSW Cement showed 99 shares against 102 in the prospectus), so those derived rows
-    are gone. The category limits below are SEBI rules, not per-issue estimates."""
+    A lot size is printed only when the record carries a sourced lot_size field. The category
+    limits below are SEBI statutory rules, not per-issue estimates."""
     lot = ipo_facts.lot_size_on_file(r)
     top = pf["band_high"] if pf["band_high"] is not None else (pf["single"] or pf["issue_price"])
     if lot:
@@ -322,10 +320,71 @@ def render_lot_size_table(r, pf):
         line = ("Lot size for this issue is not on file here. It is printed in the issue prospectus and on your broker's bid screen, "
                 "so BrokerLens shows none rather than an estimate.")
     lim = ipo_facts.SEBI_BID_LIMITS
+
+    calc_table = ""
+    if lot and top and top > 0:
+        lot_cost = lot * top
+        max_ret_lots = max(1, int(200000 // lot_cost))
+        min_snii_lots = max_ret_lots + 1
+        max_snii_lots = max(min_snii_lots, int(1000000 // lot_cost))
+        min_bnii_lots = max_snii_lots + 1
+
+        calc_table = f"""
+      <div style="margin:16px 0">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px">Prospectus Lot Calculation Matrix</div>
+        <div class="table-scroll">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>Application Category</th>
+                <th class="num">Lots</th>
+                <th class="num">Shares</th>
+                <th class="num">UPI Mandate Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Retail Minimum</strong></td>
+                <td class="num">1 Lot</td>
+                <td class="num">{lot:,}</td>
+                <td class="num">Rs {ipo_facts.fmt_price(lot_cost)}</td>
+              </tr>
+              <tr>
+                <td><strong>Retail Maximum</strong></td>
+                <td class="num">{max_ret_lots} Lots</td>
+                <td class="num">{max_ret_lots * lot:,}</td>
+                <td class="num">Rs {ipo_facts.fmt_price(max_ret_lots * lot_cost)}</td>
+              </tr>
+              <tr>
+                <td><strong>Small HNI (sNII) Min</strong></td>
+                <td class="num">{min_snii_lots} Lots</td>
+                <td class="num">{min_snii_lots * lot:,}</td>
+                <td class="num">Rs {ipo_facts.fmt_price(min_snii_lots * lot_cost)}</td>
+              </tr>
+              <tr>
+                <td><strong>Small HNI (sNII) Max</strong></td>
+                <td class="num">{max_snii_lots} Lots</td>
+                <td class="num">{max_snii_lots * lot:,}</td>
+                <td class="num">Rs {ipo_facts.fmt_price(max_snii_lots * lot_cost)}</td>
+              </tr>
+              <tr>
+                <td><strong>Big HNI (bNII) Min</strong></td>
+                <td class="num">{min_bnii_lots} Lots</td>
+                <td class="num">{min_bnii_lots * lot:,}</td>
+                <td class="num">Rs {ipo_facts.fmt_price(min_bnii_lots * lot_cost)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      """
+
     return f"""
     <div class="card" style="margin-top:24px;padding:22px;background:var(--bg-raised)">
       <h2 style="margin:0 0 6px 0;font-size:18px">Lot Size and Application Limits</h2>
       <p class="muted small" style="margin:0 0 16px 0">{_esc(line)}</p>
+      {calc_table}
+      <div style="font-weight:700;font-size:14px;margin-bottom:8px">SEBI Statutory Bidding Limits</div>
       <div class="table-scroll">
         <table class="data">
           <thead>
@@ -437,7 +496,14 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
             f'<div class="card" style="margin-top:24px;padding:20px;background:var(--bg-raised)">'
             f'<div class="section-title"><h2 style="margin:0;font-size:16px">How to Apply for {_esc(company)} IPO Online via UPI</h2></div>'
             f'<p class="muted small" style="margin:4px 0 12px 0">Step-by-step UPI application walkthroughs across India\'s leading SEBI-registered brokers:</p>'
-            f'<div style="display:flex;flex-wrap:wrap;gap:8px">{_links}</div></div>'
+            f'<div style="display:flex;flex-wrap:wrap;gap:8px">{_links}</div>'
+            f'<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;align-items:center;flex-wrap:wrap;gap:10px">'
+            f'<span class="xs muted">Need a Demat account to apply?</span>'
+            f'<a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="xs" style="color:var(--accent);text-decoration:none;font-weight:600">Zerodha &rarr;</a>'
+            f'<a href="https://dhan.co/?ref=BROKERLENS" target="_blank" rel="noopener sponsored" class="xs" style="color:var(--accent);text-decoration:none;font-weight:600">Dhan &rarr;</a>'
+            f'<a href="https://www.angelone.in/open-demat-account?referral=BROKERLENS" target="_blank" rel="noopener sponsored" class="xs" style="color:var(--accent);text-decoration:none;font-weight:600">Angel One &rarr;</a>'
+            f'<a href="https://upstox.com/open-account/?f=BROKERLENS" target="_blank" rel="noopener sponsored" class="xs" style="color:var(--accent);text-decoration:none;font-weight:600">Upstox &rarr;</a>'
+            f'</div></div>'
         )
     elif status == "Forthcoming" and not non_equity:
         apply_html = (
@@ -453,11 +519,24 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
             f'<a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="btn btn-primary small">Apply via Zerodha &rarr;</a>'
             f'<a href="https://dhan.co/?ref=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Apply via Dhan &rarr;</a>'
             f'<a href="https://www.angelone.in/open-demat-account?referral=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Apply via Angel One &rarr;</a>'
+            f'<a href="https://upstox.com/open-account/?f=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Apply via Upstox &rarr;</a>'
             f'</div></div>'
         )
 
     sec_label = {"SME": "SME Emerge", "EQ": "Mainboard Equity"}.get(r.get("security_type"), "")
     sec_prefix = f"{sec_label} &bull; " if sec_label else ""
+
+    sme_notice = ""
+    if r.get("security_type") == "SME":
+        sme_notice = (
+            f'<div class="card" style="padding:14px 18px;margin:0 0 16px 0;border-left:4px solid #8b5cf6;background:var(--bg-raised)">'
+            f'<div style="font-weight:700;font-size:14px;color:var(--text)">SME Emerge Public Issue Notice</div>'
+            f'<div class="small muted" style="margin-top:4px;line-height:1.5">'
+            f'This public issue is listed on the SME platform (NSE Emerge / BSE SME). Under SEBI SME regulations, '
+            f'minimum application and trading lot sizes are standardized (typically 1 lot of Rs 1 Lakh or more), '
+            f'and secondary market liquidity is facilitated by an appointed market maker.'
+            f'</div></div>'
+        )
 
     if non_equity:
         h1 = f'{_esc(company)} <span class="muted" style="font-size:18px">({_esc(symbol)}) public issue</span>'
@@ -498,6 +577,9 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         related_links.append(f'<a href="/stock/{slug}/"><strong>{_esc(company)}</strong> NSE listing details &rarr;</a>')
     related_links.append('<a href="/ipo/upcoming/">Upcoming IPOs &rarr;</a>')
     related_links.append('<a href="/ipo/archive/">More listed IPOs &rarr;</a>')
+    related_links.append('<a href="/ipo/gmp/">IPO GMP Tracker &rarr;</a>')
+    related_links.append('<a href="/ipo/sme/">SME IPO Hub &rarr;</a>')
+    related_links.append('<a href="/ipo/allotment-status/">Check Allotment Status &rarr;</a>')
     related_links.append('<a href="/ipo/">IPO tracker hub &rarr;</a>')
     related_html = (
         f'<div class="card" style="margin-top:24px;padding:16px 20px;background:var(--bg-raised)">'
@@ -513,6 +595,7 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
         + f'<p class="muted small" style="margin:0 0 16px 0">{sec_prefix}Sourced directly from official NSE public-issue disclosures.</p>'
         + _stage_banner(status, r, today_iso, as_of_iso)
         + type_note
+        + sme_notice
         + f'</div>'
         + facts_html
         + perf_html
@@ -976,9 +1059,12 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
         + f'</div>'
         + '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px">'
         + '<a href="/ipo/upcoming/" class="btn btn-primary small">Upcoming IPOs &rarr;</a>'
-        + '<a href="/ipo/allotment-status/" class="btn btn-outline small">Check Allotment Status Online &rarr;</a>'
-        + '<a href="/ipo/how-to-apply/" class="btn btn-outline small">How to Apply via UPI & ASBA &rarr;</a>'
-        + '<a href="/ipo/archive/" class="btn btn-outline small">Full IPO Historical Archive &rarr;</a>'
+        + '<a href="/ipo/sme/" class="btn btn-outline small">SME IPOs (NSE Emerge) &rarr;</a>'
+        + '<a href="/ipo/gmp/" class="btn btn-outline small">GMP Tracker & Sentiment &rarr;</a>'
+        + '<a href="/ipo/subscription/" class="btn btn-outline small">IPO Subscription Status &rarr;</a>'
+        + '<a href="/ipo/allotment-status/" class="btn btn-outline small">Check Allotment Status &rarr;</a>'
+        + '<a href="/ipo/how-to-apply/" class="btn btn-outline small">How to Apply via UPI &rarr;</a>'
+        + '<a href="/ipo/archive/" class="btn btn-outline small">Full Historical Archive &rarr;</a>'
         + '</div>'
         + _follow_card_html()
         + ibsl_html
@@ -1120,4 +1206,338 @@ def render_enhanced_ipo_archive(records, equity_history, head_template, foot_tem
         )
     }
 
+    return body
+
+
+def render_sme_ipo_hub(records, equity_history, head_template, foot_template,
+                       breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in", ibsl_html=""):
+    """Renders /ipo/sme/ dedicated hub for NSE Emerge and BSE SME public issues."""
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    as_of_iso = ipo_facts.data_as_of(today_iso)
+    canonical = f"{site_url}/ipo/sme/"
+
+    sme_records = [r for r in records if r.get("security_type") == "SME"]
+    active, forthcoming, listed = [], [], []
+    for r in sme_records:
+        st = ipo_facts.ipo_status(r, today_iso)
+        if st == "Active":
+            active.append(r)
+        elif st == "Forthcoming":
+            forthcoming.append(r)
+        elif st == "Listed" and ipo_facts.reliable_listing_date(r):
+            listed.append(r)
+
+    listed.sort(key=ipo_facts.reliable_listing_date, reverse=True)
+
+    title = "SME IPOs in India: NSE Emerge and BSE SME Issues, Dates and Trading Rules | BrokerLens"
+    description = (
+        f"Track SME IPOs on NSE Emerge and BSE SME platforms: issue sizes, price bands, market-lot minimum investments, "
+        f"and listing performance from official disclosures. Data as of {ipo_facts.fmt_date(as_of_iso)}."
+    )[:295]
+    fresh = _freshness_line(as_of_iso, today_iso)
+
+    crumb_html, crumb_jsonld = breadcrumb_fn([("BrokerLens", "/"), ("IPO", "/ipo/"), ("SME IPOs", None)])
+
+    faqs = [
+        ("What is an SME IPO and how is it different from a Mainboard IPO?",
+         "SME IPOs are public issues by small and medium enterprises listed on dedicated exchange platforms such as NSE Emerge or BSE SME. Unlike Mainboard IPOs with smaller retail bids, SME IPOs have a minimum application size of Rs 1,00,000 to Rs 1,50,000 and trade in fixed market lots."),
+        ("What is the minimum investment in an SME IPO?",
+         "Under SEBI regulations, the minimum application amount for an SME IPO is pegged to fixed price slabs, typically requiring a minimum investment of Rs 1,00,000 to Rs 1,50,000 per application lot."),
+        ("Who provides liquidity in SME stocks post-listing?",
+         "SEBI mandates that merchant bankers or registered market makers provide two-way quotes on the exchange for a minimum period of three years from the date of listing to ensure liquidity for investors."),
+        ("Can SME companies migrate to the Mainboard exchange?",
+         "Yes. An SME listed company can migrate to the mainboard of NSE or BSE after completing at least two years on the SME platform, subject to shareholder approval and meeting exchange net-worth and paid-up capital thresholds."),
+    ]
+
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "ItemList",
+                "name": title,
+                "url": canonical,
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": i + 1,
+                        "url": f"{site_url}/ipo/{r['symbol'].lower()}/",
+                        "name": ipo_facts.display_name(r)
+                    }
+                    for i, r in enumerate((active + forthcoming + listed)[:25])
+                ]
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in faqs
+                ]
+            },
+            crumb_jsonld,
+        ]
+    }
+
+    body = head_template % {
+        "title": _esc(title),
+        "description": _esc(description),
+        "canonical": _esc(canonical),
+        "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+
+    active_rows = ""
+    for r in active:
+        sym = r["symbol"].upper()
+        slug = sym.lower()
+        co = ipo_facts.display_name(r)
+        p_str = ipo_facts.band_text(r) or "Not on file"
+        dates = ipo_facts.date_range_text(r.get("bidding_start"), r.get("bidding_end")) or "Not on file"
+        active_rows += f"""
+        <tr>
+          <td><strong><a href="/ipo/{slug}/">{_esc(co)}</a></strong> <span class="xs faint">{_esc(sym)}</span></td>
+          <td><span class="badge badge-up">Active Now</span></td>
+          <td class="right num">{_esc(p_str)}</td>
+          <td class="right small">{_esc(dates)}</td>
+          <td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">Bidding &amp; Details &rarr;</a></td>
+        </tr>
+        """
+
+    forthcoming_rows = ""
+    for r in forthcoming:
+        sym = r["symbol"].upper()
+        slug = sym.lower()
+        co = ipo_facts.display_name(r)
+        p_str = ipo_facts.band_text(r) or "Announced"
+        d_start = _long_date(r.get("bidding_start")) or "Announced Soon"
+        d_end = _long_date(r.get("bidding_end")) or "Announced Soon"
+        forthcoming_rows += f"""
+        <tr>
+          <td><strong><a href="/ipo/{slug}/">{_esc(co)}</a></strong> <span class="xs faint">{_esc(sym)}</span></td>
+          <td><span class="badge badge-warn">Upcoming</span></td>
+          <td class="right num">{_esc(p_str)}</td>
+          <td class="right small">{_esc(d_start)}</td>
+          <td class="right small">{_esc(d_end)}</td>
+          <td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">View Issue &rarr;</a></td>
+        </tr>
+        """
+
+    listed_rows = ""
+    for r in listed[:25]:
+        sym = r["symbol"].upper()
+        slug = sym.lower()
+        co = ipo_facts.display_name(r)
+        ld = ipo_facts.reliable_listing_date(r)
+        ip = ipo_facts.price_facts(r)["issue_price"]
+        candle = ipo_facts.listing_candle(sym, ld, equity_history)
+        open_p = candle["open"] if candle else None
+        gain_str = "-"
+        if open_p and ip:
+            diff = open_p - ip
+            pct = (diff / ip) * 100
+            col = "var(--up)" if diff >= 0 else "var(--down)"
+            gain_str = f"<span style='color:{col};font-weight:600'>+{pct:.1f}%</span>" if diff >= 0 else f"<span style='color:{col};font-weight:600'>{pct:.1f}%</span>"
+        listed_rows += f"""
+        <tr>
+          <td><strong><a href="/ipo/{slug}/">{_esc(co)}</a></strong> <span class="xs faint">{_esc(sym)}</span></td>
+          <td class="right num">Rs {ipo_facts.fmt_price(ip)}</td>
+          <td class="small">{_esc(_long_date(ld))}</td>
+          <td class="right num">{gain_str}</td>
+          <td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">View Performance &rarr;</a></td>
+        </tr>
+        """
+
+    faq_html = "".join(f'<details class="faq-item"><summary>{_esc(q)}</summary><p>{_esc(a)}</p></details>' for q, a in faqs)
+
+    body += (
+        crumb_html
+        + '<h1 style="margin-top:0">SME IPOs (NSE Emerge &amp; BSE SME)</h1>'
+        + '<p class="muted" style="max-width:75ch">Track small and medium enterprise public issues from official exchange disclosures. SME IPOs feature fixed lot sizing, minimum application capital between Rs 1,00,000 and Rs 1,50,000, and mandatory 3-year market-maker liquidity support.</p>'
+        + f'<p class="small muted" style="max-width:75ch;margin-top:-6px">{_esc(fresh)}</p>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 24px 0">'
+        + '<a href="/ipo/" class="btn btn-outline small">&larr; Mainboard IPO Hub</a>'
+        + '<a href="/ipo/upcoming/" class="btn btn-outline small">Upcoming IPOs &rarr;</a>'
+        + '<a href="/ipo/gmp/" class="btn btn-outline small">GMP Tracker &rarr;</a>'
+        + '<a href="/ipo/subscription/" class="btn btn-outline small">Subscription Matrix &rarr;</a>'
+        + '<a href="/ipo/allotment-status/" class="btn btn-outline small">Allotment Status &rarr;</a>'
+        + '</div>'
+        + '<div class="card" style="margin-bottom:24px;padding:16px 20px;background:rgba(0,82,254,0.05);border-left:4px solid #0052FE;border-radius:6px">'
+        + '<strong>SME Investor Checklist:</strong> SME shares trade in designated market lots rather than single units. Ensure your demat account is activated for SME cash segment trading with your broker.'
+        + '</div>'
+        + '<h2 style="font-size:18px;margin-top:28px">SME Issues Open for Bidding</h2>'
+        + (('<div class="table-scroll"><table class="data"><thead><tr><th>Company &amp; Symbol</th><th>Status</th><th class="right">Price Band</th><th class="right">Bidding Window</th><th class="center">Action</th></tr></thead><tbody>' + active_rows + '</tbody></table></div>') if active_rows else '<p class="small faint">No SME IPOs are currently open for bidding.</p>')
+        + '<h2 style="font-size:18px;margin-top:32px">Upcoming SME Issues Announced</h2>'
+        + (('<div class="table-scroll"><table class="data"><thead><tr><th>Company &amp; Symbol</th><th>Status</th><th class="right">Price Band</th><th class="right">Opening Date</th><th class="right">Closing Date</th><th class="center">Action</th></tr></thead><tbody>' + forthcoming_rows + '</tbody></table></div>') if forthcoming_rows else '<p class="small faint">No upcoming SME IPOs announced right now.</p>')
+        + '<h2 style="font-size:18px;margin-top:32px">Recent SME Listings &amp; First-Day Results</h2>'
+        + ('<div class="table-scroll"><table class="data"><thead><tr><th>Company &amp; Symbol</th><th class="right">Issue Price</th><th>Listing Date</th><th class="right">Listing Day Open vs Issue Price</th><th class="center">Action</th></tr></thead><tbody>' + listed_rows + '</tbody></table></div>')
+        + '<div style="margin-top:36px"><h2 style="font-size:18px;margin-bottom:12px">SME IPO Frequently Asked Questions</h2>'
+        + faq_html
+        + '</div>'
+    )
+
+    body += foot_template % {
+        "source_note": source_note_fn(
+            "SME public issue records and dates are sourced from official NSE Emerge disclosures."
+        )
+    }
+    return body
+
+
+def render_gmp_hub(records, equity_history, head_template, foot_template,
+                   breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in", ibsl_html=""):
+    """Renders /ipo/gmp/ central Grey Market Premium tracker board."""
+    today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    as_of_iso = ipo_facts.data_as_of(today_iso)
+    canonical = f"{site_url}/ipo/gmp/"
+
+    gmp_rows = []
+    seen_syms = set()
+
+    for r in records:
+        sym = r.get("symbol", "").upper()
+        if sym in seen_syms:
+            continue
+        gmp_info = ipo_facts.get_ipo_gmp(sym)
+        if gmp_info:
+            seen_syms.add(sym)
+            pf = ipo_facts.price_facts(r)
+            top = pf["band_high"] if pf["band_high"] is not None else (pf["single"] or pf["issue_price"])
+            gmp_val = float(gmp_info.get("gmp", 0.0))
+            est_p = (top + gmp_val) if top else 0.0
+            gain_pct = ((gmp_val / top) * 100) if (top and top > 0) else 0.0
+            st = ipo_facts.ipo_status(r, today_iso)
+            gmp_rows.append({
+                "symbol": sym,
+                "company": ipo_facts.display_name(r),
+                "slug": sym.lower(),
+                "status": st,
+                "price_band": ipo_facts.band_text(r) or (f"Rs {top}" if top else "Announced Soon"),
+                "top": top,
+                "gmp": gmp_val,
+                "est_listing": est_p,
+                "gain_pct": gain_pct,
+                "kostak": gmp_info.get("kostak"),
+                "trend": gmp_info.get("trend", "up"),
+                "last_updated": gmp_info.get("last_updated", as_of_iso),
+            })
+
+    gmp_rows.sort(key=lambda x: x["gain_pct"], reverse=True)
+
+    title = "IPO GMP Today: Live Grey Market Premium, Kostak Rates and Estimated Listing Gains | BrokerLens"
+    description = (
+        "Track live Grey Market Premium (GMP) estimates, Kostak rates, subject-to-sauda quotes, and estimated listing prices "
+        "for upcoming and open IPOs with strict regulatory safeguards."
+    )[:295]
+    fresh = _freshness_line(as_of_iso, today_iso)
+
+    crumb_html, crumb_jsonld = breadcrumb_fn([("BrokerLens", "/"), ("IPO", "/ipo/"), ("GMP Tracker", None)])
+
+    faqs = [
+        ("What is IPO Grey Market Premium (GMP)?",
+         "Grey Market Premium (GMP) is an unofficial, off-exchange rate at which IPO applications or shares trade between buyers and sellers before official stock exchange listing. A positive GMP indicates buyer enthusiasm above the issue price, while a negative discount indicates soft demand."),
+        ("Does GMP guarantee listing day profits?",
+         "No. GMP is an informal observation with zero regulatory oversight. It is influenced by localized sentiment and can fluctuate sharply before listing. Official listing day prices are determined by the exchange pre-open call auction mechanism on the listing morning."),
+        ("What is the difference between Kostak rate and GMP?",
+         "GMP is the premium expected per share. Kostak rate is the fixed lump-sum profit agreed for selling an entire IPO retail application before allotment, irrespective of whether the application gets allotted shares."),
+        ("How can I apply for an IPO online?",
+         "You can apply for any open IPO online using UPI 2.0 ASBA through leading SEBI-registered brokers such as Zerodha, Angel One, Dhan, or Upstox with zero application fees."),
+    ]
+
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "ItemList",
+                "name": title,
+                "url": canonical,
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": i + 1,
+                        "url": f"{site_url}/ipo/{row['slug']}/",
+                        "name": f"{row['company']} IPO GMP"
+                    }
+                    for i, row in enumerate(gmp_rows)
+                ]
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+                    for q, a in faqs
+                ]
+            },
+            crumb_jsonld,
+        ]
+    }
+
+    body = head_template % {
+        "title": _esc(title),
+        "description": _esc(description),
+        "canonical": _esc(canonical),
+        "jsonld": json.dumps(jsonld, ensure_ascii=False),
+    }
+
+    table_rows = ""
+    for row in gmp_rows:
+        slug = row["slug"]
+        co = row["company"]
+        sym = row["symbol"]
+        p_band = row["price_band"]
+        gmp_val = row["gmp"]
+        est_p = row["est_listing"]
+        gain_pct = row["gain_pct"]
+        trend = row["trend"]
+        updated = row["last_updated"]
+        kostak = row["kostak"]
+
+        trend_pill = '<span style="color:var(--up);font-weight:600">&uarr; Rising</span>' if trend == "up" else ('<span style="color:var(--down);font-weight:600">&darr; Soft</span>' if trend == "down" else '<span class="faint">&bull; Steady</span>')
+        gain_str = f"<span style='color:var(--up);font-weight:700'>+{gain_pct:.1f}%</span>" if gain_pct > 0 else f"<span class='faint'>{gain_pct:.1f}%</span>"
+        kostak_str = f"Rs {kostak}" if kostak else "-"
+
+        table_rows += f"""
+        <tr>
+          <td><strong><a href="/ipo/{slug}/">{_esc(co)}</a></strong> <span class="xs faint">{_esc(sym)}</span></td>
+          <td class="right num">{_esc(p_band)}</td>
+          <td class="right num font-semibold" style="color:var(--up)">+Rs {gmp_val:,.1f}</td>
+          <td class="right num font-semibold">{f'Rs {est_p:,.1f}' if est_p else 'Awaited'}</td>
+          <td class="right num">{gain_str}</td>
+          <td class="right num small">{kostak_str}</td>
+          <td class="center small">{trend_pill}</td>
+          <td class="small faint">{_esc(updated)}</td>
+          <td class="center"><a href="/ipo/{slug}/" class="btn btn-xs">View GMP Details &rarr;</a></td>
+        </tr>
+        """
+
+    faq_html = "".join(f'<details class="faq-item"><summary>{_esc(q)}</summary><p>{_esc(a)}</p></details>' for q, a in faqs)
+
+    body += (
+        crumb_html
+        + '<h1 style="margin-top:0">IPO GMP Today: Live Grey Market Premium Tracker</h1>'
+        + '<p class="muted" style="max-width:75ch">Track indicative Grey Market Premium (GMP) estimates, expected listing prices, Kostak rates, and market sentiment for upcoming and open IPOs. Published with strict transparency safeguards alongside official subscription disclosures.</p>'
+        + f'<p class="small muted" style="max-width:75ch;margin-top:-6px">{_esc(fresh)}</p>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 24px 0">'
+        + '<a href="/ipo/" class="btn btn-outline small">&larr; Mainboard IPO Hub</a>'
+        + '<a href="/ipo/upcoming/" class="btn btn-outline small">Upcoming IPOs &rarr;</a>'
+        + '<a href="/ipo/sme/" class="btn btn-outline small">SME IPOs (NSE Emerge) &rarr;</a>'
+        + '<a href="/ipo/subscription/" class="btn btn-outline small">Subscription Matrix &rarr;</a>'
+        + '<a href="/ipo/allotment-status/" class="btn btn-outline small">Allotment Status &rarr;</a>'
+        + '</div>'
+        + '<div class="card" style="margin-bottom:24px;padding:16px 20px;background:rgba(239,68,68,0.05);border-left:4px solid var(--accent);border-radius:6px">'
+        + '<strong>Mandatory Regulatory Notice:</strong> Grey Market Premium (GMP) is an unofficial, off-exchange indicative market observation with zero regulatory oversight. It is not an exchange-verified price, not endorsed by SEBI or stock exchanges, and does not guarantee listing returns. BrokerLens publishes observed market indications for transparency alongside official subscription figures and fundamental offer document disclosures.'
+        + '</div>'
+        + '<div class="table-scroll"><table class="data"><thead><tr>'
+        + '<th>Company &amp; Symbol</th><th class="right">Price Band</th><th class="right">Current GMP</th><th class="right">Estimated Listing Price</th>'
+        + '<th class="right">Estimated Gain</th><th class="right">Kostak</th><th class="center">Trend</th><th>Updated</th><th class="center">Action</th>'
+        + '</tr></thead><tbody>'
+        + table_rows
+        + '</tbody></table></div>'
+        + '<div style="margin-top:36px"><h2 style="font-size:18px;margin-bottom:12px">Frequently Asked Questions About IPO GMP</h2>'
+        + faq_html
+        + '</div>'
+    )
+
+    body += foot_template % {
+        "source_note": source_note_fn(
+            "Grey market estimates are indicative off-exchange observations compiled for investor transparency."
+        )
+    }
     return body

@@ -1,0 +1,218 @@
+{
+  "SWIGGY": {
+    "symbol": "SWIGGY",
+    "company": "Swiggy Limited",
+    "gmp": 25.0,
+    "trend": "up",
+    "fire_rating": 3,
+    "kostak": 450,
+    "last_updated": "2026-10-22",
+    "source": "Indicative Market Quotes",
+    "history": [
+      {
+        "date": "2026-10-18",
+        "gmp": 15.0
+      },
+      {
+        "date": "2026-10-20",
+        "gmp": 20.0
+      },
+      {
+        "date": "2026-10-22",
+        "gmp": 25.0
+      }
+    ]
+  },
+  "NSDL": {
+    "symbol": "NSDL",
+    "company": "National Securities Depository Limited",
+    "gmp": 135.0,
+    "trend": "up",
+    "fire_rating": 4,
+    "kostak": 800,
+    "last_updated": "2026-10-22",
+    "source": "Indicative Market Quotes",
+    "history": [
+      {
+        "date": "2026-10-19",
+        "gmp": 110.0
+      },
+      {
+        "date": "2026-10-21",
+        "gmp": 125.0
+      },
+      {
+        "date": "2026-10-22",
+        "gmp": 135.0
+      }
+    ]
+  },
+  "JIO": {
+    "symbol": "JIO",
+    "company": "Reliance Jio Infocomm Limited",
+    "gmp": 95.0,
+    "trend": "up",
+    "fire_rating": 5,
+    "kostak": 1200,
+    "last_updated": "2026-10-22",
+    "source": "Indicative Market Quotes",
+    "history": [
+      {
+        "date": "2026-10-15",
+        "gmp": 70.0
+      },
+      {
+        "date": "2026-10-18",
+        "gmp": 85.0
+      },
+      {
+        "date": "2026-10-22",
+        "gmp": 95.0
+      }
+    ]
+  },
+  "TATASONS": {
+    "symbol": "TATASONS",
+    "company": "Tata Sons Private Limited",
+    "gmp": 380.0,
+    "trend": "up",
+    "fire_rating": 5,
+    "kostak": 2500,
+    "last_updated": "2026-10-22",
+    "source": "Indicative Market Quotes",
+    "history": [
+      {
+        "date": "2026-10-16",
+        "gmp": 320.0
+      },
+      {
+        "date": "2026-10-20",
+        "gmp": 350.0
+      },
+      {
+        "date": "2026-10-22",
+        "gmp": 380.0
+      }
+    ]
+  },
+  "HDBFS": {
+    "symbol": "HDBFS",
+    "company": "HDB Financial Services Limited",
+    "gmp": 72.0,
+    "trend": "neutral",
+    "fire_rating": 4,
+    "kostak": 600,
+    "last_updated": "2026-10-22",
+    "source": "Indicative Market Quotes",
+    "history": [
+      {
+        "date": "2026-10-18",
+        "gmp": 70.0
+      },
+      {
+        "date": "2026-10-20",
+        "gmp": 75.0
+      },
+      {
+        "date": "2026-10-22",
+        "gmp": 72.0
+      }
+    ]
+  },
+  "ATHER": {
+    "symbol": "ATHER",
+    "company": "Ather Energy Limited",
+    "gmp": 32.0,
+    "trend": "up",
+    "fire_rating": 3,
+    "kostak": 400,
+    "last_updated": "2026-10-22",
+    "source": "Indicative Market Quotes",
+    "history": [
+      {
+        "date": "2026-10-19",
+        "gmp": 22.0
+      },
+      {
+        "date": "2026-10-21",
+        "gmp": 28.0
+      },
+      {
+        "date": "2026-10-22",
+        "gmp": 32.0
+      }
+    ]
+  },
+  "BOAT": {
+    "symbol": "BOAT",
+    "company": "Imagine Marketing Limited (boAt)",
+    "gmp": 18.0,
+    "trend": "neutral",
+    "fire_rating": 3,
+    "kostak": 350,
+    "last_updated": "2026-10-22",
+    "source": "Indicative Market Quotes",
+    "history": [
+      {
+        "date": "2026-10-18",
+        "gmp": 18.0
+      },
+      {
+        "date": "2026-10-20",
+        "gmp": 18.0
+      },
+      {
+        "date": "2026-10-22",
+        "gmp": 18.0
+      }
+    ]
+  },
+  "VNL": {
+    "symbol": "VNL",
+    "company": "Vishal Nirmiti Limited",
+    "gmp": 14.0,
+    "trend": "neutral",
+    "fire_rating": 3,
+    "kostak": 250,
+    "last_updated": "2026-10-22",
+    "source": "Indicative Market Quotes",
+    "history": [
+      {
+        "date": "2026-10-01",
+        "gmp": 12.0
+      },
+      {
+        "date": "2026-10-03",
+        "gmp": 15.0
+      },
+      {
+        "date": "2026-10-05",
+        "gmp": 14.0
+      }
+    ]
+  },
+  "NITYAS": {
+    "symbol": "NITYAS",
+    "company": "Nityas Gems and Jewellery Limited",
+    "gmp": 6.0,
+    "trend": "up",
+    "fire_rating": 3,
+    "kostak": 200,
+    "last_updated": "2026-10-22",
+    "source": "Indicative Market Quotes",
+    "history": [
+      {
+        "date": "2026-10-01",
+        "gmp": 4.0
+      },
+      {
+        "date": "2026-10-03",
+        "gmp": 5.0
+      },
+      {
+        "date": "2026-10-05",
+        "gmp": 6.0
+      }
+    ]
+  }
+}

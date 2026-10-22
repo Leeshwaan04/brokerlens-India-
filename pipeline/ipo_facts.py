@@ -798,6 +798,25 @@ def open_vs_issue_phrase(open_price, issue_price):
     return "%.1f%% %s the issue price" % (abs(pct), "above" if pct > 0 else "below")
 
 
+_GMP_CACHE = None
+
+
+def get_ipo_gmp(symbol):
+    """Retrieve timestamped GMP observation for an IPO symbol if on file."""
+    global _GMP_CACHE
+    if _GMP_CACHE is None:
+        p = os.path.join(ROOT, "data", "manual", "ipo_gmp.json")
+        if os.path.exists(p):
+            try:
+                with open(p, "r", encoding="utf-8") as fh:
+                    _GMP_CACHE = json.load(fh) or {}
+            except Exception:
+                _GMP_CACHE = {}
+        else:
+            _GMP_CACHE = {}
+    return _GMP_CACHE.get((symbol or "").upper())
+
+
 def gmp_outcome_sentence(r, pf, status, candle, perf):
     """The verifiable outcome, or '' when it is not on file."""
     if status != "Listed":
@@ -810,7 +829,91 @@ def gmp_outcome_sentence(r, pf, status, candle, perf):
 
 
 def render_gmp_section(r, pf, status, candle, perf, company):
+    sym = r.get("symbol") or ""
+    gmp_info = get_ipo_gmp(sym)
     outcome = gmp_outcome_sentence(r, pf, status, candle, perf)
+
+    if gmp_info:
+        gmp_val = float(gmp_info.get("gmp", 0.0))
+        trend = gmp_info.get("trend", "up")
+        kostak = gmp_info.get("kostak")
+        updated = gmp_info.get("last_updated", "")
+        source = gmp_info.get("source", "Market Quotes")
+        top = pf["band_high"] if pf["band_high"] is not None else (pf["single"] or pf["issue_price"])
+
+        est_listing = ""
+        gain_str = ""
+        if top and top > 0:
+            est_p = top + gmp_val
+            pct = (gmp_val / top) * 100
+            est_listing = f"Rs {fmt_price(est_p)}"
+            gain_str = f"+{pct:.1f}% estimated gain"
+
+        trend_badge = ""
+        if trend == "up":
+            trend_badge = '<span class="badge badge-up">▲ Rising Sentiment</span>'
+        elif trend == "down":
+            trend_badge = '<span class="badge badge-down">▼ Softening</span>'
+        else:
+            trend_badge = '<span class="badge">━ Steady</span>'
+
+        history_html = ""
+        hist = gmp_info.get("history") or []
+        if len(hist) > 1:
+            h_rows = "".join(
+                f'<tr><td>{_esc(h.get("date"))}</td><td class="right font-semibold" style="color:var(--up)">+Rs {float(h.get("gmp", 0)):.1f}</td></tr>'
+                for h in hist[-5:]
+            )
+            history_html = f"""
+            <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+              <span class="xs muted font-semibold">Recent GMP Trend History:</span>
+              <table class="data" style="margin-top:6px;max-width:320px;font-size:12px">
+                <thead><tr><th>Date</th><th class="right">GMP</th></tr></thead>
+                <tbody>{h_rows}</tbody>
+              </table>
+            </div>
+            """
+
+        outcome_block = ""
+        if outcome:
+            outcome_block = f'<div style="margin-top:12px;padding:10px 12px;background:rgba(0,82,254,0.06);border-radius:6px" class="small"><strong>Exchange Listing Day Result:</strong> {_esc(outcome)}</div>'
+
+        kostak_block = f"<div class='card' style='padding:12px;background:var(--bg);border:1px solid var(--border)'><div class='xs muted'>Kostak Rate</div><div style='font-size:20px;font-weight:700;margin-top:4px'>Rs {kostak}</div><div class='xs faint'>Per application</div></div>" if kostak else ""
+
+        return f"""
+        <section class="card" style="margin-top:24px;padding:22px;background:var(--bg-raised)">
+          <div class="row-between" style="align-items:center;margin-bottom:12px">
+            <h2 style="margin:0;font-size:18px">Grey Market Premium (GMP) &amp; Sentiment</h2>
+            <div style="display:flex;gap:6px;align-items:center">
+              {trend_badge}
+              <span class="badge" style="background:var(--bg);font-size:11px">Updated: {_esc(updated)}</span>
+            </div>
+          </div>
+          
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px">
+            <div class="card" style="padding:12px;background:var(--bg);border:1px solid var(--border)">
+              <div class="xs muted">Current GMP Estimate</div>
+              <div style="font-size:20px;font-weight:700;color:var(--up);margin-top:4px">+Rs {gmp_val:,.1f}</div>
+              <div class="xs faint">Per equity share</div>
+            </div>
+            <div class="card" style="padding:12px;background:var(--bg);border:1px solid var(--border)">
+              <div class="xs muted">Estimated Listing Price</div>
+              <div style="font-size:20px;font-weight:700;color:var(--text);margin-top:4px">{est_listing or 'Awaited'}</div>
+              <div class="xs" style="color:var(--up)">{gain_str or 'Based on upper band'}</div>
+            </div>
+            {kostak_block}
+          </div>
+          
+          {history_html}
+          {outcome_block}
+          
+          <div style="margin-top:16px;padding:12px;background:rgba(239,68,68,0.05);border-left:3px solid var(--accent);border-radius:4px" class="xs muted">
+            <strong>Mandatory Safeguard Disclaimer:</strong> Grey Market Premium (GMP) is an unofficial, off-exchange indicative market observation with zero regulatory oversight. It is not an exchange-verified price, guaranteed listing return, or investment recommendation. BrokerLens does not publish unverified speculative tips. Always base bidding decisions on official SEBI offer documents, company financials, and verified exchange subscription numbers. Source: {_esc(source)}.
+          </div>
+        </section>
+        """
+
+    # Baseline fallback when no GMP observation is on file
     if outcome:
         tail = outcome
     elif status == "Listed":
@@ -824,7 +927,7 @@ def render_gmp_section(r, pf, status, candle, perf, company):
         '<section class="card" style="margin-top:24px;padding:20px;background:var(--bg-raised)">'
         '<h2 style="margin:0 0 8px 0;font-size:18px">GMP and listing outcome</h2>'
         '<p class="small muted" style="margin:0 0 8px 0;max-width:72ch">Grey-market premium (GMP) is an unofficial, off-exchange '
-        'figure with no regulatory oversight. BrokerLens does not publish it for %s or any other IPO.</p>'
+        'figure with no regulatory oversight. BrokerLens does not publish it for %s or any other IPO without verified quote evidence.</p>'
         '<p class="small" style="margin:0;max-width:72ch">%s</p></section>' % (_esc(company), _esc(tail))
     )
 
@@ -929,15 +1032,25 @@ def build_faqs(r, pf, status, candle, perf, company, as_of_iso):
 
     # 5. GMP
     outcome = gmp_outcome_sentence(r, pf, status, candle, perf)
-    a = ("No. Grey-market premium (GMP) is an unofficial, off-exchange figure with no regulatory oversight, and BrokerLens does not publish it.")
-    if outcome:
-        a += " The verifiable outcome is this: " + outcome
-    elif status == "Listed":
-        a += " The listing-day open for this issue is outside the exchange price history held here, so no outcome figure is shown."
-    elif status == STATUS_NO_LISTING:
-        a += " No listing is on file for this issue, so there is no outcome figure to show."
+    gmp_info = get_ipo_gmp(r.get("symbol"))
+    if gmp_info:
+        top = pf["band_high"] if pf["band_high"] is not None else (pf["single"] or pf["issue_price"])
+        gmp_val = float(gmp_info.get("gmp", 0.0))
+        est_gain = f" (estimated listing gain of around {((gmp_val / top) * 100):.1f}% over the upper band)" if top else ""
+        a = (f"The latest indicative Grey Market Premium (GMP) on file for {company} IPO is +Rs {gmp_val:,.1f} per share{est_gain}, "
+             f"recorded on {gmp_info.get('last_updated')}. GMP is an unofficial, off-exchange observation and does not guarantee listing performance.")
+        if outcome:
+            a += " The verifiable outcome is this: " + outcome
     else:
-        a += " After listing, the issue price and listing-day open from the exchange price history are shown on this page."
+        a = ("Grey-market premium (GMP) is an unofficial, off-exchange figure with no regulatory oversight, and BrokerLens does not publish it without verified quote evidence.")
+        if outcome:
+            a += " The verifiable outcome is this: " + outcome
+        elif status == "Listed":
+            a += " The listing-day open for this issue is outside the exchange price history held here, so no outcome figure is shown."
+        elif status == STATUS_NO_LISTING:
+            a += " No listing is on file for this issue, so there is no outcome figure to show."
+        else:
+            a += " After listing, the issue price and listing-day open from the exchange price history are shown on this page."
     faqs.append(("Does BrokerLens show the GMP of %s IPO?" % company, a))
 
     # 6. Advice
