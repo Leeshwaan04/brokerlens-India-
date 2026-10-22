@@ -725,14 +725,14 @@ def generate_all(site_url="https://www.brokerlens.in", universe_top_n=200):
 
     ingest_path = os.path.join(DATA_DIR, "_ingest.json")
     if not os.path.exists(ingest_path):
-        return [], []
+        return [], [], []
 
     with open(ingest_path, "r", encoding="utf-8") as f:
         ingest = json.load(f)
 
     schemes = ingest.get("amfi", {}).get("schemes", [])
     if not schemes:
-        return [], []
+        return [], [], []
 
     funds = _group_mutual_funds(schemes)
 
