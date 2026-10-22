@@ -1557,8 +1557,11 @@ table.data tr:hover td {
    setting, which left it white-on-white whenever the OS and site themes differed. */
 .ao-logo { width: auto; height: 26px; display: block; }
 .ao-logo .ao-text { fill: var(--text); }
+.ao-logo .ao-text path { fill: var(--text); }
 .ao-logo .ao-blue { fill: #0052FE; }
-.ao-logo .ao-orange { fill: #FF5A00; }
+.ao-logo .ao-green { fill: #11af4b; }
+.ao-logo .ao-orange { fill: #ff7300; }
+.ao-logo .ao-orange path { fill: #ff7300; }
 
 /* ------------------------------------------------------------ footer film */
 /* The last block of every footer: a dark "cinema" panel that stays dark in
