@@ -606,8 +606,8 @@ BROKER_BRANCH_METADATA = {
         "kyc_mode": "Instant online Aadhaar e-KYC or assisted in-person verification at local branch/franchisee.",
         "demat_service": "Direct over-the-counter physical share certificate submission, DIS slip processing, and nomination updates at local branches.",
         "helpline": "080 4748 0048 / 022 3935 7600",
-        "partner_badge": None,
-        "cta_url": "https://www.angelone.in",
+        "partner_badge": "BrokerLens Partner",
+        "cta_url": "https://www.angelone.in/open-demat-account?referral=BROKERLENS",
     },
     "upstox": {
         "brand": "Upstox",
@@ -619,8 +619,8 @@ BROKER_BRANCH_METADATA = {
         "kyc_mode": "Fast digital e-KYC using Aadhaar linked mobile number.",
         "demat_service": "Centralized physical share processing via Mumbai/Delhi operations hubs.",
         "helpline": "022 4179 2999",
-        "partner_badge": None,
-        "cta_url": "https://upstox.com",
+        "partner_badge": "BrokerLens Partner",
+        "cta_url": "https://upstox.com/open-account/?f=BROKERLENS",
     },
     "icici-direct": {
         "brand": "ICICI Direct",
@@ -697,8 +697,8 @@ BROKER_BRANCH_METADATA = {
         "kyc_mode": "Instant paperless account opening via mobile app.",
         "demat_service": "Postal dispatch for physical share certificates to Thane processing unit.",
         "helpline": "022 4942 2222",
-        "partner_badge": None,
-        "cta_url": "https://www.5paisa.com",
+        "partner_badge": "BrokerLens Partner",
+        "cta_url": "https://www.5paisa.com/demat-account?ReferralCode=53293333&ReturnUrl=invest-open-account",
     },
     "dhan": {
         "brand": "Dhan",
@@ -710,8 +710,8 @@ BROKER_BRANCH_METADATA = {
         "kyc_mode": "Lightning-fast 100% digital onboarding for options traders and investors.",
         "demat_service": "Centralized digital DP operations. Physical certificate conversion processed via Mumbai corporate address.",
         "helpline": "022 4897 7091",
-        "partner_badge": None,
-        "cta_url": "https://dhan.co",
+        "partner_badge": "BrokerLens Partner",
+        "cta_url": "https://dhan.co/?ref=BROKERLENS",
     },
     "fyers": {
         "brand": "Fyers",

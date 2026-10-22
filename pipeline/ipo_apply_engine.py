@@ -163,8 +163,8 @@ BROKERS = {
             "Enter your virtual payment address (UPI ID).",
             "Accept terms and click 'Apply'. Authorize the mandate request in your UPI banking app."
         ],
-        "cta_url": "https://www.angelone.in",
-        "partner_badge": None
+        "cta_url": "https://www.angelone.in/open-demat-account?referral=BROKERLENS",
+        "partner_badge": "BrokerLens Partner"
     },
     "upstox": {
         "brand": "Upstox",
@@ -178,8 +178,8 @@ BROKERS = {
             "Enter your UPI handle and confirm the order details.",
             "Check your UPI app for the mandate notification and approve payment before cutoff time."
         ],
-        "cta_url": "https://upstox.com",
-        "partner_badge": None
+        "cta_url": "https://upstox.com/open-account/?f=BROKERLENS",
+        "partner_badge": "BrokerLens Partner"
     },
     "dhan": {
         "brand": "Dhan",
@@ -193,8 +193,8 @@ BROKERS = {
             "Enter your UPI ID and submit your bid.",
             "Approve the auto-debit block in your UPI application."
         ],
-        "cta_url": "https://dhan.co",
-        "partner_badge": None
+        "cta_url": "https://dhan.co/?ref=BROKERLENS",
+        "partner_badge": "BrokerLens Partner"
     },
     "5paisa": {
         "brand": "5paisa",

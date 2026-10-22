@@ -1,0 +1,11 @@
+{
+  "_comment": "Broker affiliate and referral partner links. Configurable per environment.",
+  "partners": {
+    "zerodha": "https://zerodha.com/open-account?c=ZE5729",
+    "5paisa": "https://www.5paisa.com/demat-account?ReferralCode=53293333&ReturnUrl=invest-open-account",
+    "dhan": "https://dhan.co/?ref=BROKERLENS",
+    "angel-one": "https://www.angelone.in/open-demat-account?referral=BROKERLENS",
+    "upstox": "https://upstox.com/open-account/?f=BROKERLENS"
+  }
+}
+

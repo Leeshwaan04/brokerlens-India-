@@ -439,6 +439,22 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
             f'<p class="muted small" style="margin:4px 0 12px 0">Step-by-step UPI application walkthroughs across India\'s leading SEBI-registered brokers:</p>'
             f'<div style="display:flex;flex-wrap:wrap;gap:8px">{_links}</div></div>'
         )
+    elif status == "Forthcoming" and not non_equity:
+        apply_html = (
+            f'<div class="card" style="margin-top:24px;padding:22px;background:var(--bg-raised);border-left:4px solid var(--accent)">'
+            f'<div class="row-between" style="align-items:center;flex-wrap:wrap;gap:12px">'
+            f'<div><span class="badge badge-accent">Upcoming IPO Alert</span>'
+            f'<h2 style="margin:8px 0 4px 0;font-size:18px">Prepare Demat Account for {_esc(company)} IPO</h2>'
+            f'<p class="muted small" style="margin:0;max-width:65ch">'
+            f'To bid when the issue opens, you need an active SEBI-registered Demat account with UPI ASBA enabled. '
+            f'Open an account with top brokers offering zero account opening charges and instant online IPO bidding:</p></div>'
+            f'</div>'
+            f'<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px">'
+            f'<a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="btn btn-primary small">Apply via Zerodha &rarr;</a>'
+            f'<a href="https://dhan.co/?ref=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Apply via Dhan &rarr;</a>'
+            f'<a href="https://www.angelone.in/open-demat-account?referral=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Apply via Angel One &rarr;</a>'
+            f'</div></div>'
+        )
 
     sec_label = {"SME": "SME Emerge", "EQ": "Mainboard Equity"}.get(r.get("security_type"), "")
     sec_prefix = f"{sec_label} &bull; " if sec_label else ""

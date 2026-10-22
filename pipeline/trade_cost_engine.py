@@ -84,8 +84,8 @@ BROKER_RATES = {
         "demat_amc": 240,
         "account_open": 0,
         "tagline": "Rs 20 flat trading, free account opening",
-        "cta_url": "https://www.angelone.in",
-        "partner_badge": None
+        "cta_url": "https://www.angelone.in/open-demat-account?referral=BROKERLENS",
+        "partner_badge": "BrokerLens Partner"
     },
     "dhan": {
         "brand": "Dhan",
@@ -97,8 +97,8 @@ BROKER_RATES = {
         "demat_amc": 0,
         "account_open": 0,
         "tagline": "Free delivery, Rs 20 intraday, zero AMC",
-        "cta_url": "https://dhan.co",
-        "partner_badge": None
+        "cta_url": "https://dhan.co/?ref=BROKERLENS",
+        "partner_badge": "BrokerLens Partner"
     },
     "upstox": {
         "brand": "Upstox",
@@ -110,8 +110,8 @@ BROKER_RATES = {
         "demat_amc": 0,
         "account_open": 0,
         "tagline": "Flat Rs 20 equity trading, modern charting",
-        "cta_url": "https://upstox.com",
-        "partner_badge": None
+        "cta_url": "https://upstox.com/open-account/?f=BROKERLENS",
+        "partner_badge": "BrokerLens Partner"
     },
     "5paisa": {
         "brand": "5paisa",
@@ -439,6 +439,24 @@ BROKER_RATES = {
         "partner_badge": None
     }
 }
+
+
+def _load_affiliate_overrides():
+    aff_path = os.path.join(ROOT, "config", "affiliates.json")
+    if os.path.exists(aff_path):
+        try:
+            with open(aff_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            partners = data.get("partners") or {}
+            for bid, url in partners.items():
+                if bid in BROKER_RATES and url:
+                    BROKER_RATES[bid]["cta_url"] = url
+                    if not BROKER_RATES[bid].get("partner_badge"):
+                        BROKER_RATES[bid]["partner_badge"] = "BrokerLens Partner"
+        except Exception:
+            pass
+
+_load_affiliate_overrides()
 
 
 def _esc(s):
@@ -842,6 +860,14 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
     </div>
     <a class="btn btn-primary" href="{b['cta_url']}" target="_blank" rel="noopener sponsored">Start Account Opening &rarr;</a>
   </div>
+</div>
+
+<div class="mobile-sticky-cta">
+  <div>
+    <div class="xs muted">Trade {stock_sym} on {brand}</div>
+    <div style="font-weight:700">&#8377;{delivery_tiers[3]['total_charges']:.2f} <span class="xs muted">/ 100 shares</span></div>
+  </div>
+  <a class="btn btn-primary btn-sm" href="{b['cta_url']}" target="_blank" rel="noopener sponsored">Open Account &rarr;</a>
 </div>
 
 <h2 style="margin-top:36px;font-size:17px">Frequently Asked Questions</h2>
