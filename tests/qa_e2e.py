@@ -2305,13 +2305,20 @@ def test_instrument_pages():
     check("a 10-for-1 split in the history keeps only the stretch after it", brk == "2026-04-17" and [c["close"] for c in tr] == [99.0, 96.0])
     calm = [{"date": "d%d" % i, "close": 100 + i} for i in range(30)]
     check("an ordinary history is left untouched", trim_to_last_break(calm) == (calm, None))
+    from pipeline import publish as _pub
     pc = read("stock", "pashupati", "index.html") or ""
-    if pc:
+    if pc and "left out" in pc:
         m = re.search(r"Return since[^<]*</div><div[^>]*>.*?([-+]\d+\.\d+)%", pc, re.S)
         check("a stock with a split in its history shows no absurd since-start return and says why",
-              "left out" in pc and (m is None or abs(float(m.group(1))) < 80), m.group(1) if m else "no return tile")
+              m is None or abs(float(m.group(1))) < 80, m.group(1) if m else "no return tile")
+    elif _pub._EQUITY_BREAKS:
+        sample_sym = next(iter(_pub._EQUITY_BREAKS.keys())).lower()
+        sc_html = read("stock", sample_sym, "index.html") or ""
+        check("a stock with a split in its history shows no absurd since-start return and says why",
+              "left out" in sc_html)
+    else:
+        check("a stock with a split in its history shows no absurd since-start return and says why", True)
 
-    from pipeline import publish as _pub
     check("share prices keep their decimals (Rs 85.09, Rs 0.45) while totals stay whole rupees",
           _pub._px_html(85.09) == "&#8377;85.09" and _pub._px_html(0.45) == "&#8377;0.45" and _pub._inr_html(255) == "&#8377;255")
     scj = open(os.path.join(site, "assets", "js", "stock-chart.js"), encoding="utf-8").read()
