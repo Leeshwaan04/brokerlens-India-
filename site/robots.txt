@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /data/
+Disallow: /cms
 
 Sitemap: https://www.brokerlens.in/sitemap.xml

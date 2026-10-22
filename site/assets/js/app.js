@@ -6,7 +6,7 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=3e1dd431fe';
-import * as pages from './pages.js?v=51dbdb082b';
+import * as pages from './pages.js?v=8f7cbe3cbf';
 import { clearRedraws } from './chart.js?v=ec48a39b98';
 import './nav-widgets.js?v=61e20586e7';
 import './search.js?v=e1224b2aa0';
@@ -23,6 +23,7 @@ const ROUTES = [
   [/^\/compare\/([a-z0-9-]+)-vs-([a-z0-9-]+)\/?$/i, (m) => pages.compare(new URLSearchParams({ b: `${m[1]},${m[2]}` }))],
   [/^\/find-broker\/?$/i, () => pages.findBroker()],
   [/^\/match\/?$/i, () => pages.findBroker()],
+  [/^\/cms\/?$/i, () => pages.cms()],
   [/^\/leaderboards\/?$/, () => pages.leaderboards()],
   [/^\/rankings\/?$/, () => pages.leaderboards()],
   [/^\/calculator\/?$/, (_m, q) => pages.calculator(q)],
@@ -48,6 +49,7 @@ const TITLES = {
   '/compare': 'Compare Indian stock brokers side by side: BrokerLens',
   '/find-broker': 'Broker Matchmaker: Find the Best Stock Broker in India (2026) | BrokerLens',
   '/match': 'Broker Matchmaker: Find the Best Stock Broker in India (2026) | BrokerLens',
+  '/cms': 'BrokerLens CMS & Executive Analytics Portal',
   '/leaderboards': 'Market Movers: NSE Gainers, Losers and Broker Stats | BrokerLens',
   '/calculator': 'Brokerage cost calculator: BrokerLens',
   '/registry': 'SEBI-registered brokers and intermediaries: BrokerLens',
@@ -70,6 +72,7 @@ const DESCRIPTIONS = {
   '/compare': 'Put Indian stock brokers head to head on clients, complaints, regulatory standing and real cost, using regulator-sourced figures.',
   '/find-broker': 'Find the ideal stock broker for your investment style, trading capital, and platform needs in 30 seconds. Objective recommendations based on verified SEBI registrations and fee cards.',
   '/match': 'Find the ideal stock broker for your investment style, trading capital, and platform needs in 30 seconds. Objective recommendations based on verified SEBI registrations and fee cards.',
+  '/cms': 'BrokerLens Executive Analytics, Content Management, and Partner Conversion Portal.',
   '/leaderboards': "Today's real NSE top gainers, losers and most-active stocks, plus crypto market-cap and 24h movers. Broker rankings by active clients, complaints and cost publish once that data is live.",
   '/calculator': 'Work out what a month of your actual trading costs at each Indian broker, using their published charges.',
   '/registry': 'Search every SEBI-registered broking and depository-participant entity: legal name, registration number, city, exchange memberships and validity.',

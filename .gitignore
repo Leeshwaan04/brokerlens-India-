@@ -12,6 +12,7 @@ site/*
 !site/about/
 !site/find-broker/
 !site/match/
+!site/cms/
 !site/contact/
 !site/editorial-policy/
 !site/assets/

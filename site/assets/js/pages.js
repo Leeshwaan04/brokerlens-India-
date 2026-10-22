@@ -1755,6 +1755,30 @@ export async function findBroker() {
   </div>`;
 }
 
+export async function cms() {
+  onMount(async () => {
+    try {
+      const mod = await import('./cms.js');
+      const container = document.getElementById('brokerlens-cms-container');
+      if (container && mod.renderCMS) {
+        mod.renderCMS(container);
+      }
+    } catch (e) {
+      console.error('CMS module import error', e);
+    }
+  });
+
+  return `
+  <div style="margin-top:16px">
+    <div id="brokerlens-cms-container">
+      <div style="text-align:center;padding:48px 20px;color:var(--text-faint)">
+        <div style="font-size:24px;margin-bottom:8px">🔒</div>
+        <p>Loading BrokerLens CMS Portal...</p>
+      </div>
+    </div>
+  </div>`;
+}
+
 export async function contact() {
   return `
   <h1 style="margin-top:16px">Contact BrokerLens</h1>

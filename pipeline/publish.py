@@ -570,6 +570,7 @@ def build():
     calc_slugs = _write_calculator_pages()
     _write_calculator_hub()
     _write_find_broker_page(overview, built)
+    _write_cms_page(overview, built)
     _write_methodology_page()
     _write_coming_soon_pages()
     _write_about_page()
@@ -7519,6 +7520,53 @@ def _write_find_broker_page(overview, built=None):
     log("find-broker page: written", "ok")
 
 
+def _write_cms_page(overview, built=None):
+    """Executive CMS and Analytics Portal at /cms with authentication gate,
+    real-time metrics, funnel visualizations, and zero inline script."""
+    canonical = "%s/cms" % SITE_URL
+    title = "BrokerLens CMS & Executive Analytics Portal"
+    description = "BrokerLens Executive Analytics, Content Management, and Partner Conversion Portal."
+    crumb_html, crumb_jsonld = _breadcrumb([
+        ("BrokerLens", "/"),
+        ("CMS Portal", None)
+    ])
+    jsonld = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": title,
+        "url": canonical,
+        "description": description
+    }
+    
+    body = _APP_SHELL_HEAD % {
+        "title": _esc(title), "description": _esc(description),
+        "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False)
+    }
+    body = body.replace(
+        '<link rel="canonical" href="%s/cms">' % SITE_URL,
+        '<link rel="canonical" href="%s/cms">\n<meta name="robots" content="noindex, nofollow">' % SITE_URL
+    )
+    body += crumb_html
+    body += (
+        '<div style="margin-top:16px">'
+        '<div id="brokerlens-cms-container">'
+        '  <div style="text-align:center;padding:48px 20px;color:var(--text-faint)">'
+        '    <div style="font-size:24px;margin-bottom:8px">&#128274;</div>'
+        '    <p>Loading BrokerLens CMS Portal&hellip;</p>'
+        '  </div>'
+        '</div>'
+        '</div>'
+    )
+    cms_script = _stamp_asset_versions('<script type="module" src="/assets/js/cms.js"></script>')
+    body += cms_script
+    body += _APP_SHELL_FOOT
+    
+    dest_dir = os.path.join(ROOT, "site", "cms")
+    os.makedirs(dest_dir, exist_ok=True)
+    _write_text(os.path.join(dest_dir, "index.html"), body)
+    log("cms portal page: written", "ok")
+
+
 
 # Which sitemap files are submitted at each stage. 1 = core, brokers, IPO pages, the SEBI
 # registry (best performer), news, crypto and the ~500 most-traded stocks; 2 = fund/ETF/AMC,
@@ -8049,6 +8097,7 @@ def _write_robots():
         "Allow: /",
         "Disallow: /api/",
         "Disallow: /data/",
+        "Disallow: /cms",
         "",
         "Sitemap: %s/sitemap.xml" % SITE_URL,
         "",
