@@ -4469,7 +4469,7 @@ _FIVEPAISA_LOGO_DATA_URI = "/assets/img/partners/5paisa.svg"
 _BINANCE_LOGO_DATA_URI = "/assets/img/partners/binance.png"
 
 
-IBSL_LINK = "https://stocks-onboarding.indiabullssecurities.com/login"
+IBSL_LINK = "https://indiabullssecurities.onelink.me/Kaqz/brokerlens"
 IBSL_REGISTER_URL = "/sebi-registry/indiabulls-securities-limited/"
 _IBSL_ALT = ("Indiabulls Securities: Rs 0 account opening charges, Rs 11 per executed order across all segments*, "
              "20 years of trust. Open your free account now. Terms apply.")

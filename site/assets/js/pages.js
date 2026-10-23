@@ -33,7 +33,7 @@ function pending(what, detail) {
 
 const HAS = (o, key) => Boolean(o?.metadata?.data_status?.[key]);
 
-const IBSL_LINK = 'https://stocks-onboarding.indiabullssecurities.com/login';
+const IBSL_LINK = 'https://indiabullssecurities.onelink.me/Kaqz/brokerlens';
 const IBSL_ALT = 'Indiabulls Securities: Rs 0 account opening charges, Rs 11 per executed order across all segments*, 20 years of trust. Open your free account now. Terms apply.';
 
 const PARTNER_AFFILIATES = {

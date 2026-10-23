@@ -474,7 +474,7 @@ def test_ad_surface():
             attrs = m.group(1) + m.group(2)
             seen += 1
             href = re.search(r'href="([^"]+)"', attrs)
-            ok = (href and href.group(1) == "https://stocks-onboarding.indiabullssecurities.com/login"
+            ok = (href and href.group(1) == "https://indiabullssecurities.onelink.me/Kaqz/brokerlens"
                   and 'rel="sponsored noopener"' in attrs and 'target="_blank"' in attrs)
             if not ok:
                 bad.append(rel)

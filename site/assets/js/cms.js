@@ -275,7 +275,7 @@ async function renderDashboard(container) {
       name: 'Indiabulls Securities (IBSL)',
       id: 'ibsl',
       code: 'SPONSORED-IBSL',
-      linkUrl: 'https://stocks-onboarding.indiabullssecurities.com/login',
+      linkUrl: 'https://indiabullssecurities.onelink.me/Kaqz/brokerlens',
       schedule: 'Display sponsorship placement (Strip, Wide, Card) across ~3,962 catalog pages.',
       category: 'Direct Sponsor',
       status: 'Active Sponsor Campaign'
