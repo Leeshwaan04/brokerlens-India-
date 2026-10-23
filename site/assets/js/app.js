@@ -9,7 +9,7 @@ import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=3e1dd431fe
 import * as pages from './pages.js?v=ddc81243cf';
 import { clearRedraws } from './chart.js?v=ec48a39b98';
 import './nav-widgets.js?v=61e20586e7';
-import './search.js?v=e1224b2aa0';
+import './search.js?v=5d54a234ce';
 import './hero-video.js?v=9e658a1fa5';
 
 const app = document.getElementById('app');
@@ -188,6 +188,15 @@ async function render() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } else {
     window.scrollTo({ top: 0 });
+  }
+
+  /* Track SPA virtual pageviews in GA4 on subsequent navigations */
+  if (!isFirstRender && typeof window.gtag === 'function') {
+    window.gtag('event', 'page_view', {
+      page_title: document.title,
+      page_location: window.location.href,
+      page_path: window.location.pathname + window.location.search
+    });
   }
 }
 

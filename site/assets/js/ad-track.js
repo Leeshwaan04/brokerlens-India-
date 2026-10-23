@@ -23,6 +23,15 @@ function send(type, el) {
     if (navigator.sendBeacon && navigator.sendBeacon(ENDPOINT, new Blob([payload], { type: 'application/json' }))) return;
   } catch (e) { /* fall through */ }
   try { fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }); } catch (e) { /* tracking never breaks the page */ }
+  try {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', type === 'click' ? 'ad_click' : 'ad_impression', {
+        ad_id: wrap.dataset.ad || 'unknown',
+        ad_slot: wrap.dataset.slot || 'unknown',
+        page_type: wrap.dataset.pageType || 'unknown'
+      });
+    }
+  } catch (e) { /* tracking never breaks the page */ }
 }
 
 document.addEventListener('click', (e) => {

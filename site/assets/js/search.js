@@ -10,7 +10,7 @@
 import { esc, loadSearchIndex } from './store.js?v=3e1dd431fe';
 import './theme-audio.js?v=070f2dae6b';
 import './footer-film.js?v=f200bbfc3b';
-import './ad-track.js?v=7acb3a2f93';
+import './ad-track.js?v=2a0ab743f2';
 
 const toggle = document.getElementById('search-toggle');
 const overlay = document.getElementById('search-overlay');

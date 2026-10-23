@@ -58,8 +58,8 @@ ALLOWED_METHODS = {"GET", "HEAD", "POST", "OPTIONS"}
 # the part that actually defends against XSS.
 SECURITY_HEADERS = {
     "Content-Security-Policy":
-        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
-        "font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; "
+        "default-src 'self'; script-src 'self' https://www.googletagmanager.com 'sha256-RwEsoK9UR+i7wQLLW8TaJDZa5KqmxAABvkRyepNHjU0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://coin-images.coingecko.com https://*.google-analytics.com https://www.googletagmanager.com; "
+        "font-src 'self'; connect-src 'self' https://brokerlens-stream-649203501892.asia-south1.run.app https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; frame-ancestors 'none'; base-uri 'self'; "
         "form-action 'self'; object-src 'none'",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",

@@ -25,3 +25,21 @@ document.addEventListener('DOMContentLoaded', function () {
     window.dispatchEvent(new Event('resize')); // canvases (broker pages) must re-render for new tokens
   });
 });
+
+/* Google Analytics GA4 (Measurement ID: G-XJK97Q2CD7) */
+try {
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){window.dataLayer.push(arguments);}
+  window.gtag = window.gtag || gtag;
+  if (!window._ga_loaded) {
+    window._ga_loaded = true;
+    gtag('js', new Date());
+    gtag('config', 'G-XJK97Q2CD7');
+    if (!document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
+      var gas = document.createElement('script');
+      gas.async = true;
+      gas.src = 'https://www.googletagmanager.com/gtag/js?id=G-XJK97Q2CD7';
+      document.head.appendChild(gas);
+    }
+  }
+} catch (e) { /* analytics never breaks page rendering */ }
