@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-10-23T07:23:59.305311+00:00",
-  "total_articles": 25,
+  "generated_at": "2026-10-23T17:27:59.881504+00:00",
+  "total_articles": 24,
   "articles": [
     {
       "slug": "indian-stock-market-wrap-2026-10-23",
-      "title": "Indian Stock Market Today: Nifty 50 at 22,421.95, Key Gainers and Sectoral Action (23 October 2026)",
-      "description": "NSE market summary for 23 October 2026: Nifty 50 declined by -198.50 points. Review top gainers, losers, turnover, and exchange breadth disclosures.",
+      "title": "Indian Stock Market Today: Nifty 50 at 22,600.00, Key Gainers and Sectoral Action (23 October 2026)",
+      "description": "NSE market summary for 23 October 2026: Nifty 50 declined by -87.65 points. Review top gainers, losers, turnover, and exchange breadth disclosures.",
       "date": "2026-10-23",
       "date_str": "23 October 2026",
       "category": "Market News",
@@ -33,9 +33,9 @@
       "read_time": "3 min read"
     },
     {
-      "slug": "ipo-vnl-live-subscription-bidding-review",
-      "title": "Vishal Nirmiti Limited IPO Live Status: Subscribed 0.44x, Price Band Rs.208 to Rs.220",
-      "description": "Vishal Nirmiti Limited IPO is currently open for bidding. Price band is Rs.208 to Rs.220 with issue closing on 05 October 2026. Track live subscription numbers and broker application procedures.",
+      "slug": "ipo-parashlth-live-subscription-bidding-review",
+      "title": "Paras Healthcare Limited IPO Live Status: Subscribed 1.92x, Price Band Rs.660 to Rs.693",
+      "description": "Paras Healthcare Limited IPO is currently open for bidding. Price band is Rs.660 to Rs.693 with issue closing on 23 October 2026. Track live subscription numbers and broker application procedures.",
       "date": "2026-10-23",
       "date_str": "23 October 2026",
       "category": "IPO Bulletin",
@@ -43,19 +43,9 @@
       "read_time": "3 min read"
     },
     {
-      "slug": "ipo-nityas-live-subscription-bidding-review",
-      "title": "Nityas Gems and Jewellery Limited IPO Live Status: Subscribed 0.43x, Price Band Rs.70 to Rs.75",
-      "description": "Nityas Gems and Jewellery Limited IPO is currently open for bidding. Price band is Rs.70 to Rs.75 with issue closing on 05 October 2026. Track live subscription numbers and broker application procedures.",
-      "date": "2026-10-23",
-      "date_str": "23 October 2026",
-      "category": "IPO Bulletin",
-      "category_badge": "badge-up",
-      "read_time": "3 min read"
-    },
-    {
-      "slug": "ipo-eventions-live-subscription-bidding-review",
-      "title": "Eventions Limited IPO Live Status: Subscribed 1.75x, Price Band Disclosed on bid",
-      "description": "Eventions Limited IPO is currently open for bidding. Price band is Disclosed on bid with issue closing on 05 October 2026. Track live subscription numbers and broker application procedures.",
+      "slug": "ipo-jpl-live-subscription-bidding-review",
+      "title": "Jio Platforms Limited IPO Live Status: Subscribed 12.45x, Price Band Rs.1065 to Rs.1119",
+      "description": "Jio Platforms Limited IPO is currently open for bidding. Price band is Rs.1065 to Rs.1119 with issue closing on 23 October 2026. Track live subscription numbers and broker application procedures.",
       "date": "2026-10-23",
       "date_str": "23 October 2026",
       "category": "IPO Bulletin",
