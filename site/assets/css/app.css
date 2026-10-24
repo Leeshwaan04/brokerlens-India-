@@ -326,6 +326,16 @@ th[data-tip]:not(.sortable) { cursor: help; }
 :root[data-theme="dark"] .btn-primary, :root:not([data-theme="light"]) .btn-primary { color: var(--text-invert); }
 @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .btn-primary { color: #fff; } }
 .btn-sm { padding: 5px 12px; font-size: var(--fs-xs); border-radius: var(--radius-sm); }
+.btn-outline {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+}
+.btn-outline:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ---------------------------------------------------------------- cards */
@@ -1258,6 +1268,37 @@ hr.sep { border: none; border-top: 1px solid var(--border); margin: var(--space-
 .btn-aff-angelone:hover {
   background: linear-gradient(135deg, #1f68ff 0%, #004ae6 100%);
   box-shadow: 0 6px 20px rgba(0, 82, 254, 0.42);
+  transform: translateY(-1.5px);
+}
+
+.aff-card-ibsl {
+  border-top: 4px solid var(--accent);
+}
+.aff-card-ibsl:hover {
+  border-top-color: var(--accent-hover);
+}
+
+.btn-aff-ibsl {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 13.5px;
+  border-radius: 9px;
+  padding: 12px 20px;
+  text-align: center;
+  text-decoration: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(47, 74, 143, 0.28);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+  box-sizing: border-box;
+}
+.btn-aff-ibsl:hover {
+  background: linear-gradient(135deg, var(--accent-hover) 0%, #1e3366 100%);
+  box-shadow: 0 6px 20px rgba(47, 74, 143, 0.42);
   transform: translateY(-1.5px);
 }
 

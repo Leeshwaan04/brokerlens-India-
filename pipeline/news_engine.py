@@ -1510,7 +1510,7 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
           </div>
 
           <!-- Indiabulls Securities Partner Card -->
-          <div class="card aff-article-card aff-card-ibsl" style="border:1px solid rgba(47,74,143,0.25);border-radius:12px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(180deg,rgba(47,74,143,0.04) 0%,rgba(47,74,143,0.01) 100%)">
+          <div class="card aff-article-card aff-card-ibsl">
             <div>
               <div class="row-between" style="align-items:center;margin-bottom:12px">
                 <div style="font-weight:700;font-size:17px;color:var(--text);letter-spacing:-0.01em">
@@ -1543,12 +1543,12 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
                 </div>
               </div>
             </div>
-            <div style="margin-top:16px">
-              <a class="btn btn-primary" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="display:flex;justify-content:center;align-items:center;gap:6px;width:100%;text-decoration:none;font-weight:600;padding:10px 16px">
+            <div>
+              <a class="btn-aff-ibsl" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener">
                 <span>Open Free Demat Account</span>
                 <span aria-hidden="true">&rarr;</span>
               </a>
-              <div class="aff-trust-note" style="margin-top:8px;font-size:11px;color:var(--text-faint);display:flex;align-items:center;gap:6px;justify-content:center">
+              <div class="aff-trust-note">
                 <span style="color:var(--up);font-weight:700">&#10003;</span>
                 <span>SEBI Reg: INZ000036136 &middot; DP: IN-DP-423-2019</span>
               </div>

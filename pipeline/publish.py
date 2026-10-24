@@ -2550,12 +2550,15 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             )
 
         demat_cta_html = (
-            '<div class="card" style="margin-top:16px;background:var(--bg-raised);border-left:4px solid var(--accent);padding:16px">'
+            '<div style="margin-top:14px;background:var(--bg-raised);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow-sm)">'
+            '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
             '<div style="font-weight:700;font-size:14px;color:var(--text)">Open Demat Account to Trade %s</div>'
-            '<p class="small muted" style="margin:4px 0 10px 0">Ready to invest in %s? Open a paperless Demat account with zero equity delivery brokerage, flat Rs 11 F&amp;O orders, and zero account opening fee with Indiabulls Securities.</p>'
-            '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">'
-            '<a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener">Open Free Demat Account &rarr;</a>'
-            '<span class="xs faint">SEBI Reg. INZ000036136 &middot; Sponsored</span>'
+            '<span class="badge badge-verified" style="font-size:11px">Zero Delivery Brokerage</span>'
+            '</div>'
+            '<p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">Ready to invest in %s? Open a paperless Demat account with zero equity delivery brokerage, flat Rs 11 F&amp;O orders, and zero account opening fee with Indiabulls Securities.</p>'
+            '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">'
+            '<a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>'
+            '<span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>'
             '</div>'
             '</div>'
         ) % (_esc(symbol), _esc(name))
@@ -2573,34 +2576,40 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
         ipo_callout_html = ""
         if slug == "jiofin":
             ipo_callout_html = (
-                '<div class="card" style="margin-top:20px;padding:16px 20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
-                '<div style="font-weight:700">Upcoming Reliance Jio Infocomm IPO</div>'
-                '<p class="small muted" style="margin:4px 0 10px 0">Tracking the Reliance Jio telecom IPO? View expected valuation, timeline, DRHP status and demat account application steps.</p>'
-                '<a class="btn btn-primary btn-xs" href="/ipo/jio/">View Reliance Jio IPO Details &rarr;</a>'
+                '<div class="card" style="margin-top:20px;padding:18px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);box-shadow:var(--shadow-sm)">'
+                '<div style="font-weight:700;font-size:15px;color:var(--text)">Upcoming Reliance Jio Infocomm IPO</div>'
+                '<p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">Tracking the Reliance Jio telecom IPO? View expected valuation, timeline, DRHP status and demat account application steps.</p>'
+                '<a class="btn btn-primary btn-sm" href="/ipo/jio/">View Reliance Jio IPO Details &rarr;</a>'
                 '</div>'
             )
         elif slug in ipo_by_slug:
             ipo_info = ipo_by_slug[slug]
             comp_name = ipo_info.get("company") or name
             ipo_callout_html = (
-                '<div class="card" style="margin-top:20px;padding:16px 20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
-                '<div style="font-weight:700">%s IPO &amp; Historical Listing Data</div>'
-                '<p class="small muted" style="margin:4px 0 10px 0">Explore issue price band, lot size, listing day gains, and subscription history on the official IPO profile.</p>'
+                '<div class="card" style="margin-top:20px;padding:18px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);box-shadow:var(--shadow-sm)">'
+                '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+                '<div style="font-weight:700;font-size:15px;color:var(--text)">%s IPO &amp; Historical Listing Data</div>'
+                '<span class="badge badge-up" style="font-size:11px">Tracked IPO Profile</span>'
+                '</div>'
+                '<p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">Explore issue price band, lot size, listing day gains, and subscription history on the official IPO profile.</p>'
                 '<div style="display:flex;gap:10px;flex-wrap:wrap">'
-                '<a class="btn btn-outline btn-xs" href="/ipo/%s/">View %s IPO Details &rarr;</a>'
-                '<a class="btn btn-outline btn-xs" href="/ipo/gmp/">Check Live IPO GMP Rates &rarr;</a>'
+                '<a class="btn btn-outline btn-sm" href="/ipo/%s/">View %s IPO Details &rarr;</a>'
+                '<a class="btn btn-outline btn-sm" href="/ipo/gmp/">Check Live IPO GMP Rates &rarr;</a>'
                 '</div>'
                 '</div>'
             ) % (_esc(comp_name), _esc(slug), _esc(symbol))
         else:
             ipo_callout_html = (
-                '<div class="card" style="margin-top:20px;padding:16px 20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
-                '<div style="font-weight:700">Explore Primary Markets &amp; Upcoming IPOs</div>'
-                '<p class="small muted" style="margin:4px 0 10px 0">Track live Grey Market Premiums (GMP), SME public issues, and SEBI DRHP filing timelines across Indian exchanges.</p>'
+                '<div class="card" style="margin-top:20px;padding:18px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);box-shadow:var(--shadow-sm)">'
+                '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+                '<div style="font-weight:700;font-size:15px;color:var(--text)">Explore Primary Markets &amp; Upcoming IPOs</div>'
+                '<span class="badge" style="font-size:11px">Primary Markets</span>'
+                '</div>'
+                '<p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">Track live Grey Market Premiums (GMP), SME public issues, and SEBI DRHP filing timelines across Indian exchanges.</p>'
                 '<div style="display:flex;gap:10px;flex-wrap:wrap">'
-                '<a class="btn btn-outline btn-xs" href="/ipo/">IPO Tracker &rarr;</a>'
-                '<a class="btn btn-outline btn-xs" href="/ipo/gmp/">Live IPO GMP Board &rarr;</a>'
-                '<a class="btn btn-outline btn-xs" href="/ipo/sme/">SME IPO Hub &rarr;</a>'
+                '<a class="btn btn-outline btn-sm" href="/ipo/">IPO Tracker &rarr;</a>'
+                '<a class="btn btn-outline btn-sm" href="/ipo/gmp/">Live IPO GMP Board &rarr;</a>'
+                '<a class="btn btn-outline btn-sm" href="/ipo/sme/">SME IPO Hub &rarr;</a>'
                 '</div>'
                 '</div>'
             )
