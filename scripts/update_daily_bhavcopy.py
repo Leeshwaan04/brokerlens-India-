@@ -94,3 +94,4 @@ def update_bhavcopy():
 if __name__ == "__main__":
     success = update_bhavcopy()
     sys.exit(0 if success else 1)
+

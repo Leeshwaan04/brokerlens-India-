@@ -49,3 +49,4 @@ jobs:
             git push origin main
             echo "Market data updates pushed to main."
           fi
+
