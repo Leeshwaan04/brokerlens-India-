@@ -67,12 +67,14 @@ def ping_google_sitemaps():
                 }
                 print(f"[indexer] Pinged Google for {sm}: Status {resp.status}")
         except Exception as exc:
+            msg = str(exc)
+            is_dep = "deprecated" in msg.lower() or "404" in msg
             results[sm] = {
-                "status_code": None,
-                "error": str(exc),
+                "status_code": 404 if is_dep else None,
+                "note": "Google sitemaps ping is officially deprecated; relying on <lastmod> timestamps and GSC auto-crawling." if is_dep else msg,
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
-            print(f"[indexer] Ping note for {sm}: {exc}")
+            print(f"[indexer] Ping note for {sm}: {msg}")
     return results
 
 

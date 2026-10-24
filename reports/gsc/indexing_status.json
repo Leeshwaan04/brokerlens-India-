@@ -7,26 +7,26 @@
     "sitemap-core.xml": 51,
     "sitemap-crypto.xml": 28,
     "sitemap-ipos.xml": 1257,
-    "sitemap-news.xml": 102,
+    "sitemap-news.xml": 106,
     "sitemap-registry.xml": 1248,
     "sitemap-stocks-top.xml": 592
   },
-  "total_urls_submitted": 3551,
+  "total_urls_submitted": 3555,
   "pings": {
     "https://www.brokerlens.in/sitemap.xml": {
       "status_code": null,
-      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
-      "timestamp": "2026-10-24T11:29:22.982774+00:00"
+      "note": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+      "timestamp": "2026-10-24T13:21:38.437481+00:00"
     },
     "https://www.brokerlens.in/sitemaps/sitemap-news.xml": {
       "status_code": null,
-      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
-      "timestamp": "2026-10-24T11:29:22.983483+00:00"
+      "note": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+      "timestamp": "2026-10-24T13:21:38.437953+00:00"
     },
     "https://www.brokerlens.in/sitemaps/sitemap-core.xml": {
       "status_code": null,
-      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
-      "timestamp": "2026-10-24T11:29:22.983889+00:00"
+      "note": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+      "timestamp": "2026-10-24T13:21:38.438184+00:00"
     }
   },
   "spot_checks": {

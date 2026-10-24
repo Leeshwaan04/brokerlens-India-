@@ -190,9 +190,9 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
 
     <div class="card" style="margin-top:16px;padding:16px;border-left:4px solid var(--accent)">
       <p style="margin:0"><strong>Evaluate Banking Stocks:</strong> Review detailed financial ratios and brokerage costs for leading banks like
-      <a href="/stock/HDFCBANK/" data-link>HDFC Bank</a>,
-      <a href="/stock/ICICIBANK/" data-link>ICICI Bank</a>, and
-      <a href="/stock/SBIN/" data-link>State Bank of India</a>.</p>
+      <a href="/stock/hdfcbank/" data-link>HDFC Bank</a>,
+      <a href="/stock/icicibank/" data-link>ICICI Bank</a>, and
+      <a href="/stock/sbin/" data-link>State Bank of India</a>.</p>
     </div>
     """
     articles.append({

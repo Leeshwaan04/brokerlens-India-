@@ -360,6 +360,201 @@ def get_autopilot_articles(today_iso=None):
               </div>
             </div>
             """
+        },
+        {
+            "slug": "oswal-greentech-share-price-target-valuation-guide",
+            "title": "Oswal Greentech Share Price Target: Financial Assets, Real Estate & Valuation Analysis",
+            "description": "Fundamental valuation study of Oswal Greentech: investment portfolio scale, real estate asset base, treasury yields, and scenario target multiples.",
+            "category": "Empirical Research",
+            "category_badge": "badge-up",
+            "type": "NewsArticle",
+            "date": today_iso,
+            "date_str": _format_date(today_iso),
+            "read_time": "7 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              Surging query volume for <strong>Oswal Greentech share price target 2030</strong> reflects investor interest in asset-rich
+              investment holding companies. Here is an empirical review of its financial holdings, liquid reserves, and fundamental valuation dynamics.
+            </p>
+
+            <div class="section-title"><h2>1. Investment Holding Structure &amp; Balance Sheet Backing</h2></div>
+            <p>
+              Oswal Greentech operates primarily as an investment and real estate development entity. Unlike capital goods or operational FMCG
+              companies, its intrinsic book value is predominantly backed by inter-corporate deposits, listed equity securities, debt mutual funds,
+              and strategic urban real estate holdings.
+            </p>
+            <ul>
+              <li><strong>Holding Company Discount:</strong> In Indian equity markets, investment holding companies historically trade at a 30% to 60% discount to Net Asset Value (NAV).</li>
+              <li><strong>Treasury Income:</strong> Net profit is heavily influenced by dividend distributions, interest income, and mark-to-market treasury revaluations rather than assembly line manufacturing revenues.</li>
+            </ul>
+
+            <div class="section-title"><h2>2. Scenario Target Compounding &amp; Arithmetic</h2></div>
+            <p>
+              When evaluating long-term price targets, investors must separate fundamental treasury growth from market sentiment.
+              Use the <a href="/calculators/cagr-calculator/">CAGR Calculator</a> to test multi-year compounding rates or inspect
+              historical price action and trading ranges directly on the <a href="/stock/oswalgreen/">Oswal Greentech Stock Profile</a>.
+            </p>
+
+            <div class="card" style="margin-top:20px;padding:18px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                <div style="font-weight:700;font-size:15px;color:var(--text)">Trade Listed Equities with Transparent Brokerage</div>
+                <span class="badge badge-verified" style="font-size:11px">Zero Delivery Brokerage</span>
+              </div>
+              <p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">
+                Open a free Demat account with Indiabulls Securities to trade cash equities with zero delivery brokerage and flat Rs 11 derivatives orders.
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                <a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>
+                <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
+              </div>
+            </div>
+            """
+        },
+        {
+            "slug": "cupid-limited-share-price-target-financials-study",
+            "title": "Cupid Limited Share Price Target: Manufacturing Expansion, FMCG Diversification & Valuation Study",
+            "description": "In-depth analysis of Cupid Limited: capacity expansion, domestic retail and export healthcare demand, operating margins, and price target arithmetic.",
+            "category": "Empirical Research",
+            "category_badge": "badge-up",
+            "type": "NewsArticle",
+            "date": today_iso,
+            "date_str": _format_date(today_iso),
+            "read_time": "8 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              Sustained search interest in <strong>Cupid share price target 2026</strong> highlights retail curiosity around one of India's prominent
+              personal healthcare and diagnostics manufacturers. Here is a thorough dissection of its manufacturing footprint, global tender exposure,
+              and valuation metrics.
+            </p>
+
+            <div class="section-title"><h2>1. Manufacturing Scale &amp; Global Institutional Tenders</h2></div>
+            <p>
+              Cupid Limited is a pre-qualified supplier to United Nations agencies (UNFPA, WHO) and national health ministries across Africa,
+              Latin America, and Asia for male and female contraceptives and diagnostic kits.
+            </p>
+            <ul>
+              <li><strong>Domestic B2C Transition:</strong> The company is expanding beyond institutional government tenders into higher-margin domestic retail FMCG and online wellness channels.</li>
+              <li><strong>Capacity Expansion:</strong> New production lines and warehousing automation aim to double annual output capability, improving economies of scale.</li>
+            </ul>
+
+            <div class="section-title"><h2>2. Multi-Scenario Growth Arithmetic</h2></div>
+            <p>
+              Any prospective share price target must be anchored in operating EBITDA margins and return on equity (ROE).
+              Calculate transaction charges and breakeven thresholds for high-volume trading on the
+              <a href="/trade-costs/">BrokerLens Trade Cost Engine</a> and inspect real session ranges on the
+              <a href="/stock/cupid/">Cupid Stock Profile</a>.
+            </p>
+
+            <div class="card" style="margin-top:20px;padding:18px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                <div style="font-weight:700;font-size:15px;color:var(--text)">Invest in FMCG &amp; Healthcare Leaders</div>
+                <span class="badge badge-verified" style="font-size:11px">Zero Delivery Brokerage</span>
+              </div>
+              <p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">
+                Build your long-term equity portfolio with zero brokerage on delivery trades and competitive F&amp;O pricing on Indiabulls Securities.
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                <a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>
+                <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
+              </div>
+            </div>
+            """
+        },
+        {
+            "slug": "radhika-jeweltech-share-price-target-growth-study",
+            "title": "Radhika Jeweltech Share Price Target: Retail Expansion, Gold Jewelry Demand & Valuation Analysis",
+            "description": "Valuation review of Radhika Jeweltech: showroom network expansion, working capital cycles, gold price dynamics, and price target compounding arithmetic.",
+            "category": "Empirical Research",
+            "category_badge": "badge-up",
+            "type": "NewsArticle",
+            "date": today_iso,
+            "date_str": _format_date(today_iso),
+            "read_time": "7 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              High search visibility for <strong>Radhika Jeweltech share price target 2030</strong> demonstrates retail investor attention
+              on regional jewelry retailers capitalizing on consumer formalization.
+            </p>
+
+            <div class="section-title"><h2>1. Regional Footprint &amp; Organized Retail Shift</h2></div>
+            <p>
+              Based in Rajkot, Gujarat, Radhika Jeweltech designs and retails 22kt gold jewelry, diamond-studded ornaments, and bridal collections.
+              The enterprise benefits from structural tailwinds:
+            </p>
+            <ul>
+              <li><strong>Mandatory Hallmarking:</strong> Bureau of Indian Standards (BIS) hallmarking rules accelerate consumer migration from unorganized local goldsmiths to compliant regional retail chains.</li>
+              <li><strong>Working Capital Intensity:</strong> Gold inventory represents the primary asset; inventory turnover velocity directly dictates Return on Capital Employed (ROCE).</li>
+            </ul>
+
+            <div class="section-title"><h2>2. Valuation Multiples &amp; Target Calculations</h2></div>
+            <p>
+              Retail jewelry businesses generally trade at 18x to 35x P/E multiples depending on geographic diversification and store-level EBITDA.
+              Explore live session data, corporate actions, and arithmetic calculators on the
+              <a href="/stock/radhikajwe/">Radhika Jeweltech Stock Profile</a>.
+            </p>
+
+            <div class="card" style="margin-top:20px;padding:18px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                <div style="font-weight:700;font-size:15px;color:var(--text)">Open Free Demat Account to Trade Consumer Equities</div>
+                <span class="badge badge-verified" style="font-size:11px">Zero Delivery Brokerage</span>
+              </div>
+              <p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">
+                Trade retail, gold, and consumer discretionary stocks with zero delivery brokerage on Indiabulls Securities.
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                <a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>
+                <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
+              </div>
+            </div>
+            """
+        },
+        {
+            "slug": "walchandnagar-industries-share-price-target-guide",
+            "title": "Walchandnagar Industries Share Price Target: Aerospace, Defence Order Book & Capex Analysis",
+            "description": "Comprehensive fundamental study of Walchandnagar Industries: ISRO rocket motor casings, naval defence systems, nuclear equipment, and target multiples.",
+            "category": "Empirical Research",
+            "category_badge": "badge-up",
+            "type": "NewsArticle",
+            "date": today_iso,
+            "date_str": _format_date(today_iso),
+            "read_time": "8 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              Investor queries for <strong>Walchandnagar share price target 2030</strong> are driven by India's expanding aerospace,
+              naval defence, and nuclear energy manufacturing programs.
+            </p>
+
+            <div class="section-title"><h2>1. Mission-Critical Defence &amp; Aerospace Capabilities</h2></div>
+            <p>
+              Walchandnagar Industries is a pioneer heavy engineering enterprise with precision manufacturing facilities in Maharashtra.
+              Its operational portfolio includes:
+            </p>
+            <ul>
+              <li><strong>Aerospace &amp; Space Missions:</strong> Fabrication of solid propellant motor casings for ISRO's PSLV, GSLV, and SSLV launch vehicles.</li>
+              <li><strong>Naval Defence Systems:</strong> Main propulsion gearboxes and sub-assembly components for Indian Navy destroyers and frigates.</li>
+              <li><strong>Nuclear Power:</strong> Critical calandrias, end shields, and steam generators for Nuclear Power Corporation of India (NPCIL).</li>
+            </ul>
+
+            <div class="section-title"><h2>2. Balance Sheet Turnaround &amp; Valuation Outlook</h2></div>
+            <p>
+              Following debt rationalization, the company's valuation correlates with government capital expenditure allocations and private space sector contracts.
+              Access live trading candles and peer comparisons on the <a href="/stock/walchannag/">Walchandnagar Industries Stock Profile</a>.
+            </p>
+
+            <div class="card" style="margin-top:20px;padding:18px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                <div style="font-weight:700;font-size:15px;color:var(--text)">Invest in Defence &amp; Aerospace Engineering</div>
+                <span class="badge badge-verified" style="font-size:11px">Zero Delivery Brokerage</span>
+              </div>
+              <p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">
+                Capitalize on India's defence indigenization wave with paperless account opening and zero delivery brokerage at Indiabulls Securities.
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                <a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>
+                <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
+              </div>
+            </div>
+            """
         }
     ]
 

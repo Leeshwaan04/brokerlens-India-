@@ -152,6 +152,11 @@ def price_target_section_html(name, symbol, history, px, long_date, esc):
         '<div id="calc-result" class="stack" style="margin-top:16px" aria-live="polite" hidden></div>'
         '<p class="xs faint" style="margin-top:12px">This is arithmetic on your assumption, not a forecast or a '
         'recommendation.</p>'
+        '<div class="xs faint" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">'
+        'Related tools: <a href="/calculators/cagr-calculator/">CAGR Calculator</a> &middot; '
+        '<a href="/calculators/sip-calculator/">SIP Calculator</a> &middot; '
+        '<a href="/calculators/capital-gains-tax-calculator/">Capital Gains Tax</a> &middot; '
+        '<a href="/trade-costs/">Trade Cost Calculator</a></div>'
         '</div>' % (start, esc(start_note), n_esc)
     )
     return intro + data_html + calc

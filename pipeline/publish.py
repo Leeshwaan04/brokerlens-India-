@@ -2560,14 +2560,15 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                     + '</tbody></table></div>'
                 )
 
+            cmp_badges = "".join(
+                '<a class="badge" href="%s" style="text-decoration:none;padding:5px 9px">%s vs %s &rarr;</a>'
+                % (_esc(url), _esc(symbol.upper()), _esc(other)) for other, url, _sec in cmp_links[:8])
             compare_html = (
-                '<div class="section-title"><h2>Compare %s with sector peers</h2></div>'
-                '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">%s</div>'
+                ('<div class="section-title"><h2>Compare %s with sector peers</h2></div>'
+                 '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">%s</div>') % (_esc(symbol), cmp_badges)
                 + peer_matrix_html
                 + '<p class="xs faint" style="margin-top:8px">Side-by-side price range, return and volume from NSE daily data.</p>'
-            ) % (_esc(symbol), "".join(
-                '<a class="badge" href="%s" style="text-decoration:none;padding:5px 9px">%s vs %s &rarr;</a>'
-                % (_esc(url), _esc(symbol.upper()), _esc(other)) for other, url, _sec in cmp_links[:8]))
+            )
 
         if slug in trade_cost_slugs:
             trade_badges = (
