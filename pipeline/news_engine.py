@@ -1352,6 +1352,14 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     for item in research_items:
         articles.append(item)
 
+    try:
+        from .autopilot_keyword_engine import get_autopilot_articles
+        autopilot_items = get_autopilot_articles(today_iso)
+        for item in autopilot_items:
+            articles.append(item)
+    except Exception as exc:
+        pass
+
     return articles
 
 

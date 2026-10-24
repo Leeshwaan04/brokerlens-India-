@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-24T08:44:20.412707+00:00",
-  "total_articles": 27,
+  "generated_at": "2026-10-24T09:07:39.216719+00:00",
+  "total_articles": 31,
   "articles": [
     {
       "slug": "indian-stock-market-wrap-2026-10-24",
@@ -271,6 +271,46 @@
       "category": "Investor Guide",
       "category_badge": "badge-verified",
       "read_time": "7 min read"
+    },
+    {
+      "slug": "money-view-ipo-valuation-price-target-guide",
+      "title": "Money View IPO Valuation & Share Price Target Guide: Growth, Metrics and Fintech Multiples",
+      "description": "Comprehensive valuation and fundamental analysis of Money View ahead of its public issue: loan book scale, revenue multiples, and scenario target arithmetic.",
+      "date": "2026-10-24",
+      "date_str": "24 October 2026",
+      "category": "Empirical Research",
+      "category_badge": "badge-up",
+      "read_time": "9 min read"
+    },
+    {
+      "slug": "azad-india-mobility-share-price-target-valuation-guide",
+      "title": "Azad India Mobility Share Price Target: EV Bus Body Building, Revenue & Valuation Analysis",
+      "description": "Fundamental analysis of Azad India Mobility: bus body fabrication capabilities, commercial vehicle electrification tailwinds, order backlog, and target multiples.",
+      "date": "2026-10-24",
+      "date_str": "24 October 2026",
+      "category": "Empirical Research",
+      "category_badge": "badge-up",
+      "read_time": "8 min read"
+    },
+    {
+      "slug": "ardee-industries-financials-share-price-target-study",
+      "title": "Ardee Industries Share Price Target & Valuation: Industrial Crane Order Book & Multiples",
+      "description": "In-depth study of Ardee Industries: overhead material handling machinery, heavy engineering capex cycles, EBITDA trends, and fundamental valuation targets.",
+      "date": "2026-10-24",
+      "date_str": "24 October 2026",
+      "category": "Empirical Research",
+      "category_badge": "badge-up",
+      "read_time": "7 min read"
+    },
+    {
+      "slug": "idbi-bank-strategic-divestment-share-price-target-guide",
+      "title": "IDBI Bank Share Price Target 2030-2040: Strategic Divestment, Net NPA Recovery & Multiples",
+      "description": "Comprehensive long-term valuation review of IDBI Bank: LIC and Government of India divestment roadmap, balance sheet clean-up, and banking valuation multiples.",
+      "date": "2026-10-24",
+      "date_str": "24 October 2026",
+      "category": "Empirical Research",
+      "category_badge": "badge-up",
+      "read_time": "8 min read"
     }
   ]
 }

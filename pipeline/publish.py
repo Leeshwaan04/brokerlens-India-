@@ -2523,13 +2523,53 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
         compare_html = ""
         cmp_links = compare_index.get(symbol.upper()) or []
         if cmp_links:
+            peer_table_rows = []
+            for other, url, _sec in cmp_links[:5]:
+                other_hist = (equity_history or {}).get(other.upper()) or []
+                if not other_hist:
+                    continue
+                o_last = other_hist[-1].get("close")
+                o_ret1m = None
+                if len(other_hist) > 21 and other_hist[-22].get("close"):
+                    o_ret1m = (other_hist[-1]["close"] / other_hist[-22]["close"] - 1) * 100
+                elif len(other_hist) > 1 and other_hist[0].get("close"):
+                    o_ret1m = (other_hist[-1]["close"] / other_hist[0]["close"] - 1) * 100
+                o_slug = _stock_slug(other)
+                ret_html = ('<span class="up font-semibold">+%.1f%%</span>' % o_ret1m) if (o_ret1m is not None and o_ret1m >= 0) else (('<span class="down font-semibold">%.1f%%</span>' % o_ret1m) if o_ret1m is not None else '<span class="faint">-</span>')
+                peer_table_rows.append(
+                    '<tr>'
+                    '<td><strong><a href="/stock/%s/">%s</a></strong></td>'
+                    '<td class="right num font-semibold">%s</td>'
+                    '<td class="right num">%s</td>'
+                    '<td class="center"><a class="btn btn-outline btn-sm" href="%s">%s vs %s &rarr;</a></td>'
+                    '</tr>' % (
+                        _esc(o_slug), _esc(other),
+                        ("Rs {:,.2f}".format(o_last)) if o_last else "N/A",
+                        ret_html,
+                        _esc(url), _esc(symbol.upper()), _esc(other)
+                    )
+                )
+            peer_matrix_html = ""
+            if peer_table_rows:
+                peer_matrix_html = (
+                    '<div class="table-scroll" style="margin-top:12px">'
+                    '<table class="data"><thead><tr>'
+                    '<th>Sector Peer</th><th class="right">Last Price</th><th class="right">1-Month Return</th><th class="center">Head-to-Head Comparison</th>'
+                    '</tr></thead><tbody>'
+                    + "".join(peer_table_rows)
+                    + '</tbody></table></div>'
+                )
+
+            badges_html = "".join(
+                '<a class="badge" href="%s" style="text-decoration:none;padding:5px 9px">%s vs %s &rarr;</a>'
+                % (_esc(url), _esc(symbol.upper()), _esc(other)) for other, url, _sec in cmp_links[:8]
+            )
             compare_html = (
-                '<div class="section-title"><h2>Compare %s with sector peers</h2></div>'
-                '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">%s</div>'
-                '<p class="xs faint" style="margin-top:6px">Side-by-side price range, return and volume from NSE daily data.</p>'
-                % (_esc(symbol), "".join(
-                    '<a class="badge" href="%s" style="text-decoration:none;padding:5px 9px">%s vs %s &rarr;</a>'
-                    % (_esc(url), _esc(symbol.upper()), _esc(other)) for other, url, _sec in cmp_links[:8])))
+                ('<div class="section-title"><h2>Compare %s with sector peers</h2></div>' % _esc(symbol))
+                + ('<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">%s</div>' % badges_html)
+                + peer_matrix_html
+                + '<p class="xs faint" style="margin-top:8px">Side-by-side price range, return and volume from NSE daily data.</p>'
+            )
 
         if slug in trade_cost_slugs:
             trade_badges = (

@@ -1,0 +1,61 @@
+name: Autopilot Search & Content Expansion Engine
+
+on:
+  schedule:
+    # 09:00 IST = 03:30 UTC, Monday through Friday
+    # (Runs 30 mins after Search Console snapshot at 03:00 UTC)
+    - cron: "30 3 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: autopilot-content
+  cancel-in-progress: false
+
+jobs:
+  expand-content:
+    name: Autopilot Search Mining & Content Publishing
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Autopilot Content Engine
+        env:
+          SITE_URL: "https://www.brokerlens.in"
+        run: |
+          echo "Starting autopilot search keyword content engine..."
+          python3 scripts/autopilot_content_engine.py
+
+      - name: Run QA & Security Verification
+        run: |
+          echo "Running QA E2E test suite..."
+          python3 tests/qa_e2e.py
+          echo "Running VAPT security audit..."
+          python3 tests/vapt.py
+
+      - name: Commit and Push Newly Generated Content
+        run: |
+          git config --global user.name "BrokerLens Autopilot Bot"
+          git config --global user.email "bot@brokerlens.in"
+
+          git add site/data/news.json site/feed.xml site/sitemaps/sitemap-news.xml site/news/
+          if git diff --staged --quiet; then
+            echo "No new autopilot publications to commit."
+          else
+            git commit -m "feat(content): autopilot search keyword expansion $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
+            git push origin main
+            echo "Autopilot content published to main."
+          fi
+

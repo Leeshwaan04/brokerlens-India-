@@ -200,9 +200,41 @@ async function render() {
   }
 }
 
-/* ---------------------------------------------------------------- links */
+/* ---------------------------------------------------------------- links & conversions */
 
 document.addEventListener('click', (e) => {
+  const link = e.target.closest('a');
+  if (link) {
+    const href = link.getAttribute('href') || '';
+    const rel = link.getAttribute('rel') || '';
+    const isSponsored = rel.includes('sponsored') ||
+      href.includes('indiabullssecurities.onelink.me') ||
+      href.includes('zerodha.com') ||
+      href.includes('angelone.in');
+
+    if (isSponsored && typeof window.gtag === 'function') {
+      let partner = 'unknown';
+      if (href.includes('indiabullssecurities') || href.includes('Kaqz/brokerlens')) partner = 'indiabulls';
+      else if (href.includes('zerodha')) partner = 'zerodha';
+      else if (href.includes('angelone')) partner = 'angelone';
+      else if (href.includes('upstox')) partner = 'upstox';
+      else if (href.includes('groww')) partner = 'groww';
+
+      window.gtag('event', 'conversion_click', {
+        partner: partner,
+        link_url: href,
+        link_text: (link.textContent || '').trim().slice(0, 60),
+        page_location: window.location.href,
+        page_path: window.location.pathname
+      });
+      window.gtag('event', 'ad_click', {
+        ad_id: partner,
+        ad_slot: 'cta_button',
+        page_type: window.location.pathname.split('/')[1] || 'home'
+      });
+    }
+  }
+
   const a = e.target.closest('a[data-link]');
   if (!a) return;
   const url = new URL(a.href, location.origin);

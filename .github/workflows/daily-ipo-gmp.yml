@@ -1,0 +1,54 @@
+name: Daily IPO & GMP Automated Refresh
+
+on:
+  schedule:
+    # 09:15 IST = 03:45 UTC (Pre-market morning opening)
+    - cron: "45 3 * * 1-5"
+    # 18:15 IST = 12:45 UTC (Post-market evening close)
+    - cron: "45 12 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ipo-gmp-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh-ipo-gmp:
+    name: Refresh IPO GMP & Daily Bulletins
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Refresh IPO GMP and Rebuild Bulletins
+        env:
+          SITE_URL: "https://www.brokerlens.in"
+        run: |
+          python3 scripts/update_ipo_gmp.py
+
+      - name: Commit and Push Updated IPO Data
+        run: |
+          git config --global user.name "BrokerLens Automation Bot"
+          git config --global user.email "bot@brokerlens.in"
+
+          git add data/manual/ipo_gmp.json site/data/news.json site/news/ site/ipo/
+          if git diff --staged --quiet; then
+            echo "No IPO GMP changes detected. Working tree clean."
+          else
+            git commit -m "chore(ipo): automated daily GMP & bulletin refresh $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
+            git push origin main
+            echo "IPO GMP updates pushed to main."
+          fi
+
