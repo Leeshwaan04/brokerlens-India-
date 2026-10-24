@@ -443,7 +443,8 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
       with UPI ASBA capabilities. Investors can open accounts with zero account opening fees across India's leading discount brokers:
     </p>
     <div style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0">
-      <a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="btn btn-primary small">Open Zerodha Kite Account &rarr;</a>
+      <a href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" class="btn btn-primary small">Open Indiabulls Demat (Rs 0 Delivery) &rarr;</a>
+      <a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Zerodha Kite Account &rarr;</a>
       <a href="https://dhan.co/?ref=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Dhan Account &rarr;</a>
       <a href="https://www.angelone.in/open-demat-account?referral=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Angel One Account &rarr;</a>
       <a href="https://upstox.com/open-account/?f=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Upstox Account &rarr;</a>
@@ -594,7 +595,8 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     </ul>
 
     <div style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0">
-      <a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="btn btn-primary small">Open Zerodha Demat &rarr;</a>
+      <a href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" class="btn btn-primary small">Open Indiabulls Demat (Rs 0 Delivery) &rarr;</a>
+      <a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Zerodha Demat &rarr;</a>
       <a href="https://dhan.co/?ref=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Dhan Demat &rarr;</a>
       <a href="https://www.angelone.in/open-demat-account?referral=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Angel One Demat &rarr;</a>
       <a href="https://upstox.com/open-account/?f=BROKERLENS" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Upstox Demat &rarr;</a>
@@ -930,6 +932,63 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
               <li><strong>Multiple Applications from Same PAN:</strong> Multiple retail bids under the same PAN in the same IPO are disqualified as duplicate applications.</li>
             </ol>
             """
+        },
+        {
+            "slug": "sebi-registered-stock-brokers-verification-guide",
+            "title": "How to Verify SEBI Registered Stock Brokers: Depository Roles, Audit Disclosures & Regulatory Lineage",
+            "description": "Step-by-step audit guide to verifying any Indian stock broker or regional firm. Understand SEBI registration certificates, depository participant status, and complaint track records.",
+            "category": "Blog & Guide",
+            "category_badge": "badge-verified",
+            "type": "BlogPosting",
+            "read_time": "6 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              Investors often encounter regional brokerage firms, boutique wealth managers, and corporate clearing members
+              like <strong>Pankaj Mangaldas Securities</strong>, <strong>Absolute Broking</strong>, or <strong>Adroit Financial Services</strong>.
+              Before transferring investment capital or opening a trading ledger, verifying an intermediary's official SEBI registration
+              status and depository credentials is a critical safeguard.
+            </p>
+
+            <div class="section-title"><h2>1. Deciphering SEBI Registration Numbers</h2></div>
+            <p>
+              The Securities and Exchange Board of India (SEBI) issues alphanumeric registration certificates that indicate
+              an intermediary's regulatory scope:
+            </p>
+            <ul>
+              <li><strong>INZ Prefix (Stock Brokers):</strong> Signifies a certified trading member registered to execute transactions on stock and derivative exchanges (NSE, BSE, MCX). For example, Indiabulls Securities operates under SEBI Reg. <code>INZ000036136</code>, and Zerodha Broking under <code>INZ000031633</code>.</li>
+              <li><strong>IN-DP Prefix (Depository Participants):</strong> Authorizes an entity to hold electronic securities in dematerialized form with National Securities Depository Limited (NSDL) or Central Depository Services India Limited (CDSL).</li>
+              <li><strong>INA Prefix (Investment Advisers):</strong> Mandates strict fiduciary duty for fee-only advisory without accepting broker distribution commissions.</li>
+              <li><strong>INH Prefix (Research Analysts):</strong> Certifies qualified entities authorized to issue stock recommendations and research reports.</li>
+            </ul>
+
+            <div class="section-title"><h2>2. How to Search the Registry on BrokerLens</h2></div>
+            <p>
+              BrokerLens maintains an indexed directory of every active SEBI registration across Indian capital markets.
+              You can search any firm name or registration code directly:
+            </p>
+            <ul>
+              <li>Explore the central <a href="/registry">SEBI Registry Search</a> to verify registration status, registered corporate addresses, and validity timelines.</li>
+              <li>Browse <a href="/brokers">All Tracked Stock Brokers</a> to evaluate active client rankings, complaint frequency per 10,000 clients, and brokerage pricing.</li>
+              <li>Compare brokers side by side on the <a href="/compare">Broker Comparison Tool</a>.</li>
+            </ul>
+
+            <div class="section-title"><h2>3. Evaluating Broker Safety and Financial Health</h2></div>
+            <p>
+              Beyond the registration certificate, assess the following primary disclosures:
+            </p>
+            <ol style="line-height:1.7;margin-bottom:20px">
+              <li><strong>Active Client Trend:</strong> Check monthly active client counts published by NSE to determine whether client participation is expanding or contracting.</li>
+              <li><strong>Complaint Ratio:</strong> Inspect the number of investor complaints received and resolved relative to total active clients. Ratios below 5 per 10,000 clients indicate robust operational handling.</li>
+              <li><strong>Custody Protection:</strong> Under SEBI circulars, all client funds must be settled back to the primary bank account on the first Friday of each month or quarter (Quarterly Settlement of Funds).</li>
+            </ol>
+
+            <div class="card" style="margin-top:20px;padding:16px;border-left:4px solid var(--accent)">
+              <p style="margin:0"><strong>Research Intermediaries:</strong> Audit regulatory lineages on the
+              <a href="/registry" data-link>SEBI Registry</a>, discover tailored platforms with the
+              <a href="/find-broker/" data-link>Broker Matchmaker</a>, or review our independent
+              <a href="/editorial-policy" data-link>Editorial Policy</a>.</p>
+            </div>
+            """
         }
     ]
 
@@ -942,6 +1001,122 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     # 4. EMPIRICAL RESEARCH & INDUSTRY ARTICLES
     # =========================================================================
     research_items = [
+        {
+            "slug": "stock-price-target-analysis-valuation-guide",
+            "title": "How to Analyze Share Price Targets: Valuation Multiples, P/E Ratios and What-If Calculators",
+            "description": "Learn how institutional analysts evaluate equity valuations. Understand P/E ratios, 52-week price ranges, and test custom compounding scenarios with mathematical what-if calculators.",
+            "category": "Research Article",
+            "category_badge": "badge-verified",
+            "type": "Article",
+            "read_time": "7 min read",
+            "date": today_iso,
+            "date_str": today_str,
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              Retail search volume across Indian equities frequently centers on queries like "share price target 2026" or
+              "target for 2030" for high-momentum stocks such as <a href="/stock/cupid/">Cupid</a>,
+              <a href="/stock/pashupati/">Pashupati Cotspin</a>, <a href="/stock/aparinds/">Apar Industries</a>,
+              <a href="/stock/jaykay/">Jaykay Enterprises</a>, and <a href="/stock/shantigold/">Shanti Gold</a>.
+              While internet forums often publish speculative year-by-year numbers, disciplined investors evaluate equity
+              projections through corporate fundamentals, historical trading ranges, and mathematical compounding.
+            </p>
+
+            <div class="section-title"><h2>1. What Is a Share Price Target?</h2></div>
+            <p>
+              A legitimate share price target published by a SEBI-registered research analyst (RA) or institutional brokerage
+              represents an estimated fair value based on detailed mathematical models:
+            </p>
+            <ul>
+              <li><strong>Discounted Cash Flow (DCF):</strong> Projecting future free cash flows discounted back to present value using the company's weighted average cost of capital (WACC).</li>
+              <li><strong>Relative Valuation (Price-to-Earnings):</strong> Multiplying projected earnings per share (EPS) by a justified sector P/E multiple.</li>
+              <li><strong>Enterprise Value to EBITDA (EV/EBITDA):</strong> Used extensively for capital-intensive sectors like manufacturing, infrastructure, and utilities.</li>
+            </ul>
+            <p>
+              Every target is inherently contingent on assumptions regarding revenue growth, margin stability, interest rates, and macro cycles.
+              BrokerLens publishes no speculative forecasts or analyst price targets; all figures displayed on stock profiles reflect
+              primary daily trading disclosures from the National Stock Exchange (NSE).
+            </p>
+
+            <div class="section-title"><h2>2. Analyzing High-Interest Stocks on BrokerLens</h2></div>
+            <p>
+              When evaluating companies with significant retail search interest, examine the factual metrics already on file:
+            </p>
+            <div class="table-scroll" style="margin:16px 0">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Ticker</th>
+                    <th>Trading Data &amp; Tools</th>
+                    <th>Analysis Focus</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Cupid Limited</strong></td>
+                    <td>CUPID</td>
+                    <td><a href="/stock/cupid/">Cupid Share Price &amp; Calculator &rarr;</a></td>
+                    <td>FMCG &amp; healthcare manufacturing, export contracts, dividend track record</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Pashupati Cotspin</strong></td>
+                    <td>PASHUPATI</td>
+                    <td><a href="/stock/pashupati/">Pashupati Cotspin Price &amp; Calculator &rarr;</a></td>
+                    <td>Textile spinning capacity, cotton price volatility, domestic demand</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Apar Industries</strong></td>
+                    <td>APARINDS</td>
+                    <td><a href="/stock/aparinds/">Apar Industries Price &amp; Calculator &rarr;</a></td>
+                    <td>Conductor manufacturing, power transmission capex, transformer oils</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Jaykay Enterprises</strong></td>
+                    <td>JAYKAY</td>
+                    <td><a href="/stock/jaykay/">Jaykay Enterprises Price &amp; Calculator &rarr;</a></td>
+                    <td>Digital tech diversification, 3D printing, corporate restructuring</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Shanti Gold</strong></td>
+                    <td>SHANTIGOLD</td>
+                    <td><a href="/stock/shantigold/">Shanti Gold Price &amp; Calculator &rarr;</a></td>
+                    <td>Gems &amp; jewellery retail, bullion import duty impacts, festive season sales</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="section-title"><h2>3. The What-If Calculator: Arithmetic on Your Assumptions</h2></div>
+            <p>
+              Instead of accepting unverified third-party targets, BrokerLens provides an interactive
+              <strong>What-If Price Calculator</strong> on every NSE equity page (as well as dedicated tools on the
+              <a href="/calculators/">Financial Calculators</a> hub).
+            </p>
+            <p>
+              The what-if engine takes the verified last closing price from NSE bhavcopy, and compounds it at an annual growth
+              rate of your own choosing over 1 to 30 years:
+            </p>
+            <div class="card" style="padding:14px;background:var(--bg-raised);margin:12px 0">
+              <code>Future Value = Starting Price &times; (1 + Annual Growth Rate)<sup>Years</sup></code>
+            </div>
+            <p>
+              For example, if an equity closed at Rs 100 and you test an 8%% CAGR assumption over 5 years, the arithmetic yields
+              Rs 146.93. This gives investors a clear reality check on whether an internet target implies an unrealistic 50%% or 80%%
+              annual compounding rate that fundamentals cannot support.
+            </p>
+
+            <div class="section-title"><h2>4. Transaction Charges &amp; Demat Setup</h2></div>
+            <p>
+              Before executing trades based on any target analysis, factor in statutory turnover charges (STT, GST, SEBI turnover fees,
+              and exchange transaction fees). Compare exact transaction costs using the
+              <a href="/trade-costs/">Stock Trade Cost Calculator</a> and open an account with verified discount brokers:
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0">
+              <a href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" class="btn btn-primary small">Open Indiabulls Demat (Rs 0 Delivery) &rarr;</a>
+              <a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Zerodha Kite Account &rarr;</a>
+            </div>
+            """
+        },
         {
             "slug": "zerodha-vs-groww-active-clients-market-share-2026",
             "title": "Zerodha vs Groww in 2026: Active Clients, Brokerage Charges and Platform Architecture",
@@ -1330,6 +1505,52 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
               <div class="aff-trust-note">
                 <span style="color:var(--up);font-weight:700">✓</span>
                 <span>Instant Aadhaar OTP Onboarding &middot; SEBI Reg: INZ000161534</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Indiabulls Securities Partner Card -->
+          <div class="card aff-article-card aff-card-ibsl" style="border:1px solid rgba(47,74,143,0.25);border-radius:12px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(180deg,rgba(47,74,143,0.04) 0%,rgba(47,74,143,0.01) 100%)">
+            <div>
+              <div class="row-between" style="align-items:center;margin-bottom:12px">
+                <div style="font-weight:700;font-size:17px;color:var(--text);letter-spacing:-0.01em">
+                  Indiabulls Securities
+                </div>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="badge badge-verified" style="font-size:11px">Zero Delivery</span>
+                  <span class="badge" style="font-size:11px;background:rgba(47,74,143,0.12);color:var(--accent);border:1px solid rgba(47,74,143,0.25)">SEBI Listed Legacy</span>
+                </div>
+              </div>
+              <h3 style="margin:0 0 6px 0;font-size:16px;font-weight:700;color:var(--text);line-height:1.35">Zero Brokerage on Delivery &amp; Flat Rs 11 F&amp;O</h3>
+              <p class="xs muted" style="margin:0 0 12px 0;line-height:1.5">Trade equities and derivatives with India's pioneering broker. Backed by 20+ years of institutional heritage and transparent pricing.</p>
+              
+              <div class="aff-chips-grid">
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Equity Delivery</span>
+                  <span class="aff-chip-val" style="color:var(--up)">Rs 0 Free</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Intraday &amp; F&amp;O</span>
+                  <span class="aff-chip-val" style="color:var(--up)">Flat Rs 11 / order</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Account Opening</span>
+                  <span class="aff-chip-val" style="color:var(--up)">Rs 0 Free</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Heritage</span>
+                  <span class="aff-chip-val" style="color:var(--accent)">20+ Years Trusted</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:16px">
+              <a class="btn btn-primary" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="display:flex;justify-content:center;align-items:center;gap:6px;width:100%;text-decoration:none;font-weight:600;padding:10px 16px">
+                <span>Open Free Demat Account</span>
+                <span aria-hidden="true">&rarr;</span>
+              </a>
+              <div class="aff-trust-note" style="margin-top:8px;font-size:11px;color:var(--text-faint);display:flex;align-items:center;gap:6px;justify-content:center">
+                <span style="color:var(--up);font-weight:700">&#10003;</span>
+                <span>SEBI Reg: INZ000036136 &middot; DP: IN-DP-423-2019</span>
               </div>
             </div>
           </div>

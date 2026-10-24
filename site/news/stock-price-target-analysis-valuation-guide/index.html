@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/assets/js/theme-init.js?v=84c06bf143"></script>
+<title>How to Analyze Share Price Targets: Valuation Multiples, P/E Ratios and What-If Calculators | BrokerLens</title>
+<meta name="description" content="Learn how institutional analysts evaluate equity valuations. Understand P/E ratios, 52-week price ranges, and test custom compounding scenarios with mathematical what-if calculators.">
+<link rel="canonical" href="https://www.brokerlens.in/news/stock-price-target-analysis-valuation-guide/">
+<meta name="theme-color" content="#2f4a8f">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/assets/css/app.css?v=41e5de2842">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrokerLens">
+<meta property="og:locale" content="en_IN">
+<meta property="og:url" content="https://www.brokerlens.in/news/stock-price-target-analysis-valuation-guide/">
+<meta property="og:title" content="How to Analyze Share Price Targets: Valuation Multiples, P/E Ratios and What-If Calculators | BrokerLens">
+<meta property="og:description" content="Learn how institutional analysts evaluate equity valuations. Understand P/E ratios, 52-week price ranges, and test custom compounding scenarios with mathematical what-if calculators.">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Article", "headline": "How to Analyze Share Price Targets: Valuation Multiples, P/E Ratios and What-If Calculators", "description": "Learn how institutional analysts evaluate equity valuations. Understand P/E ratios, 52-week price ranges, and test custom compounding scenarios with mathematical what-if calculators.", "url": "https://www.brokerlens.in/news/stock-price-target-analysis-valuation-guide/", "datePublished": "2026-10-24", "dateModified": "2026-10-24", "mainEntityOfPage": "https://www.brokerlens.in/news/stock-price-target-analysis-valuation-guide/", "author": {"@type": "Organization", "name": "BrokerLens Financial Research Desk", "url": "https://www.brokerlens.in/about"}, "publisher": {"@type": "Organization", "name": "BrokerLens", "logo": {"@type": "ImageObject", "url": "https://www.brokerlens.in/apple-touch-icon.png"}}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "BrokerLens", "item": "https://www.brokerlens.in/"}, {"@type": "ListItem", "position": 2, "name": "News & Insights", "item": "https://www.brokerlens.in/news/"}, {"@type": "ListItem", "position": 3, "name": "How to Analyze Share Price Targets: Valuation Multiples, P/E Ratios and What-If Calculators"}]}]}</script>
+</head>
+<body>
+<header class="site"><div class="wrap nav">
+  <a class="brand" href="/">
+    <svg class="brand-logo" viewBox="0 0 512 512" width="26" height="26" role="img" aria-label="BrokerLens">
+      <defs><clipPath id="bl-lens-reg"><circle cx="256" cy="256" r="143"/></clipPath></defs>
+      <g fill="none" stroke="var(--accent)" stroke-width="30" stroke-linecap="round">
+        <path d="M50 369 L84 359" opacity=".38"/><path d="M18 379 L30 375" opacity=".18"/>
+        <path d="M438 161 L470 149" opacity=".38"/><path d="M486 143 L496 140" opacity=".18"/>
+      </g>
+      <circle cx="256" cy="256" r="166" fill="none" stroke="var(--accent)" stroke-width="46"/>
+      <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="var(--up)"
+            stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-reg)"/>
+    </svg>
+    <span>BrokerLens</span>
+  </a>
+  <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
+          aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
+  <nav class="nav-links" id="navlinks">
+    <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
+    <a href="/compare">Compare</a>
+    <a href="/leaderboards">Movers</a>
+    <a href="/calculators/">Calculators</a>
+    <a href="/registry">SEBI registry</a>
+    <a href="/algo">Algo platforms</a>
+    <a href="/ipo/">IPO</a>
+    <a href="/news/">News &amp; Blogs</a>
+    <a href="/reports/state-of-indian-broking-2026/">Reports</a>
+    <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
+  </nav>
+  <button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button class="icon-btn" id="audio-toggle" title="Play music" aria-label="Play music" aria-pressed="false" hidden><svg class="ico-off" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M11 6l3 4M14 6l-3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><svg class="ico-on" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="display:none"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M10.5 5.5a3.5 3.5 0 010 5M12.5 3.5a6.3 6.3 0 010 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+  <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
+</div>
+<div class="mega" id="mega-timings" hidden>
+  <div class="wrap">
+    <div id="mega-timings-body" class="mega-grid"><div class="small faint" style="padding:16px 0">Loading timings...</div></div>
+  </div>
+</div>
+<div class="mega" id="mega-markets" hidden>
+  <div class="wrap">
+    <div class="markets-list">
+      <a href="/brokers"><span>India</span><span class="badge badge-up">Live</span></a>
+      <a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>
+      <a href="/coming-soon/us"><span>US</span><span class="badge badge-warn">Coming soon</span></a>
+      <a href="/coming-soon/gcc"><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
+    </div>
+  </div>
+</div>
+</header>
+<div class="search-overlay" id="search-overlay" hidden>
+  <div class="search-modal" role="dialog" aria-modal="true" aria-label="Search BrokerLens">
+    <div class="search-input-row">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
+      <kbd class="search-esc">Esc</kbd>
+    </div>
+    <div id="search-results" class="search-results"></div>
+  </div>
+</div>
+<main class="wrap" style="padding-top:24px;padding-bottom:24px">
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">BrokerLens</a><span class="sep"> &rsaquo; </span><a href="/news/">News &amp; Insights</a><span class="sep"> &rsaquo; </span><span aria-current="page">How to Analyze Share Price Targets: Valuation Multiples, P/E Ratios and What-If Calculators</span></nav><div class="row-wrap" style="gap:8px;margin-bottom:12px;align-items:center"><span class="badge badge-verified">Research Article</span><span class="xs muted">&middot; Published 24 October 2026</span><span class="xs muted">&middot; 7 min read</span></div><h1 style="margin-top:0;font-size:var(--fs-2xl);letter-spacing:-0.02em;line-height:1.25">How to Analyze Share Price Targets: Valuation Multiples, P/E Ratios and What-If Calculators</h1><div class="card" style="margin:16px 0 20px 0;padding:14px 18px;background:var(--bg-raised);border-left:3px solid var(--accent);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px"><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">BL</div><div><div style="font-weight:600;font-size:13px">Researched by BrokerLens Financial Research Desk</div><div class="xs muted">Fact-Checked &amp; Verified against primary NSE, BSE and SEBI disclosures</div></div></div><div class="xs"><a href="/editorial-policy" style="color:var(--accent);text-decoration:none;font-weight:600">Editorial Guidelines &rarr;</a></div></div><div class="card" style="margin-top:20px;padding:28px;line-height:1.7">
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              Retail search volume across Indian equities frequently centers on queries like "share price target 2026" or
+              "target for 2030" for high-momentum stocks such as <a href="/stock/cupid/">Cupid</a>,
+              <a href="/stock/pashupati/">Pashupati Cotspin</a>, <a href="/stock/aparinds/">Apar Industries</a>,
+              <a href="/stock/jaykay/">Jaykay Enterprises</a>, and <a href="/stock/shantigold/">Shanti Gold</a>.
+              While internet forums often publish speculative year-by-year numbers, disciplined investors evaluate equity
+              projections through corporate fundamentals, historical trading ranges, and mathematical compounding.
+            </p>
+
+            <div class="section-title"><h2>1. What Is a Share Price Target?</h2></div>
+            <p>
+              A legitimate share price target published by a SEBI-registered research analyst (RA) or institutional brokerage
+              represents an estimated fair value based on detailed mathematical models:
+            </p>
+            <ul>
+              <li><strong>Discounted Cash Flow (DCF):</strong> Projecting future free cash flows discounted back to present value using the company's weighted average cost of capital (WACC).</li>
+              <li><strong>Relative Valuation (Price-to-Earnings):</strong> Multiplying projected earnings per share (EPS) by a justified sector P/E multiple.</li>
+              <li><strong>Enterprise Value to EBITDA (EV/EBITDA):</strong> Used extensively for capital-intensive sectors like manufacturing, infrastructure, and utilities.</li>
+            </ul>
+            <p>
+              Every target is inherently contingent on assumptions regarding revenue growth, margin stability, interest rates, and macro cycles.
+              BrokerLens publishes no speculative forecasts or analyst price targets; all figures displayed on stock profiles reflect
+              primary daily trading disclosures from the National Stock Exchange (NSE).
+            </p>
+
+            <div class="section-title"><h2>2. Analyzing High-Interest Stocks on BrokerLens</h2></div>
+            <p>
+              When evaluating companies with significant retail search interest, examine the factual metrics already on file:
+            </p>
+            <div class="table-scroll" style="margin:16px 0">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Ticker</th>
+                    <th>Trading Data &amp; Tools</th>
+                    <th>Analysis Focus</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Cupid Limited</strong></td>
+                    <td>CUPID</td>
+                    <td><a href="/stock/cupid/">Cupid Share Price &amp; Calculator &rarr;</a></td>
+                    <td>FMCG &amp; healthcare manufacturing, export contracts, dividend track record</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Pashupati Cotspin</strong></td>
+                    <td>PASHUPATI</td>
+                    <td><a href="/stock/pashupati/">Pashupati Cotspin Price &amp; Calculator &rarr;</a></td>
+                    <td>Textile spinning capacity, cotton price volatility, domestic demand</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Apar Industries</strong></td>
+                    <td>APARINDS</td>
+                    <td><a href="/stock/aparinds/">Apar Industries Price &amp; Calculator &rarr;</a></td>
+                    <td>Conductor manufacturing, power transmission capex, transformer oils</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Jaykay Enterprises</strong></td>
+                    <td>JAYKAY</td>
+                    <td><a href="/stock/jaykay/">Jaykay Enterprises Price &amp; Calculator &rarr;</a></td>
+                    <td>Digital tech diversification, 3D printing, corporate restructuring</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Shanti Gold</strong></td>
+                    <td>SHANTIGOLD</td>
+                    <td><a href="/stock/shantigold/">Shanti Gold Price &amp; Calculator &rarr;</a></td>
+                    <td>Gems &amp; jewellery retail, bullion import duty impacts, festive season sales</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="section-title"><h2>3. The What-If Calculator: Arithmetic on Your Assumptions</h2></div>
+            <p>
+              Instead of accepting unverified third-party targets, BrokerLens provides an interactive
+              <strong>What-If Price Calculator</strong> on every NSE equity page (as well as dedicated tools on the
+              <a href="/calculators/">Financial Calculators</a> hub).
+            </p>
+            <p>
+              The what-if engine takes the verified last closing price from NSE bhavcopy, and compounds it at an annual growth
+              rate of your own choosing over 1 to 30 years:
+            </p>
+            <div class="card" style="padding:14px;background:var(--bg-raised);margin:12px 0">
+              <code>Future Value = Starting Price &times; (1 + Annual Growth Rate)<sup>Years</sup></code>
+            </div>
+            <p>
+              For example, if an equity closed at Rs 100 and you test an 8%% CAGR assumption over 5 years, the arithmetic yields
+              Rs 146.93. This gives investors a clear reality check on whether an internet target implies an unrealistic 50%% or 80%%
+              annual compounding rate that fundamentals cannot support.
+            </p>
+
+            <div class="section-title"><h2>4. Transaction Charges &amp; Demat Setup</h2></div>
+            <p>
+              Before executing trades based on any target analysis, factor in statutory turnover charges (STT, GST, SEBI turnover fees,
+              and exchange transaction fees). Compare exact transaction costs using the
+              <a href="/trade-costs/">Stock Trade Cost Calculator</a> and open an account with verified discount brokers:
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0">
+              <a href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" class="btn btn-primary small">Open Indiabulls Demat (Rs 0 Delivery) &rarr;</a>
+              <a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener sponsored" class="btn btn-outline small">Open Zerodha Kite Account &rarr;</a>
+            </div>
+            </div><aside class="ad-wrap ad-wide" data-ad="ibsl" data-slot="wide" data-page-type="news" aria-label="Sponsored: Indiabulls Securities"><div class="ad-ibsl"><span class="ad-tag">Sponsored</span><a href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" data-ad-click><picture><source media="(min-width:900px)" srcset="/assets/img/ads/ibsl-wide-2000x500.jpg?v=d88be48695" width="2000" height="500"><img src="/assets/img/ads/ibsl-card-1000x400.jpg?v=9bcd5a9d69" width="1000" height="400" alt="Indiabulls Securities: Rs 0 account opening charges, Rs 11 per executed order across all segments*, 20 years of trust. Open your free account now. Terms apply." loading="lazy"></picture></a></div><p class="ad-note">Sponsored. Indiabulls Securities Limited, SEBI Reg. INZ000036136 (<a href="/sebi-registry/indiabulls-securities-limited/">check the SEBI register</a>), DP IN-DP-423-2019.</p></aside><p class="xs faint" style="margin-top:12px">Editorial Integrity: BrokerLens does not accept payment to alter factual analyses. Sponsored placements are labelled and do not affect any data, ranking or analysis. Read our <a href="/editorial-policy">Editorial Policy</a> and <a href="/methodology">Methodology</a>.</p>
+        <div class="affiliate-banner-row" style="margin:32px 0 20px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
+          <!-- Zerodha Leveled-up Banner -->
+          <div class="card aff-article-card aff-card-zerodha">
+            <div>
+              <div class="row-between" style="align-items:center;margin-bottom:12px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <img src="/assets/img/partners/zerodha.svg" alt="Zerodha Kite" height="24" style="height:24px;width:auto;display:block">
+                </div>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="badge badge-verified" style="font-size:11px">Direct Onboarding</span>
+                  <span class="badge" style="font-size:11px;background:rgba(56,126,209,0.12);color:#387ED1;border:1px solid rgba(56,126,209,0.25)">#1 Discount Broker</span>
+                </div>
+              </div>
+              <h3 style="margin:0 0 6px 0;font-size:16px;font-weight:700;color:var(--text);line-height:1.35">Zero Brokerage on Delivery &amp; Direct Mutual Funds</h3>
+              <p class="xs muted" style="margin:0 0 12px 0;line-height:1.5">India's pioneering tech-first investment platform. Institutional-grade Kite charts, lightning-fast execution, and zero debt risk.</p>
+              
+              <div class="aff-chips-grid">
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Equity Delivery</span>
+                  <span class="aff-chip-val" style="color:var(--up)">₹0 Free</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Intraday &amp; F&amp;O</span>
+                  <span class="aff-chip-val">Flat ₹20 / order</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Mutual Funds &amp; IPO</span>
+                  <span class="aff-chip-val" style="color:var(--up)">₹0 Commission</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Complaint Ratio</span>
+                  <span class="aff-chip-val" style="color:var(--accent)">1.62 / 10k (Lowest)</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <a class="btn-aff-zerodha" href="https://zerodha.com/open-account?c=ZMPGZY" target="_blank" rel="noopener nofollow">
+                <span>Open Zerodha Account</span>
+                <span aria-hidden="true">&rarr;</span>
+              </a>
+              <div class="aff-trust-note">
+                <span style="color:var(--up);font-weight:700">✓</span>
+                <span>100% Digital e-KYC in 5 Mins &middot; SEBI Reg: INZ000031633</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Angel One Leveled-up Banner -->
+          <div class="card aff-article-card aff-card-angelone">
+            <div>
+              <div class="row-between" style="align-items:center;margin-bottom:12px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <svg class="ao-logo" viewBox="0 0 325 67" height="26" role="img" aria-label="Angel One" xmlns="http://www.w3.org/2000/svg"><g class="ao-emblem"><path class="ao-green" fill="#11af4b" fill-rule="evenodd" clip-rule="evenodd" d="M20.7866 8.68398C20.6349 8.93915 20.6349 9.25349 20.7866 9.50866L46.8693 53.1389C47.0135 53.383 47.2761 53.5309 47.5609 53.5309H56.3069C56.9318 53.5309 57.3164 52.8504 56.9984 52.3142L26.2154 0.810714C26.0527 0.537054 25.657 0.537054 25.4943 0.810714L20.7866 8.68398Z"/><path class="ao-orange" fill="#ff7300" fill-rule="evenodd" clip-rule="evenodd" d="M20.487 18H24.8914C25.2021 18 25.3944 18.3365 25.239 18.6028L23.035 22.4192L20.8346 26.2357C20.6793 26.5019 20.2947 26.5019 20.1393 26.2357L17.9353 22.4192L15.7312 18.6028C15.5759 18.3365 15.7682 18 16.0788 18H20.487Z"/><path class="ao-orange" fill="#ff7300" fill-rule="evenodd" clip-rule="evenodd" d="M15.2285 26.8481H19.6329C19.9435 26.8481 20.1358 27.1847 19.9805 27.4509L17.7765 31.2674L15.5724 35.0838C15.4171 35.3501 15.0325 35.3501 14.8771 35.0838L12.6731 31.2674L10.469 27.4509C10.3137 27.1847 10.506 26.8481 10.8166 26.8481H15.2285Z"/><path class="ao-orange" fill="#ff7300" fill-rule="evenodd" clip-rule="evenodd" d="M9.93256 35.835H14.337C14.6476 35.835 14.8399 36.1715 14.6846 36.4378L12.4806 40.2542L10.2765 44.0706C10.1212 44.3369 9.73656 44.3369 9.58124 44.0706L7.37717 40.2542L5.1731 36.4378C5.01778 36.1715 5.21008 35.835 5.52072 35.835H9.93256Z"/><path class="ao-orange" fill="#ff7300" fill-rule="evenodd" clip-rule="evenodd" d="M4.8107 45.0605H9.21515C9.52579 45.0605 9.71809 45.3971 9.56277 45.6633L7.3587 49.4798L5.15463 53.2962C4.99931 53.5625 4.6147 53.5625 4.45938 53.2962L2.25901 49.4798L0.0549384 45.6633C-0.100382 45.3971 0.0919194 45.0605 0.40256 45.0605H4.8107Z"/><path class="ao-orange" fill="#ff7300" fill-rule="evenodd" clip-rule="evenodd" d="M15.2617 45.0605H19.6661C19.9767 45.0605 20.1691 45.3971 20.0137 45.6633L17.8097 49.4798L15.6056 53.2962C15.4503 53.5625 15.0657 53.5625 14.9103 53.2962L12.7063 49.4798L10.5022 45.6633C10.3469 45.3971 10.5392 45.0605 10.8498 45.0605H15.2617Z"/><path class="ao-orange" fill="#ff7300" fill-rule="evenodd" clip-rule="evenodd" d="M25.8527 45.0605H30.2571C30.5678 45.0605 30.7601 45.3971 30.6048 45.6633L28.4007 49.4798L26.1966 53.2962C26.0413 53.5625 25.6567 53.5625 25.5014 53.2962L23.301 49.4798L21.0969 45.6633C20.9416 45.3971 21.1339 45.0605 21.4446 45.0605H25.8527Z"/><path class="ao-orange" fill="#ff7300" fill-rule="evenodd" clip-rule="evenodd" d="M36.4443 45.0605H40.8487C41.1594 45.0605 41.3517 45.3971 41.1963 45.6633L38.9923 49.4798L36.7882 53.2962C36.6329 53.5625 36.2483 53.5625 36.093 53.2962L33.8889 49.4798L31.6848 45.6633C31.5295 45.3971 31.7218 45.0605 32.0324 45.0605H36.4443Z"/><path class="ao-orange" fill="#ff7300" fill-rule="evenodd" clip-rule="evenodd" d="M20.6274 35.835H25.0318C25.3425 35.835 25.5348 36.1715 25.3795 36.4378L23.1754 40.2542L20.9713 44.0706C20.816 44.3369 20.4314 44.3369 20.2761 44.0706L18.072 40.2542L15.8679 36.4378C15.7126 36.1715 15.9049 35.835 16.2155 35.835H20.6274Z"/><path class="ao-orange" fill="#ff7300" fill-rule="evenodd" clip-rule="evenodd" d="M30.9379 35.835H35.3423C35.6529 35.835 35.8452 36.1715 35.6899 36.4378L33.4859 40.2542L31.2818 44.0706C31.1265 44.3369 30.7419 44.3369 30.5865 44.0706L28.3825 40.2542L26.1858 36.4378C26.0305 36.1715 26.2228 35.835 26.5334 35.835H30.9379Z"/><path class="ao-orange" fill="#ff7300" fill-rule="evenodd" clip-rule="evenodd" d="M25.9936 26.8481H30.398C30.7087 26.8481 30.901 27.1847 30.7457 27.4509L28.5416 31.2674L26.3375 35.0838C26.1822 35.3501 25.7976 35.3501 25.6423 35.0838L23.4382 31.2674L21.2341 27.4509C21.0788 27.1847 21.2711 26.8481 21.5818 26.8481H25.9936Z"/></g><g class="ao-text"><path d="M112.821 52.6211L93.8576 6.93844H93.8539C93.3657 5.79203 92.2304 4.98584 90.9028 4.98584C89.6122 4.98584 88.5064 5.75135 87.9998 6.84599L69.047 52.6211C68.9472 52.9244 68.973 53.1537 69.121 53.3053C69.2689 53.4569 69.4945 53.5346 69.794 53.5346H77.2642C77.7597 53.5346 78.0852 53.3164 78.2368 52.8837L80.7034 45.9165C80.8033 45.7427 80.929 45.6576 81.0769 45.6576H100.799C100.947 45.6576 101.073 45.7464 101.172 45.9165L103.639 52.8837C103.787 53.3164 104.112 53.5346 104.612 53.5346H112.082C112.629 53.5346 112.903 53.3386 112.903 52.9503C112.895 52.8171 112.87 52.7062 112.821 52.6211ZM98.4802 39.0676H83.318C83.0665 39.0676 82.9704 38.9381 83.0184 38.6756L90.6365 18.9647C90.6846 18.7909 90.7623 18.7058 90.8621 18.7058C90.962 18.7058 91.0359 18.7946 91.084 18.9647L98.7761 38.6756C98.8759 38.9344 98.7761 39.0676 98.4802 39.0676Z"/><path d="M141.803 22.8671C143.908 24.9492 144.962 27.793 144.962 31.395V52.7515C144.962 52.9697 144.884 53.1546 144.732 53.3062C144.581 53.4578 144.396 53.5355 144.178 53.5355H138.187C137.968 53.5355 137.784 53.4615 137.632 53.3062C137.48 53.1546 137.403 52.9697 137.403 52.7515V32.9593C137.403 30.9623 136.837 29.3462 135.709 28.1073C134.581 26.8685 133.083 26.2509 131.216 26.2509C129.348 26.2509 127.839 26.8574 126.689 28.0741C125.539 29.2907 124.962 30.8957 124.962 32.8927V52.7515C124.962 52.9697 124.885 53.1546 124.733 53.3062C124.581 53.4578 124.396 53.5355 124.178 53.5355H118.187C117.969 53.5355 117.784 53.4615 117.633 53.3062C117.481 53.1546 117.403 52.9697 117.403 52.7515V21.044C117.403 20.8258 117.477 20.6446 117.633 20.4892C117.784 20.3376 117.969 20.26 118.187 20.26H124.178C124.396 20.26 124.578 20.3376 124.733 20.4892C124.885 20.6409 124.962 20.8258 124.962 21.044V23.126C124.962 23.2554 125.007 23.3442 125.092 23.3849C125.177 23.4292 125.243 23.3849 125.288 23.2554C127.066 20.9108 129.759 19.7385 133.361 19.7385C136.889 19.7422 139.699 20.7851 141.803 22.8671Z"/><path d="M177.956 20.4912C177.804 20.3395 177.62 20.2619 177.401 20.2619H171.41C171.192 20.2619 171.007 20.3395 170.856 20.4912C170.704 20.6428 170.626 20.8277 170.626 21.0459V22.6102C170.626 22.7396 170.582 22.8284 170.497 22.869C170.408 22.9134 170.323 22.869 170.238 22.7396C168.326 20.7426 165.66 19.7441 162.232 19.7441C159.366 19.7441 156.87 20.5355 154.743 22.122C152.617 23.7085 151.119 25.8238 150.25 28.468C149.555 30.3799 149.207 33.135 149.207 36.7369C149.207 39.9506 149.488 42.5762 150.054 44.6139C150.964 47.565 152.595 49.758 154.935 51.1891C157.28 52.6203 159.861 53.3377 162.683 53.3377C165.937 53.3377 168.456 52.3836 170.234 50.4717C170.32 50.3866 170.408 50.3534 170.493 50.3755C170.578 50.3977 170.623 50.4717 170.623 50.6048V51.1263C170.623 54.1624 169.85 56.3221 168.311 57.6053C166.769 58.8849 164.373 59.5247 161.119 59.5247C161.1 59.5247 161.078 59.5284 161.059 59.5284H155.457C154.924 59.5284 154.595 60.1127 154.869 60.5675L158.009 65.7745C158.253 66.1776 158.689 66.4253 159.162 66.4253H161.533V66.4216C166.466 66.3883 170.464 65.2271 173.518 62.9417C176.621 60.6193 178.174 56.7474 178.174 51.3223V21.0422C178.185 20.8277 178.108 20.6428 177.956 20.4912ZM170.534 40.3463C170.467 41.1044 170.349 41.8107 170.175 42.4616C169.828 43.8521 169.132 44.98 168.093 45.8454C167.05 46.7144 165.686 47.1471 163.992 47.1471C162.387 47.1471 161.008 46.7033 159.858 45.8121C158.707 44.9245 157.916 43.7818 157.483 42.395C157.047 41.3115 156.833 39.4218 156.833 36.7295C156.833 34.1261 157.091 32.2142 157.613 31.0012C158.09 29.57 158.87 28.4199 159.957 27.5508C161.041 26.6818 162.365 26.2491 163.929 26.2491C165.579 26.2491 166.936 26.6818 167.997 27.5508C169.058 28.4199 169.765 29.57 170.112 31.0012C170.331 31.6964 170.471 32.3991 170.534 33.1165C170.601 33.8339 170.63 35.0173 170.63 36.663C170.634 38.3604 170.601 39.5882 170.534 40.3463Z"/><path d="M211.731 36.7998L211.664 38.819C211.664 39.3404 211.406 39.5993 210.884 39.5993H190.508C190.289 39.5993 190.182 39.7065 190.182 39.9247C190.312 41.3559 190.508 42.3322 190.77 42.8536C191.813 45.9785 194.35 47.565 198.388 47.6057C201.339 47.6057 203.684 46.3927 205.418 43.9593C205.592 43.7005 205.81 43.5673 206.069 43.5673C206.243 43.5673 206.395 43.6339 206.524 43.7633L210.559 47.0842C210.951 47.3875 211.014 47.7351 210.755 48.1271C209.409 50.039 207.619 51.5109 205.385 52.5537C203.148 53.5966 200.666 54.118 197.93 54.118C194.542 54.118 191.669 53.3599 189.302 51.84C186.935 50.3201 185.212 48.1937 184.125 45.4608C183.126 43.1162 182.627 39.8618 182.627 35.6941C182.627 33.1794 182.886 31.138 183.407 29.5737C184.276 26.5376 185.915 24.1375 188.322 22.3809C190.73 20.6243 193.629 19.7441 197.013 19.7441C205.563 19.7441 210.381 24.2151 211.465 33.1572C211.646 34.237 211.731 35.4537 211.731 36.7998ZM193.015 27.4584C191.95 28.2609 191.203 29.3777 190.77 30.8126C190.511 31.5522 190.338 32.5063 190.249 33.6786C190.164 33.8968 190.249 34.004 190.508 34.004H203.725C203.943 34.004 204.05 33.8968 204.05 33.6786C203.961 32.5951 203.832 31.7704 203.658 31.2046C203.266 29.6403 202.497 28.4273 201.347 27.5582C200.197 26.6892 198.754 26.2565 197.016 26.2565C195.411 26.2528 194.076 26.6522 193.015 27.4584Z"/><path d="M227.344 47.3586H225.95C225.011 47.3586 224.253 46.6005 224.253 45.6649C224.253 38.4203 224.253 8.99449 224.253 8.99449C224.253 8.35102 223.731 7.82959 223.088 7.82959H217.859C217.215 7.82959 216.694 8.35102 216.694 8.99449V46.9999V47.9466C216.694 51.0124 219.179 53.4975 222.245 53.4975H227.344C227.766 53.4975 228.11 53.1536 228.11 52.732V48.1241C228.11 47.7026 227.766 47.3586 227.344 47.3586Z"/></g><g class="ao-orange" fill="#ff7300"><path d="M239.263 52.1045C236.9 50.8361 235.07 49.0499 233.779 46.7496C232.488 44.4494 231.841 41.7905 231.841 38.7691V22.2201C231.841 19.1988 232.488 16.5398 233.779 14.2396C235.07 11.9394 236.9 10.1569 239.263 8.88475C241.626 7.6163 244.363 6.98022 247.473 6.98022C250.583 6.98022 253.331 7.6163 255.716 8.88475C258.102 10.1569 259.943 11.9394 261.234 14.2396C262.525 16.5398 263.172 19.1988 263.172 22.2201V38.7728C263.172 41.7942 262.525 44.4531 261.234 46.7533C259.943 49.0536 258.102 50.8361 255.716 52.1082C253.327 53.3804 250.58 54.0127 247.473 54.0127C244.363 54.009 241.626 53.3767 239.263 52.1045ZM255.487 46.9826C257.502 44.9672 258.508 42.2971 258.508 38.9688V22.1536C258.508 18.8253 257.499 16.1441 255.487 14.1065C253.472 12.0688 250.802 11.0518 247.473 11.0518C244.189 11.0518 241.538 12.0688 239.526 14.1065C237.511 16.1441 236.505 18.8253 236.505 22.1536V38.9688C236.505 42.2971 237.511 44.9672 239.526 46.9826C241.541 48.9981 244.189 50.004 247.473 50.004C250.802 50.004 253.472 48.9981 255.487 46.9826Z"/><path d="M290.482 22.8736C292.56 24.9334 293.603 27.6922 293.603 31.1499V52.8245C293.603 53.2646 293.385 53.4828 292.945 53.4828H289.594C289.154 53.4828 288.936 53.2646 288.936 52.8245V32.0708C288.936 29.6633 288.204 27.6922 286.736 26.1575C285.268 24.6265 283.374 23.8573 281.055 23.8573C278.648 23.8573 276.699 24.6006 275.209 26.0909C273.718 27.5813 272.975 29.5302 272.975 31.9376V52.8245C272.975 53.2646 272.757 53.4828 272.317 53.4828H268.966C268.526 53.4828 268.308 53.2646 268.308 52.8245V20.9025C268.308 20.4661 268.526 20.2442 268.966 20.2442H272.317C272.753 20.2442 272.975 20.4624 272.975 20.9025V23.7278C272.975 23.8166 273.008 23.8831 273.075 23.9238C273.142 23.9682 273.193 23.946 273.238 23.8573C275.164 21.1428 278.119 19.7856 282.106 19.7856C285.612 19.7856 288.404 20.8174 290.482 22.8736Z"/><path d="M325 35.8811V37.9817C325 38.4217 324.782 38.6399 324.342 38.6399H303.126C302.952 38.6399 302.863 38.7287 302.863 38.9025C302.952 41.31 303.081 42.8669 303.259 43.5658C303.74 45.5369 304.768 47.0901 306.347 48.2291C307.922 49.3681 309.938 49.9376 312.389 49.9376C314.227 49.9376 315.847 49.5235 317.249 48.6914C318.65 47.8593 319.745 46.6759 320.533 45.1449C320.795 44.7492 321.102 44.6641 321.453 44.8823L324.016 46.3949C324.368 46.613 324.453 46.92 324.279 47.3157C323.184 49.4162 321.542 51.0693 319.353 52.2748C317.164 53.4804 314.645 54.0795 311.798 54.0795C308.688 54.0351 306.084 53.2918 303.98 51.8459C301.879 50.3999 300.367 48.3881 299.446 45.8032C298.658 43.7026 298.263 40.6813 298.263 36.7391C298.263 34.9011 298.296 33.3997 298.363 32.2385C298.429 31.0773 298.592 30.0381 298.854 29.1173C299.598 26.2698 301.099 23.9954 303.355 22.2869C305.611 20.5784 308.336 19.7241 311.531 19.7241C315.514 19.7241 318.58 20.7337 320.729 22.7455C322.874 24.7609 324.209 27.6048 324.737 31.2844C324.911 32.5085 325 34.0432 325 35.8811ZM306.18 25.471C304.757 26.5878 303.825 28.0892 303.388 29.9716C303.126 30.8924 302.948 32.379 302.863 34.4389C302.863 34.6127 302.952 34.7014 303.126 34.7014H320.137C320.311 34.7014 320.4 34.6127 320.4 34.4389C320.311 32.4678 320.181 31.0662 320.004 30.2341C319.523 28.263 318.547 26.6987 317.082 25.5375C315.614 24.3763 313.765 23.7957 311.531 23.7957C309.387 23.7957 307.604 24.3542 306.18 25.471Z"/></g></svg>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="badge badge-up" style="font-size:11px">Free Demat</span>
+                  <span class="badge" style="font-size:11px;background:rgba(0,82,254,0.12);color:#0052FE;border:1px solid rgba(0,82,254,0.25)">Zero AMC 1st Yr</span>
+                </div>
+              </div>
+              <h3 style="margin:0 0 6px 0;font-size:16px;font-weight:700;color:var(--text);line-height:1.35">Flat ₹20 Trades + Free Demat &amp; SmartAPI Algo</h3>
+              <p class="xs muted" style="margin:0 0 12px 0;line-height:1.5">Full-service advisory depth at discount broker rates. Pro TradingView charting, rule-based ARQ Prime engine, and automated API support.</p>
+              
+              <div class="aff-chips-grid">
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Demat AMC (1st Year)</span>
+                  <span class="aff-chip-val" style="color:var(--up)">₹0 Free</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Intraday &amp; F&amp;O</span>
+                  <span class="aff-chip-val">Flat ₹20 or 0.25%</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Algo Trading</span>
+                  <span class="aff-chip-val" style="color:var(--up)">Free SmartAPI</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Research &amp; Advisory</span>
+                  <span class="aff-chip-val" style="color:var(--accent)">ARQ Prime Calls</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <a class="btn-aff-angelone" href="https://angel-one.onelink.me/Wjgr/1b827725" target="_blank" rel="noopener nofollow">
+                <span>Open Angel One Account</span>
+                <span aria-hidden="true">&rarr;</span>
+              </a>
+              <div class="aff-trust-note">
+                <span style="color:var(--up);font-weight:700">✓</span>
+                <span>Instant Aadhaar OTP Onboarding &middot; SEBI Reg: INZ000161534</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Indiabulls Securities Partner Card -->
+          <div class="card aff-article-card aff-card-ibsl" style="border:1px solid rgba(47,74,143,0.25);border-radius:12px;padding:20px;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(180deg,rgba(47,74,143,0.04) 0%,rgba(47,74,143,0.01) 100%)">
+            <div>
+              <div class="row-between" style="align-items:center;margin-bottom:12px">
+                <div style="font-weight:700;font-size:17px;color:var(--text);letter-spacing:-0.01em">
+                  Indiabulls Securities
+                </div>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <span class="badge badge-verified" style="font-size:11px">Zero Delivery</span>
+                  <span class="badge" style="font-size:11px;background:rgba(47,74,143,0.12);color:var(--accent);border:1px solid rgba(47,74,143,0.25)">SEBI Listed Legacy</span>
+                </div>
+              </div>
+              <h3 style="margin:0 0 6px 0;font-size:16px;font-weight:700;color:var(--text);line-height:1.35">Zero Brokerage on Delivery &amp; Flat Rs 11 F&amp;O</h3>
+              <p class="xs muted" style="margin:0 0 12px 0;line-height:1.5">Trade equities and derivatives with India's pioneering broker. Backed by 20+ years of institutional heritage and transparent pricing.</p>
+              
+              <div class="aff-chips-grid">
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Equity Delivery</span>
+                  <span class="aff-chip-val" style="color:var(--up)">Rs 0 Free</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Intraday &amp; F&amp;O</span>
+                  <span class="aff-chip-val" style="color:var(--up)">Flat Rs 11 / order</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Account Opening</span>
+                  <span class="aff-chip-val" style="color:var(--up)">Rs 0 Free</span>
+                </div>
+                <div class="aff-chip">
+                  <span class="aff-chip-label">Heritage</span>
+                  <span class="aff-chip-val" style="color:var(--accent)">20+ Years Trusted</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:16px">
+              <a class="btn btn-primary" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="display:flex;justify-content:center;align-items:center;gap:6px;width:100%;text-decoration:none;font-weight:600;padding:10px 16px">
+                <span>Open Free Demat Account</span>
+                <span aria-hidden="true">&rarr;</span>
+              </a>
+              <div class="aff-trust-note" style="margin-top:8px;font-size:11px;color:var(--text-faint);display:flex;align-items:center;gap:6px;justify-content:center">
+                <span style="color:var(--up);font-weight:700">&#10003;</span>
+                <span>SEBI Reg: INZ000036136 &middot; DP: IN-DP-423-2019</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:24px"><a class="btn btn-sm" href="/news/" data-link>&larr; Back to all News, Blogs &amp; Market Insights</a></div></main>
+<footer class="site"><div class="wrap">
+  <p class="small muted" style="max-width:70ch">Facts are derived from National Stock Exchange (NSE) and SEBI public regulatory filings.</p>
+  <p class="small"><a href="/news/">Market News, Blogs &amp; Research →</a> ·
+  <a href="/registry">Search the full SEBI registry →</a> ·
+  <a href="/brokers">Brokers tracked in depth →</a> ·
+  <a href="/brokers-by/type/">Brokers by type →</a> ·
+  <a href="/brokers-by/segment/">Brokers by segment →</a> ·
+  <a href="/brokers-by/city/">Brokers by city →</a> ·
+  <a href="/stocks/">Browse stocks A-Z →</a> ·
+  <a href="/funds-by/">Browse mutual funds by AMC →</a> ·
+  <a href="/etfs/">Browse ETFs →</a> · <a href="/ipo/">IPO tracker →</a> · <a href="/">BrokerLens home →</a></p>
+  <p class="small"><a href="/ipo/upcoming/">Upcoming IPOs →</a> ·
+  <a href="/ipo/gmp/">IPO GMP Today →</a> ·
+  <a href="/ipo/sme/">SME IPOs →</a> ·
+  <a href="/ipo/subscription/">IPO subscription status →</a> ·
+  <a href="/trade-costs/">Trade cost calculator →</a> ·
+  <a href="/index/nifty-50/">Nifty 50 constituents →</a> ·
+  <a href="/etf/niftybees/">Nifty 50 ETF: NIFTYBEES →</a></p>
+  <p class="small"><a href="/about">About</a> · <a href="/editorial-policy">Editorial policy</a> · <a href="/contact">Contact</a> ·
+  <a href="mailto:letmeknow@brokerlens.in">letmeknow@brokerlens.in</a> · <a href="/privacy-policy">Privacy policy</a> ·
+  <a href="/terms-of-service">Terms of service</a></p>
+</div></footer>
+<script type="module" src="/assets/js/nav-widgets.js?v=61e20586e7"></script>
+<script type="module" src="/assets/js/search.js?v=5d54a234ce"></script>
+</body>
+</html>

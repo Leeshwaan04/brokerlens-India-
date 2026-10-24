@@ -558,7 +558,7 @@ def build():
         log("equity history: %d stocks had a split/bonus-sized break; earlier prices excluded" % len(_EQUITY_BREAKS), "ok")
     build_equity_history(equity_history)
     _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"),
-                        index_universe, equity_history, bse_d.get("corporate_actions") or [])
+                        index_universe, equity_history, bse_d.get("corporate_actions") or [], ipo_records=ipo_records)
     _write_index_pages(index_universe, equity_companies)
     etf_universe = nse_d.get("etfs") or []
     mf_schemes = amfi_d.get("schemes") or []
@@ -1131,6 +1131,8 @@ _REGISTRY_PAGE_FOOT = f"""</main>
   <a href="/funds-by/">Browse mutual funds by AMC →</a> ·
   <a href="/etfs/">Browse ETFs →</a> · <a href="/ipo/">IPO tracker →</a> · <a href="/">BrokerLens home →</a></p>
   <p class="small"><a href="/ipo/upcoming/">Upcoming IPOs →</a> ·
+  <a href="/ipo/gmp/">IPO GMP Today →</a> ·
+  <a href="/ipo/sme/">SME IPOs →</a> ·
   <a href="/ipo/subscription/">IPO subscription status →</a> ·
   <a href="/trade-costs/">Trade cost calculator →</a> ·
   <a href="/index/nifty-50/">Nifty 50 constituents →</a> ·
@@ -1286,6 +1288,8 @@ _APP_SHELL_FOOT = """</main>
           <li><a href="/compare/stocks/">Compare stocks</a></li>
           <li><a href="/ipo/">IPO tracker</a></li>
           <li><a href="/ipo/upcoming/">Upcoming IPOs</a></li>
+          <li><a href="/ipo/gmp/">IPO GMP Today</a></li>
+          <li><a href="/ipo/sme/">SME IPOs</a></li>
           <li><a href="/ipo/subscription/">IPO subscription status</a></li>
           <li><a href="/ipo/allotment-status/">IPO allotment status</a></li>
           <li><a href="/ipo/how-to-apply/">How to apply for IPO</a></li>
@@ -2319,7 +2323,7 @@ _SECTOR_INDEX_SLUGS = {
 }
 
 
-def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None, corporate_actions=None):
+def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None, corporate_actions=None, ipo_records=None):
     """One static page per NSE-listed equity - Phase 1 of docs/SCALE_TO_60K_PLAN.md,
     completed: sector, a real price snapshot and corporate actions were named
     in that plan as in-scope "from data this pipeline already pulls" but
@@ -2356,6 +2360,12 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
         trade_cost_slugs = {_stock_slug(s["symbol"]) for s in get_trade_cost_stocks(limit_stocks=1000)}
     except Exception:
         trade_cost_slugs = set()
+    ipo_by_slug = {}
+    for r in (ipo_records or []):
+        sym_r = (r.get("symbol") or "").strip().lower()
+        if sym_r:
+            ipo_by_slug[sym_r] = r
+
     membership, industry_by_symbol, sector_members = {}, {}, {}
     for slug, idx in (indices or {}).items():
         for con in idx["constituents"]:
@@ -2539,22 +2549,59 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                 '</div>'
             )
 
-        trade_cta_html = (
-            '<div class="card" style="margin-top:20px;background:var(--accent-soft);border-style:solid">'
-            '<div class="card-title">Trade %s</div>'
-            '<p class="small muted" style="margin-top:4px">%s is tradable through any SEBI-registered broker '
-            'with an NSE cash-market membership. Compare broker charges, STT, and breakeven point movements:</p>'
-            + trade_badges +
+        demat_cta_html = (
+            '<div class="card" style="margin-top:16px;background:var(--bg-raised);border-left:4px solid var(--accent);padding:16px">'
+            '<div style="font-weight:700;font-size:14px;color:var(--text)">Open Demat Account to Trade %s</div>'
+            '<p class="small muted" style="margin:4px 0 10px 0">Ready to invest in %s? Open a paperless Demat account with zero equity delivery brokerage, flat Rs 11 F&amp;O orders, and zero account opening fee with Indiabulls Securities.</p>'
+            '<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">'
+            '<a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener">Open Free Demat Account &rarr;</a>'
+            '<span class="xs faint">SEBI Reg. INZ000036136 &middot; Sponsored</span>'
+            '</div>'
             '</div>'
         ) % (_esc(symbol), _esc(name))
 
-        jio_callout_html = ""
+        trade_cta_html = (
+            '<div class="card" style="margin-top:20px;background:var(--accent-soft);border-style:solid">'
+            '<div class="card-title">Trade %s</div>'
+            '<p class="small muted" style="margin:4px 0 10px 0">%s is tradable through any SEBI-registered broker '
+            'with an NSE cash-market membership. Compare broker charges, STT, and breakeven point movements:</p>'
+            + trade_badges
+            + demat_cta_html +
+            '</div>'
+        ) % (_esc(symbol), _esc(name))
+
+        ipo_callout_html = ""
         if slug == "jiofin":
-            jio_callout_html = (
+            ipo_callout_html = (
                 '<div class="card" style="margin-top:20px;padding:16px 20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
                 '<div style="font-weight:700">Upcoming Reliance Jio Infocomm IPO</div>'
                 '<p class="small muted" style="margin:4px 0 10px 0">Tracking the Reliance Jio telecom IPO? View expected valuation, timeline, DRHP status and demat account application steps.</p>'
                 '<a class="btn btn-primary btn-xs" href="/ipo/jio/">View Reliance Jio IPO Details &rarr;</a>'
+                '</div>'
+            )
+        elif slug in ipo_by_slug:
+            ipo_info = ipo_by_slug[slug]
+            comp_name = ipo_info.get("company") or name
+            ipo_callout_html = (
+                '<div class="card" style="margin-top:20px;padding:16px 20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
+                '<div style="font-weight:700">%s IPO &amp; Historical Listing Data</div>'
+                '<p class="small muted" style="margin:4px 0 10px 0">Explore issue price band, lot size, listing day gains, and subscription history on the official IPO profile.</p>'
+                '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+                '<a class="btn btn-outline btn-xs" href="/ipo/%s/">View %s IPO Details &rarr;</a>'
+                '<a class="btn btn-outline btn-xs" href="/ipo/gmp/">Check Live IPO GMP Rates &rarr;</a>'
+                '</div>'
+                '</div>'
+            ) % (_esc(comp_name), _esc(slug), _esc(symbol))
+        else:
+            ipo_callout_html = (
+                '<div class="card" style="margin-top:20px;padding:16px 20px;background:var(--bg-raised);border-left:3px solid var(--accent)">'
+                '<div style="font-weight:700">Explore Primary Markets &amp; Upcoming IPOs</div>'
+                '<p class="small muted" style="margin:4px 0 10px 0">Track live Grey Market Premiums (GMP), SME public issues, and SEBI DRHP filing timelines across Indian exchanges.</p>'
+                '<div style="display:flex;gap:10px;flex-wrap:wrap">'
+                '<a class="btn btn-outline btn-xs" href="/ipo/">IPO Tracker &rarr;</a>'
+                '<a class="btn btn-outline btn-xs" href="/ipo/gmp/">Live IPO GMP Board &rarr;</a>'
+                '<a class="btn btn-outline btn-xs" href="/ipo/sme/">SME IPO Hub &rarr;</a>'
+                '</div>'
                 '</div>'
             )
 
@@ -2623,7 +2670,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             + actions_html
             + peers_html
             + compare_html
-            + jio_callout_html
+            + ipo_callout_html
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
         )
