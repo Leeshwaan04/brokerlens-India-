@@ -9,6 +9,7 @@
   --bg:            #fbfbfa;
   --bg-raised:     #ffffff;
   --bg-sunken:     #f2f2f0;
+  --bg-sub:        #f4f4f2;
   --bg-hover:      #f6f6f4;
   --border:        #e3e3df;
   --border-strong: #cfcfc9;
@@ -19,13 +20,13 @@
   --text-faint:    #96968d;
   --text-invert:   #fbfbfa;
 
-  /* brand — deep indigo reads as "market data", not "fintech startup" */
+  /* brand: deep indigo reads as "market data", not "fintech startup" */
   --accent:        #2f4a8f;
   --accent-hover:  #263d76;
   --accent-soft:   #eaeefa;
   --accent-text:   #2f4a8f;
 
-  /* semantic: Indian markets convention — green up, red down */
+  /* semantic: Indian markets convention: green up, red down */
   --up:            #0f7a4d;
   --up-soft:       #e6f4ec;
   --down:          #c0392b;
@@ -45,6 +46,7 @@
 
   /* radius */
   --radius-sm: 4px; --radius: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-full: 999px;
+  --r: var(--radius);
 
   /* type */
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
@@ -71,6 +73,7 @@
     --bg:            #131316;
     --bg-raised:     #1b1b1f;
     --bg-sunken:     #0e0e11;
+    --bg-sub:        #16161a;
     --bg-hover:      #23232a;
     --border:        #2c2c33;
     --border-strong: #3d3d46;
@@ -102,7 +105,7 @@
 
 /* explicit overrides must beat the media query in both directions */
 :root[data-theme="dark"] {
-  --bg: #131316; --bg-raised: #1b1b1f; --bg-sunken: #0e0e11; --bg-hover: #23232a;
+  --bg: #131316; --bg-raised: #1b1b1f; --bg-sunken: #0e0e11; --bg-sub: #16161a; --bg-hover: #23232a;
   --border: #2c2c33; --border-strong: #3d3d46;
   --text: #ececef; --text-muted: #a2a2ac; --text-faint: #74747e; --text-invert: #131316;
   --accent: #8fa8e8; --accent-hover: #a8bcf0; --accent-soft: #1e2438; --accent-text: #a8bcf0;
@@ -113,7 +116,7 @@
 }
 
 :root[data-theme="light"] {
-  --bg: #fbfbfa; --bg-raised: #ffffff; --bg-sunken: #f2f2f0; --bg-hover: #f6f6f4;
+  --bg: #fbfbfa; --bg-raised: #ffffff; --bg-sunken: #f2f2f0; --bg-sub: #f4f4f2; --bg-hover: #f6f6f4;
   --border: #e3e3df; --border-strong: #cfcfc9;
   --text: #1a1a18; --text-muted: #6b6b64; --text-faint: #96968d; --text-invert: #fbfbfa;
   --accent: #2f4a8f; --accent-hover: #263d76; --accent-soft: #eaeefa; --accent-text: #2f4a8f;

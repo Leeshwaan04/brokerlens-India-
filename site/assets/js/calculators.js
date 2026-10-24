@@ -20,15 +20,14 @@ function pct(n, digits = 2) {
 
 function brokerCta() {
   return `
-    <div style="grid-column:1/-1;margin-top:16px;padding:14px 18px;background:var(--bg-sub);border:1px solid var(--accent);border-radius:var(--r);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div style="grid-column:1/-1;margin-top:16px;padding:16px 18px;background:var(--bg-sub);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--r);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:var(--shadow-sm)">
       <div>
-        <div style="font-weight:700;font-size:var(--fs-sm)">Invest with Zero Brokerage on Equity Delivery</div>
-        <div class="xs muted" style="margin-top:2px">Compare charges and open a verified Demat account with India's top SEBI-registered brokers.</div>
+        <div style="font-weight:700;font-size:var(--fs-sm);color:var(--text)">Invest with Zero Brokerage on Equity Delivery</div>
+        <div class="xs muted" style="margin-top:3px">Open a free paperless Demat account with flat Rs 11 F&amp;O orders and zero account opening fee on Indiabulls Securities.</div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a href="https://zerodha.com/open-account?c=ZE5729" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-primary btn-xs">Open on Zerodha &rarr;</a>
-        <a href="https://dhan.co/?ref=BROKERLENS" target="_blank" rel="noopener noreferrer sponsored" class="btn btn-outline btn-xs">Open on Dhan &rarr;</a>
-        <a href="/compare/zerodha-vs-groww" class="btn btn-outline btn-xs">Compare Brokers &rarr;</a>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <a href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" class="btn btn-primary btn-sm" style="font-weight:600">Open Free Demat Account &rarr;</a>
+        <a href="/compare" class="btn btn-outline btn-sm">Compare Brokers &rarr;</a>
       </div>
     </div>`;
 }
