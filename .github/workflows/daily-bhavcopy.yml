@@ -1,0 +1,51 @@
+name: Daily NSE Bhavcopy & Market Refresh
+
+on:
+  schedule:
+    # 18:30 IST = 13:00 UTC (Post-market closing prices)
+    - cron: "0 13 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-bhavcopy-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh-bhavcopy:
+    name: Refresh NSE Bhavcopy & Market Movers
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ingest Daily Bhavcopy
+        env:
+          SITE_URL: "https://www.brokerlens.in"
+        run: |
+          python3 scripts/update_daily_bhavcopy.py
+
+      - name: Commit and Push Updated Market Data
+        run: |
+          git config --global user.name "BrokerLens Automation Bot"
+          git config --global user.email "bot@brokerlens.in"
+
+          git add data/_ingest.json site/data/ticker.json site/data/market-movers.json
+          if git diff --staged --quiet; then
+            echo "No market data updates detected. Working tree clean."
+          else
+            git commit -m "chore(market): automated daily NSE bhavcopy & ticker refresh $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
+            git push origin main
+            echo "Market data updates pushed to main."
+          fi

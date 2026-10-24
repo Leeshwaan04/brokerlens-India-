@@ -999,6 +999,55 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
   Calculate exact roundtrip statutory charges, STT, exchange turnover fees, GST, SEBI charges, stamp duty, and Demat debit fees for buying and selling shares across India's leading stock brokers.
 </p>
 
+<h2 style="font-size:20px;margin-bottom:12px">Active Trader Scenario Presets</h2>
+<p class="xs muted" style="margin-bottom:16px">Instant statutory breakdown for popular retail trading sizes under post-STT rules.</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;margin-bottom:36px">
+  <div class="card" style="padding:16px;background:var(--bg-raised);border-top:3px solid var(--accent)">
+    <div style="font-weight:700;font-size:15px">Nifty Index Option (1 Lot)</div>
+    <div class="xs muted" style="margin:4px 0 10px 0">65 Qty &middot; Buy @ Rs 120, Sell @ Rs 140</div>
+    <div class="small" style="line-height:1.6">
+      <div>Turnover: <strong>Rs 16,900</strong></div>
+      <div>Brokerage (Rs 20 flat): <strong>Rs 40.00</strong></div>
+      <div>Brokerage (Rs 11 flat): <strong>Rs 22.00</strong></div>
+      <div>STT (0.1% on Sell): <strong>Rs 9.10</strong></div>
+      <div style="margin-top:6px;color:var(--up);font-weight:600">Net Profit: +Rs 1,230</div>
+    </div>
+  </div>
+  <div class="card" style="padding:16px;background:var(--bg-raised);border-top:3px solid var(--accent)">
+    <div style="font-weight:700;font-size:15px">Equity Delivery (Rs 1 Lakh)</div>
+    <div class="xs muted" style="margin:4px 0 10px 0">50 Shares @ Rs 2,000 &middot; Roundtrip</div>
+    <div class="small" style="line-height:1.6">
+      <div>Turnover: <strong>Rs 2,00,000</strong></div>
+      <div>Brokerage (Zero): <strong>Rs 0.00</strong></div>
+      <div>STT (0.1% Buy + Sell): <strong>Rs 200.00</strong></div>
+      <div>Exchange + SEBI: <strong>Rs 6.14</strong></div>
+      <div style="margin-top:6px;color:var(--accent);font-weight:600">Total Statutory Taxes: Rs 242</div>
+    </div>
+  </div>
+  <div class="card" style="padding:16px;background:var(--bg-raised);border-top:3px solid var(--accent)">
+    <div style="font-weight:700;font-size:15px">Stock Intraday Momentum</div>
+    <div class="xs muted" style="margin:4px 0 10px 0">500 Shares @ Rs 500 &middot; Rs 5L Turnover</div>
+    <div class="small" style="line-height:1.6">
+      <div>Turnover: <strong>Rs 5,00,000</strong></div>
+      <div>Brokerage (max Rs 20): <strong>Rs 40.00</strong></div>
+      <div>STT (0.025% on Sell): <strong>Rs 62.50</strong></div>
+      <div>Exchange Charges: <strong>Rs 14.85</strong></div>
+      <div style="margin-top:6px;color:var(--up);font-weight:600">Breakeven Point: +Rs 0.25/share</div>
+    </div>
+  </div>
+  <div class="card" style="padding:16px;background:var(--bg-raised);border-top:3px solid var(--accent)">
+    <div style="font-weight:700;font-size:15px">BankNifty Expiry Scalp</div>
+    <div class="xs muted" style="margin:4px 0 10px 0">2 Lots (30 Qty) &middot; Buy @ Rs 220, Sell @ Rs 280</div>
+    <div class="small" style="line-height:1.6">
+      <div>Turnover: <strong>Rs 15,000</strong></div>
+      <div>Brokerage (Rs 11 flat): <strong>Rs 22.00</strong></div>
+      <div>STT (0.1% on Sell): <strong>Rs 8.40</strong></div>
+      <div>GST + Stamp Duty: <strong>Rs 4.20</strong></div>
+      <div style="margin-top:6px;color:var(--up);font-weight:600">Net Profit: +Rs 1,745</div>
+    </div>
+  </div>
+</div>
+
 <h2 style="font-size:20px;margin-bottom:16px">Compare by Stock Broker</h2>
 <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:16px;margin-bottom:40px">
   {''.join(broker_cards)}

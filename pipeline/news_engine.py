@@ -1738,6 +1738,34 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
 </rss>""" % (site_url, items_xml)
     _write_text(os.path.join(ROOT, "site", "feed.xml"), rss_xml)
 
+    # 5. Write Google News Sitemap (`site/sitemaps/sitemap-news.xml`)
+    sitemaps_dir = os.path.join(ROOT, "site", "sitemaps")
+    os.makedirs(sitemaps_dir, exist_ok=True)
+    news_urls = []
+    for a in articles:
+        slug = a.get("slug")
+        if not slug:
+            continue
+        art_title = _esc(a.get("title") or "")
+        art_date = a.get("date") or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        news_urls.append(
+            f"<url><loc>{site_url}/news/{slug}/</loc><lastmod>{art_date}</lastmod>"
+            "<news:news>"
+            "<news:publication><news:name>BrokerLens</news:name><news:language>en</news:language></news:publication>"
+            f"<news:publication_date>{art_date}</news:publication_date>"
+            f"<news:title>{art_title}</news:title>"
+            "</news:news>"
+            "</url>"
+        )
+    news_sitemap_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">\n'
+        + "".join(news_urls)
+        + "\n</urlset>"
+    )
+    _write_text(os.path.join(sitemaps_dir, "sitemap-news.xml"), news_sitemap_xml)
+
     return written_count, articles
 
 

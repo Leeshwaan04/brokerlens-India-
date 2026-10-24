@@ -7872,15 +7872,33 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
             % (SITE_URL, slugify(letter), today)
         )
 
-    # 7. NEWS & ARTICLES SITEMAP
+    # 7. NEWS & ARTICLES SITEMAP (with Google News schema tags)
     news_entries = []
+    news_meta_path = os.path.join(ROOT, "site", "data", "news.json")
+    news_meta_dict = {}
+    if os.path.exists(news_meta_path):
+        try:
+            with open(news_meta_path, "r", encoding="utf-8") as f:
+                news_meta_dict = {a["slug"]: a for a in json.load(f).get("articles", []) if a.get("slug")}
+        except Exception:
+            pass
+
     news_dir = os.path.join(ROOT, "site", "news")
     if os.path.isdir(news_dir):
         for item in sorted(os.listdir(news_dir)):
             if item != "index.html" and os.path.isdir(os.path.join(news_dir, item)):
+                art = news_meta_dict.get(item) or {}
+                art_title = _esc(art.get("title") or item.replace("-", " ").title())
+                art_date = art.get("date") or today
                 news_entries.append(
-                    "<url><loc>%s/news/%s/</loc><lastmod>%s</lastmod><changefreq>daily</changefreq></url>"
-                    % (SITE_URL, item, today)
+                    "<url><loc>%s/news/%s/</loc><lastmod>%s</lastmod><changefreq>daily</changefreq>"
+                    "<news:news>"
+                    "<news:publication><news:name>BrokerLens</news:name><news:language>en</news:language></news:publication>"
+                    "<news:publication_date>%s</news:publication_date>"
+                    "<news:title>%s</news:title>"
+                    "</news:news>"
+                    "</url>"
+                    % (SITE_URL, item, art_date, art_date, art_title)
                 )
 
     # 8. CRYPTO SITEMAP
@@ -8019,9 +8037,10 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         for i in range(total_chunks):
             chunk = entries[i * CHUNK_LIMIT : (i + 1) * CHUNK_LIMIT]
             filename = "sitemap-%s.xml" % name if total_chunks == 1 else "sitemap-%s-%d.xml" % (name, i + 1)
+            news_ns = ' xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"' if name == "news" else ""
             xml = (
                 '<?xml version="1.0" encoding="UTF-8"?>\n'
-                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+                f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"{news_ns}>\n'
                 + "".join(chunk)
                 + "\n</urlset>"
             )
