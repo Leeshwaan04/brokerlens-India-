@@ -1015,17 +1015,43 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
   <div class="table-scroll">
     <table class="data">
       <thead>
-        <tr><th>Charge Name</th><th>Levied By</th><th>Equity Delivery Rate</th><th>Equity Intraday Rate</th></tr>
+        <tr><th>Charge Name</th><th>Levied By</th><th>Equity Delivery Rate</th><th>Equity Intraday Rate</th><th>Derivatives (F&amp;O) Rate</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>STT (Securities Transaction Tax)</strong></td><td>Govt of India / MoF</td><td>0.1% on Buy & Sell</td><td>0.025% on Sell only</td></tr>
-        <tr><td><strong>Exchange Turnover Charge</strong></td><td>NSE / BSE</td><td>0.00297% (NSE true-to-label)</td><td>0.00297%</td></tr>
-        <tr><td><strong>SEBI Turnover Charge</strong></td><td>SEBI Regulatory</td><td>₹10 per Crore (0.0001%)</td><td>₹10 per Crore (0.0001%)</td></tr>
-        <tr><td><strong>Stamp Duty</strong></td><td>State Revenue (Indian Stamp Act)</td><td>0.015% on Buy</td><td>0.003% on Buy</td></tr>
-        <tr><td><strong>GST (Goods & Services Tax)</strong></td><td>Govt of India</td><td>18% on (Brokerage + Exchange + SEBI)</td><td>18% on (Brokerage + Exchange + SEBI)</td></tr>
-        <tr><td><strong>DP (Depository) Charges</strong></td><td>CDSL / NSDL + Depository Participant</td><td>₹13.50 to ₹20 + GST per debit transaction</td><td>₹0 (No Demat movement)</td></tr>
+        <tr><td><strong>STT (Securities Transaction Tax)</strong></td><td>Govt of India / MoF</td><td>0.1% on Buy &amp; Sell</td><td>0.025% on Sell only</td><td>0.02% on Futures (Sell), 0.1% on Options (Sell Premium)</td></tr>
+        <tr><td><strong>Exchange Turnover Charge</strong></td><td>NSE / BSE</td><td>0.00297% (NSE true-to-label)</td><td>0.00297%</td><td>0.00173% (Futures), 0.03503% (Options Premium)</td></tr>
+        <tr><td><strong>SEBI Turnover Charge</strong></td><td>SEBI Regulatory</td><td>₹10 per Crore (0.0001%)</td><td>₹10 per Crore (0.0001%)</td><td>₹10 per Crore (0.0001%)</td></tr>
+        <tr><td><strong>Stamp Duty</strong></td><td>State Revenue (Indian Stamp Act)</td><td>0.015% on Buy</td><td>0.003% on Buy</td><td>0.002% on Futures Buy, 0.003% on Options Buy</td></tr>
+        <tr><td><strong>GST (Goods &amp; Services Tax)</strong></td><td>Govt of India</td><td>18% on (Brokerage + Exchange + SEBI)</td><td>18% on (Brokerage + Exchange + SEBI)</td><td>18% on (Brokerage + Exchange + SEBI)</td></tr>
+        <tr><td><strong>DP (Depository) Charges</strong></td><td>CDSL / NSDL + Depository Participant</td><td>₹13.50 to ₹20 + GST per debit transaction</td><td>₹0 (No Demat movement)</td><td>₹0 (Cash-settled derivatives)</td></tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<div class="card" style="margin-top:28px;padding:24px;background:var(--bg-raised);border-left:4px solid var(--accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <h2 style="font-size:19px;margin:0;color:var(--text)">F&amp;O Cost Audit: Save Over Rs 47,000 Annually in Brokerage</h2>
+    <span class="badge badge-verified" style="font-size:11px">Flat Rs 11 F&amp;O</span>
+  </div>
+  <p class="small muted" style="margin:8px 0 16px 0;line-height:1.6">
+    Under the revised 2026 STT rates, keeping brokerage low is essential for derivatives traders. Here is how annual costs compare for an active trader executing 10 trades daily (220 trades monthly = 2,640 trades annually):
+  </p>
+  <div class="table-scroll">
+    <table class="data" style="margin-bottom:16px">
+      <thead>
+        <tr><th>Broker Model</th><th>Brokerage per Order</th><th>Roundtrip Cost (Buy + Sell)</th><th>Annual Brokerage (2,640 trades)</th><th>Annual Savings vs Percentage</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Traditional Percentage Broker</strong></td><td>0.05% (~Rs 50 to Rs 100)</td><td>~Rs 100 to Rs 200</td><td>~Rs 264,000</td><td>Baseline</td></tr>
+        <tr><td><strong>Standard Discount Broker</strong></td><td>Flat Rs 20</td><td>Rs 40</td><td>Rs 105,600</td><td>Rs 158,400 Saved</td></tr>
+        <tr style="background:rgba(16,185,129,0.06)"><td><strong>Indiabulls Securities</strong></td><td><strong>Flat Rs 11</strong></td><td><strong>Rs 22</strong></td><td><strong>Rs 58,080</strong></td><td><strong style="color:var(--up)">Rs 205,920 Saved (Rs 47,520 vs Rs 20 brokers)</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+    <a class="btn btn-primary" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Demat Account (Flat Rs 11 F&amp;O Orders) &rarr;</a>
+    <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
   </div>
 </div>
 </main>

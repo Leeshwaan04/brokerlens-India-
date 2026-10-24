@@ -415,6 +415,20 @@ def render_allotment_status_hub(site_url="https://www.brokerlens.in"):
   </div>
 </div>
 
+<div class="card" style="margin:24px 0 36px 0;padding:22px 24px;background:var(--bg-raised);border-left:4px solid var(--accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <div style="font-weight:700;font-size:16px;color:var(--text)">Apply for the Next Big IPO with Zero Delivery Brokerage</div>
+    <span class="badge badge-verified" style="font-size:11px">Zero Account Opening Fee</span>
+  </div>
+  <p class="small muted" style="margin:8px 0 14px 0;line-height:1.5">
+    Whether your shares were allotted or your mandate was unblocked, get ready for upcoming primary issues. Open a paperless Demat account with Indiabulls Securities featuring flat Rs 11 F&amp;O orders, zero delivery fees, and instant ASBA/UPI bidding.
+  </p>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+    <a class="btn btn-primary" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>
+    <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
+  </div>
+</div>
+
 <h2 style="font-size:20px;margin-bottom:16px">Official Registrar Allotment Portals</h2>
 <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:16px;margin-bottom:40px">
   {''.join(reg_cards)}
@@ -1214,6 +1228,20 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
         <li>Enter Application Number or PAN and complete verification.</li>
       </ol>
       <a href="https://www.bseindia.com/investors/appli_check.aspx" target="_blank" rel="noopener nofollow" class="btn small" style="background:var(--bg);border:1px solid var(--border);">Open BSE Check Portal &rarr;</a>
+    </div>
+  </div>
+
+  <div class="card" style="margin:20px 0 28px 0;padding:22px 24px;background:var(--bg-raised);border-left:4px solid var(--accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div style="font-weight:700;font-size:16px;color:var(--text)">Trade {company} on Listing Day or Apply for Next IPO</div>
+      <span class="badge badge-verified" style="font-size:11px">Zero Delivery Brokerage</span>
+    </div>
+    <p class="small muted" style="margin:8px 0 14px 0;line-height:1.5">
+      Open a paperless Demat account with Indiabulls Securities to trade on listing day with zero brokerage on delivery orders, flat Rs 11 F&amp;O orders, and zero account opening fee.
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+      <a class="btn btn-primary" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>
+      <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
     </div>
   </div>
 

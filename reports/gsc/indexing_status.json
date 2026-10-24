@@ -1,0 +1,109 @@
+{
+  "as_of": "2026-10-24",
+  "verified_live": true,
+  "sitemaps": {
+    "sitemap-broker-charges.xml": 11,
+    "sitemap-brokers.xml": 262,
+    "sitemap-core.xml": 51,
+    "sitemap-crypto.xml": 28,
+    "sitemap-ipos.xml": 1257,
+    "sitemap-news.xml": 102,
+    "sitemap-registry.xml": 1248,
+    "sitemap-stocks-top.xml": 592
+  },
+  "total_urls_submitted": 3551,
+  "pings": {
+    "https://www.brokerlens.in/sitemap.xml": {
+      "status_code": null,
+      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+      "timestamp": "2026-10-24T11:29:22.982774+00:00"
+    },
+    "https://www.brokerlens.in/sitemaps/sitemap-news.xml": {
+      "status_code": null,
+      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+      "timestamp": "2026-10-24T11:29:22.983483+00:00"
+    },
+    "https://www.brokerlens.in/sitemaps/sitemap-core.xml": {
+      "status_code": null,
+      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+      "timestamp": "2026-10-24T11:29:22.983889+00:00"
+    }
+  },
+  "spot_checks": {
+    "https://www.brokerlens.in/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-21T20:42:58Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/brokers": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-22T04:30:40Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/sources": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/methodology": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-22T19:10:56Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/broker/zerodha/": {
+      "coverageState": "Soft 404",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": "2026-10-13T04:36:46Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/stock/20microns/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-20T09:52:19Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/etf/niftybees/": {
+      "coverageState": "URL is unknown to Google",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/calculators/sip-calculator/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-15T03:02:11Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    },
+    "https://www.brokerlens.in/brokers-by/type/": {
+      "coverageState": "Discovered - currently not indexed",
+      "verdict": "NEUTRAL",
+      "lastCrawlTime": null,
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+    },
+    "https://www.brokerlens.in/crypto/btc/": {
+      "coverageState": "Submitted and indexed",
+      "verdict": "PASS",
+      "lastCrawlTime": "2026-10-14T17:57:07Z",
+      "pageFetchState": "SUCCESSFUL",
+      "robotsTxtState": "ALLOWED"
+    }
+  },
+  "summary": {
+    "total_spot_checks": 10,
+    "indexed_count": 6,
+    "indexing_health": "6/10 verified indexed in spot-checks"
+  }
+}

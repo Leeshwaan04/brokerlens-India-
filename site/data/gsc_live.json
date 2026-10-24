@@ -483,5 +483,12 @@
       "pageFetchState": "SUCCESSFUL",
       "robotsTxtState": "ALLOWED"
     }
+  },
+  "indexing_acceleration": {
+    "last_run": "2026-10-24",
+    "total_sitemap_urls": 3551,
+    "sitemaps_count": 8,
+    "spot_checks_indexed": 6,
+    "spot_checks_total": 10
   }
 }
