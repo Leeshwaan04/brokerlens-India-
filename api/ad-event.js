@@ -31,12 +31,17 @@ function done(res, status) {
   res.status(status).end();
 }
 
+// Only this project's own preview deployments (brokerlens-india-<hash-or-branch>.vercel.app),
+// never an arbitrary *.vercel.app host: any attacker can get a free vercel.app subdomain, and
+// a bare ".vercel.app" suffix check let any of them pass as an "allowed" origin and forge events.
+const PREVIEW_HOST_RE = /^brokerlens-india(-[a-z0-9-]+)?\.vercel\.app$/i;
+
 function originAllowed(req) {
   const origin = req.headers.origin;
   if (!origin) return false;
   try {
     const host = new URL(origin).host;
-    return ALLOWED_HOSTS.has(host) || host.endsWith('.vercel.app');
+    return ALLOWED_HOSTS.has(host) || PREVIEW_HOST_RE.test(host);
   } catch (e) {
     return false;
   }

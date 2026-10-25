@@ -101,8 +101,14 @@ export const esc = (s) =>
 export function safeUrl(url, { allowMailto = false } = {}) {
   const raw = String(url ?? '').trim();
   if (!raw) return '';
-  // Strip control characters: "java\tscript:" is a real bypass.
-  const cleaned = raw.replace(/[\x00-\x1f\x7f]/g, '');
+  // Strip control characters: "java\tscript:" is a real bypass. Normalize
+  // backslashes to forward slashes too: browsers treat '/\' and '\\' the same
+  // as '//' when resolving a URL (new URL('/\\evil.com', origin).href ===
+  // 'https://evil.com/'), so a leading-slash value with a backslash right
+  // after it would otherwise sail past the '//' check below and come back
+  // out of this function looking same-origin while actually being protocol-
+  // relative to another host.
+  const cleaned = raw.replace(/[\x00-\x1f\x7f]/g, '').replace(/\\/g, '/');
   if (cleaned.startsWith('//')) return '';            // protocol-relative
   if (cleaned.startsWith('/') || cleaned.startsWith('#')) return esc(cleaned);  // same-origin
   let parsed;

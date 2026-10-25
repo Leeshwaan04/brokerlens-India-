@@ -42,6 +42,7 @@ import threading
 import time
 import socket
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import unquote
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, "site")
@@ -136,24 +137,34 @@ class Handler(SimpleHTTPRequestHandler):
         # Cloud Run terminates every connection at Google's proxy layer, so
         # client_address is always the proxy's internal address there - every
         # visitor would collapse onto one "IP" for rate limiting and the
-        # per-IP subscriber cap, which defeats both. Cloud Run's proxy always
-        # sets X-Forwarded-For with the real client first; trusted here only
-        # because ALLOWED_ORIGIN (set only in the Cloud Run deployment) is the
-        # signal that this header is coming from that trusted proxy, not a
-        # spoofable client - locally (no ALLOWED_ORIGIN) the header is ignored
-        # and the raw socket peer is used, as before.
+        # per-IP subscriber cap, which defeats both. Cloud Run's proxy does not
+        # replace an inbound X-Forwarded-For, it APPENDS the verified client
+        # IP to whatever arrived - so the trustworthy value is the LAST entry,
+        # not the first. Taking the first entry let a client set its own
+        # X-Forwarded-For to a different fake value per connection and get a
+        # fresh "IP" (and thus a fresh rate-limit/subscriber-cap bucket) every
+        # time. Trusted here only because ALLOWED_ORIGIN (set only in the
+        # Cloud Run deployment) is the signal this header is coming through
+        # that trusted proxy at all - locally (no ALLOWED_ORIGIN) the header
+        # is ignored and the raw socket peer is used, as before.
         if ALLOWED_ORIGIN:
             fwd = self.headers.get("X-Forwarded-For")
             if fwd:
-                return fwd.split(",")[0].strip()
+                return fwd.split(",")[-1].strip()
         return self.client_address[0] if self.client_address else "-"
 
     def _blocked(self, route):
         """Never serve internal state or a directory index."""
-        if any(route.startswith(p) for p in FORBIDDEN_PREFIXES):
+        # translate_path() (used by the base class to resolve a file on disk)
+        # percent-decodes the path first, so this check has to run on the
+        # decoded form too - otherwise GET /%64ata/_ingest.json ("%64" = "d")
+        # sails straight past a check that only ever compared the raw,
+        # still-encoded "/%64ata/..." against FORBIDDEN_PREFIXES.
+        decoded = unquote(route)
+        if any(decoded.startswith(p) for p in FORBIDDEN_PREFIXES):
             return True
         # dotfiles anywhere in the path
-        return any(seg.startswith(".") for seg in route.split("/") if seg)
+        return any(seg.startswith(".") for seg in decoded.split("/") if seg)
 
     def do_OPTIONS(self):
         self.send_response(204)

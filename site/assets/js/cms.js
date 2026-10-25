@@ -9,7 +9,7 @@ import { esc, inr, count, safeUrl } from './store.js?v=3e1dd431fe';
 
 const MASTER_ADMIN_USER = 'admin@brokerlens.in';
 const MASTER_ADMIN_ALIAS = 'admin';
-const MASTER_PASS_HASH = '9bffe42d48fa1a87d627dd89cf30b0937df9c5a0ff3d078e51fcc9740a7bdb2c'; // SHA-256 for BrokerLens@2026!
+const MASTER_PASS_HASH = '9bffe42d48fa1a87d627dd89cf30b0937df9c5a0ff3d078e51fcc9740a7bdb2c';
 const SESSION_STORAGE_KEY = 'bl_cms_auth_token';
 
 let inMemoryAuthToken = null;
@@ -402,6 +402,14 @@ async function renderDashboard(container) {
   if (exportBtn) {
     exportBtn.addEventListener('click', () => {
       exportRealAnalyticsData({ gsc, articles, verifiedPartners });
+    });
+  }
+
+  const gotoGscBtn = container.querySelector('#cms-goto-gsc');
+  if (gotoGscBtn) {
+    gotoGscBtn.addEventListener('click', async () => {
+      activeTab = 'gsc';
+      await renderDashboard(container);
     });
   }
 }
