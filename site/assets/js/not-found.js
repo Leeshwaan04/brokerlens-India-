@@ -35,9 +35,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const index = await res.json();
     if (!Array.isArray(index)) return;
 
-    const matches = index.filter(item => {
-      const title = (item.title || '').toLowerCase();
-      const sub = (item.subtitle || '').toLowerCase();
+    const matches = index.filter(row => {
+      const title = (row[0] || '').toLowerCase();
+      const sub = (row[3] || '').toLowerCase();
       return title.includes(query) || sub.includes(query);
     }).slice(0, 3);
 
@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:8px">Were you looking for one of these?</div>
           <div style="display:flex;flex-direction:column;gap:8px">
             ${matches.map(m => `
-              <a href="${safeUrl(m.url)}" class="btn btn-outline btn-sm" style="display:flex;justify-content:space-between;align-items:center;text-align:left;padding:8px 12px">
-                <span><strong>${esc(m.title)}</strong> <span class="xs faint">${esc(m.subtitle || '')}</span></span>
+              <a href="${safeUrl(m[1])}" class="btn btn-outline btn-sm" style="display:flex;justify-content:space-between;align-items:center;text-align:left;padding:8px 12px">
+                <span><strong>${esc(m[0])}</strong> <span class="xs faint">${esc(m[3] || '')}</span></span>
                 <span>&rarr;</span>
               </a>
             `).join('')}

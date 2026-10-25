@@ -1970,6 +1970,8 @@ export async function news(query) {
     if (search) {
       search.addEventListener('input', applyFilter);
     }
+
+    applyFilter();
   });
 
   const cardsHtml = articles.map((a) => `

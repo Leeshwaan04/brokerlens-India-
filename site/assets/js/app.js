@@ -124,6 +124,7 @@ async function render() {
     app.innerHTML = `<div class="grid g3"><div class="card skeleton" style="height:96px"></div>
       <div class="card skeleton" style="height:96px"></div><div class="card skeleton" style="height:96px"></div></div>`;
   }
+  const wasFirstRender = isFirstRender;
   isFirstRender = false;
 
   try {
@@ -191,7 +192,7 @@ async function render() {
   }
 
   /* Track SPA virtual pageviews in GA4 on subsequent navigations */
-  if (!isFirstRender && typeof window.gtag === 'function') {
+  if (!wasFirstRender && typeof window.gtag === 'function') {
     window.gtag('event', 'page_view', {
       page_title: document.title,
       page_location: window.location.href,
