@@ -20,6 +20,19 @@ from ..common import amfi, log, snapshot, to_num
 
 URL = "https://portal.amfiindia.com/spages/NAVAll.txt"
 
+# AMFI's real NAVAll.txt has carried 14,000+ scheme rows for years. A 200
+# response under an interstitial/anti-bot/error page, or a truncated body,
+# still parses to a handful of matching rows (or zero) and used to be logged
+# and published as a plain "ok" - identical to a full file - because the only
+# check here was "is the list non-empty". That let a broken fetch silently
+# replace the entire ~3,400-page mutual fund section with a near-empty one
+# for over a week with no alert (see data/raw/amfi_nav_master/2026-10-16
+# onward: row_count collapsed from ~14,300+ to exactly 3 and stayed there).
+# This floor is well below any real file (which has never dropped under
+# ~14,000) and well above a blocked/broken response, so it can't be crossed
+# by ordinary AMFI data churn.
+MIN_PLAUSIBLE_ROWS = 5000
+
 
 def _clean_name(name):
     """AMFI's own file re-types the same scheme name slightly differently
@@ -78,11 +91,22 @@ def nav_master(f):
             "category": category,
         })
 
+    snapshot("amfi_nav_master", {"row_count": len(rows)})
     log("amfi nav master: %d scheme rows across %d AMCs"
         % (len(rows), len(set(r["amc"] for r in rows))), "ok" if rows else "warn")
-    snapshot("amfi_nav_master", {"row_count": len(rows)})
     return rows
 
 
 def collect():
-    return {"schemes": nav_master(amfi())}
+    rows = nav_master(amfi())
+    if rows is not None and len(rows) < MIN_PLAUSIBLE_ROWS:
+        # Implausibly small for a real NAVAll.txt pull - treat it the same as
+        # no data at all so pipeline.run's EXPECTED_ROWS gate sees "schemes"
+        # as empty, logs "err", and the run exits non-zero instead of
+        # silently publishing a near-empty mutual fund section as a success.
+        # (The floor lives here, not in nav_master(), so unit tests can still
+        # call nav_master() directly with small fixtures.)
+        log("amfi nav master: only %d scheme rows parsed (expected 14,000+) "
+            "- treating as a failed fetch, not publishing" % len(rows), "err")
+        rows = None
+    return {"schemes": rows}

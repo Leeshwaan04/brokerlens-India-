@@ -45,6 +45,7 @@ def update_bhavcopy():
     now_utc = datetime.now(timezone.utc)
     today_iso = now_utc.strftime("%Y-%m-%d")
     print(f"[daily_bhavcopy] Initiating Bhavcopy refresh sequence for {today_iso}...")
+    ok = True
 
     # Load current ingest state
     ingest_data = {}
@@ -78,6 +79,7 @@ def update_bhavcopy():
         print(f"[daily_bhavcopy] Updated {INGEST_PATH} state successfully.")
     except Exception as e:
         print(f"[daily_bhavcopy] Error writing {INGEST_PATH}: {e}")
+        ok = False
 
     # Re-publish ticker and market movers
     try:
@@ -86,9 +88,13 @@ def update_bhavcopy():
         print("[daily_bhavcopy] Regenerated site/data/ticker.json and site/data/market-movers.json.")
     except Exception as exc:
         print(f"[daily_bhavcopy] Publish note: {exc}")
+        ok = False
 
-    print("[daily_bhavcopy] Daily Bhavcopy refresh completed successfully.")
-    return True
+    if ok:
+        print("[daily_bhavcopy] Daily Bhavcopy refresh completed successfully.")
+    else:
+        print("[daily_bhavcopy] Daily Bhavcopy refresh completed with errors (see notes above).")
+    return ok
 
 
 if __name__ == "__main__":

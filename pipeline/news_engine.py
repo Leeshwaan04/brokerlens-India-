@@ -52,7 +52,7 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     mkt = nse_d.get("pulse") or {}
     indices = mkt.get("indices") or []
     nifty = indices[0] if indices else {}
-    breadth = nse_d.get("live", {}).get("breadth") or {}
+    breadth = mkt.get("breadth") or {}
     gainers = nse_d.get("live", {}).get("gainers") or []
     losers = nse_d.get("live", {}).get("losers") or []
     most_active = nse_d.get("live", {}).get("most_active") or []
@@ -1747,7 +1747,7 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
         if not slug:
             continue
         art_title = _esc(a.get("title") or "")
-        art_date = a.get("date") or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        art_date = a.get("date") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
         news_urls.append(
             f"<url><loc>{site_url}/news/{slug}/</loc><lastmod>{art_date}</lastmod>"
             "<news:news>"

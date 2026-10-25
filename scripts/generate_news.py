@@ -43,7 +43,7 @@ def main():
         if os.path.exists(ingest_path):
             with open(ingest_path, "r", encoding="utf-8") as f:
                 ingest_data = json.load(f)
-        count = write_news_suite(ingest_data, args.site_url)
+        count, _articles = write_news_suite(ingest_data, args.site_url)
         print("[generate_news] Compiled %d news articles, blogs and guides." % count)
 
     print("[generate_news] Completed successfully. Outputs updated:")

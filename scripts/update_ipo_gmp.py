@@ -73,20 +73,12 @@ def refresh_gmp_data():
 
 def rebuild_ipo_views():
     from pipeline import publish
-    from pipeline.run import build
 
     print("[update_ipo_gmp] Rebuilding IPO hubs and sitemaps...")
-    # Rebuilding pages ensures /ipo/gmp/ and /ipo/sme/ render fresh timestamps
-    try:
-        from pipeline.news_engine import run_live_generation, write_news_suite
-        ingest_data = {}
-        if os.path.exists(INGEST_PATH):
-            with open(INGEST_PATH, "r", encoding="utf-8") as f:
-                ingest_data = json.load(f)
-        count, _ = write_news_suite(ingest_data)
-        print(f"[update_ipo_gmp] Rebuilt news bulletin suite ({count} publications updated).")
-    except Exception as exc:
-        print(f"[update_ipo_gmp] News rebuild warning: {exc}")
+    # publish.build() re-renders /ipo/gmp/ and /ipo/sme/ (and the news suite) from the
+    # ipo_gmp.json just written above, plus whatever is already in data/_ingest.json.
+    publish.build()
+    print("[update_ipo_gmp] Site rebuild complete.")
 
     return True
 
@@ -96,8 +88,11 @@ def main():
     if ok:
         rebuild_ipo_views()
         print("[update_ipo_gmp] Successfully completed IPO and GMP daily update.")
+    else:
+        print("[update_ipo_gmp] Aborting: GMP data refresh failed, skipping site rebuild.")
+    return ok
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(0 if main() else 1)
 
