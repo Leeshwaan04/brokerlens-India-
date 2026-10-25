@@ -7092,6 +7092,7 @@ def _write_calculator_tool_page(built):
             ),
             len(priced), len(built),
         )
+    body += ibslBanner_html("wide", "calculator")
     body += _APP_SHELL_FOOT
     dest_dir = os.path.join(ROOT, "site", "calculator")
     os.makedirs(dest_dir, exist_ok=True)

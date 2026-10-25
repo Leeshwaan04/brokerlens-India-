@@ -13,6 +13,11 @@
       "source": "/stock/:symbol/share-price-target-:year/",
       "destination": "/stock/:symbol/",
       "permanent": true
+    },
+    {
+      "source": "/sebi-registry/fourdegreewater-services-private-limited/",
+      "destination": "/sebi-registry/wint-securities-private-limited/",
+      "permanent": true
     }
   ],
   "headers": [
