@@ -7815,6 +7815,10 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         return sum(vs) / len(vs) if vs else 0
     top_syms = {(c.get("symbol") or "").upper() for c in sorted(companies or [], key=lambda c: -_avg_vol(c.get("symbol")))[:500]
                 if _avg_vol(c.get("symbol")) > 0}
+    # Trading volume is a poor proxy for where this site actually wins in search: GSC shows
+    # small and mid caps ranking, large caps lost to established portals. Stocks with proven
+    # search demand (maintained daily by scripts/gsc_report.py) join wave 1 too.
+    demand = set((read_json(os.path.join(ROOT, "reports", "gsc", "stock_demand.json"), {}) or {}).get("slugs") or [])
     for c in (companies or []):
         slug = _stock_slug(c.get("symbol"))
         if slug:
@@ -7822,7 +7826,8 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
             lastmod = hist[-1]["date"] if hist else today
             entry = ("<url><loc>%s/stock/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
                      % (SITE_URL, slug, lastmod))
-            (stock_top_entries if (c.get("symbol") or "").upper() in top_syms else stock_entries).append(entry)
+            wave1 = (c.get("symbol") or "").upper() in top_syms or slug in demand
+            (stock_top_entries if wave1 else stock_entries).append(entry)
     for slug in (indices or {}):
         stock_top_entries.append(
             "<url><loc>%s/index/%s/</loc><lastmod>%s</lastmod><changefreq>weekly</changefreq></url>"

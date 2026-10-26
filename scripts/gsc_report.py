@@ -12,6 +12,7 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import re
 import sys
 import urllib.parse
 
@@ -39,6 +40,44 @@ SPOT_CHECK_URLS = [
     "https://www.brokerlens.in/brokers-by/type/",
     "https://www.brokerlens.in/crypto/btc/",
 ]
+
+
+DEMAND_PATH = os.path.join(OUT_DIR, "stock_demand.json")
+DEMAND_MIN_IMPRESSIONS = 5
+_STOCK_PATH_RE = re.compile(r"^/stock/([a-z0-9-]+)/(?:share-price-target-\d+/?)?$")
+
+
+def update_stock_demand(token, start, end):
+    """Stock slugs with proven search demand, read by publish.py's sitemap writer.
+
+    Wave 1 of the stock sitemap was the 500 most-traded names, but GSC shows this
+    site actually wins on small and mid caps that rule leaves out. A slug that took
+    at least DEMAND_MIN_IMPRESSIONS on its stock page (or its retired
+    share-price-target URL) over 28 days joins wave 1. The set only ever grows:
+    the 28-day window slides daily, and letting slugs drop out again would churn
+    the sitemap every day, which is its own crawl-trust problem. Leaves the file
+    untouched if the API call fails."""
+    rows = _safe(lambda: gsc._api(
+        "%s/sites/%s/searchAnalytics/query" % (gsc.API_ROOT, SITE_QUOTED), token, "POST",
+        {"startDate": start.isoformat(), "endDate": end.isoformat(), "dimensions": ["page"], "rowLimit": 25000},
+    ))
+    if not isinstance(rows, dict) or "error" in rows:
+        return None
+    impressions = {}
+    for r in rows.get("rows", []):
+        m = _STOCK_PATH_RE.match(r["keys"][0].split("brokerlens.in", 1)[-1])
+        if m:
+            impressions[m.group(1)] = impressions.get(m.group(1), 0) + r.get("impressions", 0)
+    try:
+        with open(DEMAND_PATH, encoding="utf-8") as f:
+            slugs = set(json.load(f).get("slugs", []))
+    except (OSError, ValueError):
+        slugs = set()
+    slugs |= {s for s, n in impressions.items() if n >= DEMAND_MIN_IMPRESSIONS}
+    with open(DEMAND_PATH, "w", encoding="utf-8") as f:
+        json.dump({"updated": datetime.date.today().isoformat(), "min_impressions_28d": DEMAND_MIN_IMPRESSIONS,
+                   "slugs": sorted(slugs)}, f, indent=1)
+    return len(slugs)
 
 
 def _safe(fn, *args):
@@ -113,6 +152,9 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     with open(os.path.join(OUT_DIR, "%s.json" % today), "w", encoding="utf-8") as f:
         json.dump(snapshot, f, indent=2)
+    n_demand = update_stock_demand(token, start, end)
+    if n_demand is not None:
+        print("stock demand: %d slugs with proven search demand" % n_demand)
 
     indexed_total = sum(int(s["indexed"] or 0) for s in sitemap_summary if s.get("indexed") not in (None, ""))
     submitted_total = sum(int(s["submitted"] or 0) for s in sitemap_summary if s.get("submitted") not in (None, ""))
