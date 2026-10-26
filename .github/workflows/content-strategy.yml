@@ -2,7 +2,7 @@ name: Weekly content strategy report
 
 on:
   schedule:
-    - cron: "0 4 * * 1"  # 04:00 UTC Monday = 09:30 IST
+    - cron: "19 4 * * 1"  # 04:19 UTC Monday = 09:49 IST
   workflow_dispatch: {}
 
 permissions:

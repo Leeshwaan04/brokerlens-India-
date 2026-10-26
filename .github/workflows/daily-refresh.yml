@@ -10,7 +10,7 @@ name: Daily content refresh
 
 on:
   schedule:
-    - cron: "0 21 * * *"  # 21:00 UTC = 02:30 IST - well outside market hours
+    - cron: "13 21 * * *"  # 21:13 UTC = 02:43 IST - well outside market hours
   workflow_dispatch: {}
 
 # This job never checks out the repo and only fires a webhook - it needs no

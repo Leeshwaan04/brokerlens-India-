@@ -2,9 +2,9 @@ name: Autopilot Search & Content Expansion Engine
 
 on:
   schedule:
-    # 09:00 IST = 03:30 UTC, Monday through Friday
-    # (Runs 30 mins after Search Console snapshot at 03:00 UTC)
-    - cron: "30 3 * * 1-5"
+    # 09:07 IST = 03:37 UTC, Monday through Friday (off-peak minute on purpose)
+    # (Runs 30 mins after the Search Console snapshot at 03:07 UTC)
+    - cron: "37 3 * * 1-5"
   workflow_dispatch:
 
 permissions:

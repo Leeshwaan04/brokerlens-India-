@@ -2,8 +2,8 @@ name: Daily NSE Bhavcopy & Market Refresh
 
 on:
   schedule:
-    # 18:30 IST = 13:00 UTC (Post-market closing prices)
-    - cron: "0 13 * * 1-5"
+    # 18:41 IST = 13:11 UTC (Post-market closing prices; off-peak minute on purpose)
+    - cron: "11 13 * * 1-5"
   workflow_dispatch:
 
 permissions:

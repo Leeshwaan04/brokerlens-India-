@@ -2,8 +2,8 @@ name: Daily Market Ingest & Build Pipeline
 
 on:
   schedule:
-    # 18:00 IST (UTC+5:30) = 12:30 UTC, Monday through Friday
-    - cron: "30 12 * * 1-5"
+    # 17:53 IST (UTC+5:30) = 12:23 UTC, Monday through Friday (off-peak minute on purpose)
+    - cron: "23 12 * * 1-5"
   workflow_dispatch:
 
 permissions:

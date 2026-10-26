@@ -2,10 +2,12 @@ name: Daily IPO & GMP Automated Refresh
 
 on:
   schedule:
-    # 09:15 IST = 03:45 UTC (Pre-market morning opening)
-    - cron: "45 3 * * 1-5"
-    # 18:15 IST = 12:45 UTC (Post-market evening close)
-    - cron: "45 12 * * 1-5"
+    # Off-peak minutes on purpose: GitHub delays (and under heavy load drops) scheduled
+    # runs around :00/:30/:45, when most of the world's crons fire.
+    # 09:22 IST = 03:52 UTC (Pre-market morning opening)
+    - cron: "52 3 * * 1-5"
+    # 18:22 IST = 12:52 UTC (Post-market evening close)
+    - cron: "52 12 * * 1-5"
   workflow_dispatch:
 
 permissions:
