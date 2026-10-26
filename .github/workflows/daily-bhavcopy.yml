@@ -41,7 +41,7 @@ jobs:
           git config --global user.name "BrokerLens Automation Bot"
           git config --global user.email "bot@brokerlens.in"
 
-          git add data/_ingest.json site/data/ticker.json site/data/market-movers.json
+          git add site/data/ticker.json
           if git diff --staged --quiet; then
             echo "No market data updates detected. Working tree clean."
           else
