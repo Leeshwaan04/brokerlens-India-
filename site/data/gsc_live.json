@@ -4,23 +4,16 @@
   "source": "Google Search Console API",
   "property": "sc-domain:brokerlens.in",
   "auth_method": "OAuth2 Service Account (secrets/gsc-service-account.json)",
-  "report_date": "2026-10-24",
+  "report_date": "2026-10-25",
   "totals_28d": {
-    "clicks": 551,
-    "impressions": 61578,
-    "ctr_pct": 0.89,
-    "avg_position": 20.0,
-    "date_range_start": "2026-09-23",
-    "date_range_end": "2026-10-21"
+    "clicks": 577,
+    "impressions": 64448,
+    "ctr_pct": 0.9,
+    "avg_position": 21.2,
+    "date_range_start": "2026-09-24",
+    "date_range_end": "2026-10-22"
   },
   "daily_history": [
-    {
-      "date": "2026-09-22",
-      "clicks_28d": 9,
-      "impressions_28d": 7682,
-      "submitted": 9516,
-      "indexed": 0
-    },
     {
       "date": "2026-09-23",
       "clicks_28d": 11,
@@ -223,29 +216,43 @@
       "impressions_28d": 61578,
       "submitted": 3961,
       "indexed": 0
+    },
+    {
+      "date": "2026-10-25",
+      "clicks_28d": 577,
+      "impressions_28d": 64448,
+      "submitted": 4037,
+      "indexed": 0
     }
   ],
   "top_queries": [
     {
       "query": "pashupati cotspin share price target 2030",
       "clicks": 14,
-      "impressions": 260,
-      "ctr": 5.38,
-      "position": 4.8
+      "impressions": 292,
+      "ctr": 4.79,
+      "position": 4.7
     },
     {
       "query": "jaykay enterprises share price target 2030",
       "clicks": 10,
-      "impressions": 35,
-      "ctr": 28.57,
-      "position": 5
+      "impressions": 36,
+      "ctr": 27.78,
+      "position": 5.2
     },
     {
       "query": "money view share price target 2027",
       "clicks": 9,
-      "impressions": 98,
-      "ctr": 9.18,
-      "position": 2.3
+      "impressions": 101,
+      "ctr": 8.91,
+      "position": 2.5
+    },
+    {
+      "query": "azad india mobility share price target 2030",
+      "clicks": 6,
+      "impressions": 163,
+      "ctr": 3.68,
+      "position": 3.1
     },
     {
       "query": "brokerlens",
@@ -255,45 +262,38 @@
       "position": 1
     },
     {
-      "query": "azad india mobility share price target 2030",
-      "clicks": 5,
-      "impressions": 137,
-      "ctr": 3.65,
-      "position": 3.2
-    },
-    {
       "query": "mon100 share price target 2030",
       "clicks": 4,
-      "impressions": 24,
-      "ctr": 16.67,
-      "position": 5.2
+      "impressions": 26,
+      "ctr": 15.38,
+      "position": 5.3
     },
     {
       "query": "ardee industries share price target 2030",
       "clicks": 3,
-      "impressions": 42,
-      "ctr": 7.14,
-      "position": 4.7
+      "impressions": 46,
+      "ctr": 6.52,
+      "position": 5
     },
     {
       "query": "cupid share price target 2026",
       "clicks": 3,
-      "impressions": 298,
-      "ctr": 1.01,
+      "impressions": 311,
+      "ctr": 0.96,
       "position": 6.8
     },
     {
       "query": "oswal greentech share price target 2030",
       "clicks": 3,
-      "impressions": 13,
-      "ctr": 23.08,
-      "position": 3.4
+      "impressions": 15,
+      "ctr": 20.0,
+      "position": 3.5
     },
     {
       "query": "pankaj mangaldas securities pvt. ltd",
       "clicks": 3,
-      "impressions": 122,
-      "ctr": 2.46,
+      "impressions": 117,
+      "ctr": 2.56,
       "position": 6.4
     },
     {
@@ -306,9 +306,9 @@
     {
       "query": "alpine texworld share price target 2030",
       "clicks": 2,
-      "impressions": 12,
-      "ctr": 16.67,
-      "position": 5.2
+      "impressions": 14,
+      "ctr": 14.29,
+      "position": 4.9
     },
     {
       "query": "ardee industries share price 2030",
@@ -334,9 +334,9 @@
     {
       "query": "media matrix share price target 2030",
       "clicks": 2,
-      "impressions": 9,
-      "ctr": 22.22,
-      "position": 4
+      "impressions": 13,
+      "ctr": 15.38,
+      "position": 4.9
     },
     {
       "query": "onix solar share price target 2030",
@@ -348,9 +348,9 @@
     {
       "query": "radhika jeweltech share price target 2030",
       "clicks": 2,
-      "impressions": 13,
-      "ctr": 15.38,
-      "position": 6.5
+      "impressions": 15,
+      "ctr": 13.33,
+      "position": 6.9
     },
     {
       "query": "shanti gold share price target 2030",
@@ -369,15 +369,15 @@
     {
       "query": "xtranet technologies share price target 2030",
       "clicks": 2,
-      "impressions": 16,
-      "ctr": 12.5,
+      "impressions": 17,
+      "ctr": 11.76,
       "position": 4.2
     },
     {
       "query": "absolute broking",
       "clicks": 1,
-      "impressions": 36,
-      "ctr": 2.78,
+      "impressions": 37,
+      "ctr": 2.7,
       "position": 7.4
     },
     {
@@ -397,8 +397,8 @@
     {
       "query": "allcargo logistics share price target 2026",
       "clicks": 1,
-      "impressions": 12,
-      "ctr": 8.33,
+      "impressions": 13,
+      "ctr": 7.69,
       "position": 4.3
     }
   ],
@@ -408,7 +408,7 @@
       "lastDownloaded": "2026-10-21T07:27:01.877Z",
       "warnings": "0",
       "errors": "0",
-      "submitted": "3961",
+      "submitted": "4037",
       "indexed": "0"
     }
   ],
@@ -416,23 +416,23 @@
     "https://www.brokerlens.in/": {
       "coverageState": "Submitted and indexed",
       "verdict": "PASS",
-      "lastCrawlTime": "2026-10-21T20:42:58Z",
+      "lastCrawlTime": "2026-10-24T22:38:04Z",
       "pageFetchState": "SUCCESSFUL",
       "robotsTxtState": "ALLOWED"
     },
     "https://www.brokerlens.in/brokers": {
       "coverageState": "Submitted and indexed",
       "verdict": "PASS",
-      "lastCrawlTime": "2026-10-22T04:30:40Z",
+      "lastCrawlTime": "2026-10-25T02:48:53Z",
       "pageFetchState": "SUCCESSFUL",
       "robotsTxtState": "ALLOWED"
     },
     "https://www.brokerlens.in/sources": {
-      "coverageState": "Discovered - currently not indexed",
-      "verdict": "NEUTRAL",
+      "coverageState": null,
+      "verdict": null,
       "lastCrawlTime": null,
-      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
-      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
+      "pageFetchState": null,
+      "robotsTxtState": null
     },
     "https://www.brokerlens.in/methodology": {
       "coverageState": "Submitted and indexed",
@@ -483,12 +483,5 @@
       "pageFetchState": "SUCCESSFUL",
       "robotsTxtState": "ALLOWED"
     }
-  },
-  "indexing_acceleration": {
-    "last_run": "2026-10-24",
-    "total_sitemap_urls": 3555,
-    "sitemaps_count": 8,
-    "spot_checks_indexed": 6,
-    "spot_checks_total": 10
   }
 }

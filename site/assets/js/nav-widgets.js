@@ -11,7 +11,7 @@
  * loads the same static /data/timings.json every other page uses and does
  * the live/closed math client-side, on every view.
  */
-import { esc, loadTimings, safeUrl } from './store.js?v=3e1dd431fe';
+import { esc, loadTimings, safeUrl } from './store.js?v=f96dfa9225';
 
 /* ------------------------------------------------------------- mobile nav */
 

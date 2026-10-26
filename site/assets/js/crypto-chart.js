@@ -10,7 +10,7 @@
  * up" rule as every other asset here. Loaded as a classic <script> before
  * this module so window.LightweightCharts exists by the time this runs.
  */
-import { esc } from './store.js?v=3e1dd431fe';
+import { esc } from './store.js?v=f96dfa9225';
 
 const RANGES = [
   { label: '1M', days: 30 },

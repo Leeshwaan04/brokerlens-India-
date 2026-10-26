@@ -5759,10 +5759,11 @@ def _write_contact_page():
 
 
 def _write_privacy_page():
-    """/privacy-policy: states plainly that BrokerLens runs no third-party
-    analytics or tracking cookies (true as of this build - only a
-    same-origin theme/exchange preference in localStorage), so this is a
-    factual description of the site, not templated boilerplate. Static,
+    """/privacy-policy: a factual description of what the site actually does,
+    not templated boilerplate, so this must be kept in sync by hand whenever
+    tracking changes - as of this build that's Google Analytics (GA4,
+    G-XJK97Q2CD7, added 2026-10-23) plus a same-origin theme/exchange
+    preference in localStorage and the cookie-free ad-event beacon. Static,
     like methodology/sources."""
     canonical = "%s/privacy-policy" % SITE_URL
     title = "Privacy Policy | BrokerLens"
@@ -5782,14 +5783,17 @@ def _write_privacy_page():
         'what it does not, and how to reach us about either.</p>'
 
         '<div class="section-title"><h2>What we collect</h2></div>'
-        '<div class="card"><p class="small muted">BrokerLens runs no third-party analytics or advertising '
-        'tracking. The site stores two preferences in your own browser\'s local storage (never sent to us or '
-        'anyone else): your light or dark theme choice, and your selected market exchange on the price ticker. '
-        'Clearing your browser data removes them. When a sponsored banner is shown or clicked, the site '
-        'records an anonymous event (which banner, which page, phone or desktop, and the referring site) with no '
-        'cookie, no IP address and no personal identifier, so we can see which pages send readers to an advertiser. '
-        'If you write to us by email, we hold that message and your '
-        'email address only for as long as needed to answer it.</p></div>'
+        '<div class="card"><p class="small muted">BrokerLens uses Google Analytics (GA4) to understand aggregate '
+        'traffic to the site: which pages are visited, how many visitors, and roughly which country or device '
+        'type. Google Analytics may set cookies and use your IP address and similar technical signals to do '
+        'this; see <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google\'s own '
+        'Privacy Policy</a> for how it handles that data. Separately, the site stores two preferences in your '
+        'own browser\'s local storage (never sent to us or anyone else): your light or dark theme choice, and '
+        'your selected market exchange on the price ticker. Clearing your browser data removes them. When a '
+        'sponsored banner is shown or clicked, the site records a separate, anonymous event (which banner, '
+        'which page, phone or desktop, and the referring site) with no cookie, no IP address and no personal '
+        'identifier, so we can see which pages send readers to an advertiser. If you write to us by email, we '
+        'hold that message and your email address only for as long as needed to answer it.</p></div>'
 
         '<div class="section-title"><h2>Affiliate and sponsored links</h2></div>'
         '<div class="card"><p class="small muted">Some pages carry a clearly marked sponsored banner linking to '

@@ -2,7 +2,7 @@
  * Provides a 30-second 3-step recommendation flow matching user goals
  * to verified SEBI registrations, fee schedules, and partner onboarding.
  */
-import { esc, safeUrl } from './store.js?v=3e1dd431fe';
+import { esc, safeUrl } from './store.js?v=f96dfa9225';
 
 export const PARTNER_LINKS = {
   zerodha: "https://zerodha.com/open-account?c=ZE5729",

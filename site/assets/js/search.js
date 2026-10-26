@@ -7,7 +7,7 @@
  * core pages). It's fetched lazily, only on first open, so it never adds
  * weight to a page a visitor doesn't search from.
  */
-import { esc, loadSearchIndex } from './store.js?v=3e1dd431fe';
+import { esc, loadSearchIndex } from './store.js?v=f96dfa9225';
 import './theme-audio.js?v=070f2dae6b';
 import './footer-film.js?v=f200bbfc3b';
 import './ad-track.js?v=2a0ab743f2';

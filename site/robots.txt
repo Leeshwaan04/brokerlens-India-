@@ -4,4 +4,4 @@ Disallow: /api/
 Disallow: /data/
 Disallow: /cms
 
-Sitemap: https://www.brokerlens.in/sitemap.xml
+Sitemap: https://brokerlens.in/sitemap.xml

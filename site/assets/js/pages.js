@@ -6,8 +6,8 @@ import {
   cls, count, esc, full, initials, inr, loadAlgo, loadBroker, loadNews, loadOverview,
   loadRegistry, loadSources, markColor, month, pct, provDot, safeUrl,
   SEGMENT_LABEL, TYPE_LABEL,
-} from './store.js?v=3e1dd431fe';
-import { barChart, donut, lineChart, registerRedraw, sparkline } from './chart.js?v=ec48a39b98';
+} from './store.js?v=f96dfa9225';
+import { barChart, donut, lineChart, registerRedraw, sparkline } from './chart.js?v=22460af914';
 
 const after = [];
 export const runAfter = () => { while (after.length) { try { after.shift()(); } catch (e) { console.error(e); } } };

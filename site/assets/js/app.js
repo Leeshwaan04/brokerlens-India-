@@ -5,11 +5,11 @@
  * server (and any production host) must rewrite unknown paths to /index.html.
  */
 
-import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=3e1dd431fe';
-import * as pages from './pages.js?v=ddc81243cf';
-import { clearRedraws } from './chart.js?v=ec48a39b98';
-import './nav-widgets.js?v=61e20586e7';
-import './search.js?v=5d54a234ce';
+import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=f96dfa9225';
+import * as pages from './pages.js?v=02d5c896be';
+import { clearRedraws } from './chart.js?v=22460af914';
+import './nav-widgets.js?v=0741624501';
+import './search.js?v=ec92af65f0';
 import './hero-video.js?v=9e658a1fa5';
 
 const app = document.getElementById('app');
