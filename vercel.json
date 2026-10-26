@@ -5,6 +5,16 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/stock/:symbol(autobees|bankbees|bfsi|bse500ietf|bslnifty|chemical|defence|egold|energy|evindia|fmcgietf|gold1|goldaxis|goldbees|goldcase|goldetf|goldietf|growwcapm|growwchem|growwgold|growwhospi|growwnet|growwnifty|growwpower|growwrlty|hdfcgold|hdfcpvtban|hdfcvalue|healthcare|hngsngbees|infrabees|infraietf|it|itbees|juniorbees|liquidcase|mafang|mahktech|makeindia|manufgbees|masptop50|metal|metalietf|mid150|mid150case|midcap|midcapetf|modefence|mogsec|mom50|mommidcap|mon100|monifty500|mosmall250|next50|next50ietf|nif100ietf|niftyaxis|niftybees|niftybetf|niftyetf|niftyietf|psubnkbees|sbismletf|sensexetf|sensexietf|setfnif50|setfnn50|silver001|silverbees|silvercase|smallcap|tatagold|tatsilv|valueaxis)/share-price-target-:year",
+      "destination": "/etf/:symbol/",
+      "permanent": true
+    },
+    {
+      "source": "/stock/:symbol(autobees|bankbees|bfsi|bse500ietf|bslnifty|chemical|defence|egold|energy|evindia|fmcgietf|gold1|goldaxis|goldbees|goldcase|goldetf|goldietf|growwcapm|growwchem|growwgold|growwhospi|growwnet|growwnifty|growwpower|growwrlty|hdfcgold|hdfcpvtban|hdfcvalue|healthcare|hngsngbees|infrabees|infraietf|it|itbees|juniorbees|liquidcase|mafang|mahktech|makeindia|manufgbees|masptop50|metal|metalietf|mid150|mid150case|midcap|midcapetf|modefence|mogsec|mom50|mommidcap|mon100|monifty500|mosmall250|next50|next50ietf|nif100ietf|niftyaxis|niftybees|niftybetf|niftyetf|niftyietf|psubnkbees|sbismletf|sensexetf|sensexietf|setfnif50|setfnn50|silver001|silverbees|silvercase|smallcap|tatagold|tatsilv|valueaxis)/share-price-target-:year/",
+      "destination": "/etf/:symbol/",
+      "permanent": true
+    },
+    {
       "source": "/stock/:symbol/share-price-target-:year",
       "destination": "/stock/:symbol/",
       "permanent": true
@@ -24,24 +34,48 @@
     {
       "source": "/data/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=30, s-maxage=60, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=30, s-maxage=60, must-revalidate"
+        }
       ]
     },
     {
       "source": "/assets/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com 'sha256-RwEsoK9UR+i7wQLLW8TaJDZa5KqmxAABvkRyepNHjU0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://coin-images.coingecko.com https://*.google-analytics.com https://*.googletagmanager.com https://*.doubleclick.net https://*.google.com; font-src 'self'; connect-src 'self' https://brokerlens-stream-649203501892.asia-south1.run.app https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://*.doubleclick.net https://*.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "geolocation=(), camera=(), microphone=(), payment=(), usb=()" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com 'sha256-RwEsoK9UR+i7wQLLW8TaJDZa5KqmxAABvkRyepNHjU0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://coin-images.coingecko.com https://*.google-analytics.com https://*.googletagmanager.com https://*.doubleclick.net https://*.google.com; font-src 'self'; connect-src 'self' https://brokerlens-stream-649203501892.asia-south1.run.app https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net https://*.doubleclick.net https://*.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), camera=(), microphone=(), payment=(), usb=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
       ]
     }
   ]
