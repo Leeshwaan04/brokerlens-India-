@@ -246,6 +246,15 @@ class Hub:
         with self._lock:
             self._subs.pop(q, None)
 
+    def is_subscribed(self, q):
+        """False once _broadcast() has evicted this subscriber for being too slow to
+        drain its queue. The eviction itself only updates this dict so the caps free
+        up immediately; the connection's own read loop has to poll this to find out
+        and actually close the socket, or it holds the thread/FD open indefinitely
+        counting against nothing."""
+        with self._lock:
+            return q in self._subs
+
     def subscriber_count(self):
         with self._lock:
             return len(self._subs)
@@ -422,7 +431,14 @@ class Worker(threading.Thread):
         return fn() or 0
 
     def _poll_nse_pulse(self):
-        pulse = nse_src.market_pulse(self._fetcher, ttl=0) or {}
+        pulse = nse_src.market_pulse(self._fetcher, ttl=0)
+        if not pulse:
+            # A real fetch returns at least a status/indices structure even when the
+            # market is closed; only a failed fetch comes back empty. Without this,
+            # a broken NSE pulse source silently applies as a no-op success every
+            # cycle and self.breaker.ok() resets the failure count, so the circuit
+            # breaker can never open for this source no matter how long it's down.
+            raise RuntimeError("NSE market pulse returned nothing")
         for s in pulse.get("status") or []:
             mk = (s.get("market") or "").lower()
             if "capital" in mk:
@@ -485,15 +501,21 @@ class Worker(threading.Thread):
     def _poll_mcx_gainers(self):
         g = mcx_src.top_gainers(self._fetcher, ttl=0)
         rows = g.get("quotes") or []
-        if rows:
-            self.hub.apply("MCX", instruments=rows)
+        if not rows:
+            # Matches _poll_mcx_heatmap's pattern: silently swallowing an empty
+            # result (instead of raising) calls self.breaker.ok() every cycle
+            # regardless of whether the fetch actually worked, so the circuit
+            # breaker can never open for this source no matter how long it's down.
+            raise RuntimeError(g.get("note") or "MCX gainers empty")
+        self.hub.apply("MCX", instruments=rows)
         return self.spec.get("wire_bytes")
 
     def _poll_mcx_full(self):
         """Slow loop only: complete contract list, units, expiries. 1.28 MB."""
         live = mcx_src.live_quotes(self._fetcher, self._mcx_watch)
-        if live.get("quotes"):
-            self.hub.apply("MCX", instruments=live["quotes"], as_of=live.get("as_of"))
+        if not live.get("quotes"):
+            raise RuntimeError(live.get("note") or "MCX full contract list empty")
+        self.hub.apply("MCX", instruments=live["quotes"], as_of=live.get("as_of"))
         return self.spec.get("wire_bytes")
 
     def _poll_crypto_prices(self):
@@ -618,6 +640,15 @@ def start(install_signal_handlers=True):
         def _bye(signum, _frame):
             log("stream: signal %d - shutting workers down" % signum, "warn")
             pool.stop()
+            # This handler replaces Python's default SIGINT behavior (which raises
+            # KeyboardInterrupt), so without this, neither signal unwinds the server's
+            # serve_forever() loop: the workers stop but the listening socket and the
+            # process itself stay up indefinitely, serving a permanently frozen
+            # snapshot until something SIGKILLs it. sys.exit() raises SystemExit from
+            # wherever the main thread was interrupted, which still passes through
+            # devserver.py main()'s try/finally (server_close() runs normally) on its
+            # way out, so the socket closes cleanly before the process actually exits.
+            sys.exit(0)
         for sig in (signal.SIGINT, signal.SIGTERM):
             try:
                 signal.signal(sig, _bye)

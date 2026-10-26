@@ -7,6 +7,15 @@
  * light/dark and theme switches need no JS wiring.
  */
 
+// Kept local, not imported from store.js, so this file stays the dependency-free
+// module its own header comment describes. set.label/labels[i] come from our own
+// data (broker/stock/fund names), not raw attacker input, but they do pass through
+// external sources (NSE/BSE company names) un-vetted for HTML-special characters,
+// and this was the one innerHTML sink in the codebase not already run through an
+// escape helper - every other one uses store.js's esc().
+const escHtml = (s) =>
+  String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 const css = (name, fallback) => {
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   return v || fallback;
@@ -188,11 +197,11 @@ function attachTooltip(canvas, s) {
       .map((set) => {
         const d = set.data[i];
         if (!d || d[1] == null) return null;
-        return `${set.label ? set.label + ': ' : ''}${s.fmt ? s.fmt(d[1]) : d[1]}`;
+        return `${set.label ? escHtml(set.label) + ': ' : ''}${escHtml(s.fmt ? s.fmt(d[1]) : d[1])}`;
       })
       .filter(Boolean);
     if (!rows.length) { tip.classList.remove('on'); return; }
-    tip.innerHTML = `<strong>${s.labels[i] ?? ''}</strong><br>${rows.join('<br>')}`;
+    tip.innerHTML = `<strong>${escHtml(s.labels[i] ?? '')}</strong><br>${rows.join('<br>')}`;
     tip.classList.add('on');
     const tw = tip.offsetWidth;
     tip.style.left = Math.min(Math.max(s.X(i) - tw / 2, 0), s.w - tw) + 'px';

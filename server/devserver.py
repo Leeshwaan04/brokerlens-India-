@@ -75,7 +75,7 @@ FORBIDDEN_PREFIXES = ("/data/_ingest", "/.git", "/.env", "/config", "/pipeline",
 
 # Simple in-memory rate limiting. Enough for a single-process dev/edge server;
 # put a real limiter in front of a production deployment.
-RATE_LIMITS = {"/api/stream": (30, 300)}   # (requests, window_s)
+RATE_LIMITS = {"/api/stream": (30, 300), "/api/health": (60, 60)}   # (requests, window_s)
 
 # Empty locally (same-origin, no CORS needed). On Cloud Run this is set to the
 # Vercel site's own origin, since /api/* is then served cross-origin from the
@@ -194,6 +194,13 @@ class Handler(SimpleHTTPRequestHandler):
             self._json(200, HUB.snapshot) if HUB else self._json(503, {"error": "stream disabled"})
             return
         if route == "/api/health":
+            ok, retry = LIMITER.check("health:" + self._client_ip(), *RATE_LIMITS["/api/health"])
+            if not ok:
+                self.send_response(429)
+                self.send_header("Retry-After", str(retry))
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
             self._json(200, {
                 "ok": True,
                 "stream": bool(HUB),
@@ -248,6 +255,10 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "text/event-stream; charset=utf-8")
             self.send_header("Cache-Control", "no-cache, no-transform")
             self.send_header("Connection", "keep-alive")
+            # _sse_raw() below hand-writes chunk framing (length\r\n...\r\n) for every
+            # frame; without this header nothing on the wire declares that framing, so
+            # an intermediary has to guess the message boundary instead of being told.
+            self.send_header("Transfer-Encoding", "chunked")
             self.send_header("X-Accel-Buffering", "no")   # tell nginx not to buffer us
             self.end_headers()
 
@@ -261,6 +272,13 @@ class Handler(SimpleHTTPRequestHandler):
                     self._sse(event, payload)
                 except queue.Empty:
                     pass
+                # A slow subscriber gets dropped from HUB._subs the moment its queue
+                # fills (see Hub._broadcast), which frees it against the connection
+                # caps immediately - but this loop would otherwise never find out and
+                # would keep holding the thread/FD open against a client that counts
+                # against nothing, until the socket itself eventually breaks.
+                if not HUB.is_subscribed(sub):
+                    break
                 if time.time() - last_beat >= SSE_HEARTBEAT_S:
                     # Comment frame: keeps proxies and phones from closing an idle stream.
                     self._sse_raw(": keep-alive\n\n")
@@ -304,7 +322,24 @@ class Handler(SimpleHTTPRequestHandler):
     # refused outright.
 
     def do_POST(self):
-        self._json(405, {"error": "method not allowed"})
+        # Draining is deliberately skipped: this server never reads a POST body, and
+        # trying to parse one ourselves (honoring a client-declared Content-Length or
+        # Transfer-Encoding: chunked framing) is exactly the surface that enables
+        # request smuggling - a second request hidden in a body we never consumed
+        # gets reparsed as the start of the next request on this same keep-alive
+        # connection. The safe answer is to never attempt it: refuse and stop
+        # reusing this connection outright, so nothing unread can be reinterpreted.
+        self.close_connection = True
+        body = json.dumps({"error": "method not allowed"}).encode()
+        self.send_response(405)
+        self.send_header("Connection", "close")
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        try:
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def _json(self, code, obj):
         body = json.dumps(obj).encode()
