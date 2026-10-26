@@ -58,11 +58,16 @@ jobs:
           git config --global user.name "BrokerLens Autopilot Bot"
           git config --global user.email "bot@brokerlens.in"
 
-          git add site/data/news.json site/feed.xml site/sitemaps/sitemap-news.xml site/news/
+          git add site/data/news.json site/sitemaps/sitemap-news.xml site/news/
           if git diff --staged --quiet; then
             echo "No new autopilot publications to commit."
           else
             git commit -m "feat(content): autopilot search keyword expansion $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
+            # The fetch+build step above touches far more of site/ than this job's own
+            # git add allowlist (that's daily-pipeline.yml's job to publish, on its own
+            # schedule) - discard those extra unstaged changes so the working tree is
+            # clean before a rebase, which otherwise refuses to run at all.
+            git checkout -- .
             # Sibling scheduled workflows (daily-ipo-gmp, daily-pipeline) can push to main
             # in the same window and touch overlapping paths. Rebase onto whatever is there
             # now before pushing, instead of letting a stale checkout hit a flat
