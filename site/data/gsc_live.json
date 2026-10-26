@@ -4,23 +4,16 @@
   "source": "Google Search Console API",
   "property": "sc-domain:brokerlens.in",
   "auth_method": "OAuth2 Service Account (secrets/gsc-service-account.json)",
-  "report_date": "2026-10-25",
+  "report_date": "2026-10-26",
   "totals_28d": {
-    "clicks": 577,
-    "impressions": 64448,
-    "ctr_pct": 0.9,
-    "avg_position": 21.2,
-    "date_range_start": "2026-09-24",
-    "date_range_end": "2026-10-22"
+    "clicks": 612,
+    "impressions": 66893,
+    "ctr_pct": 0.91,
+    "avg_position": 21.6,
+    "date_range_start": "2026-09-25",
+    "date_range_end": "2026-10-23"
   },
   "daily_history": [
-    {
-      "date": "2026-09-23",
-      "clicks_28d": 11,
-      "impressions_28d": 8503,
-      "submitted": 9507,
-      "indexed": 0
-    },
     {
       "date": "2026-09-24",
       "clicks_28d": 17,
@@ -223,14 +216,21 @@
       "impressions_28d": 64448,
       "submitted": 4037,
       "indexed": 0
+    },
+    {
+      "date": "2026-10-26",
+      "clicks_28d": 612,
+      "impressions_28d": 66893,
+      "submitted": 4040,
+      "indexed": 0
     }
   ],
   "top_queries": [
     {
       "query": "pashupati cotspin share price target 2030",
       "clicks": 14,
-      "impressions": 292,
-      "ctr": 4.79,
+      "impressions": 311,
+      "ctr": 4.5,
       "position": 4.7
     },
     {
@@ -249,66 +249,66 @@
     },
     {
       "query": "azad india mobility share price target 2030",
-      "clicks": 6,
-      "impressions": 163,
-      "ctr": 3.68,
+      "clicks": 7,
+      "impressions": 177,
+      "ctr": 3.95,
       "position": 3.1
     },
     {
       "query": "brokerlens",
-      "clicks": 6,
-      "impressions": 9,
-      "ctr": 66.67,
+      "clicks": 5,
+      "impressions": 7,
+      "ctr": 71.43,
       "position": 1
     },
     {
       "query": "mon100 share price target 2030",
       "clicks": 4,
-      "impressions": 26,
-      "ctr": 15.38,
-      "position": 5.3
+      "impressions": 30,
+      "ctr": 13.33,
+      "position": 5.1
     },
     {
       "query": "ardee industries share price target 2030",
       "clicks": 3,
-      "impressions": 46,
-      "ctr": 6.52,
-      "position": 5
+      "impressions": 49,
+      "ctr": 6.12,
+      "position": 5.0
     },
     {
       "query": "cupid share price target 2026",
       "clicks": 3,
-      "impressions": 311,
-      "ctr": 0.96,
+      "impressions": 332,
+      "ctr": 0.9,
       "position": 6.8
     },
     {
       "query": "oswal greentech share price target 2030",
       "clicks": 3,
-      "impressions": 15,
-      "ctr": 20.0,
+      "impressions": 16,
+      "ctr": 18.75,
       "position": 3.5
     },
     {
       "query": "pankaj mangaldas securities pvt. ltd",
       "clicks": 3,
-      "impressions": 117,
-      "ctr": 2.56,
+      "impressions": 112,
+      "ctr": 2.68,
       "position": 6.4
     },
     {
       "query": "ved power share price target 2027",
       "clicks": 3,
-      "impressions": 12,
-      "ctr": 25.0,
+      "impressions": 13,
+      "ctr": 23.08,
       "position": 1.6
     },
     {
       "query": "alpine texworld share price target 2030",
       "clicks": 2,
-      "impressions": 14,
-      "ctr": 14.29,
-      "position": 4.9
+      "impressions": 21,
+      "ctr": 9.52,
+      "position": 4.6
     },
     {
       "query": "ardee industries share price 2030",
@@ -320,9 +320,9 @@
     {
       "query": "broker lens",
       "clicks": 2,
-      "impressions": 7,
-      "ctr": 28.57,
-      "position": 2.7
+      "impressions": 8,
+      "ctr": 25.0,
+      "position": 2.5
     },
     {
       "query": "idbi share price target 2040",
@@ -348,9 +348,16 @@
     {
       "query": "radhika jeweltech share price target 2030",
       "clicks": 2,
-      "impressions": 15,
-      "ctr": 13.33,
-      "position": 6.9
+      "impressions": 19,
+      "ctr": 10.53,
+      "position": 6.6
+    },
+    {
+      "query": "railtel share price target 2027",
+      "clicks": 2,
+      "impressions": 10,
+      "ctr": 20.0,
+      "position": 5.1
     },
     {
       "query": "shanti gold share price target 2030",
@@ -369,8 +376,8 @@
     {
       "query": "xtranet technologies share price target 2030",
       "clicks": 2,
-      "impressions": 17,
-      "ctr": 11.76,
+      "impressions": 18,
+      "ctr": 11.11,
       "position": 4.2
     },
     {
@@ -393,22 +400,15 @@
       "impressions": 11,
       "ctr": 9.09,
       "position": 3.7
-    },
-    {
-      "query": "allcargo logistics share price target 2026",
-      "clicks": 1,
-      "impressions": 13,
-      "ctr": 7.69,
-      "position": 4.3
     }
   ],
   "sitemaps": [
     {
       "path": "https://www.brokerlens.in/sitemap.xml",
-      "lastDownloaded": "2026-10-21T07:27:01.877Z",
+      "lastDownloaded": "2026-10-26T05:21:10.866Z",
       "warnings": "0",
       "errors": "0",
-      "submitted": "4037",
+      "submitted": "4040",
       "indexed": "0"
     }
   ],
@@ -428,11 +428,11 @@
       "robotsTxtState": "ALLOWED"
     },
     "https://www.brokerlens.in/sources": {
-      "coverageState": null,
-      "verdict": null,
+      "coverageState": "URL is unknown to Google",
+      "verdict": "NEUTRAL",
       "lastCrawlTime": null,
-      "pageFetchState": null,
-      "robotsTxtState": null
+      "pageFetchState": "PAGE_FETCH_STATE_UNSPECIFIED",
+      "robotsTxtState": "ROBOTS_TXT_STATE_UNSPECIFIED"
     },
     "https://www.brokerlens.in/methodology": {
       "coverageState": "Submitted and indexed",
