@@ -2683,7 +2683,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
         }
         if history:
             body = body.replace("</head>", _stamp_asset_versions(
-                '<script src="/assets/js/vendor/lightweight-charts.standalone.production.js"></script>'
+                '<script src="/assets/js/vendor/lightweight-charts.standalone.production.js" defer></script>'
                 '<script type="module" src="/assets/js/stock-chart.js" defer></script></head>'))
         # what-if price calculator (kind 'price-whatif'), same versioned loader as /calculators/
         body = body.replace("</head>", _stamp_asset_versions(
@@ -4840,7 +4840,7 @@ def _write_crypto_pages(coins):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         body = body.replace("</head>", _stamp_asset_versions(
-            '<script src="/assets/js/vendor/lightweight-charts.standalone.production.js"></script>'
+            '<script src="/assets/js/vendor/lightweight-charts.standalone.production.js" defer></script>'
             '<script type="module" src="/assets/js/crypto-live.js" defer></script>'
             '<script type="module" src="/assets/js/crypto-chart.js" defer></script></head>'))
         body += (

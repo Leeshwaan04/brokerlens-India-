@@ -106,14 +106,16 @@ def run(check, ROOT, load):
           and not re.search(r"yahoo|google finance|moneycontrol|tradingview|screener|bloomberg", " ".join(a for _q, a in faqs).lower()))
 
     t = pts.stock_title("Acme Ltd", "ACME")
-    check("pricetarget: title strips 'Ltd', keeps 'Name (SYM): ... | BrokerLens', covers the query, within 70, no dashes",
-          t == "Acme (ACME): Share Price and What-If Calculator | BrokerLens" and "Ltd" not in t
+    check("pricetarget: title strips 'Ltd', keeps 'Name (SYM): ... | BrokerLens', covers the share-price-target query, no dashes",
+          t == "Acme (ACME): Share Price Target 2026-2030, What-If Calculator" and "Ltd" not in t
           and len(t) <= 70 and not any(d in t for d in DASHES), t)
     t2 = pts.stock_title("Reliance Industries Limited", "RELIANCE")
     t3 = pts.stock_title("Housing Development Finance Corporation Limited", "HDFC")
-    check("pricetarget: 'Limited' is stripped and the brand suffix is dropped when the title would pass 70 characters",
-          t2 == "Reliance Industries (RELIANCE): Share Price and What-If Calculator" and "Limited" not in t2
-          and len(t2) <= 70 and "BrokerLens" not in t2 and "What-If Calculator" in t3 and "Limited" not in t3, t2 + " / " + t3)
+    check("pricetarget: 'Limited' is stripped and the brand suffix is dropped before the target-year phrase is ever dropped",
+          t2 == "Reliance Industries (RELIANCE): Share Price Target 2026-2030, What-If Calculator" and "Limited" not in t2
+          and "BrokerLens" not in t2 and "Share Price Target 2026-2030" in t3 and "Limited" not in t3, t2 + " / " + t3)
+    check("pricetarget: a long company name is allowed to run past the usual 70-char budget rather than lose the target-year phrase",
+          len(t2) > 70 and "Share Price Target 2026-2030" in t2, t2)
     check("pricetarget: short_company_name keeps the name when stripping would leave nothing, and strips Ltd.",
           pts.short_company_name("Limited", "X") == "Limited" and pts.short_company_name("Bajaj Finance Ltd.", "BAJ") == "Bajaj Finance"
           and pts.short_company_name("", "ABC") == "ABC" and pts.short_company_name(None, "") == "")
@@ -136,8 +138,9 @@ def run(check, ROOT, load):
         check("pricetarget: built /stock/itc/ title keeps the what-if phrase and the symbol",
               "What-If" in ttl and "(ITC)" in ttl and not any(d in ttl for d in DASHES), ttl)
     d = pts.stock_description("Acme Ltd", "ACME")
-    check("pricetarget: meta description states no targets are published and has no dashes",
-          "publishes no price targets" in d and not any(x in d for x in DASHES), d)
+    check("pricetarget: meta description covers the share-price-target query and has no dashes "
+          "(the no-forecast disclosure still lives in the H2 body and FAQ, checked above)",
+          "share price target" in d.lower() and not any(x in d for x in DASHES), d)
 
     page = _read(ROOT, "site", "stock", "itc", "index.html")
     if page is None:

@@ -1539,7 +1539,10 @@ def test_published():
     check("pipeline/run.py has no em or en dash in its own source",
           not any(d in run_src for d in dash_chars))
     check("pipeline/run.py exposes programmatic engine commands",
-          all(cmd in run_src for cmd in ('"branches"', '"ipo-apply"', '"targets"', '"trade-costs"', '"engines"')))
+          all(cmd in run_src for cmd in ('"branches"', '"ipo-apply"', '"trade-costs"', '"engines"')))
+    check("pipeline/run.py no longer exposes the retired 'targets' CLI command "
+          "(it regenerated exactly the thin-content pages vercel.json permanently redirects away from)",
+          '"targets"' not in run_src)
     js_dir_for_dash = os.path.join(ROOT, "site", "assets", "js")
     if os.path.isdir(js_dir_for_dash):
         for fname in sorted(os.listdir(js_dir_for_dash)):

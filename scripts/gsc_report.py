@@ -61,7 +61,12 @@ def main():
     perf_by_query = _safe(lambda: gsc._api(
         "%s/sites/%s/searchAnalytics/query" % (gsc.API_ROOT, SITE_QUOTED),
         token, "POST",
-        {"startDate": start.isoformat(), "endDate": end.isoformat(), "dimensions": ["query"], "rowLimit": 25},
+        # rowLimit was 25 (clicks-descending, GSC's default sort), which structurally could
+        # never surface a "striking distance" query - good impressions, poor clicks, ranking
+        # just off page 1 - since anything with few clicks never made the top 25 regardless of
+        # its impression volume or how close its position is. 250 gives real headroom for that
+        # without the report growing unreasonably (API allows up to 25,000).
+        {"startDate": start.isoformat(), "endDate": end.isoformat(), "dimensions": ["query"], "rowLimit": 250},
     ))
     perf_totals = _safe(lambda: gsc._api(
         "%s/sites/%s/searchAnalytics/query" % (gsc.API_ROOT, SITE_QUOTED),

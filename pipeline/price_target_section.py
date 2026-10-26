@@ -34,12 +34,18 @@ def short_company_name(name, symbol=""):
 
 
 def stock_title(name, symbol):
-    """'<Name> (<SYM>): Share Price and What-If Calculator | BrokerLens' with 'Limited' or
-    'Ltd' stripped from the name. The brand suffix is dropped when the title would run
-    past about 70 characters; the what-if calculator phrase is always kept.
-    Plain text; the caller escapes."""
+    """'<Name> (<SYM>): Share Price Target 2026-2030, What-If Calculator | BrokerLens' with
+    'Limited' or 'Ltd' stripped from the name. "Share price target <years>" matches the query
+    this page actually ranks for (the FAQ below answers that exact question honestly, with no
+    target asserted) - putting the same phrase in the title too, instead of leaving it only in
+    on-page FAQ text, makes that match a title-tag signal Google can act on directly rather
+    than something it has to infer or rewrite. The brand suffix is dropped first, then - for a
+    long company name - the title is allowed to run past the usual ~70-char display budget
+    rather than fall back to a title with no target-year phrase at all: Google still indexes
+    and matches on the full title text even where it visually truncates the SERP display.
+    Plain text; caller escapes."""
     head = "%s (%s)" % (short_company_name(name, symbol), symbol)
-    tail = ": Share Price and What-If Calculator"
+    tail = ": Share Price Target 2026-2030, What-If Calculator"
     for suffix in (TITLE_SUFFIX, ""):
         title = head + tail + suffix
         if len(title) <= _TITLE_MAX:
@@ -48,10 +54,18 @@ def stock_title(name, symbol):
 
 
 def stock_description(name, symbol):
-    """Plain text meta description (caller escapes and caps the length)."""
+    """Plain text meta description (caller escapes and caps the length).
+
+    Leads with the "share price target <years>" query match and what the page
+    concretely offers, rather than opening (or, as before, closing) on a bare
+    negation - the honest "no forecasts" disclosure still runs prominently in
+    the page's own H2 body copy, so dropping it from this snippet-only field
+    doesn't weaken that compliance posture, it just stops a meta description
+    Google may not even render past its own truncation from reading, in
+    effect, as a reason not to click."""
     return (
-        "%s (NSE: %s): last close and trading range from NSE daily data, listing facts, and a what-if price "
-        "calculator where you set the growth assumption. BrokerLens publishes no price targets or forecasts."
+        "%s (NSE: %s) share price target 2026, 2027, 2030: see the real last close and NSE trading "
+        "range, and run your own what-if price calculator with any growth assumption you choose."
         % (name, symbol)
     )
 

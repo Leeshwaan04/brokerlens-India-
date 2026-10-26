@@ -9,7 +9,6 @@
   python3 -m pipeline.run branches         generate broker branch directory
   python3 -m pipeline.run ipo-apply        generate IPO how-to-apply and allotment guides
   python3 -m pipeline.run ipo-subscription generate IPO live bidding and subscription hubs
-  python3 -m pipeline.run targets          generate share price target forecast pages
   python3 -m pipeline.run trade-costs      generate stock x broker transaction cost breakdown
   python3 -m pipeline.run sip              generate SIP compounding calculator suites
   python3 -m pipeline.run fund-compare     generate mutual fund 1v1 comparisons
@@ -252,10 +251,6 @@ def main(argv):
         from . import ipo_subscription_engine
         ipo_subscription_engine.build_ipo_subscription_suite()
         return 0
-    if cmd == "targets":
-        from . import share_price_target_engine
-        share_price_target_engine.build_share_price_target_suite()
-        return 0
     if cmd == "trade-costs":
         from . import trade_cost_engine
         trade_cost_engine.build_trade_cost_pages()
@@ -278,7 +273,6 @@ def main(argv):
             fund_compare_engine,
             ipo_apply_engine,
             ipo_subscription_engine,
-            share_price_target_engine,
             sip_calculator_engine,
             stock_compare_engine,
             trade_cost_engine,
@@ -291,7 +285,6 @@ def main(argv):
         sip_calculator_engine.build_sip_calculator_suite()
         fund_compare_engine.generate_all()
         stock_compare_engine.build_stock_compare_suite()
-        share_price_target_engine.build_share_price_target_suite()
         log("all programmatic engines completed successfully", "ok")
         return 0
 
