@@ -35,27 +35,14 @@ jobs:
           SITE_URL: "https://www.brokerlens.in"
         run: |
           python3 scripts/update_daily_bhavcopy.py
-
-      - name: Commit and Push Updated Market Data
-        run: |
-          git config --global user.name "BrokerLens Automation Bot"
-          git config --global user.email "bot@brokerlens.in"
-
-          git add site/data/ticker.json
-          if git diff --staged --quiet; then
-            echo "No market data updates detected. Working tree clean."
-          else
-            git commit -m "chore(market): automated daily NSE bhavcopy & ticker refresh $(date -u +'%Y-%m-%d %H:%M UTC') [skip ci]"
-            # Sibling scheduled workflows (daily-pipeline, daily-ipo-gmp) can push to main in
-            # the same window and touch overlapping paths. Rebase onto whatever is there now
-            # before pushing, instead of letting a stale checkout hit a flat non-fast-forward
-            # rejection.
-            if git pull --rebase origin main; then
-              git push origin main
-              echo "Market data updates pushed to main."
-            else
-              git rebase --abort
-              echo "::warning::Rebase conflict with a concurrent push to main - skipping this run's push. The next scheduled run will regenerate fresh content."
-            fi
-          fi
+          # Nothing here is committed: data/_ingest.json and every file
+          # update_bhavcopy() writes (site/data/ticker.json, and the
+          # market-movers.json path this workflow used to also try to add)
+          # are all gitignored by design ("Internal, regenerable" / live
+          # derived data), so a "Commit and Push" step here could never
+          # succeed - git refuses to add an explicitly ignored path. This
+          # workflow's real job is making sure the bhavcopy fetch + ticker
+          # rebuild itself runs and exits non-zero on a real failure (see
+          # update_bhavcopy()'s own ok-tracking), which is already covered
+          # by this step alone.
 
