@@ -31,6 +31,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Fetch regulator and market data, build the site
+        env:
+          SITE_URL: "https://www.brokerlens.in"
+          PUBLISH_MODE: "production"
+        run: |
+          python3 -m pipeline.run fetch || true
+          python3 -m pipeline.run build
+
       - name: Run Autopilot Content Engine
         env:
           SITE_URL: "https://www.brokerlens.in"

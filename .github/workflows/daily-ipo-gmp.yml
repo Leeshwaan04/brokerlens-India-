@@ -32,6 +32,12 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Fetch regulator and market data
+        env:
+          SITE_URL: "https://www.brokerlens.in"
+        run: |
+          python3 -m pipeline.run fetch || true
+
       - name: Refresh IPO GMP and Rebuild Bulletins
         env:
           SITE_URL: "https://www.brokerlens.in"
