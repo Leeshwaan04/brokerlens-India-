@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: pipeline-run
@@ -40,9 +41,10 @@ jobs:
           python3 -m pipeline.run all
 
       - name: Commit and Push Updated Data & Static Builds
+        id: push
         run: |
           git config --global user.name "BrokerLens Pipeline Bot"
-          git config --global user.email "bot@brokerlens.in"
+          git config --global user.email "206470553+Leeshwaan04@users.noreply.github.com"
           
           git add data/ site/
           if git diff --staged --quiet; then
@@ -55,9 +57,20 @@ jobs:
             # rejection.
             if git pull --rebase origin main; then
               git push origin main
-              echo "Changes pushed to main. Vercel deployment triggered automatically."
+              echo "pushed=true" >> "$GITHUB_OUTPUT"
+              echo "Changes pushed to main."
             else
               git rebase --abort
               echo "::warning::Rebase conflict with a concurrent push to main - skipping this run's push. The next scheduled run will regenerate fresh content."
             fi
           fi
+
+      - name: Deploy through the QA + VAPT gate
+        if: steps.push.outputs.pushed == 'true'
+        # Pushes made with the workflow token never start other workflows, so a bot push
+        # alone never ran ci.yml and its content reached production only when a human push
+        # happened to land on top. workflow_dispatch is the one trigger that token may fire;
+        # ci.yml runs QA + VAPT and only then calls the deploy hook.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci.yml --ref main --repo "$GITHUB_REPOSITORY"

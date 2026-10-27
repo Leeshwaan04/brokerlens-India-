@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: ipo-gmp-refresh
@@ -47,9 +48,10 @@ jobs:
           python3 scripts/update_ipo_gmp.py
 
       - name: Commit and Push Updated IPO Data
+        id: push
         run: |
           git config --global user.name "BrokerLens Automation Bot"
-          git config --global user.email "bot@brokerlens.in"
+          git config --global user.email "206470553+Leeshwaan04@users.noreply.github.com"
 
           git add data/manual/ipo_gmp.json site/data/news.json site/news/ site/ipo/
           if git diff --staged --quiet; then
@@ -67,6 +69,7 @@ jobs:
             # non-fast-forward rejection.
             if git pull --rebase origin main; then
               git push origin main
+              echo "pushed=true" >> "$GITHUB_OUTPUT"
               echo "IPO GMP updates pushed to main."
             else
               git rebase --abort
@@ -74,3 +77,12 @@ jobs:
             fi
           fi
 
+      - name: Deploy through the QA + VAPT gate
+        if: steps.push.outputs.pushed == 'true'
+        # Pushes made with the workflow token never start other workflows, so a bot push
+        # alone never ran ci.yml and its content reached production only when a human push
+        # happened to land on top. workflow_dispatch is the one trigger that token may fire;
+        # ci.yml runs QA + VAPT and only then calls the deploy hook.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci.yml --ref main --repo "$GITHUB_REPOSITORY"
