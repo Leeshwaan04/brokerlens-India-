@@ -98,7 +98,7 @@ def run(check, ROOT, load):
 
     faqs = pts.stock_target_faqs("Acme Ltd", "ACME", "")
     check("pricetarget: three FAQ entries, first keeps the pinned query wording and the no-forecast answer",
-          len(faqs) == 3 and faqs[0][0] == "What is the share price target of Acme Ltd for 2026, 2027 or 2030?"
+          len(faqs) == 3 and faqs[0][0] == "What is the share price target of Acme Ltd for 2026, 2030, 2040 or 2050?"
           and "does not publish price targets or forecasts" in faqs[0][1] and "what-if price calculator" in faqs[0][1])
     check("pricetarget: FAQ copy has no dashes, no advice wording, no vendor names",
           not any(d in q + a for q, a in faqs for d in DASHES)
@@ -107,15 +107,15 @@ def run(check, ROOT, load):
 
     t = pts.stock_title("Acme Ltd", "ACME")
     check("pricetarget: title strips 'Ltd', keeps 'Name (SYM): ... | BrokerLens', covers the share-price-target query, no dashes",
-          t == "Acme (ACME): Share Price Target 2026-2030, What-If Calculator" and "Ltd" not in t
+          t == "Acme (ACME): Share Price Target 2026-2050, What-If Calculator" and "Ltd" not in t
           and len(t) <= 70 and not any(d in t for d in DASHES), t)
     t2 = pts.stock_title("Reliance Industries Limited", "RELIANCE")
     t3 = pts.stock_title("Housing Development Finance Corporation Limited", "HDFC")
     check("pricetarget: 'Limited' is stripped and the brand suffix is dropped before the target-year phrase is ever dropped",
-          t2 == "Reliance Industries (RELIANCE): Share Price Target 2026-2030, What-If Calculator" and "Limited" not in t2
-          and "BrokerLens" not in t2 and "Share Price Target 2026-2030" in t3 and "Limited" not in t3, t2 + " / " + t3)
+          t2 == "Reliance Industries (RELIANCE): Share Price Target 2026-2050, What-If Calculator" and "Limited" not in t2
+          and "BrokerLens" not in t2 and "Share Price Target 2026-2050" in t3 and "Limited" not in t3, t2 + " / " + t3)
     check("pricetarget: a long company name is allowed to run past the usual 70-char budget rather than lose the target-year phrase",
-          len(t2) > 70 and "Share Price Target 2026-2030" in t2, t2)
+          len(t2) > 70 and "Share Price Target 2026-2050" in t2, t2)
     check("pricetarget: short_company_name keeps the name when stripping would leave nothing, and strips Ltd.",
           pts.short_company_name("Limited", "X") == "Limited" and pts.short_company_name("Bajaj Finance Ltd.", "BAJ") == "Bajaj Finance"
           and pts.short_company_name("", "ABC") == "ABC" and pts.short_company_name(None, "") == "")

@@ -34,7 +34,7 @@ def short_company_name(name, symbol=""):
 
 
 def stock_title(name, symbol):
-    """'<Name> (<SYM>): Share Price Target 2026-2030, What-If Calculator | BrokerLens' with
+    """'<Name> (<SYM>): Share Price Target 2026-2050, What-If Calculator | BrokerLens' with
     'Limited' or 'Ltd' stripped from the name. "Share price target <years>" matches the query
     this page actually ranks for (the FAQ below answers that exact question honestly, with no
     target asserted) - putting the same phrase in the title too, instead of leaving it only in
@@ -45,7 +45,11 @@ def stock_title(name, symbol):
     and matches on the full title text even where it visually truncates the SERP display.
     Plain text; caller escapes."""
     head = "%s (%s)" % (short_company_name(name, symbol), symbol)
-    tail = ": Share Price Target 2026-2030, What-If Calculator"
+    # Real GSC query data: "2030" dominates (6,345 impr/28d), "2026"/"2027" are next (1,740 /
+    # 1,261), but there is a real, non-trivial tail at "2040" (390) and "2050" (174) too -
+    # spanning the title to 2050 catches that tail without changing anything about the page's
+    # content (it never asserts a number for any year asked about, near or far).
+    tail = ": Share Price Target 2026-2050, What-If Calculator"
     for suffix in (TITLE_SUFFIX, ""):
         title = head + tail + suffix
         if len(title) <= _TITLE_MAX:
@@ -64,7 +68,7 @@ def stock_description(name, symbol):
     Google may not even render past its own truncation from reading, in
     effect, as a reason not to click."""
     return (
-        "%s (NSE: %s) share price target 2026, 2027, 2030: see the real last close and NSE trading "
+        "%s (NSE: %s) share price target 2026-2050: see the real last close and NSE trading "
         "range, and run your own what-if price calculator with any growth assumption you choose."
         % (name, symbol)
     )
@@ -187,7 +191,7 @@ def stock_target_faqs(name, symbol, facts_line=""):
         "the starting price, a yearly growth rate and the number of years." + ((" " + facts_line) if facts_line else "")
     )
     return [
-        ("What is the share price target of %s for 2026, 2027 or 2030?" % name, first),
+        ("What is the share price target of %s for 2026, 2030, 2040 or 2050?" % name, first),
         ("How does the what-if price calculator for %s work?" % name,
          "It multiplies the starting price by (1 + growth rate) once for each year. For example, a starting price of 100 "
          "and a growth rate of 10 percent a year gives 110 after one year and 121 after two. The growth rate is yours to "

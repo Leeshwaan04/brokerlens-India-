@@ -2232,7 +2232,7 @@ def test_instrument_pages():
               "Performance snapshot" in itc2 and "no 1-year or 52-week figure is shown" in itc2
               and re.search(r"From \d+-session high", itc2) is not None)
         check("stock page answers the 'share price target' query honestly (no forecast number)",
-              "does not publish price targets or forecasts" in itc2 and "for 2026, 2027 or 2030" in itc2)
+              "does not publish price targets or forecasts" in itc2 and "for 2026, 2030, 2040 or 2050" in itc2)
 
     kf = read("ipo", "kfintech", "index.html") or ""
     if kf:

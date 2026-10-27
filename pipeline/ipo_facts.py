@@ -615,8 +615,16 @@ def build_title(r, pf, status, group=None):
     name = _title_name(r)
     b_start, b_end = r.get("bidding_start") or "", r.get("bidding_end") or ""
     ld = reliable_listing_date(r)
+    # "<company> ipo gmp" is the single highest-intent IPO query while an issue is open or
+    # about to open (confirmed by real GSC data: the IPO section is the worst-performing
+    # page family on the site despite real search volume), and the body already renders a
+    # GMP section whenever data is on file via render_gmp_section() - the title just never
+    # mentioned it. Once listed, GMP is moot, so this only applies pre-listing.
+    gmp_on_file = status in OPEN_STATUSES and bool(get_ipo_gmp(r.get("symbol")))
     if group == "B":
         bits = []
+        if gmp_on_file:
+            bits.append("GMP")
         if _parse(b_start) or _parse(b_end):
             bits.append("Date")
         if pf["band_low"] is not None:
@@ -658,6 +666,12 @@ def build_title(r, pf, status, group=None):
     while len(parts) > 1 and len(key(parts)) > MAX_KEY_CHARS:
         drop = next((x for x in order if x in parts), parts[-1])
         parts.remove(drop)
+    if gmp_on_file:
+        # Added after the degrade loop, never a candidate for removal: GMP is the keyword
+        # driving real search demand, so it is kept even if the rest already used the full
+        # budget, same principle as the stock price-target title (file/pipeline/
+        # price_target_section.py's stock_title()).
+        parts = ["GMP"] + parts
     return "%s | %s" % (key(parts), BRAND)
 
 
