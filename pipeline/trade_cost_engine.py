@@ -1000,7 +1000,7 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
 </p>
 
 <h2 style="font-size:20px;margin-bottom:12px">Active Trader Scenario Presets</h2>
-<p class="xs muted" style="margin-bottom:16px">Instant statutory breakdown for popular retail trading sizes under post-STT rules.</p>
+<p class="xs muted" style="margin-bottom:16px">Statutory breakdown for popular retail trading sizes at the STT rates in force from April 1, 2026 (Union Budget 2026). Net figures include exchange, SEBI, stamp duty and 18% GST.</p>
 <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;margin-bottom:36px">
   <div class="card" style="padding:16px;background:var(--bg-raised);border-top:3px solid var(--accent)">
     <div style="font-weight:700;font-size:15px">Nifty Index Option (1 Lot)</div>
@@ -1009,8 +1009,9 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
       <div>Turnover: <strong>Rs 16,900</strong></div>
       <div>Brokerage (Rs 20 flat): <strong>Rs 40.00</strong></div>
       <div>Brokerage (Rs 11 flat): <strong>Rs 22.00</strong></div>
-      <div>STT (0.1% on Sell): <strong>Rs 9.10</strong></div>
-      <div style="margin-top:6px;color:var(--up);font-weight:600">Net Profit: +Rs 1,230</div>
+      <div>STT (0.15% on Sell Premium): <strong>Rs 13.65</strong></div>
+      <div>Exchange + SEBI + Stamp: <strong>Rs 6.17</strong></div>
+      <div style="margin-top:6px;color:var(--up);font-weight:600">Net Profit: +Rs 1,232 (Rs 20 broker), +Rs 1,253 (Rs 11 broker)</div>
     </div>
   </div>
   <div class="card" style="padding:16px;background:var(--bg-raised);border-top:3px solid var(--accent)">
@@ -1021,7 +1022,8 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
       <div>Brokerage (Zero): <strong>Rs 0.00</strong></div>
       <div>STT (0.1% Buy + Sell): <strong>Rs 200.00</strong></div>
       <div>Exchange + SEBI: <strong>Rs 6.14</strong></div>
-      <div style="margin-top:6px;color:var(--accent);font-weight:600">Total Statutory Taxes: Rs 242</div>
+      <div>Stamp Duty (0.015% on Buy) + GST: <strong>Rs 16.11</strong></div>
+      <div style="margin-top:6px;color:var(--accent);font-weight:600">Total Statutory Taxes: Rs 222</div>
     </div>
   </div>
   <div class="card" style="padding:16px;background:var(--bg-raised);border-top:3px solid var(--accent)">
@@ -1032,18 +1034,20 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
       <div>Brokerage (max Rs 20): <strong>Rs 40.00</strong></div>
       <div>STT (0.025% on Sell): <strong>Rs 62.50</strong></div>
       <div>Exchange Charges: <strong>Rs 14.85</strong></div>
-      <div style="margin-top:6px;color:var(--up);font-weight:600">Breakeven Point: +Rs 0.25/share</div>
+      <div>Stamp + SEBI + GST: <strong>Rs 17.96</strong></div>
+      <div style="margin-top:6px;color:var(--up);font-weight:600">Breakeven Point: +Rs 0.27/share</div>
     </div>
   </div>
   <div class="card" style="padding:16px;background:var(--bg-raised);border-top:3px solid var(--accent)">
     <div style="font-weight:700;font-size:15px">BankNifty Expiry Scalp</div>
-    <div class="xs muted" style="margin:4px 0 10px 0">2 Lots (30 Qty) &middot; Buy @ Rs 220, Sell @ Rs 280</div>
+    <div class="xs muted" style="margin:4px 0 10px 0">30 Qty &middot; Buy @ Rs 220, Sell @ Rs 280</div>
     <div class="small" style="line-height:1.6">
       <div>Turnover: <strong>Rs 15,000</strong></div>
       <div>Brokerage (Rs 11 flat): <strong>Rs 22.00</strong></div>
-      <div>STT (0.1% on Sell): <strong>Rs 8.40</strong></div>
-      <div>GST + Stamp Duty: <strong>Rs 4.20</strong></div>
-      <div style="margin-top:6px;color:var(--up);font-weight:600">Net Profit: +Rs 1,745</div>
+      <div>STT (0.15% on Sell Premium): <strong>Rs 12.60</strong></div>
+      <div>Exchange + SEBI + Stamp: <strong>Rs 5.46</strong></div>
+      <div>GST: <strong>Rs 4.91</strong></div>
+      <div style="margin-top:6px;color:var(--up);font-weight:600">Net Profit: +Rs 1,755</div>
     </div>
   </div>
 </div>
@@ -1060,14 +1064,14 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
 </div>
 
 <div class="card" style="padding:24px;background:var(--bg-raised)">
-  <h2 style="font-size:19px;margin-top:0">Statutory Transaction Cost Schedule in India (2024 to 2026)</h2>
+  <h2 style="font-size:19px;margin-top:0">Statutory Transaction Cost Schedule in India (from April 1, 2026)</h2>
   <div class="table-scroll">
     <table class="data">
       <thead>
         <tr><th>Charge Name</th><th>Levied By</th><th>Equity Delivery Rate</th><th>Equity Intraday Rate</th><th>Derivatives (F&amp;O) Rate</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>STT (Securities Transaction Tax)</strong></td><td>Govt of India / MoF</td><td>0.1% on Buy &amp; Sell</td><td>0.025% on Sell only</td><td>0.02% on Futures (Sell), 0.1% on Options (Sell Premium)</td></tr>
+        <tr><td><strong>STT (Securities Transaction Tax)</strong></td><td>Govt of India / MoF</td><td>0.1% on Buy &amp; Sell</td><td>0.025% on Sell only</td><td>0.05% on Futures (Sell), 0.15% on Options (Sell Premium), 0.15% on Exercised Options (Intrinsic Value)</td></tr>
         <tr><td><strong>Exchange Turnover Charge</strong></td><td>NSE / BSE</td><td>0.00297% (NSE true-to-label)</td><td>0.00297%</td><td>0.00173% (Futures), 0.03503% (Options Premium)</td></tr>
         <tr><td><strong>SEBI Turnover Charge</strong></td><td>SEBI Regulatory</td><td>₹10 per Crore (0.0001%)</td><td>₹10 per Crore (0.0001%)</td><td>₹10 per Crore (0.0001%)</td></tr>
         <tr><td><strong>Stamp Duty</strong></td><td>State Revenue (Indian Stamp Act)</td><td>0.015% on Buy</td><td>0.003% on Buy</td><td>0.002% on Futures Buy, 0.003% on Options Buy</td></tr>
