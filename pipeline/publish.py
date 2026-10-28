@@ -2880,12 +2880,13 @@ def _write_etf_pages(etfs, indices):
         canonical = "%s/etf/%s/" % (SITE_URL, slug)
         has_nav = isinstance(e.get("nav"), (int, float))
         title = "%s (%s): %s | BrokerLens" % (
-            _esc(name), _esc(symbol), "ETF Details, NAV & Benchmark" if has_nav else "ETF Listing Details")
+            _esc(name), _esc(symbol), "Share Price Target 2026-2050, NAV & What-If Calculator" if has_nav else "ETF Listing Details")
         description = _esc(
-            "%s (NSE: %s): the ETF's underlying benchmark, ISIN, listing date and market lot%s, "
-            "sourced from NSE's listed-ETF register%s." % (
-                name, symbol, ", plus its latest AMFI-published NAV" if has_nav else "",
-                " and AMFI's NAV file" if has_nav else "")
+            ("%s (NSE: %s): see the latest AMFI NAV of Rs %.2f, benchmark index details, and run your own "
+             "what-if price calculator for 2026-2050 with any growth assumption you choose." % (name, symbol, e["nav"]))
+            if has_nav else
+            ("%s (NSE: %s): the ETF's underlying benchmark, ISIN, listing date and market lot, "
+             "sourced from NSE's listed-ETF register." % (name, symbol))
         )[:300]
 
         etf_jsonld = {"@type": "FinancialProduct", "name": name, "url": canonical}
@@ -2959,6 +2960,11 @@ def _write_etf_pages(etfs, indices):
             etf_faqs.append(("What is the latest NAV of %s?" % name,
                              "As of %s, the NAV of %s published by AMFI was Rs %.4f." % (
                                  _long_date(e.get("nav_date")), name, e["nav"])))
+            etf_faqs.append(("What is the share price target of %s for 2026, 2030, 2040 or 2050?" % name,
+                             "BrokerLens does not publish price targets or forecasts, and nothing here is investment advice. "
+                             "An ETF tracks its underlying benchmark and fluctuates with market movements. To test an assumed growth rate "
+                             "of your own, use the what-if investment calculator on this page. As of %s, the latest published NAV on file was Rs %.4f."
+                             % (_long_date(e.get("nav_date")), e["nav"])))
         etf_faq_html = "".join(
             '<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a))
             for q, a in etf_faqs
@@ -2978,10 +2984,46 @@ def _write_etf_pages(etfs, indices):
             ],
         }
 
+        calc_html = ""
+        if has_nav:
+            start_price = "%.2f" % e["nav"]
+            calc_html = (
+                '<div class="card" data-calc="price-whatif" style="margin-top:20px;padding:20px;max-width:560px">'
+                '<div class="card-title">What-if investment calculator</div>'
+                '<p class="xs muted" style="margin-top:4px">Work out what an investment in %s would become if it grew at a rate you choose. '
+                'You supply the growth assumption; BrokerLens does not.</p>'
+                '<div class="field" style="margin-top:12px"><label for="pw-price">Starting NAV per unit (Rs)</label>'
+                '<input id="pw-price" type="number" inputmode="decimal" min="0.01" step="0.01" value="%s" '
+                'placeholder="Enter NAV in rupees"></div>'
+                '<div class="field"><label for="pw-growth">Assumed growth per year (%%), your own assumption</label>'
+                '<input id="pw-growth" type="number" inputmode="decimal" min="-90" max="100" step="0.1" value="" '
+                'placeholder="Type your own number, for example 12">'
+                '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">'
+                '<span class="xs muted" style="align-self:center">Example assumptions:</span>'
+                '<button type="button" class="btn btn-outline xs" data-preset-growth="10" style="padding:2px 8px;font-size:11px">+10%% CAGR</button>'
+                '<button type="button" class="btn btn-outline xs" data-preset-growth="15" style="padding:2px 8px;font-size:11px">+15%% CAGR</button>'
+                '<button type="button" class="btn btn-outline xs" data-preset-growth="20" style="padding:2px 8px;font-size:11px">+20%% CAGR</button>'
+                '</div></div>'
+                '<div class="field"><label for="pw-years">Years (1 to 30)</label>'
+                '<input id="pw-years" type="number" inputmode="numeric" min="1" max="30" step="1" value="5"></div>'
+                '<p class="xs faint" style="margin-top:6px">Prefilled with the latest AMFI NAV on file (Rs %s). The growth box is left empty on purpose: '
+                'the number in the placeholder is only an example of the format, not an estimate for %s.</p>'
+                '<button type="button" id="calc-btn" class="btn" style="margin-top:8px">Calculate</button>'
+                '<div id="calc-result" class="stack" style="margin-top:16px" aria-live="polite" hidden></div>'
+                '<p class="xs faint" style="margin-top:12px">This is arithmetic on your assumption, not a forecast or a recommendation.</p>'
+                '<div class="xs faint" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">'
+                'Related tools: <a href="/calculators/cagr-calculator/">CAGR Calculator</a> &middot; '
+                '<a href="/calculators/sip-calculator/">SIP Calculator</a> &middot; '
+                '<a href="/trade-costs/">Trade Cost Calculator</a></div>'
+                '</div>' % (_esc(symbol), start_price, start_price, _esc(name))
+            )
+
         body = _REGISTRY_PAGE_HEAD % {
             "title": _esc(title), "description": description,
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
+        if has_nav:
+            body = body.replace("</head>", _stamp_asset_versions('<script src="/assets/js/calculators.js" defer></script></head>'))
         body += (
             crumb_html
             + '<h1 style="margin-top:0">%s</h1>' % _esc(name)
@@ -2992,6 +3034,7 @@ def _write_etf_pages(etfs, indices):
               % (" and AMFI's daily NAV master file (matched by ISIN)" if has_nav else "")
             + index_html
             + scheme_link
+            + calc_html
             + '<div class="aff-block" style="margin-top:24px">'
               '<div class="section-title"><h2>Trade ETFs</h2></div>'
               '<p class="muted small" style="margin-top:4px">ETFs trade on the exchange through any SEBI-registered broker.</p>'

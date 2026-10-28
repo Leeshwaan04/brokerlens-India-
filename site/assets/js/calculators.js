@@ -363,5 +363,16 @@ document.addEventListener('DOMContentLoaded', () => {
     container.querySelectorAll('input').forEach((el) => {
       el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); fn(); } });
     });
+    // Preset growth buttons
+    container.querySelectorAll('[data-preset-growth]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('pw-growth');
+        if (input) {
+          input.value = el.dataset.presetGrowth;
+          fn();
+        }
+      });
+    });
   }
 });
