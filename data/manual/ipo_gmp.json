@@ -6,7 +6,7 @@
     "trend": "up",
     "fire_rating": 3,
     "kostak": 450,
-    "last_updated": "2026-10-27",
+    "last_updated": "2026-10-28",
     "source": "Indicative Market Quotes",
     "history": [
       {
@@ -28,6 +28,10 @@
       {
         "date": "2026-10-27",
         "gmp": 25.0
+      },
+      {
+        "date": "2026-10-28",
+        "gmp": 25.0
       }
     ]
   },
@@ -38,7 +42,7 @@
     "trend": "up",
     "fire_rating": 4,
     "kostak": 800,
-    "last_updated": "2026-10-27",
+    "last_updated": "2026-10-28",
     "source": "Indicative Market Quotes",
     "history": [
       {
@@ -60,6 +64,10 @@
       {
         "date": "2026-10-27",
         "gmp": 135.0
+      },
+      {
+        "date": "2026-10-28",
+        "gmp": 135.0
       }
     ]
   },
@@ -70,7 +78,7 @@
     "trend": "up",
     "fire_rating": 5,
     "kostak": 1200,
-    "last_updated": "2026-10-27",
+    "last_updated": "2026-10-28",
     "source": "Indicative Market Quotes",
     "history": [
       {
@@ -92,6 +100,10 @@
       {
         "date": "2026-10-27",
         "gmp": 95.0
+      },
+      {
+        "date": "2026-10-28",
+        "gmp": 95.0
       }
     ]
   },
@@ -102,7 +114,7 @@
     "trend": "up",
     "fire_rating": 5,
     "kostak": 2500,
-    "last_updated": "2026-10-27",
+    "last_updated": "2026-10-28",
     "source": "Indicative Market Quotes",
     "history": [
       {
@@ -124,6 +136,10 @@
       {
         "date": "2026-10-27",
         "gmp": 380.0
+      },
+      {
+        "date": "2026-10-28",
+        "gmp": 380.0
       }
     ]
   },
@@ -134,7 +150,7 @@
     "trend": "neutral",
     "fire_rating": 4,
     "kostak": 600,
-    "last_updated": "2026-10-27",
+    "last_updated": "2026-10-28",
     "source": "Indicative Market Quotes",
     "history": [
       {
@@ -156,6 +172,10 @@
       {
         "date": "2026-10-27",
         "gmp": 72.0
+      },
+      {
+        "date": "2026-10-28",
+        "gmp": 72.0
       }
     ]
   },
@@ -166,7 +186,7 @@
     "trend": "up",
     "fire_rating": 3,
     "kostak": 400,
-    "last_updated": "2026-10-27",
+    "last_updated": "2026-10-28",
     "source": "Indicative Market Quotes",
     "history": [
       {
@@ -188,6 +208,10 @@
       {
         "date": "2026-10-27",
         "gmp": 32.0
+      },
+      {
+        "date": "2026-10-28",
+        "gmp": 32.0
       }
     ]
   },
@@ -198,7 +222,7 @@
     "trend": "neutral",
     "fire_rating": 3,
     "kostak": 350,
-    "last_updated": "2026-10-27",
+    "last_updated": "2026-10-28",
     "source": "Indicative Market Quotes",
     "history": [
       {
@@ -220,6 +244,10 @@
       {
         "date": "2026-10-27",
         "gmp": 18.0
+      },
+      {
+        "date": "2026-10-28",
+        "gmp": 18.0
       }
     ]
   },
@@ -230,7 +258,7 @@
     "trend": "neutral",
     "fire_rating": 3,
     "kostak": 250,
-    "last_updated": "2026-10-27",
+    "last_updated": "2026-10-28",
     "source": "Indicative Market Quotes",
     "history": [
       {
@@ -252,6 +280,10 @@
       {
         "date": "2026-10-27",
         "gmp": 14.0
+      },
+      {
+        "date": "2026-10-28",
+        "gmp": 14.0
       }
     ]
   },
@@ -262,7 +294,7 @@
     "trend": "up",
     "fire_rating": 3,
     "kostak": 200,
-    "last_updated": "2026-10-27",
+    "last_updated": "2026-10-28",
     "source": "Indicative Market Quotes",
     "history": [
       {
@@ -283,6 +315,10 @@
       },
       {
         "date": "2026-10-27",
+        "gmp": 6.0
+      },
+      {
+        "date": "2026-10-28",
         "gmp": 6.0
       }
     ]

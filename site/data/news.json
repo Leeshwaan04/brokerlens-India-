@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-28T18:28:47.066665+00:00",
-  "total_articles": 36,
+  "generated_at": "2026-10-28T18:37:37.734738+00:00",
+  "total_articles": 37,
   "articles": [
     {
       "slug": "indian-stock-market-wrap-2026-10-28",
@@ -30,6 +30,16 @@
       "date_str": "28 October 2026",
       "category": "Market News",
       "category_badge": "badge-verified",
+      "read_time": "3 min read"
+    },
+    {
+      "slug": "ipo-bcssl-live-subscription-bidding-review",
+      "title": "Bombay Coated and Special Steels Limited IPO Live Status: Subscribed 0.00x, Price Band Rs.78 to Rs.82",
+      "description": "Bombay Coated and Special Steels Limited IPO is currently open for bidding. Price band is Rs.78 to Rs.82 with issue closing on 02 November 2026. Track live subscription numbers and broker application procedures.",
+      "date": "2026-10-28",
+      "date_str": "28 October 2026",
+      "category": "IPO Bulletin",
+      "category_badge": "badge-up",
       "read_time": "3 min read"
     },
     {
