@@ -7853,7 +7853,8 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
             % (SITE_URL, amc_slug, today)
         )
     from . import indexation as _ix
-    top_etfs = set(_ix.top_etf_slugs(etfs, eq_hist, _stock_slug, limit=40))
+    etf_slugs = {_stock_slug(e.get("symbol")) for e in (etfs or []) if _stock_slug(e.get("symbol"))}
+    top_etfs = set(_ix.top_etf_slugs(etfs, eq_hist, _stock_slug, limit=40)) | (demand & etf_slugs)
     for e in (etfs or []):
         slug = _stock_slug(e.get("symbol"))
         if slug:
