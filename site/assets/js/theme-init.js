@@ -43,3 +43,14 @@ try {
     }
   }
 } catch (e) { /* analytics never breaks page rendering */ }
+
+/* Google AdSense (ca-pub-8447377943455646) */
+try {
+  if (!document.querySelector('script[src*="pagead2.googlesyndication.com"]')) {
+    var ads = document.createElement('script');
+    ads.async = true;
+    ads.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8447377943455646';
+    ads.crossOrigin = 'anonymous';
+    document.head.appendChild(ads);
+  }
+} catch (e) { /* ads never break page rendering */ }

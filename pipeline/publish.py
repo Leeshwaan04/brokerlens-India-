@@ -1040,6 +1040,8 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google-adsense-account" content="ca-pub-8447377943455646">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8447377943455646" crossorigin="anonymous"></script>
 <script src="/assets/js/theme-init.js"></script>
 <title>%(title)s</title>
 <meta name="description" content="%(description)s">
@@ -1164,6 +1166,8 @@ _APP_SHELL_HEAD = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google-adsense-account" content="ca-pub-8447377943455646">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8447377943455646" crossorigin="anonymous"></script>
 <script src="/assets/js/theme-init.js"></script>
 <title>%(title)s</title>
 <meta name="description" content="%(description)s">
@@ -8277,6 +8281,7 @@ def _write_feed(built, aggregates):
            "%s</channel></rss>" % (SITE_URL, "".join(items)))
     _write_text(os.path.join(SITE_DATA, "..", "feed.xml"), xml)
     _write_robots()
+    _write_ads_txt()
 
 
 def _write_text(path, body):
@@ -8321,6 +8326,12 @@ def _write_robots():
         "",
     ])
     _write_text(os.path.join(SITE_DATA, "..", "robots.txt"), body)
+
+
+def _write_ads_txt():
+    """Publish Authorized Digital Sellers (ads.txt) for Google AdSense verification."""
+    body = "google.com, pub-8447377943455646, DIRECT, f08c47fec0942fa0\n"
+    _write_text(os.path.join(SITE_DATA, "..", "ads.txt"), body)
 
 
 def _esc(s):
