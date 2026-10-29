@@ -5849,6 +5849,15 @@ def _write_privacy_page():
         'disclosed on the <a href="/methodology" data-link>methodology page</a>. We do not receive or store any '
         'personal or financial information from that process.</p></div>'
 
+        '<div class="section-title"><h2>Google AdSense and advertising cookies</h2></div>'
+        '<div class="card"><p class="small muted">BrokerLens works with Google AdSense to display advertisements across the site. '
+        'Third-party vendors, including Google, use cookies to serve ads based on a user\'s prior visits to BrokerLens or other websites on the internet. '
+        'Google\'s use of advertising cookies enables it and its partners to serve ads to users based on their visits to this site and other sites on the internet. '
+        'Users may opt out of personalized advertising by visiting '
+        '<a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google Ads Settings</a>. '
+        'Alternatively, you can opt out of a third-party vendor\'s use of cookies for personalized advertising by visiting '
+        '<a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener">aboutads.info</a>.</p></div>'
+
         '<div class="section-title"><h2>Hosting and infrastructure</h2></div>'
         '<div class="card"><p class="small muted">The site is served over HTTPS by a standard web hosting '
         'provider, which may log basic technical request data (IP address, timestamp, requested page) for '
