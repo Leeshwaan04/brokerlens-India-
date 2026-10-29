@@ -1040,6 +1040,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="google-adsense-account" content="ca-pub-8447377943455646">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8447377943455646" crossorigin="anonymous"></script>
 <script src="/assets/js/theme-init.js"></script>
@@ -1057,6 +1058,11 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
 <meta property="og:url" content="%(canonical)s">
 <meta property="og:title" content="%(title)s">
 <meta property="og:description" content="%(description)s">
+<meta property="og:image" content="https://www.brokerlens.in/assets/img/ads/ibsl-wide-2000x500.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="%(title)s">
+<meta name="twitter:description" content="%(description)s">
+<meta name="twitter:image" content="https://www.brokerlens.in/assets/img/ads/ibsl-wide-2000x500.jpg">
 <script type="application/ld+json">%(jsonld)s</script>
 </head>
 <body>
@@ -1166,6 +1172,7 @@ _APP_SHELL_HEAD = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="google-adsense-account" content="ca-pub-8447377943455646">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8447377943455646" crossorigin="anonymous"></script>
 <script src="/assets/js/theme-init.js"></script>
@@ -1183,6 +1190,11 @@ _APP_SHELL_HEAD = """<!doctype html>
 <meta property="og:url" content="%(canonical)s">
 <meta property="og:title" content="%(title)s">
 <meta property="og:description" content="%(description)s">
+<meta property="og:image" content="https://www.brokerlens.in/assets/img/ads/ibsl-wide-2000x500.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="%(title)s">
+<meta name="twitter:description" content="%(description)s">
+<meta name="twitter:image" content="https://www.brokerlens.in/assets/img/ads/ibsl-wide-2000x500.jpg">
 <meta name="twitter:card" content="summary">
 <script type="application/ld+json">%(jsonld)s</script>
 </head>
@@ -7749,8 +7761,8 @@ def _write_cms_page(overview, built=None):
         "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False)
     }
     body = body.replace(
-        '<link rel="canonical" href="%s/cms">' % SITE_URL,
-        '<link rel="canonical" href="%s/cms">\n<meta name="robots" content="noindex, nofollow">' % SITE_URL
+        '<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">',
+        '<meta name="robots" content="noindex, nofollow">'
     )
     body += crumb_html
     body += (

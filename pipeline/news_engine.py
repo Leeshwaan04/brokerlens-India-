@@ -41,6 +41,10 @@ def _format_date(d_str):
         return str(d_str)
 
 
+def _slugify(s):
+    return re.sub(r"[^a-z0-9]+", "-", str(s or "").lower()).strip("-")
+
+
 def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     """Builds a rich collection of data-driven news, educational blogs, and empirical articles."""
     articles = []
@@ -70,14 +74,14 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     sign_str = "+" if nifty_chg >= 0 else ""
 
     top_gainers_html = "".join(
-        '<li><strong>%s</strong>: Rs %s (<span class="up">+%.2f%%</span>)</li>'
-        % (_esc(g.get("symbol")), _esc(g.get("last")), g.get("change_pct", 0.0))
+        '<li><a href="/stock/%s/" style="font-weight:700">%s</a>: Rs %s (<span class="up">+%.2f%%</span>) &middot; <a class="xs" href="/stock/%s/">Live Chart &rarr;</a></li>'
+        % (_slugify(g.get("symbol")), _esc(g.get("symbol")), _esc(g.get("last")), g.get("change_pct", 0.0), _slugify(g.get("symbol")))
         for g in gainers[:5]
     ) or '<li>Top momentum tracked across NSE Nifty 50 constituents.</li>'
 
     top_losers_html = "".join(
-        '<li><strong>%s</strong>: Rs %s (<span class="down">%.2f%%</span>)</li>'
-        % (_esc(l.get("symbol")), _esc(l.get("last")), l.get("change_pct", 0.0))
+        '<li><a href="/stock/%s/" style="font-weight:700">%s</a>: Rs %s (<span class="down">%.2f%%</span>) &middot; <a class="xs" href="/stock/%s/">Live Chart &rarr;</a></li>'
+        % (_slugify(l.get("symbol")), _esc(l.get("symbol")), _esc(l.get("last")), l.get("change_pct", 0.0), _slugify(l.get("symbol")))
         for l in losers[:5]
     ) or '<li>Equities tracking broader market consolidation.</li>'
 
@@ -1410,6 +1414,9 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
                     "@type": schema_type,
                     "headline": art["title"],
                     "description": desc,
+                    "image": [
+                        "%s/assets/img/ads/ibsl-wide-2000x500.jpg" % site_url
+                    ],
                     "url": canon,
                     "datePublished": art["date"],
                     "dateModified": art["date"],
@@ -1598,6 +1605,13 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
             + '<p class="xs faint" style="margin-top:12px">Editorial Integrity: BrokerLens does not accept payment to alter factual analyses. Sponsored placements are labelled and do not affect any data, ranking or analysis. Read our <a href="/editorial-policy">Editorial Policy</a> and <a href="/methodology">Methodology</a>.</p>'
             + affiliate_html
             + '<div style="margin-top:24px"><a class="btn btn-sm" href="/news/" data-link>&larr; Back to all News, Blogs &amp; Market Insights</a></div>'
+            + '<aside class="mobile-sticky-lead" aria-label="Sponsored account opening">'
+            + '<div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.3">'
+            + '<span>Zero Delivery Brokerage &amp; Flat Rs 11 F&amp;O</span>'
+            + '<div class="xs faint" style="font-weight:400">Indiabulls Securities &middot; Free Demat</div>'
+            + '</div>'
+            + '<a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-size:11px;padding:6px 12px;white-space:nowrap;font-weight:600">Open Demat &rarr;</a>'
+            + '</aside>'
         )
         body += _REGISTRY_PAGE_FOOT % {
             "source_note": "Facts are derived from National Stock Exchange (NSE) and SEBI public regulatory filings."

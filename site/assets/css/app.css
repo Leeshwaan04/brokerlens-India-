@@ -655,7 +655,32 @@ th[data-tip]:not(.sortable) { cursor: help; }
 @media (max-width: 900px) { .g3, .g4, .g-main { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 620px) { .g2, .g3, .g4, .g-main { grid-template-columns: minmax(0, 1fr); } }
 
-/* ---------------------------------------------------------------- stat tile */
+/* Mobile sticky lead CTA */
+.mobile-sticky-lead {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  width: calc(100% - 24px);
+  max-width: 440px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-lg);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+@media (min-width: 900px) {
+  .mobile-sticky-lead {
+    display: none !important;
+  }
+}
+
 
 .stat { display: flex; flex-direction: column; gap: 2px; }
 .stat-label { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
