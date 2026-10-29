@@ -351,7 +351,7 @@ const CALCULATORS = {
   },
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+function initCalculator() {
   const container = document.querySelector('[data-calc]');
   const kind = container && container.dataset.calc;
   const fn = kind && CALCULATORS[kind];
@@ -375,4 +375,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCalculator);
+} else {
+  initCalculator();
+}

@@ -671,6 +671,16 @@ th[data-tip]:not(.sortable) { cursor: help; }
   background: var(--bg-sunken); color: var(--text-muted); border: 1px solid var(--border);
   white-space: nowrap;
 }
+a.badge {
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+}
+a.badge:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--bg-raised);
+  text-decoration: none;
+}
 .badge-verified { background: var(--info-soft); color: var(--info); border-color: transparent; }
 .badge-up { background: var(--up-soft); color: var(--up); border-color: transparent; }
 .badge-down { background: var(--down-soft); color: var(--down); border-color: transparent; }

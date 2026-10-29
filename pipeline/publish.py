@@ -2361,7 +2361,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
     valid_symbols = {(c.get("symbol") or "").strip().upper() for c in companies} - {""}
     try:
         from .trade_cost_engine import get_trade_cost_stocks
-        trade_cost_slugs = {_stock_slug(s["symbol"]) for s in get_trade_cost_stocks(limit_stocks=1000)}
+        trade_cost_slugs = {_stock_slug(s["symbol"]) for s in get_trade_cost_stocks(limit_stocks=2500)}
     except Exception:
         trade_cost_slugs = set()
     ipo_by_slug = {}
@@ -2588,7 +2588,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             trade_badges = (
                 '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">'
                 '<a class="badge" href="/trade-costs/" style="text-decoration:none;padding:5px 9px">Stock Trade Cost Calculator &rarr;</a>'
-                '<a class="badge" href="/compare" style="text-decoration:none;padding:5px 9px">Compare Top Brokers &rarr;</a>'
+                '<a class="badge" href="/compare/" style="text-decoration:none;padding:5px 9px">Compare Top Brokers &rarr;</a>'
                 '</div>'
             )
 

@@ -130,34 +130,58 @@ function calcBollinger(points, period = 20, multiplier = 2) {
 }
 
 /* Automated Technical Analysis: Smart Zones (Support / Resistance) */
-function calcSmartZones(points, lookback = 8) {
-  if (points.length < lookback * 2) return null;
-  const pivotHighs = [];
-  const pivotLows = [];
+function calcSmartZones(points) {
+  if (points.length < 5) return null;
+  const lastClose = points[points.length - 1].close;
 
-  for (let i = lookback; i < points.length - lookback; i++) {
-    const currentHigh = points[i].high;
-    const currentLow = points[i].low;
-    let isHigh = true;
-    let isLow = true;
+  // Multi-pass pivot identification: primary lookback 8, secondary lookback 4
+  let pivotHighs = [];
+  let pivotLows = [];
 
-    for (let j = i - lookback; j <= i + lookback; j++) {
-      if (j === i) continue;
-      if (points[j].high > currentHigh) isHigh = false;
-      if (points[j].low < currentLow) isLow = false;
+  for (const lb of [8, 4]) {
+    pivotHighs = [];
+    pivotLows = [];
+    for (let i = lb; i < points.length - lb; i++) {
+      let isHigh = true;
+      let isLow = true;
+      for (let j = i - lb; j <= i + lb; j++) {
+        if (j === i) continue;
+        if (points[j].high > points[i].high) isHigh = false;
+        if (points[j].low < points[i].low) isLow = false;
+      }
+      if (isHigh) pivotHighs.push(points[i].high);
+      if (isLow) pivotLows.push(points[i].low);
     }
-
-    if (isHigh) pivotHighs.push(currentHigh);
-    if (isLow) pivotLows.push(currentLow);
+    const res = pivotHighs.filter((p) => p > lastClose);
+    const sup = pivotLows.filter((p) => p < lastClose);
+    if (res.length > 0 && sup.length > 0) break;
   }
 
-  const lastClose = points[points.length - 1].close;
   const resistances = pivotHighs.filter((p) => p > lastClose).sort((a, b) => a - b);
   const supports = pivotLows.filter((p) => p < lastClose).sort((a, b) => b - a);
 
+  const allHigh = Math.max(...points.map((p) => p.high));
+  const allLow = Math.min(...points.map((p) => p.low));
+
+  let resVal = resistances.length ? resistances[0] : (allHigh > lastClose ? allHigh : null);
+  let resTitle = 'Resistance';
+  if (!resVal && allHigh <= lastClose) {
+    resVal = parseFloat((lastClose * 1.05).toFixed(2));
+    resTitle = 'Breakout Zone (+5%)';
+  }
+
+  let supVal = supports.length ? supports[0] : (allLow < lastClose ? allLow : null);
+  let supTitle = 'Support';
+  if (!supVal && allLow >= lastClose) {
+    supVal = parseFloat((lastClose * 0.95).toFixed(2));
+    supTitle = 'Breakdown Floor (-5%)';
+  }
+
   return {
-    resistance: resistances.length ? resistances[0] : null,
-    support: supports.length ? supports[0] : null,
+    resistance: resVal,
+    resistanceTitle: resTitle,
+    support: supVal,
+    supportTitle: supTitle,
   };
 }
 
@@ -180,7 +204,7 @@ async function loadHistory(slug) {
   return r.json();
 }
 
-function buildToolbar(container, onRangeSelect, onIndicatorToggle) {
+function buildToolbar(container, points, onRangeSelect, onIndicatorToggle) {
   const bar = document.createElement('div');
   bar.className = 'chart-toolbar';
   bar.style.display = 'flex';
@@ -216,20 +240,27 @@ function buildToolbar(container, onRangeSelect, onIndicatorToggle) {
   indicatorGroup.setAttribute('aria-label', 'Technical indicators');
 
   const indicators = [
-    { id: 'sma', label: 'SMA 20' },
-    { id: 'ema', label: 'EMA 50' },
-    { id: 'bb', label: 'Bollinger' },
-    { id: 'zones', label: 'Smart Zones' },
-    { id: 'vol', label: 'Volume' },
+    { id: 'sma', label: 'SMA 20', minPoints: 20 },
+    { id: 'ema', label: 'EMA 50', minPoints: 50 },
+    { id: 'bb', label: 'Bollinger', minPoints: 20 },
+    { id: 'zones', label: 'Smart Zones', minPoints: 5 },
+    { id: 'vol', label: 'Volume', minPoints: 1 },
   ];
 
   indicators.forEach((ind) => {
     const btn = document.createElement('button');
     btn.className = 'chip';
     btn.type = 'button';
+    if (points && points.length < ind.minPoints) {
+      btn.disabled = true;
+      btn.title = `Requires ${ind.minPoints} trading sessions (holds ${points.length})`;
+      btn.style.opacity = '0.4';
+      btn.style.cursor = 'not-allowed';
+    }
     btn.setAttribute('aria-pressed', ind.id === 'vol' ? 'true' : 'false');
     btn.textContent = ind.label;
     btn.addEventListener('click', () => {
+      if (btn.disabled) return;
       const active = btn.getAttribute('aria-pressed') === 'true';
       btn.setAttribute('aria-pressed', active ? 'false' : 'true');
       onIndicatorToggle(ind.id, !active);
@@ -353,7 +384,7 @@ async function initChart(host) {
   bbLowerSeries.applyOptions({ visible: false });
 
   // Smart Zones (Support / Resistance Price Lines)
-  const zones = calcSmartZones(points, 8);
+  const zones = calcSmartZones(points);
   let resistanceLine = null;
   let supportLine = null;
 
@@ -376,7 +407,7 @@ async function initChart(host) {
         lineWidth: 1,
         lineStyle: 2,
         axisLabelVisible: true,
-        title: 'Resistance',
+        title: zones.resistanceTitle || 'Resistance',
       });
     }
     if (zones && zones.support && !supportLine) {
@@ -386,7 +417,7 @@ async function initChart(host) {
         lineWidth: 1,
         lineStyle: 2,
         axisLabelVisible: true,
-        title: 'Support',
+        title: zones.supportTitle || 'Support',
       });
     }
   };
@@ -428,17 +459,21 @@ async function initChart(host) {
     }
   });
 
-  const lastDate = new Date(`${points[points.length - 1].time}T00:00:00Z`);
   const setRange = (days) => {
     if (days == null) {
       chart.timeScale().fitContent();
       return;
     }
-    const from = new Date(lastDate);
-    from.setUTCDate(from.getUTCDate() - days);
-    const fromStr = from.toISOString().slice(0, 10);
-    const clampedFrom = points.find((p) => p.time >= fromStr)?.time || points[0].time;
-    chart.timeScale().setVisibleRange({ from: clampedFrom, to: points[points.length - 1].time });
+    const bars = days === 30 ? 22 : (days === 90 ? 65 : points.length);
+    const fromIndex = Math.max(0, points.length - bars);
+    try {
+      chart.timeScale().setVisibleLogicalRange({
+        from: fromIndex,
+        to: points.length,
+      });
+    } catch {
+      chart.timeScale().fitContent();
+    }
   };
 
   const handleIndicatorToggle = (id, active) => {
@@ -452,7 +487,7 @@ async function initChart(host) {
     if (id === 'vol') volumeSeries.applyOptions({ visible: active });
   };
 
-  buildToolbar(host, setRange, handleIndicatorToggle);
+  buildToolbar(host, points, setRange, handleIndicatorToggle);
 
   const ro = new ResizeObserver(() => chart.applyOptions({ width: canvasWrap.clientWidth }));
   ro.observe(canvasWrap);
