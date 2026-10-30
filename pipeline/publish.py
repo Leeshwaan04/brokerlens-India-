@@ -557,8 +557,11 @@ def build():
     if _EQUITY_BREAKS:
         log("equity history: %d stocks had a split/bonus-sized break; earlier prices excluded" % len(_EQUITY_BREAKS), "ok")
     build_equity_history(equity_history)
+    from .news_engine import write_news_suite
+    _news_count, news_articles = write_news_suite(ingest, SITE_URL)
     _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"),
-                        index_universe, equity_history, bse_d.get("corporate_actions") or [], ipo_records=ipo_records)
+                        index_universe, equity_history, bse_d.get("corporate_actions") or [], ipo_records=ipo_records,
+                        news_articles=news_articles)
     _write_index_pages(index_universe, equity_companies)
     etf_universe = nse_d.get("etfs") or []
     mf_schemes = amfi_d.get("schemes") or []
@@ -598,8 +601,6 @@ def build():
     _write_ipo_upcoming(ipo_records, equity_history=equity_history)
     _write_ipo_sme(ipo_records, equity_history=equity_history)
     _write_ipo_gmp(ipo_records, equity_history=equity_history)
-    from .news_engine import write_news_suite
-    _news_count, news_articles = write_news_suite(ingest, SITE_URL)
     from .trade_cost_engine import build_trade_cost_pages
     trade_cost_urls = build_trade_cost_pages(limit_stocks=2500, site_url=SITE_URL)
     from .broker_charges_engine import build_broker_charges_pages
@@ -2370,7 +2371,133 @@ _SECTOR_INDEX_SLUGS = {
 }
 
 
-def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None, corporate_actions=None, ipo_records=None):
+def _build_news_stock_indexer(news_articles):
+    """Pre-indexes news articles by uppercase tokens for fast, contextual stock lookup."""
+    if not news_articles:
+        return lambda sym, nm, slg, sec, is_ipo: []
+    indexed = []
+    for a in news_articles:
+        slug = a.get("slug", "")
+        title = a.get("title", "")
+        desc = a.get("description", "")
+        body = a.get("body_html", "")
+        full_text = (slug + " " + title + " " + desc + " " + body).upper()
+        words = set(re.findall(r"[A-Z0-9]+", full_text))
+        indexed.append({
+            "art": a,
+            "slug": slug,
+            "words": words,
+            "is_market_wrap": "market-wrap" in slug,
+            "is_pre_market": "pre-market" in slug,
+            "is_bank": "bank" in slug,
+            "is_ipo_gmp": "ipo-gmp-today" in slug,
+            "is_sme_ipo": "sme-ipo" in slug,
+            "is_general_guide": ("best-stock-brokers" in slug or "demat-account" in slug),
+            "date": a.get("date", ""),
+        })
+
+    def match_for_stock(symbol, name, slug, sector, is_ipo):
+        sym_u = symbol.upper()
+        name_clean = re.sub(r"[^A-Z0-9 ]+", " ", name.upper()).split()
+        is_financial = bool(sector and ("Bank" in sector or "Financial" in sector))
+
+        scored = []
+        for item in indexed:
+            score = 0
+            # 1. Direct symbol / name mention
+            if sym_u in item["words"]:
+                score += 100
+            elif any(w in item["words"] for w in name_clean if len(w) > 4 and w not in {"LIMITED", "INDIA", "CORP", "INDUSTRIES"}):
+                score += 85
+
+            # 2. Specific IPO slug
+            if is_ipo and ("ipo-" + slug + "-") in item["slug"]:
+                score += 95
+
+            # 3. Sector
+            if is_financial and item["is_bank"]:
+                score += 50
+
+            # 4. Universal wraps / broad guides
+            if item["is_market_wrap"]:
+                score += 40
+            elif item["is_pre_market"]:
+                score += 35
+            elif is_ipo and item["is_ipo_gmp"]:
+                score += 38
+            elif is_ipo and item["is_sme_ipo"]:
+                score += 36
+            elif item["is_general_guide"]:
+                score += 25
+            elif item["art"].get("category") == "Market News":
+                score += 20
+            elif not is_ipo and item["art"].get("category") == "IPO Bulletin":
+                score += 5
+            else:
+                score += 10
+
+            scored.append((score, item["date"], item["art"]))
+
+        scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+        seen = set()
+        chosen = []
+        for sc, dt, art in scored:
+            if art["slug"] not in seen:
+                seen.add(art["slug"])
+                chosen.append(art)
+            if len(chosen) >= 3:
+                break
+        return chosen
+
+    return match_for_stock
+
+
+def _stock_news_section_html(matched_articles, esc_fn):
+    """Renders contextual market news, wrap, and research cards on stock pages."""
+    if not matched_articles:
+        return ""
+    cards = []
+    for art in matched_articles[:3]:
+        badge = esc_fn(art.get("category") or "Market News")
+        badge_cls = esc_fn(art.get("category_badge") or "badge-verified")
+        date_str = esc_fn(art.get("date_str") or art.get("date") or "Recent")
+        read_time = esc_fn(art.get("read_time") or "3 min read")
+        title = esc_fn(art.get("title") or "")
+        art_slug = esc_fn(art.get("slug") or "")
+        desc = esc_fn(art.get("description") or "")
+        if len(desc) > 130:
+            desc = desc[:127] + "..."
+        card_html = (
+            '<div class="card card-interactive" style="display:flex;flex-direction:column;justify-content:space-between;padding:16px">'
+            '<div>'
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+            '<span class="badge %s" style="font-size:10px">%s</span>'
+            '<span class="xs faint">%s &middot; %s</span>'
+            '</div>'
+            '<div style="font-weight:700;font-size:14px;line-height:1.4;margin-bottom:6px">'
+            '<a href="/news/%s/" style="color:var(--text);text-decoration:none">%s</a>'
+            '</div>'
+            '<p class="xs muted" style="margin:0;line-height:1.5">%s</p>'
+            '</div>'
+            '<div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--border)">'
+            '<a class="xs font-semibold link-arrow" href="/news/%s/">Read Full Bulletin &rarr;</a>'
+            '</div>'
+            '</div>'
+        ) % (badge_cls, badge, date_str, read_time, art_slug, title, desc, art_slug)
+        cards.append(card_html)
+
+    return (
+        '<div class="section-title" style="margin-top:28px">'
+        '<h2>Market News, Bulletins &amp; Research</h2>'
+        '</div>'
+        '<div class="grid g3" style="margin-top:14px">%s</div>'
+        '<p class="xs faint" style="margin-top:10px">'
+        '<a href="/news/" style="font-weight:600">Browse all market news, IPO bulletins and research reports &rarr;</a>'
+        '</p>'
+    ) % "".join(cards)
+
+
+def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None, corporate_actions=None, ipo_records=None, news_articles=None):
     """One static page per NSE-listed equity - Phase 1 of docs/SCALE_TO_60K_PLAN.md,
     completed: sector, a real price snapshot and corporate actions were named
     in that plan as in-scope "from data this pipeline already pulls" but
@@ -2412,6 +2539,19 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
         sym_r = (r.get("symbol") or "").strip().lower()
         if sym_r:
             ipo_by_slug[sym_r] = r
+
+    if news_articles is None:
+        news_file = os.path.join(ROOT, "site", "data", "news.json")
+        if os.path.exists(news_file):
+            try:
+                with open(news_file, "r", encoding="utf-8") as f:
+                    news_articles = json.load(f).get("articles", [])
+            except Exception:
+                news_articles = []
+        else:
+            news_articles = []
+
+    news_matcher = _build_news_stock_indexer(news_articles)
 
     membership, industry_by_symbol, sector_members = {}, {}, {}
     for slug, idx in (indices or {}).items():
@@ -2700,6 +2840,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                 '</div>'
             )
 
+        news_html = _stock_news_section_html(news_matcher(symbol, name, slug, sector, slug in ipo_by_slug), _esc)
         perf_html, perf = _stock_perf(history, _EQUITY_BREAKS.get(symbol.upper()))
         faqs = stock_faqs(name, symbol, c, member_of, match, price_row, perf)
         faq_html = "".join(
@@ -2765,6 +2906,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             + actions_html
             + peers_html
             + compare_html
+            + news_html
             + ipo_callout_html
             + '<h2 style="margin-top:28px;font-size:16px">Frequently asked questions</h2>'
             + '<div style="max-width:68ch">' + faq_html + '</div>'
