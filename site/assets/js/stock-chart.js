@@ -204,7 +204,7 @@ async function loadHistory(slug) {
   return r.json();
 }
 
-function buildToolbar(container, points, onRangeSelect, onIndicatorToggle) {
+function buildToolbar(points, onRangeSelect, onIndicatorToggle) {
   const bar = document.createElement('div');
   bar.className = 'chart-toolbar';
   bar.style.display = 'flex';
@@ -212,7 +212,7 @@ function buildToolbar(container, points, onRangeSelect, onIndicatorToggle) {
   bar.style.alignItems = 'center';
   bar.style.flexWrap = 'wrap';
   bar.style.gap = '8px';
-  bar.style.marginBottom = '8px';
+  bar.style.margin = '4px 0 10px 0';
 
   // Range group
   const rangeGroup = document.createElement('div');
@@ -270,7 +270,6 @@ function buildToolbar(container, points, onRangeSelect, onIndicatorToggle) {
 
   bar.appendChild(rangeGroup);
   bar.appendChild(indicatorGroup);
-  container.appendChild(bar);
   return bar;
 }
 
@@ -279,17 +278,6 @@ async function initChart(host) {
   const canvasWrap = document.createElement('div');
   canvasWrap.className = 'coin-chart-canvas';
 
-  const hud = document.createElement('div');
-  hud.className = 'chart-hud xs faint';
-  hud.style.display = 'flex';
-  hud.style.gap = '14px';
-  hud.style.flexWrap = 'wrap';
-  hud.style.padding = '4px 0 8px 0';
-  hud.style.fontFamily = 'monospace';
-
-  host.appendChild(hud);
-  host.appendChild(canvasWrap);
-
   let candles;
   try {
     const data = await loadHistory(slug);
@@ -297,19 +285,30 @@ async function initChart(host) {
   } catch {
     canvasWrap.innerHTML = `<div class="small faint" style="padding:24px 0;text-align:center">
       Price history isn't available for this stock yet - it refreshes on the next site update.</div>`;
+    host.appendChild(canvasWrap);
     return;
   }
   const points = toCandleData(candles);
   if (points.length < 2) {
     canvasWrap.innerHTML = '<div class="small faint" style="padding:24px 0;text-align:center">Not enough price history yet.</div>';
+    host.appendChild(canvasWrap);
     return;
   }
 
   const LWC = window.LightweightCharts;
   if (!LWC) {
     canvasWrap.innerHTML = '<div class="small faint" style="padding:24px 0;text-align:center">Chart library failed to load.</div>';
+    host.appendChild(canvasWrap);
     return;
   }
+
+  const hud = document.createElement('div');
+  hud.className = 'chart-hud xs faint';
+  hud.style.display = 'flex';
+  hud.style.gap = '14px';
+  hud.style.flexWrap = 'wrap';
+  hud.style.padding = '4px 0 8px 0';
+  hud.style.fontFamily = 'monospace';
 
   const colors = themeColors();
   const chart = LWC.createChart(canvasWrap, {
@@ -469,7 +468,7 @@ async function initChart(host) {
     try {
       chart.timeScale().setVisibleLogicalRange({
         from: fromIndex,
-        to: points.length,
+        to: Math.max(0, points.length - 1),
       });
     } catch {
       chart.timeScale().fitContent();
@@ -487,7 +486,10 @@ async function initChart(host) {
     if (id === 'vol') volumeSeries.applyOptions({ visible: active });
   };
 
-  buildToolbar(host, points, setRange, handleIndicatorToggle);
+  host.appendChild(hud);
+  const toolbar = buildToolbar(points, setRange, handleIndicatorToggle);
+  host.appendChild(toolbar);
+  host.appendChild(canvasWrap);
 
   const ro = new ResizeObserver(() => chart.applyOptions({ width: canvasWrap.clientWidth }));
   ro.observe(canvasWrap);
