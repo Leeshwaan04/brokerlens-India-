@@ -45,6 +45,42 @@ def _slugify(s):
     return re.sub(r"[^a-z0-9]+", "-", str(s or "").lower()).strip("-")
 
 
+def _extract_upper_price(band_str):
+    nums = re.findall(r"\d+", str(band_str or ""))
+    return float(nums[-1]) if nums else 0.0
+
+
+def _inject_mid_article_breaks(body_html):
+    """Injects high-converting contextual Demat callout and AdSense in-article placement midway."""
+    mid_break = """
+    <div class="card in-article-lead-card" style="margin:24px 0;padding:16px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);box-shadow:var(--shadow-sm)">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div style="font-weight:700;font-size:14px;color:var(--text)">Apply for Upcoming IPOs with Rs 0 Delivery Brokerage</div>
+        <span class="badge badge-verified" style="font-size:11px">Zero Account Opening Fee</span>
+      </div>
+      <p class="xs muted" style="margin:6px 0 12px 0;line-height:1.5">Open a paperless Demat account in 5 minutes with zero equity delivery fees, flat Rs 11 F&amp;O orders, and seamless UPI ASBA bidding with Indiabulls Securities.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+        <a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>
+        <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
+      </div>
+    </div>
+    <aside class="ad-wrap ad-in-article" style="margin:20px 0;text-align:center" aria-label="Sponsored Content">
+      <ins class="adsbygoogle"
+           style="display:block; text-align:center;"
+           data-ad-layout="in-article"
+           data-ad-format="fluid"
+           data-ad-client="ca-pub-8447377943455646"
+           data-ad-slot="brokerlens-in-article"></ins>
+    </aside>
+    """
+    parts = body_html.split('<div class="section-title">')
+    if len(parts) >= 3:
+        return parts[0] + '<div class="section-title">' + parts[1] + mid_break + '<div class="section-title">' + '<div class="section-title">'.join(parts[2:])
+    elif len(parts) == 2:
+        return parts[0] + mid_break + '<div class="section-title">' + parts[1]
+    return body_html + mid_break
+
+
 def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     """Builds a rich collection of data-driven news, educational blogs, and empirical articles."""
     articles = []
@@ -365,29 +401,54 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
         except Exception:
             gmp_data = {}
 
+    curated_map = {}
+    curated_path = os.path.join(ROOT, "data", "manual", "curated_ipos.json")
+    if os.path.exists(curated_path):
+        try:
+            with open(curated_path, "r", encoding="utf-8") as f:
+                curated_map = {item["symbol"].upper(): item for item in json.load(f) if item.get("symbol")}
+        except Exception:
+            curated_map = {}
+
     gmp_rows = []
+    gmp_items_enriched = []
     for gsym, ginfo in gmp_data.items():
-        gname = ginfo.get("company_name", gsym)
-        g_val = ginfo.get("gmp_inr", 0)
-        g_pct = ginfo.get("expected_gain_pct", 0)
-        g_price = ginfo.get("estimated_listing_price", 0)
-        g_band = ginfo.get("price_band", "-")
-        g_trend = ginfo.get("trend", "stable")
-        g_updated = ginfo.get("recorded_at", today_iso)[:10]
-        g_kostak = ginfo.get("kostak_inr", 0)
+        c_info = curated_map.get(gsym.upper()) or {}
+        gname = ginfo.get("company") or ginfo.get("company_name") or c_info.get("company") or gsym
+        g_val = float(ginfo.get("gmp") if ginfo.get("gmp") is not None else ginfo.get("gmp_inr", 0.0))
+        g_band = ginfo.get("price_band") or c_info.get("price_band") or "-"
+        upper_px = _extract_upper_price(g_band)
+        g_price = (upper_px + g_val) if upper_px > 0 else g_val
+        g_pct = (g_val / upper_px * 100) if upper_px > 0 else 0.0
+        g_trend = str(ginfo.get("trend") or "stable").lower()
+        g_updated = str(ginfo.get("last_updated") or ginfo.get("recorded_at") or today_iso)[:10]
+        g_kostak = int(ginfo.get("kostak") if ginfo.get("kostak") is not None else ginfo.get("kostak_inr", 0))
         g_trend_icon = "&uarr;" if g_trend == "up" else ("&darr;" if g_trend == "down" else "&rarr;")
         g_trend_color = "var(--up)" if g_trend == "up" else ("var(--down)" if g_trend == "down" else "var(--text)")
         gmp_rows.append(
             f'<tr>'
             f'<td><strong>{_esc(gname)}</strong><br><span class="xs muted">{_esc(gsym)}</span></td>'
             f'<td class="num">{_esc(g_band)}</td>'
-            f'<td class="num" style="color:var(--up);font-weight:700">+Rs {g_val:,} ({g_pct:.1f}%)</td>'
-            f'<td class="num">Rs {g_price:,}</td>'
+            f'<td class="num" style="color:var(--up);font-weight:700">+Rs {g_val:,.1f} ({g_pct:.1f}%)</td>'
+            f'<td class="num">Rs {g_price:,.1f}</td>'
             f'<td class="num">Rs {g_kostak:,}</td>'
             f'<td style="text-align:center;color:{g_trend_color}">{g_trend_icon} {_esc(g_trend.capitalize())}</td>'
             f'<td class="xs muted" style="text-align:right">{_esc(g_updated)}</td>'
             f'</tr>'
         )
+        gmp_items_enriched.append({
+            "symbol": gsym,
+            "company": gname,
+            "gmp": g_val,
+            "price_band": g_band,
+            "upper_price": upper_px,
+            "listing_price": g_price,
+            "gain_pct": g_pct,
+            "kostak": g_kostak,
+            "trend": g_trend,
+            "last_updated": g_updated,
+            "history": ginfo.get("history") or [],
+        })
     gmp_table_html = "".join(gmp_rows) if gmp_rows else '<tr><td colspan="7" class="muted">No active GMP quotes recorded today.</td></tr>'
 
     # Daily Live IPO GMP Bulletin
@@ -474,6 +535,174 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
         "read_time": "4 min read",
         "body_html": gmp_article_body,
     })
+
+    # Individual High-Intent IPO GMP Bulletins
+    for item in gmp_items_enriched:
+        sym_l = _slugify(item["symbol"])
+        comp_n = item["company"]
+        g_val = item["gmp"]
+        if g_val <= 0:
+            continue
+        g_band = item["price_band"]
+        g_pct = item["gain_pct"]
+        g_listing = item["listing_price"]
+        g_kostak = item["kostak"]
+        g_trend_str = item["trend"].capitalize()
+        history_rows = "".join(
+            f'<tr><td>{_esc(h.get("date"))}</td><td class="num" style="color:var(--up);font-weight:600">+Rs {float(h.get("gmp", 0)):,.1f}</td></tr>'
+            for h in item.get("history", [])
+        )
+        hist_table = f"""
+        <div class="table-scroll" style="margin:16px 0;max-width:380px">
+          <table class="data">
+            <thead><tr><th>Date</th><th class="num">Recorded GMP</th></tr></thead>
+            <tbody>{history_rows}</tbody>
+          </table>
+        </div>
+        """ if history_rows else ""
+
+        single_gmp_slug = f"ipo-{sym_l}-gmp-today-grey-market-premium-listing-estimates"
+        single_gmp_title = f"{comp_n} IPO GMP Today: Live Grey Market Premium, Kostak Rate & Listing Gain Estimates ({today_str})"
+        single_gmp_desc = (
+            f"{comp_n} IPO live GMP today ({today_str}): latest grey market quotes indicate +Rs {g_val:,.1f} "
+            f"per share ({g_pct:.1f}% gain over issue price band {g_band}). Review expected listing price, "
+            f"Kostak rate Rs {g_kostak:,}, and Demat application procedure."
+        )[:300]
+
+        single_gmp_body = f"""
+        <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+          The grey market premium for <strong>{_esc(comp_n)}</strong> ({_esc(item["symbol"])}) is currently quoted at
+          <strong>+Rs {g_val:,.1f}</strong> per equity share as of <strong>{_esc(today_str)}</strong>.
+          Based on the upper price band of <strong>{_esc(g_band)}</strong>, the expected listing price is
+          projected around <strong>Rs {g_listing:,.1f}</strong>, reflecting an estimated listing gain of
+          <strong>+{g_pct:.1f}%</strong>.
+        </p>
+
+        <div class="section-title"><h2>{_esc(comp_n)} IPO GMP Snapshot ({_esc(today_str)})</h2></div>
+        <div class="grid g3" style="margin:16px 0">
+          <div class="card stat">
+            <div class="stat-label">Price Band</div>
+            <div class="stat-value" style="font-size:18px">{_esc(g_band)}</div>
+            <div class="stat-sub">Issue Price Range</div>
+          </div>
+          <div class="card stat">
+            <div class="stat-label">Current GMP</div>
+            <div class="stat-value" style="font-size:18px;color:var(--up)">+Rs {g_val:,.1f}</div>
+            <div class="stat-sub">Trend: {_esc(g_trend_str)}</div>
+          </div>
+          <div class="card stat">
+            <div class="stat-label">Estimated Listing Price</div>
+            <div class="stat-value" style="font-size:18px">Rs {g_listing:,.1f}</div>
+            <div class="stat-sub">Expected Gain: +{g_pct:.1f}%</div>
+          </div>
+        </div>
+
+        <div class="section-title"><h2>Historical GMP Trend</h2></div>
+        <p>Tracking day-by-day dealer quotations provides visibility into changing retail appetite ahead of exchange debut:</p>
+        {hist_table}
+
+        <div class="section-title"><h2>Kostak Rate and Subject to Sauda</h2></div>
+        <p>
+          The Kostak rate for {_esc(comp_n)} IPO is quoted at <strong>Rs {g_kostak:,}</strong> per retail application.
+          Kostak represents the fixed profit an applicant locks in by trading their IPO application rights before allotment.
+          Investors should note that trading in the unofficial grey market is subject to counterparty risk as transactions
+          are not settled or guaranteed by SEBI, NSE, or BSE.
+        </p>
+
+        <div class="section-title"><h2>How to Apply for {_esc(comp_n)} IPO via UPI</h2></div>
+        <ol style="line-height:1.7;margin-bottom:20px">
+          <li>Log into your registered Demat account on your broker app (Indiabulls Securities, Zerodha, Groww, Angel One).</li>
+          <li>Navigate to the <strong>IPO</strong> section and choose <strong>{_esc(comp_n)}</strong>.</li>
+          <li>Select the number of lots to bid for and choose the cut-off price.</li>
+          <li>Enter your valid UPI Virtual Payment Address (VPA) and submit your application.</li>
+          <li>Accept the UPI mandate request on your banking app (Google Pay, PhonePe, BHIM) before the 5:00 PM cutoff.</li>
+        </ol>
+
+        <div class="card" style="margin-top:20px;padding:16px;border-left:4px solid var(--accent)">
+          <p style="margin:0"><strong>Track Issue Details:</strong> Explore the complete
+          <a href="/ipo/{_esc(sym_l)}/" data-link>{_esc(comp_n)} IPO Profile</a> &middot;
+          <a href="/ipo/gmp/" data-link>All Live IPO GMP Rates</a> &middot;
+          <a href="/ipo/allotment-status/" data-link>Check Allotment Status Online</a>.</p>
+        </div>
+        """
+        articles.append({
+            "slug": single_gmp_slug,
+            "title": single_gmp_title,
+            "description": single_gmp_desc,
+            "date": today_iso,
+            "date_str": today_str,
+            "category": "IPO Bulletin",
+            "category_badge": "badge-up",
+            "type": "NewsArticle",
+            "read_time": "3 min read",
+            "body_html": single_gmp_body,
+            "related_symbol": item["symbol"],
+        })
+
+    # Individual High-Intent IPO Allotment Guides
+    for item in gmp_items_enriched[:6]:
+        sym_l = _slugify(item["symbol"])
+        comp_n = item["company"]
+        allot_slug = f"how-to-check-{sym_l}-ipo-allotment-status-online"
+        allot_title = f"How to Check {comp_n} IPO Allotment Status Online: Registrar, BSE & Demat Guide"
+        allot_desc = (
+            f"Step-by-step instructions to check {comp_n} IPO allotment status online. Direct verification links "
+            f"for registrar portals (Link Intime, KFintech), BSE application check, and UPI refund unblocking timelines."
+        )[:300]
+
+        allot_body = f"""
+        <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+          Following the close of bidding for <strong>{_esc(comp_n)}</strong> ({_esc(item["symbol"])}), the registrar
+          finalizes the <strong>Basis of Allotment</strong> under SEBI's proportionate allocation framework.
+          Investors can verify whether equity shares were allotted to their PAN or application number using official portals.
+        </p>
+
+        <div class="section-title"><h2>Step-by-Step Allotment Verification Methods</h2></div>
+        
+        <h3 style="font-size:15px;margin-top:16px">Method 1: Check via Registrar Official Portal</h3>
+        <p>The designated registrar processes and validates all submitted bids against exchange master files:</p>
+        <ol style="line-height:1.7">
+          <li>Visit the official registrar allotment portal (Link Intime, KFin Technologies, or Bigshare Services).</li>
+          <li>Select <strong>{_esc(comp_n)}</strong> from the dropdown list of active public issues.</li>
+          <li>Choose your verification identifier: <strong>PAN Number</strong>, <strong>Application Number</strong>, or <strong>DP Client ID</strong>.</li>
+          <li>Enter the chosen identifier along with the captcha code and click <strong>Submit</strong>.</li>
+        </ol>
+
+        <h3 style="font-size:15px;margin-top:16px">Method 2: Check via BSE India Direct Application Portal</h3>
+        <p>BSE operates a central application verification service for all registered issues:</p>
+        <ol style="line-height:1.7">
+          <li>Navigate to the BSE Application Check portal (<a href="https://www.bseindia.com/investors/appli_check.aspx" target="_blank" rel="noopener">bseindia.com</a>).</li>
+          <li>Select <strong>Equity</strong> under Issue Type.</li>
+          <li>Choose <strong>{_esc(comp_n)}</strong> in the Issue Name dropdown.</li>
+          <li>Enter your 10-character PAN and Application Number, then click <strong>Search</strong>.</li>
+        </ol>
+
+        <div class="section-title"><h2>Demat Credit and UPI Refund Timelines</h2></div>
+        <ul>
+          <li><strong>Shares Credited:</strong> If allotted, equity shares are credited directly to your CDSL or NSDL Demat account one business day before listing.</li>
+          <li><strong>UPI Mandate Revocation:</strong> If not allotted or partially allotted, your bank will release the blocked funds within 24 to 48 hours of allotment finalization.</li>
+          <li><strong>No Penalty / Deductions:</strong> No processing charges or penalties are levied on unsuccessful applications.</li>
+        </ul>
+
+        <div class="card" style="margin-top:20px;padding:16px;border-left:4px solid var(--accent)">
+          <p style="margin:0"><strong>Prepare for Next IPO:</strong> Not allotted? Open a free paperless Demat account with
+          <a href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener">Indiabulls Securities</a>
+          for zero delivery brokerage and fast UPI bidding on all upcoming public issues.</p>
+        </div>
+        """
+        articles.append({
+            "slug": allot_slug,
+            "title": allot_title,
+            "description": allot_desc,
+            "date": today_iso,
+            "date_str": today_str,
+            "category": "Blog & Guide",
+            "category_badge": "badge-verified",
+            "type": "BlogPosting",
+            "read_time": "4 min read",
+            "body_html": allot_body,
+            "related_symbol": item["symbol"],
+        })
 
     # SME IPO Guide & Trading Rules
     sme_article_slug = "sme-ipo-market-roundup-nse-emerge-bse-sme-trading-rules"
@@ -1600,7 +1829,7 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
             + '</div>'
             + '<div class="xs"><a href="/editorial-policy" style="color:var(--accent);text-decoration:none;font-weight:600">Editorial Guidelines &rarr;</a></div>'
             + '</div>'
-            + '<div class="card" style="margin-top:20px;padding:28px;line-height:1.7">%s</div>' % art["body_html"]
+            + '<div class="card" style="margin-top:20px;padding:28px;line-height:1.7">%s</div>' % _inject_mid_article_breaks(art["body_html"])
             + _ibsl_news_banner()
             + '<p class="xs faint" style="margin-top:12px">Editorial Integrity: BrokerLens does not accept payment to alter factual analyses. Sponsored placements are labelled and do not affect any data, ranking or analysis. Read our <a href="/editorial-policy">Editorial Policy</a> and <a href="/methodology">Methodology</a>.</p>'
             + affiliate_html
