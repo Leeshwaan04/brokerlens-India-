@@ -1152,6 +1152,16 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
       <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
       <kbd class="search-esc">Esc</kbd>
     </div>
+    <div class="search-filter-bar" role="tablist" aria-label="Filter search categories">
+      <button type="button" class="search-filter-btn" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" class="search-filter-btn" data-filter="broker" aria-pressed="false">Broker</button>
+      <button type="button" class="search-filter-btn" data-filter="sebi" aria-pressed="false">SEBI Registry</button>
+      <button type="button" class="search-filter-btn" data-filter="stock" aria-pressed="false">Stock</button>
+      <button type="button" class="search-filter-btn" data-filter="etf" aria-pressed="false">ETF</button>
+      <button type="button" class="search-filter-btn" data-filter="fund" aria-pressed="false">Mutual Fund</button>
+      <button type="button" class="search-filter-btn" data-filter="ipo" aria-pressed="false">IPO</button>
+      <button type="button" class="search-filter-btn" data-filter="compare" aria-pressed="false">Comparison</button>
+    </div>
     <div id="search-results" class="search-results"></div>
   </div>
 </div>
@@ -1298,6 +1308,16 @@ _APP_SHELL_HEAD = """<!doctype html>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
       <kbd class="search-esc">Esc</kbd>
+    </div>
+    <div class="search-filter-bar" role="tablist" aria-label="Filter search categories">
+      <button type="button" class="search-filter-btn" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" class="search-filter-btn" data-filter="broker" aria-pressed="false">Broker</button>
+      <button type="button" class="search-filter-btn" data-filter="sebi" aria-pressed="false">SEBI Registry</button>
+      <button type="button" class="search-filter-btn" data-filter="stock" aria-pressed="false">Stock</button>
+      <button type="button" class="search-filter-btn" data-filter="etf" aria-pressed="false">ETF</button>
+      <button type="button" class="search-filter-btn" data-filter="fund" aria-pressed="false">Mutual Fund</button>
+      <button type="button" class="search-filter-btn" data-filter="ipo" aria-pressed="false">IPO</button>
+      <button type="button" class="search-filter-btn" data-filter="compare" aria-pressed="false">Comparison</button>
     </div>
     <div id="search-results" class="search-results"></div>
   </div>

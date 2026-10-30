@@ -9,7 +9,7 @@ import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=f96dfa9225
 import * as pages from './pages.js?v=02d5c896be';
 import { clearRedraws } from './chart.js?v=22460af914';
 import './nav-widgets.js?v=0741624501';
-import './search.js?v=ec92af65f0';
+import './search.js?v=0d491de965';
 import './hero-video.js?v=9e658a1fa5';
 
 const app = document.getElementById('app');

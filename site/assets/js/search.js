@@ -20,13 +20,25 @@ const resultsEl = document.getElementById('search-results');
 const TYPE_LABEL = {
   broker: 'Broker', stock: 'Stock', etf: 'ETF', fund: 'Mutual fund',
   sebi: 'SEBI registry', index: 'Index', hub: 'Browse', report: 'Report',
-  calc: 'Calculator', page: 'Page', crypto: 'Crypto', news: 'News', compare: 'Comparison',
+  calc: 'Calculator', page: 'Page', crypto: 'Crypto', news: 'News', compare: 'Comparison', ipo: 'IPO',
 };
+
+const FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'broker', label: 'Broker' },
+  { id: 'sebi', label: 'SEBI Registry' },
+  { id: 'stock', label: 'Stock' },
+  { id: 'etf', label: 'ETF' },
+  { id: 'fund', label: 'Mutual Fund' },
+  { id: 'ipo', label: 'IPO' },
+  { id: 'compare', label: 'Comparison' },
+];
 
 let index = null;
 let indexPromise = null;
 let active = -1;
 let shown = [];
+let currentFilter = 'all';
 
 function ensureIndex() {
   if (!indexPromise) {
@@ -61,11 +73,24 @@ function score(row, q) {
   return 0;
 }
 
-function search(q) {
-  if (!index || !q) return [];
-  const needle = q.trim().toLowerCase();
-  if (!needle) return [];
-  return index
+function search(q, filterType) {
+  if (!index) return [];
+  const needle = (q || '').trim().toLowerCase();
+  const target = filterType || currentFilter;
+
+  let candidates = index;
+  if (target !== 'all') {
+    candidates = candidates.filter((row) => row[2] === target);
+  }
+
+  if (!needle) {
+    if (target !== 'all') {
+      return candidates.slice(0, 20);
+    }
+    return [];
+  }
+
+  return candidates
     .map((row) => [score(row, needle), row])
     .filter(([s]) => s > 0)
     .sort((a, b) => b[0] - a[0])
@@ -78,23 +103,26 @@ function render(q) {
     resultsEl.innerHTML = '<div class="search-hint">Loading search index...</div>';
     return;
   }
-  if (!q.trim()) {
+  const needle = (q || '').trim();
+  if (!needle && currentFilter === 'all') {
     resultsEl.innerHTML = '<div class="search-hint">Search brokers, stocks, mutual funds, ETFs, '
       + 'SEBI-registered entities and calculators by name.</div>';
     shown = [];
     active = -1;
     return;
   }
-  shown = search(q);
+  shown = search(needle, currentFilter);
   active = shown.length ? 0 : -1;
   if (!shown.length) {
-    resultsEl.innerHTML = '<div class="search-empty">No matches for "' + esc(q) + '".</div>';
+    const fObj = FILTERS.find((f) => f.id === currentFilter);
+    const scopeSuffix = fObj && fObj.id !== 'all' ? ' in ' + fObj.label : '';
+    resultsEl.innerHTML = '<div class="search-empty">No matches for "' + esc(needle) + '"' + esc(scopeSuffix) + '.</div>';
     return;
   }
   let lastType = null;
   resultsEl.innerHTML = shown.map((row, i) => {
     const [name, url, type, sub] = row;
-    const groupHead = type !== lastType
+    const groupHead = (currentFilter === 'all' && type !== lastType)
       ? '<div class="search-group-label">' + esc(TYPE_LABEL[type] || type) + '</div>' : '';
     lastType = type;
     return groupHead
@@ -103,6 +131,50 @@ function render(q) {
       + (sub ? '<span class="s">' + esc(sub) + '</span>' : '')
       + '</a>';
   }).join('');
+}
+
+function syncFilterButtons(bar) {
+  if (!bar) return;
+  bar.querySelectorAll('.search-filter-btn').forEach((b) => {
+    b.setAttribute('aria-pressed', b.dataset.filter === currentFilter ? 'true' : 'false');
+  });
+}
+
+function setupFilterBar() {
+  const modal = overlay ? overlay.querySelector('.search-modal') : null;
+  if (!modal) return;
+  let bar = modal.querySelector('.search-filter-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.className = 'search-filter-bar';
+    bar.setAttribute('role', 'tablist');
+    bar.setAttribute('aria-label', 'Filter search categories');
+    bar.innerHTML = FILTERS.map((f) => {
+      const isPressed = f.id === currentFilter;
+      return '<button type="button" class="search-filter-btn" data-filter="' + esc(f.id) + '" '
+        + 'aria-pressed="' + (isPressed ? 'true' : 'false') + '">'
+        + esc(f.label)
+        + '</button>';
+    }).join('');
+
+    const inputRow = modal.querySelector('.search-input-row');
+    if (inputRow && resultsEl) {
+      modal.insertBefore(bar, resultsEl);
+    } else {
+      modal.appendChild(bar);
+    }
+  }
+
+  bar.onclick = (e) => {
+    const btn = e.target.closest('.search-filter-btn');
+    if (!btn) return;
+    const fId = btn.dataset.filter;
+    if (fId === currentFilter) return;
+    currentFilter = fId;
+    syncFilterButtons(bar);
+    render(input ? input.value : '');
+    if (input) input.focus();
+  };
 }
 
 function setActive(i) {
@@ -117,6 +189,13 @@ function open() {
   if (!overlay) return;
   overlay.hidden = false;
   input.value = '';
+  currentFilter = 'all';
+  setupFilterBar();
+  const modal = overlay.querySelector('.search-modal');
+  if (modal) {
+    const bar = modal.querySelector('.search-filter-bar');
+    syncFilterButtons(bar);
+  }
   render('');
   ensureIndex().then(() => render(input.value));
   setTimeout(() => input.focus(), 0);
@@ -154,3 +233,6 @@ document.addEventListener('keydown', (e) => {
     if (overlay && !overlay.hidden) close(); else open();
   }
 });
+
+// Setup filter bar immediately on load so static pre-rendered modals are wired up
+setupFilterBar();
