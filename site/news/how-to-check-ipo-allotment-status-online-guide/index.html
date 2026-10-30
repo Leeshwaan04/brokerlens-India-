@@ -14,7 +14,7 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" href="/assets/css/app.css?v=82a166525e">
+<link rel="stylesheet" href="/assets/css/app.css?v=670afd221e">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BrokerLens">
 <meta property="og:locale" content="en_IN">
@@ -82,6 +82,16 @@
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
       <kbd class="search-esc">Esc</kbd>
+    </div>
+    <div class="search-filter-bar" role="tablist" aria-label="Filter search categories">
+      <button type="button" class="search-filter-btn" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" class="search-filter-btn" data-filter="broker" aria-pressed="false">Broker</button>
+      <button type="button" class="search-filter-btn" data-filter="sebi" aria-pressed="false">SEBI Registry</button>
+      <button type="button" class="search-filter-btn" data-filter="stock" aria-pressed="false">Stock</button>
+      <button type="button" class="search-filter-btn" data-filter="etf" aria-pressed="false">ETF</button>
+      <button type="button" class="search-filter-btn" data-filter="fund" aria-pressed="false">Mutual Fund</button>
+      <button type="button" class="search-filter-btn" data-filter="ipo" aria-pressed="false">IPO</button>
+      <button type="button" class="search-filter-btn" data-filter="compare" aria-pressed="false">Comparison</button>
     </div>
     <div id="search-results" class="search-results"></div>
   </div>
@@ -299,6 +309,6 @@
   <a href="/terms-of-service">Terms of service</a></p>
 </div></footer>
 <script type="module" src="/assets/js/nav-widgets.js?v=0741624501"></script>
-<script type="module" src="/assets/js/search.js?v=ec92af65f0"></script>
+<script type="module" src="/assets/js/search.js?v=0d491de965"></script>
 </body>
 </html>
