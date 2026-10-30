@@ -948,11 +948,42 @@ def build_market_movers():
     def rows(key):
         return [r for r in (nse_live.get(key) or []) if r.get("symbol") and r.get("last") is not None][:10]
 
+    gainers = rows("gainers")
+    losers = rows("losers")
+    most_active = rows("quotes")
+
+    if not gainers or not losers:
+        eq_hist = (ingest.get("nse") or {}).get("equity_history") or {}
+        moves = []
+        for sym, candles in eq_hist.items():
+            if not candles or len(candles) < 2:
+                continue
+            last_c = candles[-1].get("close")
+            prev_c = candles[-2].get("close")
+            vol = candles[-1].get("volume") or 0
+            if last_c and prev_c and prev_c > 0:
+                pct = ((last_c - prev_c) / prev_c) * 100.0
+                moves.append({
+                    "symbol": sym.upper(),
+                    "last": round(last_c, 2),
+                    "change": round(last_c - prev_c, 2),
+                    "change_pct": round(pct, 2),
+                    "volume": vol,
+                })
+        if moves:
+            moves_sorted = sorted(moves, key=lambda m: m["change_pct"], reverse=True)
+            if not gainers:
+                gainers = moves_sorted[:10]
+            if not losers:
+                losers = list(reversed(moves_sorted[-10:]))
+            if not most_active:
+                most_active = sorted(moves, key=lambda m: m["volume"], reverse=True)[:10]
+
     payload = {
         "generated_at": now_iso(),
-        "gainers": rows("gainers"),
-        "losers": rows("losers"),
-        "most_active": rows("quotes"),
+        "gainers": gainers,
+        "losers": losers,
+        "most_active": most_active,
     }
     size = write_json(os.path.join(SITE_DATA, "market-movers.json"), payload, compact=True)
     log("market-movers.json %.1f KB (gainers=%d losers=%d most_active=%d)"
