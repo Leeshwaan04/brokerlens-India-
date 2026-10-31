@@ -1150,6 +1150,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
     <div class="search-input-row">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
+      <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" hidden>&times;</button>
       <kbd class="search-esc">Esc</kbd>
     </div>
     <div class="search-filter-bar" role="tablist" aria-label="Filter search categories">
@@ -1307,6 +1308,7 @@ _APP_SHELL_HEAD = """<!doctype html>
     <div class="search-input-row">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <input type="text" id="search-input" placeholder="Search brokers, stocks, funds, calculators..." autocomplete="off" aria-label="Search BrokerLens">
+      <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" hidden>&times;</button>
       <kbd class="search-esc">Esc</kbd>
     </div>
     <div class="search-filter-bar" role="tablist" aria-label="Filter search categories">
@@ -7037,6 +7039,21 @@ def _write_compare_pages(overview, built=None):
             '<th class="right"><a href="/broker/%s/">%s</a></th>'
             '</tr></thead><tbody>%s</tbody></table></div>'
         ) % (_esc(id1), _esc(brand1), _esc(id2), _esc(brand2), table_rows)
+
+        # Sponsored Partner Conversion Callout
+        p_page += (
+            '<div class="card in-article-lead-card" style="margin:28px 0;padding:16px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);box-shadow:var(--shadow-sm)">'
+            '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+            '<div style="font-weight:700;font-size:15px;color:var(--text)">Looking for Lower Brokerage and Rs 0 Delivery?</div>'
+            '<span class="badge badge-verified" style="font-size:11px">Zero Account Opening Fee</span>'
+            '</div>'
+            '<p class="xs muted" style="margin:6px 0 12px 0;line-height:1.5">Open a paperless Demat account in 5 minutes with zero equity delivery fees, flat Rs 11 F&amp;O orders across NSE and BSE, and 20+ years of regulatory trust with Indiabulls Securities.</p>'
+            '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">'
+            '<a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>'
+            '<span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>'
+            '</div>'
+            '</div>'
+        )
 
         # FAQs
         p_page += (

@@ -16,6 +16,12 @@ const toggle = document.getElementById('search-toggle');
 const overlay = document.getElementById('search-overlay');
 const input = document.getElementById('search-input');
 const resultsEl = document.getElementById('search-results');
+const clearBtn = document.getElementById('search-clear');
+
+const TRENDING = [
+  'NIFTY 50', 'Zerodha', 'Gold ETF', 'Swiggy IPO', 'HDFC Bank',
+  'SIP Calculator', 'Angel One vs Zerodha', 'Groww'
+];
 
 const TYPE_LABEL = {
   broker: 'Broker', stock: 'Stock', etf: 'ETF', fund: 'Mutual fund',
@@ -105,8 +111,14 @@ function render(q) {
   }
   const needle = (q || '').trim();
   if (!needle && currentFilter === 'all') {
-    resultsEl.innerHTML = '<div class="search-hint">Search brokers, stocks, mutual funds, ETFs, '
-      + 'SEBI-registered entities and calculators by name.</div>';
+    resultsEl.innerHTML = '<div class="search-empty-state">'
+      + '<div class="search-hint">Search brokers, stocks, mutual funds, ETFs, '
+      + 'SEBI-registered entities and calculators by name.</div>'
+      + '<div class="search-trending-title">Trending &amp; Popular Searches</div>'
+      + '<div class="search-trending-chips">'
+      + TRENDING.map((t) => '<button type="button" class="search-trending-chip" data-query="' + esc(t) + '">' + esc(t) + '</button>').join('')
+      + '</div>'
+      + '</div>';
     shown = [];
     active = -1;
     return;
@@ -149,6 +161,15 @@ function setupFilterBar() {
     bar.className = 'search-filter-bar';
     bar.setAttribute('role', 'tablist');
     bar.setAttribute('aria-label', 'Filter search categories');
+    const inputRow = modal.querySelector('.search-input-row');
+    if (inputRow && resultsEl) {
+      modal.insertBefore(bar, resultsEl);
+    } else {
+      modal.appendChild(bar);
+    }
+  }
+
+  if (!bar.children.length) {
     bar.innerHTML = FILTERS.map((f) => {
       const isPressed = f.id === currentFilter;
       return '<button type="button" class="search-filter-btn" data-filter="' + esc(f.id) + '" '
@@ -156,13 +177,6 @@ function setupFilterBar() {
         + esc(f.label)
         + '</button>';
     }).join('');
-
-    const inputRow = modal.querySelector('.search-input-row');
-    if (inputRow && resultsEl) {
-      modal.insertBefore(bar, resultsEl);
-    } else {
-      modal.appendChild(bar);
-    }
   }
 
   bar.onclick = (e) => {
@@ -185,10 +199,17 @@ function setActive(i) {
   rows[active].scrollIntoView({ block: 'nearest' });
 }
 
+function syncClearButton() {
+  if (clearBtn) {
+    clearBtn.hidden = !input || !input.value.trim();
+  }
+}
+
 function open() {
   if (!overlay) return;
   overlay.hidden = false;
   input.value = '';
+  syncClearButton();
   currentFilter = 'all';
   setupFilterBar();
   const modal = overlay.querySelector('.search-modal');
@@ -213,7 +234,28 @@ overlay?.addEventListener('click', (e) => {
   if (e.target === overlay) close();
 });
 
-input?.addEventListener('input', () => render(input.value));
+clearBtn?.addEventListener('click', () => {
+  if (!input) return;
+  input.value = '';
+  syncClearButton();
+  render('');
+  input.focus();
+});
+
+resultsEl?.addEventListener('click', (e) => {
+  const chip = e.target.closest('.search-trending-chip');
+  if (!chip || !input) return;
+  const q = chip.dataset.query || chip.textContent.trim();
+  input.value = q;
+  syncClearButton();
+  render(q);
+  input.focus();
+});
+
+input?.addEventListener('input', () => {
+  syncClearButton();
+  render(input.value);
+});
 
 input?.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }

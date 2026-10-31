@@ -555,6 +555,103 @@ def get_autopilot_articles(today_iso=None):
               </div>
             </div>
             """
+        },
+        {
+            "slug": "pashupati-cotspin-share-price-target-financials-guide",
+            "title": "Pashupati Cotspin Share Price Target & Financials: Textile Capex & Multiples",
+            "description": "Fundamental valuation study of Pashupati Cotspin: cotton spinning, weaving, ginning export cycles, EBITDA trends, and realistic growth scenario analysis.",
+            "category": "Empirical Research",
+            "category_badge": "badge-up",
+            "type": "NewsArticle",
+            "date": today_iso,
+            "date_str": _format_date(today_iso),
+            "read_time": "7 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              Queries for <strong>Pashupati Cotspin share price target 2030</strong> reflect growing investor focus on regional textile manufacturing,
+              cotton processing capacity, and yarn export realizations across western India.
+            </p>
+
+            <div class="section-title"><h2>1. Cotton Ginning, Spinning and Weaving Value Chain</h2></div>
+            <p>
+              Pashupati Cotspin operates integrated processing facilities spanning raw cotton ginning, spinning of combed compact yarns, and grey fabric weaving.
+              Its financial performance hinges on several core industrial dynamics:
+            </p>
+            <ul>
+              <li><strong>Raw Cotton Spread:</strong> Operational profitability depends heavily on the price spread between raw seed cotton procured during harvest windows and finished yarn selling prices.</li>
+              <li><strong>Capacity Utilization &amp; Capex:</strong> Automated spinning spindle installations determine unit conversion costs and power efficiency per kilogram of output.</li>
+              <li><strong>Export Realizations:</strong> Export demand from Bangladesh, Vietnam, and Southeast Asian apparel hubs provides volume absorption when domestic textile demand moderates.</li>
+            </ul>
+
+            <div class="section-title"><h2>2. What-If Valuation &amp; Growth Sensitivity</h2></div>
+            <p>
+              Rather than relying on speculative target numbers, investors can evaluate historical cyclicality and run what-if price models:
+              applying steady revenue compounding against historical median P/E multiples (10x to 16x) typical of micro-cap textile operators.
+              Explore real trading history and interactive models on the <a href="/stock/pashupati/">Pashupati Cotspin Stock Profile</a>.
+            </p>
+
+            <div class="card" style="margin-top:20px;padding:18px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                <div style="font-weight:700;font-size:15px;color:var(--text)">Trade Textile &amp; Manufacturing Scrips</div>
+                <span class="badge badge-verified" style="font-size:11px">Zero Delivery Brokerage</span>
+              </div>
+              <p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">
+                Invest in emerging textile and manufacturing businesses with zero delivery fees, flat Rs 11 F&amp;O orders, and paperless onboarding at Indiabulls Securities.
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                <a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>
+                <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
+              </div>
+            </div>
+            """
+        },
+        {
+            "slug": "jaykay-enterprises-share-price-target-valuation-guide",
+            "title": "Jaykay Enterprises Share Price Target: 3D Printing & Additive Manufacturing Pivot",
+            "description": "In-depth study of Jaykay Enterprises: transition to advanced additive manufacturing, aerospace 3D printing joint ventures, and fundamental valuation multiples.",
+            "category": "Empirical Research",
+            "category_badge": "badge-up",
+            "type": "NewsArticle",
+            "date": today_iso,
+            "date_str": _format_date(today_iso),
+            "read_time": "8 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              High search volume for <strong>Jaykay Enterprises share price target 2030</strong> stems from the company's high-tech turnaround,
+              transitioning from legacy operations to advanced industrial 3D printing and digital manufacturing technologies.
+            </p>
+
+            <div class="section-title"><h2>1. The Additive Manufacturing Transformation</h2></div>
+            <p>
+              Jaykay Enterprises has repositioned itself as a technology provider in additive manufacturing (metal and polymer 3D printing) through strategic joint ventures:
+            </p>
+            <ul>
+              <li><strong>Aerospace &amp; Defence Tooling:</strong> Supplying customized, lightweight metal 3D components with reduced lead times compared to traditional casting.</li>
+              <li><strong>Industrial Partnerships:</strong> Collaborations with global 3D printing technology manufacturers to deliver enterprise rapid-prototyping infrastructure in India.</li>
+              <li><strong>Asset-Light Engineering:</strong> Digital inventory management and distributed manufacturing models that reduce working capital lockup.</li>
+            </ul>
+
+            <div class="section-title"><h2>2. Valuation Multiples &amp; Technology Re-Rating</h2></div>
+            <p>
+              High-growth digital manufacturing enterprises carry different valuation parameters than legacy industrial units.
+              Investors evaluating Jaykay Enterprises should analyze order-book conversions, technology partnership renewals, and cash flows.
+              View exchange trade data and price history on the <a href="/stock/jaykay/">Jaykay Enterprises Stock Profile</a>.
+            </p>
+
+            <div class="card" style="margin-top:20px;padding:18px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                <div style="font-weight:700;font-size:15px;color:var(--text)">Invest in Emerging Advanced Tech</div>
+                <span class="badge badge-verified" style="font-size:11px">Zero Delivery Brokerage</span>
+              </div>
+              <p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">
+                Take positions in high-conviction technology and manufacturing turnarounds with zero equity delivery brokerage on Indiabulls Securities.
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+                <a class="btn btn-primary btn-sm" href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" style="font-weight:600">Open Free Demat Account &rarr;</a>
+                <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
+              </div>
+            </div>
+            """
         }
     ]
 
