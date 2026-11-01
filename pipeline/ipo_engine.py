@@ -1415,7 +1415,7 @@ def render_gmp_hub(records, equity_history, head_template, foot_template,
                 "est_listing": est_p,
                 "gain_pct": gain_pct,
                 "kostak": gmp_info.get("kostak"),
-                "trend": gmp_info.get("trend", "up"),
+                "trend": ipo_facts.gmp_trend(gmp_info),
                 "last_updated": gmp_info.get("last_updated", as_of_iso),
             })
 

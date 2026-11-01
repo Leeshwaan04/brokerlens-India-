@@ -634,7 +634,7 @@ def collect(broker_aliases):
     fa = nse_archives()
     out = {
         "pulse": market_pulse(f),
-        "live": live_quotes(f),
+        "live": live_quotes(f, want_losers=True),
         "fii_dii": fii_dii(f),
         "universe": equity_universe(fa),
         "indices": index_universe(fa),

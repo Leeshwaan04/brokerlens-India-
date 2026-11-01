@@ -24,6 +24,12 @@ import os
 import re
 import sys
 
+try:
+    from . import ipo_facts
+except ImportError:  # run as a script
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from pipeline import ipo_facts
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -96,6 +102,7 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     gainers = nse_d.get("live", {}).get("gainers") or []
     losers = nse_d.get("live", {}).get("losers") or []
     most_active = nse_d.get("live", {}).get("most_active") or []
+    active_count_str = "{:,}".format(len(nse_d.get("universe") or []) or 2578)
     ipos = nse_d.get("ipo") or {}
     current_ipos = ipos.get("current") or []
     upcoming_ipos = ipos.get("upcoming") or []
@@ -153,7 +160,7 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
       </div>
       <div class="card stat">
         <div class="stat-label">Active Equities</div>
-        <div class="stat-value">2,578</div>
+        <div class="stat-value">%s</div>
         <div class="stat-sub">Tracked on NSE Primary Feeds</div>
       </div>
     </div>
@@ -190,6 +197,7 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
         "{:,.2f}".format(nifty_last) if isinstance(nifty_last, (int, float)) else str(nifty_last),
         sign_str, nifty_chg, sign_str, nifty_pct,
         breadth.get("advances", "-"), breadth.get("declines", "-"),
+        active_count_str,
         top_gainers_html,
         top_losers_html
     )
@@ -420,7 +428,7 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
         upper_px = _extract_upper_price(g_band)
         g_price = (upper_px + g_val) if upper_px > 0 else g_val
         g_pct = (g_val / upper_px * 100) if upper_px > 0 else 0.0
-        g_trend = str(ginfo.get("trend") or "stable").lower()
+        g_trend = ipo_facts.gmp_trend(ginfo)
         g_updated = str(ginfo.get("last_updated") or ginfo.get("recorded_at") or today_iso)[:10]
         g_kostak = int(ginfo.get("kostak") if ginfo.get("kostak") is not None else ginfo.get("kostak_inr", 0))
         g_trend_icon = "&uarr;" if g_trend == "up" else ("&darr;" if g_trend == "down" else "&rarr;")

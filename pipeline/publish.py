@@ -6904,19 +6904,54 @@ def _write_compare_pages(overview, built=None):
         defaulter1 = "Yes (Expelled)" if fl1.get("defaulter") else "No"
         defaulter2 = "Yes (Expelled)" if fl2.get("defaulter") else "No"
 
+        has_deliv = deliv_str1 != "-" or deliv_str2 != "-"
+        has_intra = intra_str1 != "-" or intra_str2 != "-"
+        has_clients = clients_str1 != "-" or clients_str2 != "-"
+        has_amc = amc_str1 != "-" or amc_str2 != "-"
+        has_complaints = k_str1 != "-" or k_str2 != "-"
+
         q1 = "How do brokerage charges compare between %s and %s?" % (brand1, brand2)
-        a1 = ("For equity delivery, %s offers %s while %s offers %s. For intraday equity trades, %s charges %s "
-              "compared to %s at %s.") % (brand1, deliv_str1, brand2, deliv_str2, brand1, intra_str1, brand2, intra_str2)
+        if has_deliv or has_intra:
+            bits = []
+            if has_deliv:
+                bits.append("For equity delivery, %s offers %s while %s offers %s." % (brand1, deliv_str1, brand2, deliv_str2))
+            if has_intra:
+                bits.append("For intraday equity trades, %s charges %s compared to %s at %s." % (brand1, intra_str1, brand2, intra_str2))
+            a1 = " ".join(bits)
+        else:
+            a1 = ("Brokerage rates for %s and %s are not independently verified against each broker's own rate card here; "
+                  "see /broker/%s/charges/ and /broker/%s/charges/ for a disclosed, caveated estimate.") % (brand1, brand2, id1, id2)
+
         q2 = "Which broker has more active clients, %s or %s?" % (brand1, brand2)
-        a2 = ("%s has %s active clients (%s market share) while %s has %s active clients (%s market share) "
-              "based on primary NSE disclosures.") % (brand1, clients_str1, share_str1, brand2, clients_str2, share_str2)
+        if has_clients:
+            a2 = ("%s has %s active clients (%s market share) while %s has %s active clients (%s market share) "
+                  "based on primary NSE disclosures.") % (brand1, clients_str1, share_str1, brand2, clients_str2, share_str2)
+        else:
+            a2 = ("Active client and market share figures for %s and %s are not yet published from NSE's member-wise "
+                  "UCC disclosures; BrokerLens does not estimate this figure.") % (brand1, brand2)
+
         q3 = "What are the account opening and Demat AMC fees for %s vs %s?" % (brand1, brand2)
-        a3 = ("For %s, account opening is %s and annual Demat AMC is %s. For %s, account opening is %s "
-              "and annual Demat AMC is %s.") % (brand1, acct_str1, amc_str1, brand2, acct_str2, amc_str2)
+        if has_amc:
+            a3 = ("For %s, account opening is %s and annual Demat AMC is %s. For %s, account opening is %s "
+                  "and annual Demat AMC is %s.") % (brand1, acct_str1, amc_str1, brand2, acct_str2, amc_str2)
+        else:
+            a3 = ("For %s, account opening is %s. For %s, account opening is %s. Annual Demat AMC for both is not "
+                  "yet independently verified here.") % (brand1, acct_str1, brand2, acct_str2)
+
         q4 = "Is %s or %s better for beginners?" % (brand1, brand2)
-        a4 = ("Both %s and %s are SEBI-registered intermediaries. Beginners often look for low delivery brokerage, "
-              "intuitive mobile apps, and prompt customer support. Compare delivery charges (%s vs %s) and complaint "
-              "rates (%s vs %s) to decide which matches your investment style.") % (brand1, brand2, deliv_str1, deliv_str2, k_str1, k_str2)
+        beginner_bits = []
+        if has_deliv:
+            beginner_bits.append("delivery charges (%s vs %s)" % (deliv_str1, deliv_str2))
+        if has_complaints:
+            beginner_bits.append("complaint rates (%s vs %s)" % (k_str1, k_str2))
+        if beginner_bits:
+            a4 = ("Both %s and %s are SEBI-registered intermediaries. Beginners often look for low delivery brokerage, "
+                  "intuitive mobile apps, and prompt customer support. Compare %s to decide which matches your "
+                  "investment style.") % (brand1, brand2, " and ".join(beginner_bits))
+        else:
+            a4 = ("Both %s and %s are SEBI-registered intermediaries. Beginners often look for low delivery brokerage, "
+                  "intuitive mobile apps, and prompt customer support; check each broker's own charges page and recent "
+                  "app store reviews before deciding.") % (brand1, brand2)
 
         p_jsonld = {"@context": "https://schema.org", "@graph": [
             {"@type": "WebPage", "name": p_title, "url": p_canon, "description": p_desc},
@@ -7078,8 +7113,9 @@ def _write_compare_pages(overview, built=None):
 
         p_page += (
             '<p class="xs faint" style="margin-top:24px">BrokerLens is an independent financial research publisher, not a SEBI-registered investment adviser. '
-            'Data verified against the SEBI recognised-intermediary register, NSE monthly active client disclosures, '
-            'and official broker tariff schedules as of BrokerLens\'s latest data refresh. '
+            'Data verified against the SEBI recognised-intermediary register and official broker tariff schedules as of '
+            'BrokerLens\'s latest data refresh; fields without an independently verified source are shown as not published '
+            'rather than estimated. '
             '<a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources &amp; lineage</a> &middot; '
             '<a href="/editorial-policy">Editorial Policy</a> &middot; <a href="/compare">All comparisons</a></p>'
         )

@@ -322,14 +322,19 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 
     crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/compare">Compare</a></li><li class="muted">/</li><li><a href="/compare/stocks/">Stocks</a></li><li class="muted">/</li><li class="muted">{sym1} vs {sym2}</li></ol></nav>'
 
-    is_real_sector_pair = sector_name != "Cross-Sector Peers"
-    sector_faq = (
-        (f"Are {sym1} and {sym2} direct sector competitors?",
-         f"Yes, both companies operate within the {sector_name} sector in India.")
-        if is_real_sector_pair else
-        (f"Are {sym1} and {sym2} direct sector competitors?",
-         f"Not necessarily. This is a broad cross-sector comparison between two of NSE's higher-volume stocks, not a curated sector-peer pairing; check each company's own sector/industry classification on its stock profile before treating them as direct competitors.")
-    )
+    is_market_cap_bucket = sector_name == "Mega-Cap Cross Leaders"
+    is_real_sector_pair = sector_name != "Cross-Sector Peers" and not is_market_cap_bucket
+    if is_real_sector_pair:
+        sector_faq = (f"Are {sym1} and {sym2} direct sector competitors?",
+                       f"Yes, both companies operate within the {sector_name} sector in India.")
+    elif is_market_cap_bucket:
+        sector_faq = (f"Are {sym1} and {sym2} direct sector competitors?",
+                       f"Not necessarily. {sym1} and {sym2} are both large, frequently-traded NSE stocks grouped here by market "
+                       f"capitalisation, not by industry; check each company's own sector/industry classification on its stock "
+                       f"profile before treating them as direct competitors.")
+    else:
+        sector_faq = (f"Are {sym1} and {sym2} direct sector competitors?",
+                       f"Not necessarily. This is a broad cross-sector comparison between two of NSE's higher-volume stocks, not a curated sector-peer pairing; check each company's own sector/industry classification on its stock profile before treating them as direct competitors.")
 
     faqs = [
         (f"Between {sym1} and {sym2}, which stock gave better returns over {return_period}?",
@@ -401,7 +406,7 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 
 <h1 style="margin:20px 0 8px 0;font-size:26px">{sym1} vs {sym2}: Stock Comparison</h1>
 <p class="muted" style="max-width:75ch;margin:0 0 28px 0;line-height:1.6">
-  Head-to-head financial and trading comparison between <strong>{name1}</strong> ({sym1}) and <strong>{name2}</strong> ({sym2}){f" in the {sector_name} sector" if is_real_sector_pair else ""}.
+  Head-to-head financial and trading comparison between <strong>{name1}</strong> ({sym1}) and <strong>{name2}</strong> ({sym2}){f" in the {sector_name} sector" if is_real_sector_pair else (" among India's largest mega-cap stocks" if is_market_cap_bucket else "")}.
 </p>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px">

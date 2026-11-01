@@ -831,6 +831,18 @@ def get_ipo_gmp(symbol):
     return _GMP_CACHE.get((symbol or "").upper())
 
 
+def gmp_trend(gmp_info):
+    """'up'/'down'/'neutral' derived from the actual recorded history, not
+    the static hand-set field, so a value frozen for days stops reading as
+    'Rising' everywhere it is shown (GMP section, /ipo/gmp/ hub, bulletins)."""
+    hist = (gmp_info or {}).get("history") or []
+    dated = [h for h in hist if h.get("gmp") is not None]
+    if len(dated) >= 2:
+        last_gmp, prev_gmp = float(dated[-1]["gmp"]), float(dated[-2]["gmp"])
+        return "up" if last_gmp > prev_gmp else "down" if last_gmp < prev_gmp else "neutral"
+    return (gmp_info or {}).get("trend", "neutral")
+
+
 def gmp_outcome_sentence(r, pf, status, candle, perf):
     """The verifiable outcome, or '' when it is not on file."""
     if status != "Listed":
@@ -849,7 +861,6 @@ def render_gmp_section(r, pf, status, candle, perf, company):
 
     if gmp_info:
         gmp_val = float(gmp_info.get("gmp", 0.0))
-        trend = gmp_info.get("trend", "up")
         kostak = gmp_info.get("kostak")
         updated = gmp_info.get("last_updated", "")
         source = gmp_info.get("source", "Market Quotes")
@@ -863,6 +874,9 @@ def render_gmp_section(r, pf, status, candle, perf, company):
             est_listing = f"Rs {fmt_price(est_p)}"
             gain_str = f"+{pct:.1f}% estimated gain"
 
+        hist = gmp_info.get("history") or []
+        trend = gmp_trend(gmp_info)
+
         trend_badge = ""
         if trend == "up":
             trend_badge = '<span class="badge badge-up">▲ Rising Sentiment</span>'
@@ -872,7 +886,6 @@ def render_gmp_section(r, pf, status, candle, perf, company):
             trend_badge = '<span class="badge">━ Steady</span>'
 
         history_html = ""
-        hist = gmp_info.get("history") or []
         if len(hist) > 1:
             h_rows = "".join(
                 f'<tr><td>{_esc(h.get("date"))}</td><td class="right font-semibold" style="color:var(--up)">+Rs {float(h.get("gmp", 0)):.1f}</td></tr>'
