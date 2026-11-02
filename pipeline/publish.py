@@ -539,7 +539,7 @@ def build():
     sources_data = _write_sources(sources_cfg, ingest, sample_flags)
     algo_data = _write_algo(brokers_cfg)
     _write_timings()
-    _write_registry_pages(reg_rows, untracked, registry_entity.register_asof(ingest))
+    _write_registry_pages(reg_rows, untracked, registry_entity.register_asof(ingest), sebi_d.get("defaulters"))
     reg_to_registry_slug = registry_entity.reg_to_slug_map(reg_rows, untracked)
     _write_broker_pages(built, reg_to_registry_slug)
     hub_groups = _write_broker_hub_pages(built)
@@ -1627,7 +1627,7 @@ def _breadcrumb(trail):
     return html, jsonld
 
 
-def _write_registry_pages(reg_rows, details=None, asof=None):
+def _write_registry_pages(reg_rows, details=None, asof=None, defaulters=None):
     """One static, server-rendered page per SEBI-registered entity.
 
     Everything else on this site is a client-rendered SPA: a crawler that
@@ -1652,7 +1652,7 @@ def _write_registry_pages(reg_rows, details=None, asof=None):
     written = 0
     keep = {r["slug"] for r in reg_rows if r.get("slug")}
     pruned = _prune_stale_dirs(base, keep)
-    models = registry_entity.build_models(reg_rows, details, asof, SITE_URL)
+    models = registry_entity.build_models(reg_rows, details, asof, SITE_URL, defaulters)
     for r, model in zip(reg_rows, models):
         if not model:
             continue

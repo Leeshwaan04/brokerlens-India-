@@ -53,6 +53,19 @@ def _format_date(d_str):
         return str(d_str)
 
 
+def _compute_read_time(body_html):
+    """Real minutes-to-read from the article's own body text, at ~220 wpm.
+
+    Every article here used to carry a hand-typed "7 min read"/"8 min read"
+    literal alongside its body_html - several were 165-212 words (under a
+    minute's actual reading), tagged 7-8 min read regardless. Computing it
+    from the real word count means it can never drift from the content again,
+    including after a future edit to the body."""
+    words = len(re.sub(r"<[^>]+>", " ", body_html or "").split())
+    minutes = max(1, round(words / 220))
+    return "%d min read" % minutes
+
+
 def get_latest_gsc_queries():
     """Extracts top and striking-distance queries from the latest GSC snapshot on file."""
     reports = sorted(glob.glob(os.path.join(GSC_DIR, "20*.json")))
@@ -79,7 +92,18 @@ def get_latest_gsc_queries():
 
 
 def get_autopilot_articles(today_iso=None):
-    """Generates research articles addressing real, active queries from searchers."""
+    """Static, hand-written research guides addressing real, active search queries.
+
+    today_iso is this call's run date, used only as a fallback for anything
+    that doesn't set its own date below - every article's own "date"/"date_str"
+    is a hardcoded literal (its real git-history first-introduction date),
+    NOT today_iso. These used to be set to today_iso directly, so every one
+    of these unchanging static guides silently reported itself as published
+    (and modified) TODAY on every single daily pipeline run, forever - a
+    false freshness signal in both the visible byline and the NewsArticle
+    datePublished/dateModified JSON-LD. Change an article's "date" literal
+    only when you actually rewrite its content, same as editing a real
+    published date would mean."""
     if not today_iso:
         today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
@@ -91,8 +115,8 @@ def get_autopilot_articles(today_iso=None):
             "category": "Empirical Research",
             "category_badge": "badge-up",
             "type": "NewsArticle",
-            "date": today_iso,
-            "date_str": _format_date(today_iso),
+            "date": "2026-10-24",
+            "date_str": _format_date("2026-10-24"),
             "read_time": "9 min read",
             "body_html": """
             <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
@@ -214,8 +238,8 @@ def get_autopilot_articles(today_iso=None):
             "category": "Empirical Research",
             "category_badge": "badge-up",
             "type": "NewsArticle",
-            "date": today_iso,
-            "date_str": _format_date(today_iso),
+            "date": "2026-10-24",
+            "date_str": _format_date("2026-10-24"),
             "read_time": "8 min read",
             "body_html": """
             <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
@@ -269,8 +293,8 @@ def get_autopilot_articles(today_iso=None):
             "category": "Empirical Research",
             "category_badge": "badge-up",
             "type": "NewsArticle",
-            "date": today_iso,
-            "date_str": _format_date(today_iso),
+            "date": "2026-10-24",
+            "date_str": _format_date("2026-10-24"),
             "read_time": "7 min read",
             "body_html": """
             <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
@@ -317,8 +341,8 @@ def get_autopilot_articles(today_iso=None):
             "category": "Empirical Research",
             "category_badge": "badge-up",
             "type": "NewsArticle",
-            "date": today_iso,
-            "date_str": _format_date(today_iso),
+            "date": "2026-10-24",
+            "date_str": _format_date("2026-10-24"),
             "read_time": "8 min read",
             "body_html": """
             <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
@@ -368,8 +392,8 @@ def get_autopilot_articles(today_iso=None):
             "category": "Empirical Research",
             "category_badge": "badge-up",
             "type": "NewsArticle",
-            "date": today_iso,
-            "date_str": _format_date(today_iso),
+            "date": "2026-10-24",
+            "date_str": _format_date("2026-10-24"),
             "read_time": "7 min read",
             "body_html": """
             <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
@@ -417,8 +441,8 @@ def get_autopilot_articles(today_iso=None):
             "category": "Empirical Research",
             "category_badge": "badge-up",
             "type": "NewsArticle",
-            "date": today_iso,
-            "date_str": _format_date(today_iso),
+            "date": "2026-10-24",
+            "date_str": _format_date("2026-10-24"),
             "read_time": "8 min read",
             "body_html": """
             <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
@@ -467,8 +491,8 @@ def get_autopilot_articles(today_iso=None):
             "category": "Empirical Research",
             "category_badge": "badge-up",
             "type": "NewsArticle",
-            "date": today_iso,
-            "date_str": _format_date(today_iso),
+            "date": "2026-10-24",
+            "date_str": _format_date("2026-10-24"),
             "read_time": "7 min read",
             "body_html": """
             <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
@@ -515,8 +539,8 @@ def get_autopilot_articles(today_iso=None):
             "category": "Empirical Research",
             "category_badge": "badge-up",
             "type": "NewsArticle",
-            "date": today_iso,
-            "date_str": _format_date(today_iso),
+            "date": "2026-10-24",
+            "date_str": _format_date("2026-10-24"),
             "read_time": "8 min read",
             "body_html": """
             <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
@@ -563,8 +587,8 @@ def get_autopilot_articles(today_iso=None):
             "category": "Empirical Research",
             "category_badge": "badge-up",
             "type": "NewsArticle",
-            "date": today_iso,
-            "date_str": _format_date(today_iso),
+            "date": "2026-10-31",
+            "date_str": _format_date("2026-10-31"),
             "read_time": "7 min read",
             "body_html": """
             <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
@@ -612,8 +636,8 @@ def get_autopilot_articles(today_iso=None):
             "category": "Empirical Research",
             "category_badge": "badge-up",
             "type": "NewsArticle",
-            "date": today_iso,
-            "date_str": _format_date(today_iso),
+            "date": "2026-10-31",
+            "date_str": _format_date("2026-10-31"),
             "read_time": "8 min read",
             "body_html": """
             <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
@@ -654,6 +678,10 @@ def get_autopilot_articles(today_iso=None):
             """
         }
     ]
+
+    for a in articles:
+        if a.get("body_html"):
+            a["read_time"] = _compute_read_time(a["body_html"])
 
     return clean_dashes(articles)
 

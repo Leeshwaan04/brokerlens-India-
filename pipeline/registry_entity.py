@@ -472,7 +472,28 @@ def _asof_clause(asof):
         "per the register file BrokerLens holds (its date is not on file)"
 
 
-def make_faq(m, group, asof):
+def _defaulter_match(m, defaulters):
+    """True only on an exact registration-number match, or an exact
+    normalised-name match (both sides run through this module's own
+    norm_name(), never a fuzzy/partial one) against SEBI's defaulter/expelled
+    list. This is the same no-fuzzy-match discipline publish.py's broker-
+    profile defaulter attribution already requires: a false positive here
+    publishes "this named, regulated firm is a SEBI defaulter" about one of
+    the ~1,700 individual entities this page type covers, which a miss only
+    costs as a gap, never a defamation claim."""
+    if not defaulters:
+        return False
+    reg = (m.get("reg") or "").strip().upper()
+    for d in defaulters:
+        d_reg = str(d.get("reg_no") or "").strip().upper()
+        if reg and d_reg and reg == d_reg:
+            return True
+        if m.get("norm") and norm_name(d.get("name") or "") == m["norm"]:
+            return True
+    return False
+
+
+def make_faq(m, group, asof, is_defaulter=False):
     name, reg = m["display"], m["reg"]
     others = [o for o in group if o is not m]
     clause = _asof_clause(asof)
@@ -487,6 +508,9 @@ def make_faq(m, group, asof):
         a1 = ("Yes. %s is listed in the SEBI register of recognised intermediaries as %s, "
               "registration number %s, %s. BrokerLens does not rate or recommend any intermediary."
               % (name, m["phrase"], reg, clause))
+    if is_defaulter:
+        a1 += (" This entity appears on SEBI's defaulter / expelled broker list; "
+               "verify directly with SEBI before proceeding.")
     a2 = "The SEBI registration number of %s in the register is %s (%s)." % (name, reg, m["category"])
     if others:
         a2 += " Other registrations listed under the same legal name: %s." % "; ".join(
@@ -614,7 +638,7 @@ def _others_html(m, group, site_url):
             '<th></th></tr></thead><tbody>%s</tbody></table></div>' % "".join(rows))
 
 
-def render_main(m, group, asof, faq, site_url):
+def render_main(m, group, asof, faq, site_url, is_defaulter=False):
     """Everything inside <main> after the breadcrumb."""
     primary = group[0]
     is_primary = primary is m
@@ -629,6 +653,12 @@ def render_main(m, group, asof, faq, site_url):
     if m["trade_name"] and norm_name(m["trade_name"]) != m["norm"]:
         html.append('<p class="muted">Trading as %s</p>' % esc(proper_case(m["trade_name"])))
     html.append('<p style="max-width:72ch;font-size:1.05em"><strong>%s</strong></p>' % answer)
+    if is_defaulter:
+        html.append(
+            '<div class="banner" style="margin-top:4px;margin-bottom:16px"><span>&#9873;</span><div>'
+            '<strong>This entity appears on SEBI\'s defaulter / expelled broker list.</strong> '
+            'Verify directly with SEBI before proceeding.</div></div>'
+        )
     if not is_primary:
         html.append(
             '<p class="small" style="max-width:72ch">This is a secondary registration of the same legal name. '
@@ -680,13 +710,17 @@ def render_main(m, group, asof, faq, site_url):
     return "".join(h for h in html if h)
 
 
-def build_models(reg_rows, details, asof, site_url):
+def build_models(reg_rows, details, asof, site_url, defaulters=None):
     """One model per reg_row, in the same order.
 
     model keys: slug, display, title, description, canonical, main_html, org_jsonld,
     faq_jsonld, title_group (the crc32 experiment group), title_pattern (the pattern
     actually used: A for any page whose listed end date is before the as-of date),
-    primary_slug, faq."""
+    primary_slug, faq. `defaulters` is SEBI's own defaulter/expelled-broker list
+    (the same raw list publish.py's broker profiles already cross-reference) -
+    previously only those 48 tracked profiles ever showed this flag; every one
+    of the ~1,700 individual registry entities here now gets the same exact-
+    match check (see _defaulter_match)."""
     pairs = _pair_details(reg_rows, details)
     members = [_member(r, d) for r, d in zip(reg_rows, pairs)]
     groups, _amb = group_members(members)
@@ -702,7 +736,8 @@ def build_models(reg_rows, details, asof, site_url):
         g = group_of[id(m)]
         primary = g[0]
         canonical = "%s/sebi-registry/%s/" % (site_url, primary["slug"])
-        faq = make_faq(m, g, asof)
+        is_defaulter = _defaulter_match(m, defaulters)
+        faq = make_faq(m, g, asof, is_defaulter)
         org = {"@type": "Organization", "name": m["display"], "url": canonical, "identifier": m["reg"]}
         if m["trade_name"] and norm_name(m["trade_name"]) != m["norm"]:
             org["alternateName"] = proper_case(m["trade_name"])
@@ -718,7 +753,7 @@ def build_models(reg_rows, details, asof, site_url):
             "title_pattern": title_pattern(m, asof),
             "primary_slug": primary["slug"], "faq": faq,
             "org_jsonld": org, "faq_jsonld": faq_ld,
-            "main_html": render_main(m, g, asof, faq, site_url),
+            "main_html": render_main(m, g, asof, faq, site_url, is_defaulter),
         })
     return models
 

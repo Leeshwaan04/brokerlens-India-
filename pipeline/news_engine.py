@@ -61,6 +61,16 @@ def _extract_upper_price(band_str):
     return float(nums[-1]) if nums else 0.0
 
 
+def _compute_read_time(body_html):
+    """Real minutes-to-read from the article's own body text, at ~220 wpm,
+    computed on the pure authored body (before _inject_mid_article_breaks()
+    adds its sponsor/ad boilerplate at write time) - not a hand-typed literal
+    that can drift from whatever the body actually says."""
+    words = len(re.sub(r"<[^>]+>", " ", body_html or "").split())
+    minutes = max(1, round(words / 220))
+    return "%d min read" % minutes
+
+
 def _inject_mid_article_breaks(body_html):
     """Injects high-converting contextual Demat callout and AdSense in-article placement midway."""
     mid_break = """
@@ -1612,6 +1622,10 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
             articles.append(item)
     except Exception as exc:
         pass
+
+    for a in articles:
+        if a.get("body_html"):
+            a["read_time"] = _compute_read_time(a["body_html"])
 
     return articles
 
