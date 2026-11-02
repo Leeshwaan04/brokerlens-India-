@@ -474,6 +474,38 @@ def _esc(s):
     return html.escape(str(s or ""), quote=True)
 
 
+def _rule_short(flat, pct):
+    """Compact 'X flat' / 'lower of X or Y%' / 'Z% of trade value' label for a
+    stat tile - same convention as broker_charges_engine.py's _rule_short(),
+    extended for the uncapped percentage plans that module never has to
+    render (its own pages are withheld for exactly those brokers)."""
+    flat, pct = flat or 0.0, pct or 0.0
+    if not flat and not pct:
+        return "Rs 0 (Zero)"
+    if pct > CAP_RULE_MAX_PCT:
+        return "%g%% of trade value" % (pct * 100)
+    if not pct:
+        return "Rs %g flat" % flat
+    return "Rs %g or %g%%" % (flat, pct * 100)
+
+
+def _rule_text(flat, pct):
+    """Honest one-line description of a (flat, pct) brokerage rule - used in
+    the page's FAQ prose and JSON-LD. Two separate hardcoded sentences here
+    used to describe every broker's delivery brokerage as its flat fee alone
+    (and every intraday rule as "flat X or Y%, whichever is lower"), which is
+    wrong for the 16 brokers whose real plan is an uncapped percentage of
+    turnover - see CAP_RULE_MAX_PCT above and calculate_trade_fees()."""
+    flat, pct = flat or 0.0, pct or 0.0
+    if not flat and not pct:
+        return "Rs 0 (Zero Brokerage)"
+    if pct > CAP_RULE_MAX_PCT:
+        return "%g%% of trade value" % (pct * 100)
+    if not pct:
+        return "Rs %g flat per order" % flat
+    return "Rs %g or %g%% per order, whichever is lower" % (flat, pct * 100)
+
+
 def _charges_link_block(broker_id):
     """Visible link to /broker/<id>/charges/ with the exact anchor text, or "" when the broker has no page."""
     try:
@@ -621,7 +653,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
                     "url": f"{site_url}/broker/{broker_id}/"
                 },
                 "description": meta_desc,
-                "feesAndCommissionsSpecification": f"Delivery: Rs {b['delivery_flat']} or {b['delivery_pct']*100}%, Intraday: Rs {b['intraday_flat']} or {b['intraday_pct']*100}%"
+                "feesAndCommissionsSpecification": f"Delivery: {_rule_text(b['delivery_flat'], b['delivery_pct'])}. Intraday: {_rule_text(b['intraday_flat'], b['intraday_pct'])}."
             },
             {
                 "@type": "FAQPage",
@@ -631,7 +663,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
                         "name": f"What is the brokerage for buying {stock_name} shares on {brand}?",
                         "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": f"On {brand}, equity delivery brokerage for {stock_name} is Rs {b['delivery_flat'] if b['delivery_flat'] > 0 else '0 (Zero Brokerage)'}. Intraday brokerage is flat Rs {b['intraday_flat']} or {b['intraday_pct']*100}% per executed order (whichever is lower)."
+                            "text": f"On {brand}, equity delivery brokerage for {stock_name} is {_rule_text(b['delivery_flat'], b['delivery_pct'])}. Intraday brokerage is {_rule_text(b['intraday_flat'], b['intraday_pct'])}."
                         }
                     },
                     {
@@ -767,13 +799,13 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 <div class="grid g4" style="margin-top:24px">
   <div class="card stat">
     <div class="stat-label">Delivery Brokerage</div>
-    <div class="stat-value">{'&#8377;0 (Zero)' if b['delivery_flat'] == 0 else f'&#8377;{b["delivery_flat"]:.0f}'}</div>
+    <div class="stat-value">{_esc(_rule_short(b['delivery_flat'], b['delivery_pct']))}</div>
     <div class="stat-sub">{b['tagline']}</div>
   </div>
   <div class="card stat">
     <div class="stat-label">Intraday Brokerage</div>
-    <div class="stat-value">&#8377;{b['intraday_flat']:.0f} flat</div>
-    <div class="stat-sub">or {b['intraday_pct']*100:.2f}% per executed order</div>
+    <div class="stat-value">{_esc(_rule_short(b['intraday_flat'], b['intraday_pct']))}</div>
+    <div class="stat-sub">per executed order</div>
   </div>
   <div class="card stat">
     <div class="stat-label">Roundtrip 100 Shares</div>
@@ -893,7 +925,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 <div style="max-width:72ch">
   <details class="faq-item" open>
     <summary>What is the brokerage for buying {stock_name} shares on {brand}?</summary>
-    <p>On {brand}, equity delivery brokerage for {stock_name} is {'&#8377;0 (Zero Brokerage)' if b['delivery_flat'] == 0 else f'&#8377;{b["delivery_flat"]:.0f} flat'}. Intraday trades incur {'&#8377;0' if b['intraday_flat'] == 0 else f'&#8377;{b["intraday_flat"]:.0f} or {b["intraday_pct"]*100:.2f}%'} per executed order.</p>
+    <p>On {brand}, equity delivery brokerage for {stock_name} is {_rule_text(b['delivery_flat'], b['delivery_pct'])}. Intraday trades incur {_rule_text(b['intraday_flat'], b['intraday_pct'])}.</p>
   </details>
   <details class="faq-item">
     <summary>How much STT and government tax is charged when buying {stock_name}?</summary>
@@ -925,8 +957,8 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
 
     broker_cards = []
     for b_id, b in brokers.items():
-        deliv = "Free (₹0)" if b["delivery_flat"] == 0 and b["delivery_pct"] == 0 else f"₹{b['delivery_flat']:.0f} flat"
-        intra = "Free" if b["intraday_flat"] == 0 else f"₹{b['intraday_flat']:.0f} or {b['intraday_pct']*100:.2f}%"
+        deliv = _rule_short(b["delivery_flat"], b["delivery_pct"])
+        intra = _rule_short(b["intraday_flat"], b["intraday_pct"])
         broker_cards.append(f"""
         <div class="card" style="padding:20px;display:flex;flex-direction:column;justify-content:space-between">
           <div>
