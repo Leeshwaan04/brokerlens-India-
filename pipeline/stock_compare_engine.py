@@ -34,6 +34,19 @@ DATA_DIR = os.path.join(ROOT, "data")
 def _stock_slug(sym: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", (sym or "").lower()).strip("-")
 
+# The 8 groups below carry a trailing comment recording the real NSE index-
+# constituent "INDUSTRY" classification (pipeline/sources/nse.py's
+# index_universe(), Nifty 500 file) each was expanded against, and are capped
+# at 15 members (ranked by 120-day average turnover among same-industry
+# Nifty 500 names not already hand-picked here). Only industries where
+# exactly one curated group maps cleanly to one real NSE category were
+# expanded this way - e.g. NSE's "Financial Services" spans private banks,
+# PSU banks, NBFCs and broking all at once, so those groups stay hand-picked
+# rather than risk mixing categories NSE itself doesn't distinguish. The
+# former "Mega-Cap Cross Leaders" group was removed entirely: it was not a
+# real sector (it spanned 6 different real NSE industries) - see the
+# is_market_cap_bucket handling below, now dormant but left in place as a
+# guard if a similar non-sector bucket is ever reintroduced under that name.
 SECTOR_PEER_GROUPS = {
     "Private Sector Banking": [
         "HDFCBANK", "ICICIBANK", "KOTAKBANK", "AXISBANK", "INDUSINDBK",
@@ -43,9 +56,10 @@ SECTOR_PEER_GROUPS = {
         "SBIN", "BANKBARODA", "PNB", "CANBK", "UNIONBANK",
         "INDIANB", "BANKINDIA", "MAHABANK", "CENTRALBK", "UCOBANK"
     ],
-    "Information Technology (IT)": [
+    "Information Technology (IT)": [  # NSE Industry: Information Technology
         "TCS", "INFY", "HCLTECH", "WIPRO", "TECHM",
-        "LTIM", "PERSISTENT", "COFORGE", "KPITTECH", "TATAELXSI", "MPHASIS"
+        "LTIM", "PERSISTENT", "COFORGE", "KPITTECH", "TATAELXSI", "MPHASIS",
+        "NETWEB", "OFSS", "LTM", "ZENSARTECH"
     ],
     "Automobiles & Electric Mobility": [
         "TMCV", "TMPV", "MARUTI", "M&M", "BAJAJ-AUTO",
@@ -55,9 +69,10 @@ SECTOR_PEER_GROUPS = {
         "BHARATFORG", "MOTHERSON", "BOSCHLTD", "MRF", "APOLLOTYRE",
         "BALKRISIND", "CEATLTD", "ENDURANCE", "EXIDEIND"
     ],
-    "FMCG & Consumer Goods": [
+    "FMCG & Consumer Goods": [  # NSE Industry: Fast Moving Consumer Goods
         "ITC", "HINDUNILVR", "NESTLEIND", "BRITANNIA", "TATACONSUM",
-        "DABUR", "MARICO", "GODREJCP", "VBL", "COLPAL"
+        "DABUR", "MARICO", "GODREJCP", "VBL", "COLPAL",
+        "CUPID", "PATANJALI", "RADICO", "BALRAMCHIN", "UNITDSPR"
     ],
     "Pharmaceuticals & Healthcare": [
         "SUNPHARMA", "CIPLA", "DRREDDY", "DIVISLAB", "LUPIN",
@@ -66,17 +81,20 @@ SECTOR_PEER_GROUPS = {
     "Hospitals & Diagnostics": [
         "APOLLOHOSP", "MAXHEALTH", "FORTIS", "MEDANTA", "LALPATHLAB", "METROPOLIS", "NH"
     ],
-    "Oil, Gas & Energy": [
+    "Oil, Gas & Energy": [  # NSE Industry: Oil Gas & Consumable Fuels
         "RELIANCE", "ONGC", "IOC", "BPCL", "HPCL",
-        "GAIL", "OIL", "PETRONET", "IGL", "MGL"
+        "GAIL", "OIL", "PETRONET", "IGL", "MGL",
+        "COALINDIA", "ATGL", "CHENNPETRO", "HINDPETRO", "VOGL"
     ],
-    "Power Generation & Utilities": [
+    "Power Generation & Utilities": [  # NSE Industry: Power
         "NTPC", "POWERGRID", "TATAPOWER", "ADANIGREEN", "ADANIPOWER",
-        "JSWENERGY", "NHPC", "SJVN", "TORNTPOWER"
+        "JSWENERGY", "NHPC", "SJVN", "TORNTPOWER",
+        "ADANIENSOL", "JPPOWER", "NLCINDIA", "VEDPOWER", "RPOWER", "ACMESOLAR"
     ],
-    "Metals & Mining": [
+    "Metals & Mining": [  # NSE Industry: Metals & Mining
         "TATASTEEL", "JSWSTEEL", "HINDALCO", "VEDL", "JINDALSTEL",
-        "NMDC", "SAIL", "NATIONALUM"
+        "NMDC", "SAIL", "NATIONALUM",
+        "ADANIENT", "VAML", "HINDCOPPER", "HINDZINC", "GMDCLTD", "VISL", "LLOYDSME"
     ],
     "Capital Goods & Infrastructure": [
         "LT", "SIEMENS", "ABB", "BHEL", "HAL",
@@ -88,14 +106,17 @@ SECTOR_PEER_GROUPS = {
     "Defense & Aerospace": [
         "HAL", "BEL", "BDL", "MAZDOCK", "COCHINSHIP", "GRSE"
     ],
-    "Chemicals & Agro": [
-        "PIIND", "SRF", "AARTIIND", "DEEPAKNTR", "TATACHEM", "ATUL", "UPL", "COROMANDEL"
+    "Chemicals & Agro": [  # NSE Industry: Chemicals
+        "PIIND", "SRF", "AARTIIND", "DEEPAKNTR", "TATACHEM", "ATUL", "UPL", "COROMANDEL",
+        "HSCL", "SOLARINDS", "NAVINFLUOR", "PIDILITIND", "PARADEEP", "FLUOROCHEM", "FACT"
     ],
-    "Cement & Building Materials": [
-        "ULTRACEMCO", "AMBUJACEM", "ACC", "SHREECEM", "DALBHARAT", "JKCEMENT", "RAMCOCEM"
+    "Cement & Building Materials": [  # NSE Industry: Construction Materials
+        "ULTRACEMCO", "AMBUJACEM", "ACC", "SHREECEM", "DALBHARAT", "JKCEMENT", "RAMCOCEM",
+        "GRASIM", "JSWCEMENT", "NUVOCO", "INDIACEM"
     ],
-    "Real Estate & Housing": [
-        "DLF", "GODREJPROP", "OBEROIRLTY", "PRESTIGE", "PHOENIXLTD", "BRIGADE", "SOBHA"
+    "Real Estate & Housing": [  # NSE Industry: Realty
+        "DLF", "GODREJPROP", "OBEROIRLTY", "PRESTIGE", "PHOENIXLTD", "BRIGADE", "SOBHA",
+        "LODHA", "ANANTRAJ", "ABREL", "SIGNATURE", "BAGMANE", "BIRET", "EMBASSY"
     ],
     "Retail, Ecommerce & Consumer Tech": [
         "ZOMATO", "SWIGGY", "TRENT", "DMART", "NYKAA", "PAYTM", "POLICYBZR", "DELHIVERY"
@@ -115,10 +136,6 @@ SECTOR_PEER_GROUPS = {
     "Non-Banking Financial Companies (NBFC)": [
         "BAJFINANCE", "BAJAJFINSV", "CHOLAFIN", "SHRIRAMFIN", "MUTHOOTFIN", "MANAPPURAM", "POONAWALLA"
     ],
-    "Mega-Cap Cross Leaders": [
-        "RELIANCE", "TCS", "HDFCBANK", "BHARTIARTL", "ICICIBANK",
-        "SBIN", "INFY", "ITC", "LT", "HINDUNILVR"
-    ]
 }
 
 
