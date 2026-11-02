@@ -1637,7 +1637,7 @@ export async function sources() {
           <div class="xs faint" style="word-break:break-all">${esc(r.url || '')}</div></td>
         <td class="small">${esc(r.cadence || '-')}</td>
         <td class="small nowrap">${esc((r.last_run || '-').slice(0, 16).replace('T', ' '))}</td>
-        <td>${statusBadge(r.last_status)}</td>
+        <td>${statusBadge(r.last_status, r.stale)}</td>
         <td class="xs muted">${esc(r.notes || '')}</td>
       </tr>`).join('')}</tbody>
     </table></div>`).join('')}
@@ -1651,9 +1651,12 @@ export async function sources() {
   </div>`;
 }
 
-function statusBadge(st) {
+function statusBadge(st, stale) {
   if (!st) return '<span class="badge">not run</span>';
-  if (st === 'ok') return '<span class="badge badge-up">ok</span>';
+  if (st === 'ok') {
+    if (stale) return '<span class="badge badge-warn" title="Served from a cached copy, not a live fetch, on the last run">stale</span>';
+    return '<span class="badge badge-up">ok</span>';
+  }
   if (st === 'empty') return '<span class="badge badge-warn">empty</span>';
   return `<span class="badge badge-down" title="${esc(st)}">error</span>`;
 }

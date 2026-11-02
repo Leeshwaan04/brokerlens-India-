@@ -199,7 +199,7 @@ def heatmap(f: Fetcher = None, symbols=None, ttl=1, retries=2):
     for r in rows:
         sym = str(r.get("Symbol") or "").strip().upper()
         last = to_num(r.get("LTP"))
-        if not sym or not last:
+        if not sym or not last or (wanted and sym not in wanted):
             continue
         got[sym] = {
             "symbol": sym,

@@ -290,7 +290,15 @@ export function computeMatch(answers) {
 
 export function renderMatchmaker(container, options = {}) {
   if (!container) return;
-  
+  // This page ships both its own DOMContentLoaded bootstrap (below) and the
+  // SPA router's explicit call on the same container - whichever runs second
+  // would silently discard whatever step/answer the user had already reached
+  // in the first mount. A one-time mount flag on the container is safe since
+  // this function owns its own internal render() for step transitions and is
+  // never itself re-invoked mid-flow.
+  if (container.dataset.matchmakerMounted === '1') return;
+  container.dataset.matchmakerMounted = '1';
+
   let currentStep = 0;
   const answers = {};
 

@@ -311,7 +311,13 @@ async function initChart(host) {
   hud.style.fontFamily = 'monospace';
 
   const colors = themeColors();
+  // canvasWrap is not attached to the document yet at this point (it joins
+  // host, after the HUD and toolbar, further down - that order is what puts
+  // the toolbar above the chart). Passing host's own current width here
+  // means the chart starts at a real size instead of depending on the
+  // ResizeObserver below to correct a 0-width creation after attach.
   const chart = LWC.createChart(canvasWrap, {
+    width: host.clientWidth || undefined,
     height: 310,
     layout: { background: { type: 'solid', color: 'transparent' }, textColor: colors.text },
     grid: { vertLines: { visible: false }, horzLines: { color: colors.border } },

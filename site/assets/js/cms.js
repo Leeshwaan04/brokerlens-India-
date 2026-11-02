@@ -141,6 +141,14 @@ async function loadPublishedNews() {
 
 export async function renderCMS(container) {
   if (!container) return;
+  // This page ships both its own DOMContentLoaded bootstrap (below) and the
+  // SPA router's explicit call on the same container - whichever runs second
+  // would silently wipe out whatever the user had already typed or clicked
+  // in the first mount. renderCMS() is only ever the initial entry point
+  // (a later login/logout re-render goes straight through renderDashboard()/
+  // renderLogin()), so a one-time mount flag on the container is safe here.
+  if (container.dataset.cmsMounted === '1') return;
+  container.dataset.cmsMounted = '1';
 
   if (!isAuthenticated()) {
     renderLogin(container);

@@ -181,9 +181,14 @@ const CALCULATORS = {
     const rate = num('ssip-rate') / 100 / 12;
     const years = num('ssip-years');
     if (monthly0 <= 0 || years <= 0) return;
+    // Annuity-due, same convention as the plain SIP calculator's closed-form
+    // formula above: each month's contribution is added before that month's
+    // growth is applied, not after. With 0% step-up this must reduce to the
+    // exact same maturity value as sip() for the same inputs - it previously
+    // didn't (an ordinary-annuity recurrence, off by a factor of (1+rate)).
     let balance = 0, invested = 0, current = monthly0;
     for (let m = 1; m <= years * 12; m++) {
-      balance = balance * (1 + rate) + current;
+      balance = (balance + current) * (1 + rate);
       invested += current;
       if (m % 12 === 0) current *= (1 + stepUp);
     }

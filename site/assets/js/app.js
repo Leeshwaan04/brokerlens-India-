@@ -14,6 +14,10 @@ import './hero-video.js?v=9e658a1fa5';
 
 const app = document.getElementById('app');
 let isFirstRender = true;
+// Bumped at the top of every render() call; a render whose async data fetch
+// resolves after a newer navigation has started must not overwrite that
+// newer page's content, title, or canonical/og tags with its own (stale) data.
+let renderGen = 0;
 
 const ROUTES = [
   [/^\/$/, () => pages.home()],
@@ -97,6 +101,7 @@ const ALIAS_OF = {
 let firstRender = true;
 
 async function render() {
+  const myGen = ++renderGen;
   // Server-rendered depth blocks (data-static-only) belong to the page that was
   // loaded; once the visitor navigates client-side they would be stale, so drop them.
   if (!firstRender) document.querySelectorAll('[data-static-only]').forEach((n) => n.remove());
@@ -129,12 +134,18 @@ async function render() {
 
   try {
     const html = hit ? await hit[1](path.match(hit[0]), query) : pages.notFound();
+    // A newer render() started (and may have already finished) while this
+    // one's data fetch was in flight - writing this stale result now would
+    // silently revert the page to a previous route's content, title and
+    // canonical while the address bar already shows the new URL.
+    if (myGen !== renderGen) return;
     const isNotFoundView = /^\s*<div class="empty"[^>]*>\s*<h1>Not found<\/h1>/.test(html);
     if (!(hadServerContent && isNotFoundView)) {
       app.innerHTML = html;
       pages.runAfter();
     }
   } catch (err) {
+    if (myGen !== renderGen) return;
     console.error(err);
     if (!hadServerContent) {
       app.innerHTML = `<div class="empty"><h2>Could not load this page</h2>
@@ -142,6 +153,7 @@ async function render() {
       <p class="xs faint">If the data files are missing, run <code>python3 -m pipeline.run all</code> first.</p></div>`;
     }
   }
+  if (myGen !== renderGen) return;
 
   // Per-broker titles come from the rendered heading so they stay in step with
   // the data rather than needing a second lookup.

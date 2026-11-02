@@ -64,6 +64,28 @@ def log(msg, level="info"):
     sys.stderr.flush()
 
 
+# Fetcher.get() sets served_stale=True on an instance when it falls back to a
+# cached body rather than a live fetch, but nothing ever read that flag - a
+# degraded fetch published indistinguishably from a fresh one. Track stale
+# fetcher names here (module-level, not per-instance) so run.py can surface it
+# in the published ingest payload without every adapter having to plumb its
+# own Fetcher instance back out through collect()'s return value.
+_stale_fetcher_names = set()
+
+
+def _mark_stale(name):
+    _stale_fetcher_names.add(name)
+
+
+def stale_fetcher_names():
+    """Fetcher names that served a stale cached body at least once this process."""
+    return set(_stale_fetcher_names)
+
+
+def reset_stale_tracking():
+    _stale_fetcher_names.clear()
+
+
 # -------------------------------------------------------------------------- http
 
 
@@ -227,6 +249,7 @@ class Fetcher:
                 log("%s serving STALE cache (%.1fh old) for %s"
                     % (self.name, age_s / 3600.0, _short(url)), "warn")
                 self.served_stale = True
+                _mark_stale(self.name)
                 with open(cp, "rb") as fh:
                     return fh.read()
             log("%s REFUSING cache for %s: %.1f days old, past the %.1f-day ceiling"

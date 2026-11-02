@@ -469,10 +469,21 @@ _BENIGN_TERMS = (
 )
 
 
+# A plain substring test matched "nfo" (meant for "NFO"/New Fund Offer
+# notices) inside ordinary words like "e[nfo]rcement" and "no[nco]nfo[rma]nce",
+# silently reclassifying real disciplinary circulars as benign product notices.
+# Anchoring each term to a leading word boundary keeps the deliberate prefix
+# matching ("suspend" still matches "suspended"/"suspension", "terminat"
+# still matches "terminate"/"termination") while refusing a match that starts
+# mid-word.
+_ADVERSE_RE = [re.compile(r"\b" + re.escape(t)) for t in _ADVERSE_TERMS]
+_BENIGN_RE = [re.compile(r"\b" + re.escape(t)) for t in _BENIGN_TERMS]
+
+
 def _circular_is_adverse(blob):
-    if any(t in blob for t in _BENIGN_TERMS):
+    if any(p.search(blob) for p in _BENIGN_RE):
         return False
-    return any(t in blob for t in _ADVERSE_TERMS)
+    return any(p.search(blob) for p in _ADVERSE_RE)
 
 
 def member_circulars(f: Fetcher, broker_aliases):
@@ -506,13 +517,16 @@ def member_circulars(f: Fetcher, broker_aliases):
         if not blob.strip():
             continue
         adverse = _circular_is_adverse(blob)
+        # A single circular can genuinely name more than one broker (a joint
+        # penalty notice, a market-wide enforcement circular) - check every
+        # broker's alias against this circular, not just the first match.
         for bid, aliases in broker_aliases.items():
             matched = any(len(a) >= 6 and _whole_word_in(a, blob) for a in aliases)
             if not matched:
                 continue
             if not adverse:
                 skipped += 1
-                break
+                continue
             hits.setdefault(bid, []).append(
                 {
                     "date": c.get("cirDisplayDate") or c.get("cirDate"),
@@ -523,7 +537,6 @@ def member_circulars(f: Fetcher, broker_aliases):
                     "url": c.get("circFilelink"),
                 }
             )
-            break
     for bid in hits:
         hits[bid] = hits[bid][:10]
     snapshot("nse_member_circulars", hits)

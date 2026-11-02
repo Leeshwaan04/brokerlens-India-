@@ -25,6 +25,7 @@ import sys
 import traceback
 
 from . import publish, seed_sample
+from . import common
 from .common import CONFIG, DATA, MANUAL, log, now_iso, read_json, write_json
 from .identity import Resolver
 from .sources import amfi as amfi_src
@@ -81,16 +82,27 @@ def fetch(sebi_pages=None):
     out = {"_status": {}, "fetched_at": now_iso()}
     problems = []
     wl = _watchlist()
+    common.reset_stale_tracking()
 
     def run(key, fn, source_ids):
+        before_stale = common.stale_fetcher_names()
         try:
             val = fn()
             out[key] = val
             missing = _shortfalls(key, val)
             ok = bool(val) and not missing
             status = "ok" if ok else ("empty: %s" % ", ".join(missing) if missing else "empty")
+            # A Fetcher that fell back to a stale cache still returns a
+            # structurally-valid, non-empty result - without this, a 1-3 day
+            # old cached body is published exactly like a true live fetch,
+            # with no trace beyond a single stderr log line during the run.
+            new_stale = common.stale_fetcher_names() - before_stale
             for sid in source_ids:
                 out["_status"][sid] = {"last_run": now_iso(), "status": status}
+                if new_stale:
+                    out["_status"][sid]["stale"] = True
+            if new_stale:
+                log("%s served stale cached data for: %s" % (key, ", ".join(sorted(new_stale))), "warn")
             if not ok:
                 log("%s returned no rows for: %s" % (key, ", ".join(missing) or "everything"), "err")
                 problems.append(key)

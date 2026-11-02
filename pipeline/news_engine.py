@@ -52,7 +52,12 @@ def _slugify(s):
 
 
 def _extract_upper_price(band_str):
-    nums = re.findall(r"\d+", str(band_str or ""))
+    # A plain \d+ splits on the decimal point, so "Rs 99.50 to Rs 105.50"
+    # returned ['99','50','105','50'] and this took the last fragment (50)
+    # instead of the real upper band (105.5) - silently wrong for any
+    # paise-denominated band, feeding directly into the published estimated
+    # listing price and gain percentage.
+    nums = re.findall(r"\d+(?:\.\d+)?", str(band_str or ""))
     return float(nums[-1]) if nums else 0.0
 
 

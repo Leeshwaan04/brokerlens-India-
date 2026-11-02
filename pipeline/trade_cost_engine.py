@@ -46,6 +46,17 @@ STT_INTRADAY_SELL_RATE = 0.00025 # 0.025% on sell side
 STAMP_DUTY_DELIVERY_BUY = 0.00015 # 0.015% on buy
 STAMP_DUTY_INTRADAY_BUY = 0.00003 # 0.003% on buy
 
+# A brokerage plan encoded as (flat, pct) is only a genuine "lower of Rs flat
+# or pct% of turnover, whichever is lower" discount-broker cap when pct is at
+# a discount-broker level. Above CAP_RULE_MAX_PCT it is a full-service or
+# regional percentage-of-turnover plan with no such cap (ICICI Direct 0.55%,
+# HDFC Securities 0.50%, Sharekhan 0.30%, Motilal Oswal 0.20% and so on) -
+# taking min(flat, pct_cost) for those would silently substitute the tiny
+# flat fee for the real, much larger ad-valorem commission. broker_charges_
+# engine.py imports this same constant so the two engines can never disagree
+# on which brokers get the capped formula.
+CAP_RULE_MAX_PCT = 0.001  # 0.1% of order value, either segment
+
 # Standard broker fee structures (verified published pricing)
 BROKER_RATES = {
     "zerodha": {
@@ -482,19 +493,27 @@ def calculate_trade_fees(price: float, qty: int, broker_key: str, trade_type: st
     total_turnover = buy_turnover + sell_turnover
 
     # 1. Brokerage
+    def _brokerage(pct, flat):
+        pct = pct or 0.0
+        pct_cost = buy_turnover * pct
+        if not flat and not pct:
+            return 0.0
+        # A real percentage-of-turnover plan (not a discount-broker cap) has
+        # no flat-fee floor to fall back to - see CAP_RULE_MAX_PCT above.
+        if pct > CAP_RULE_MAX_PCT:
+            return pct_cost
+        if not flat:
+            return pct_cost
+        return min(flat, pct_cost) if pct_cost > 0 else flat
+
     if trade_type == "delivery":
         if b["delivery_flat"] == 0 and b["delivery_pct"] == 0:
             buy_brokerage = 0.0
-            sell_brokerage = 0.0
         else:
-            pct_cost = buy_turnover * b.get("delivery_pct", 0.0)
-            flat_cap = b.get("delivery_flat", 20.0)
-            buy_brokerage = min(flat_cap, pct_cost) if pct_cost > 0 else flat_cap
-            sell_brokerage = buy_brokerage
+            buy_brokerage = _brokerage(b.get("delivery_pct", 0.0), b.get("delivery_flat", 20.0))
+        sell_brokerage = buy_brokerage
     else: # intraday
-        pct_cost = buy_turnover * b.get("intraday_pct", 0.0003)
-        flat_cap = b.get("intraday_flat", 20.0)
-        buy_brokerage = min(flat_cap, pct_cost) if pct_cost > 0 else flat_cap
+        buy_brokerage = _brokerage(b.get("intraday_pct", 0.0003), b.get("intraday_flat", 20.0))
         sell_brokerage = buy_brokerage
 
     total_brokerage = round(buy_brokerage + sell_brokerage, 2)

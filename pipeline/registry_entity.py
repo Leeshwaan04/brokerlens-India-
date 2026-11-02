@@ -721,3 +721,25 @@ def build_models(reg_rows, details, asof, site_url):
             "main_html": render_main(m, g, asof, faq, site_url),
         })
     return models
+
+
+def reg_to_slug_map(reg_rows, details):
+    """registration number (upper-cased) -> the canonical /sebi-registry/<slug>/
+    slug for it, so a broker's own stated SEBI registration number can be
+    hyperlinked back to its regulatory page (a secondary registration resolves
+    to its group's primary slug, same as the page itself does). Cheaper than
+    build_models(): skips title/FAQ/HTML generation entirely."""
+    pairs = _pair_details(reg_rows, details)
+    members = [_member(r, d) for r, d in zip(reg_rows, pairs)]
+    groups, _amb = group_members(members)
+    group_of = {}
+    for g in groups:
+        for m in g:
+            group_of[id(m)] = g
+    out = {}
+    for m in members:
+        if not m["slug"] or not m.get("reg"):
+            continue
+        primary = group_of[id(m)][0]
+        out[str(m["reg"]).strip().upper()] = primary["slug"]
+    return out

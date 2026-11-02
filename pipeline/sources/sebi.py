@@ -168,10 +168,24 @@ def registry(f: Fetcher, category="commodity_broker", max_pages=None):
             by_key[key] = norm
             order.append(key)
         if not got:
-            log("sebi %s: page %d yielded nothing, stopping" % (category, p), "warn")
+            # A single transient parse failure, rate-limit response or malformed
+            # fragment on this page permanently truncates every page after it -
+            # loudly say so (and how much was lost against the known total)
+            # instead of letting the run look identical to one that simply
+            # reached the real last page.
+            if total and p < pages:
+                shortfall = total - rows_seen
+                log("sebi %s: page %d yielded nothing with %d of %d pages still unfetched - "
+                    "stopping short, missing up to %d registration rows (%.0f%% of the known total)"
+                    % (category, p, pages - p + 1, pages, shortfall, 100.0 * shortfall / total), "err")
+            else:
+                log("sebi %s: page %d yielded nothing, stopping" % (category, p), "warn")
             break
 
     records = [by_key[k] for k in order]
+    if total and rows_seen < total:
+        log("sebi %s: fetched %d of an expected %d registration rows (%d missing, %.0f%%)"
+            % (category, rows_seen, total, total - rows_seen, 100.0 * (total - rows_seen) / total), "err")
     log("sebi %s: %d entities from %d registration rows"
         % (category, len(records), rows_seen), "ok" if records else "warn")
     if records:

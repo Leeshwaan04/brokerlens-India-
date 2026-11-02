@@ -77,7 +77,7 @@ BROKING_CATS = ("stock_broker", "commodity_broker")
 # percentage plan whose Rs 20 cap is not supported by the model (ICICI Direct
 # 0.55%, HDFC Securities 0.50%, Sharekhan 0.30%, Motilal Oswal 0.20% and so on),
 # and rendering "lower of Rs 20 and X%" for it would publish a wrong rupee total.
-CAP_RULE_MAX_PCT = 0.001  # 0.1% of order value, either segment
+CAP_RULE_MAX_PCT = tce.CAP_RULE_MAX_PCT  # single source of truth: trade_cost_engine.py
 
 # Wording in the model's own tagline that marks a restricted or conditional plan
 # (the schedule would only hold for some customers, or only for a period).
@@ -510,17 +510,22 @@ def _identifiers(rate_key, built_by_id, registry):
     return out
 
 
-def _identifiers_html(brand, rate_key, ident):
+def _reg_link(no, reg_to_registry_slug):
+    slug = (reg_to_registry_slug or {}).get(str(no).strip().upper())
+    return '<a href="/sebi-registry/%s/">%s</a>' % (slug, _esc(no)) if slug else _esc(no)
+
+
+def _identifiers_html(brand, rate_key, ident, reg_to_registry_slug=None):
     rows = []
     if ident["legal_name"]:
         rows.append(("Legal name", _esc(ident["legal_name"])))
     if ident["broking"]:
         rows.append(("SEBI registration number (stock broking)", "<br>".join(
-            "%s%s" % (_esc(no), (" (%s)" % _esc(ent)) if ent and ident["legal_name"] and _inorm(ent) != _inorm(ident["legal_name"]) else "")
+            "%s%s" % (_reg_link(no, reg_to_registry_slug), (" (%s)" % _esc(ent)) if ent and ident["legal_name"] and _inorm(ent) != _inorm(ident["legal_name"]) else "")
             for no, ent in ident["broking"])))
     if ident["dps"]:
         rows.append(("SEBI registration number (depository participant)", "<br>".join(
-            "%s: %s" % (_esc(dep), _esc(no)) for dep, no, _ent in ident["dps"])))
+            "%s: %s" % (_esc(dep), _reg_link(no, reg_to_registry_slug)) for dep, no, _ent in ident["dps"])))
     if not ident["broking"] and not ident["dps"]:
         body = ('<p class="small" style="max-width:72ch">BrokerLens does not yet hold a matched SEBI registration number or '
                 'depository participant registration for %s, so none is shown. Check SEBI\'s own register before '
@@ -593,7 +598,7 @@ def _faqs(brand, rates, ex_del, ex_int, ident, peers=()):
 
 
 def render_charges_page(rate_key, built_by_id=None, registry=None, site_url="https://www.brokerlens.in",
-                        generated_on=None, stocks=None):
+                        generated_on=None, stocks=None, reg_to_registry_slug=None):
     """Full HTML for /broker/<id>/charges/ (uses publish.py's shared page head, foot and banner)."""
     from . import publish as P  # lazy: publish imports this module's caller, not the other way round
 
@@ -743,7 +748,7 @@ def render_charges_page(rate_key, built_by_id=None, registry=None, site_url="htt
         + calc_html
         + '<h2 style="margin-top:32px;font-size:18px">%s indicative fee schedule (BrokerLens model, not verified)</h2>' % _esc(brand) + sched_html
         + worked_html
-        + _identifiers_html(brand, rate_key, ident)
+        + _identifiers_html(brand, rate_key, ident, reg_to_registry_slug)
         + source_html + how_html + faq_html + more_html
         + '<p class="xs faint" style="margin-top:20px">%s</p>' % _esc(DISCLAIMER)
     )
@@ -774,7 +779,8 @@ def remove_withheld_pages(site_dir):
     return removed
 
 
-def build_broker_charges_pages(built, registry=None, site_url="https://www.brokerlens.in", site_dir=None):
+def build_broker_charges_pages(built, registry=None, site_url="https://www.brokerlens.in", site_dir=None,
+                                reg_to_registry_slug=None):
     """Write every eligible page; return the list of site paths for the sitemap."""
     from . import publish as P
 
@@ -786,7 +792,8 @@ def build_broker_charges_pages(built, registry=None, site_url="https://www.broke
         stocks = []
     urls = []
     for k in eligible_keys():
-        page = render_charges_page(k, built_by_id, registry, site_url=site_url, stocks=stocks)
+        page = render_charges_page(k, built_by_id, registry, site_url=site_url, stocks=stocks,
+                                    reg_to_registry_slug=reg_to_registry_slug)
         dest = os.path.join(site_dir, "broker", charges_id(k), "charges")
         os.makedirs(dest, exist_ok=True)
         P._write_text(os.path.join(dest, "index.html"), page)

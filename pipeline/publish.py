@@ -540,7 +540,8 @@ def build():
     algo_data = _write_algo(brokers_cfg)
     _write_timings()
     _write_registry_pages(reg_rows, untracked, registry_entity.register_asof(ingest))
-    _write_broker_pages(built)
+    reg_to_registry_slug = registry_entity.reg_to_slug_map(reg_rows, untracked)
+    _write_broker_pages(built, reg_to_registry_slug)
     hub_groups = _write_broker_hub_pages(built)
     equity_companies = ((nse_d.get("universe") or {}).get("companies")) or []
     index_universe = nse_d.get("indices") or {}
@@ -586,7 +587,7 @@ def build():
     _write_leaderboards_page(overview, nse_d.get("live") or {}, crypto_coins)
     registry_letters = _write_registry_directory(reg_rows)
     _write_registry_landing_page(reg_rows, overview, registry_letters)
-    comparison_pairs = _write_compare_pages(overview, built)
+    comparison_pairs = _write_compare_pages(overview, built, reg_to_registry_slug)
     _write_brokers_page(overview)
     _write_calculator_tool_page(built)
     _prerender_home(overview)
@@ -604,7 +605,8 @@ def build():
     from .trade_cost_engine import build_trade_cost_pages
     trade_cost_urls = build_trade_cost_pages(limit_stocks=2500, site_url=SITE_URL)
     from .broker_charges_engine import build_broker_charges_pages
-    broker_charges_urls = build_broker_charges_pages(built, registry, site_url=SITE_URL)
+    broker_charges_urls = build_broker_charges_pages(built, registry, site_url=SITE_URL,
+                                                      reg_to_registry_slug=reg_to_registry_slug)
     from .ipo_apply_engine import build_ipo_apply_suite
     ipo_apply_urls = build_ipo_apply_suite(limit_recent_ipos=100, site_url=SITE_URL)
     from .ipo_subscription_engine import build_ipo_subscription_suite
@@ -1002,6 +1004,7 @@ def _write_sources(cfg, ingest, sample_flags):
             "verified": s.get("verified"), "notes": s.get("notes"),
             "last_run": status.get(sid, {}).get("last_run"),
             "last_status": status.get(sid, {}).get("status"),
+            "stale": bool(status.get(sid, {}).get("stale")),
         })
     payload = {"generated_at": now_iso(), "sources": rows,
                "licensing": cfg.get("licensing"), "sample_data": sample_flags}
@@ -1238,7 +1241,6 @@ _APP_SHELL_HEAD = """<!doctype html>
 <meta name="twitter:title" content="%(title)s">
 <meta name="twitter:description" content="%(description)s">
 <meta name="twitter:image" content="https://www.brokerlens.in/assets/img/ads/ibsl-wide-2000x500.jpg">
-<meta name="twitter:card" content="summary">
 <script type="application/ld+json">%(jsonld)s</script>
 </head>
 <body>
@@ -1702,7 +1704,7 @@ BROKER_HUB_DIM_INTRO = {
 }
 
 
-def _broker_facts_html(b, built=None):
+def _broker_facts_html(b, built=None, reg_to_registry_slug=None):
     """The server-rendered <main> content for one broker's static page.
 
     Deliberately mirrors pages.js's broker() renderer in substance (same
@@ -1719,9 +1721,14 @@ def _broker_facts_html(b, built=None):
     def fact(raw):
         return _esc(raw) if raw else None
 
+    sebi_reg_cell = None
+    if p.get("sebi_reg_no"):
+        reg_slug = (reg_to_registry_slug or {}).get(str(p["sebi_reg_no"]).strip().upper())
+        sebi_reg_cell = ('<a href="/sebi-registry/%s/">%s</a>' % (reg_slug, fact(p["sebi_reg_no"]))
+                          if reg_slug else fact(p["sebi_reg_no"]))
     identity_rows = [
         ("Legal name", fact(p.get("legal_name"))),
-        ("SEBI registration", fact(p.get("sebi_reg_no")) or ("Not yet matched to the SEBI register" if not p.get("legal_name_verified") else None)),
+        ("SEBI registration", sebi_reg_cell or ("Not yet matched to the SEBI register" if not p.get("legal_name_verified") else None)),
         ("Type", fact(TYPE_LABEL.get(p.get("type"), p.get("type")))),
         ("Segments", fact(", ".join(SEGMENT_LABEL.get(s, s) for s in (p.get("segments") or [])))),
         ("Head office", fact(p.get("hq"))),
@@ -1963,7 +1970,7 @@ def _broker_depth(b, built):
     return body, faqs
 
 
-def _write_broker_pages(built):
+def _write_broker_pages(built, reg_to_registry_slug=None):
     """Static, server-rendered pages at the SAME /broker/:id URL the SPA already
     uses - not a sibling path like the registry pages needed.
 
@@ -2020,7 +2027,7 @@ def _write_broker_pages(built):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         page += crumb_html
-        page += _broker_facts_html(b, built)
+        page += _broker_facts_html(b, built, reg_to_registry_slug)
         # The depth block goes right after </main>, outside the element the SPA
         # re-renders, so hydration cannot wipe it (see data-static-only in app.js).
         page += _APP_SHELL_FOOT.replace("</main>", "</main>" + depth_html, 1)
@@ -6164,13 +6171,16 @@ def _write_terms_page():
     log("terms of service page: written", "ok")
 
 
-def _status_badge_html(st):
-    """Python port of pages.js's statusBadge() - same three-state pipeline
-    health indicator (ok/empty/error) on the static /sources page as on the
+def _status_badge_html(st, stale=False):
+    """Python port of pages.js's statusBadge() - same pipeline health
+    indicator (ok/stale/empty/error) on the static /sources page as on the
     SPA's own copy of it."""
     if not st:
         return '<span class="badge">not run</span>'
     if st == "ok":
+        if stale:
+            return ('<span class="badge badge-warn" title="Served from a cached copy, not a live fetch, '
+                     'on the last run">stale</span>')
         return '<span class="badge badge-up">ok</span>'
     if st == "empty":
         return '<span class="badge badge-warn">empty</span>'
@@ -6221,7 +6231,7 @@ def _write_sources_page(sources_data):
             ) % (
                 _esc(r.get("title") or ""), _esc(r.get("url") or ""),
                 _esc(r.get("cadence") or "-"), _esc(last_run),
-                _status_badge_html(r.get("last_status")), _esc(r.get("notes") or ""),
+                _status_badge_html(r.get("last_status"), r.get("stale")), _esc(r.get("notes") or ""),
             )
         body += "</tbody></table></div>"
 
@@ -6759,7 +6769,7 @@ def _fmt_broker_plan(plan):
     return _esc(", ".join(bits) or "-")
 
 
-def _write_compare_pages(overview, built=None):
+def _write_compare_pages(overview, built=None, reg_to_registry_slug=None):
     brokers = sorted(overview.get("brokers") or [], key=lambda b: -(b.get("clients") or 0))
     built_map = {b["id"]: b for b in (built or [])}
     b_brand = {b["id"]: b.get("brand") or b["id"] for b in brokers}
@@ -6899,6 +6909,14 @@ def _write_compare_pages(overview, built=None):
         fnd_str2 = str(prof2.get("founded") or "-")
         sebi_str1 = prof1.get("sebi_reg_no") or "-"
         sebi_str2 = prof2.get("sebi_reg_no") or "-"
+
+        def _reg_cell(reg_no):
+            if not reg_no or reg_no == "-":
+                return "-"
+            slug = (reg_to_registry_slug or {}).get(str(reg_no).strip().upper())
+            return '<a href="/sebi-registry/%s/">%s</a>' % (slug, _esc(reg_no)) if slug else _esc(reg_no)
+
+        sebi_cell1, sebi_cell2 = _reg_cell(sebi_str1), _reg_cell(sebi_str2)
         seg_str1 = ", ".join(SEGMENT_LABEL.get(s, s) for s in (prof1.get("segments") or [])) or "-"
         seg_str2 = ", ".join(SEGMENT_LABEL.get(s, s) for s in (prof2.get("segments") or [])) or "-"
         defaulter1 = "Yes (Expelled)" if fl1.get("defaulter") else "No"
@@ -7056,13 +7074,16 @@ def _write_compare_pages(overview, built=None):
             ("Account Opening", acct_str1, acct_str2),
             ("Head Office", city_str1, city_str2),
             ("Founded", fnd_str1, fnd_str2),
-            ("SEBI Registration", sebi_str1, sebi_str2),
+            ("SEBI Registration", sebi_cell1, sebi_cell2),
             ("Segments", seg_str1, seg_str2),
             ("Defaulter List Status", defaulter1, defaulter2),
         ]
+        _pre_escaped_rows = {"SEBI Registration"}
         table_rows = "".join(
             '<tr><td class="muted small">%s</td><td class="right">%s</td><td class="right">%s</td></tr>'
-            % (_esc(m_label), _esc(v1), _esc(v2)) for m_label, v1, v2 in metrics
+            % (_esc(m_label), v1 if m_label in _pre_escaped_rows else _esc(v1),
+               v2 if m_label in _pre_escaped_rows else _esc(v2))
+            for m_label, v1, v2 in metrics
         )
 
         p_page += (
