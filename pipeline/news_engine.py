@@ -72,7 +72,13 @@ def _compute_read_time(body_html):
 
 
 def _inject_mid_article_breaks(body_html):
-    """Injects high-converting contextual Demat callout and AdSense in-article placement midway."""
+    """Injects a high-converting contextual Demat callout midway through the article.
+
+    This used to also inject a manual <ins class="adsbygoogle"> in-article unit,
+    but its data-ad-slot ("brokerlens-in-article") was a placeholder string, never
+    a real numeric id issued by the AdSense dashboard, so it could never have
+    served an ad. Removed in favour of site-wide Auto ads (theme-init.js), which
+    needs no per-unit slot id and lets Google place/size units itself."""
     mid_break = """
     <div class="card in-article-lead-card" style="margin:24px 0;padding:16px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);box-shadow:var(--shadow-sm)">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -85,14 +91,6 @@ def _inject_mid_article_breaks(body_html):
         <span class="xs faint">SEBI Reg. INZ000036136 &middot; 20+ Years Trusted &middot; Sponsored</span>
       </div>
     </div>
-    <aside class="ad-wrap ad-in-article" style="margin:20px 0;text-align:center" aria-label="Sponsored Content">
-      <ins class="adsbygoogle"
-           style="display:block; text-align:center;"
-           data-ad-layout="in-article"
-           data-ad-format="fluid"
-           data-ad-client="ca-pub-8447377943455646"
-           data-ad-slot="brokerlens-in-article"></ins>
-    </aside>
     """
     parts = body_html.split('<div class="section-title">')
     if len(parts) >= 3:

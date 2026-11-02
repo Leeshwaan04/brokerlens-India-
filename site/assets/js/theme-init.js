@@ -54,3 +54,16 @@ try {
     document.head.appendChild(ads);
   }
 } catch (e) { /* ads never break page rendering */ }
+
+/* Auto ads: let Google place and size ad units itself instead of relying on
+ * hand-coded <ins class="adsbygoogle"> slots. The one manual slot this site
+ * carried (in-article, on news pages) had data-ad-slot="brokerlens-in-article"
+ * - a placeholder string, never a real numeric id issued by the AdSense
+ * dashboard - so it could never have served an ad regardless of account
+ * approval status. Removed in favour of this, which needs no per-unit id. */
+try {
+  (window.adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: 'ca-pub-8447377943455646',
+    enable_page_level_ads: true
+  });
+} catch (e) { /* ads never break page rendering */ }
