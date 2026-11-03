@@ -31,6 +31,13 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Python dependencies
+        # Deliberately minimal (see requirements.txt's own comment): xlrd is
+        # the one documented exception to this pipeline's otherwise
+        # stdlib-only policy, needed only to read NSE's Report 1C (legacy
+        # binary .xls - no stdlib parsing path exists for that format).
+        run: pip install -r requirements.txt
+
       - name: Run Full Pipeline (Fetch + Build)
         env:
           SITE_URL: "https://www.brokerlens.in"
@@ -39,6 +46,12 @@ jobs:
         run: |
           echo "Starting daily pipeline ingest at $(date)..."
           python3 -m pipeline.run all
+          # Real broker complaint disclosures and NSE's own active-client
+          # report update at most monthly on their own side - same
+          # "never let one source kill the build" tolerance as the main
+          # fetch, so a bad run here leaves the existing file untouched.
+          python3 -m pipeline.run complaints || true
+          python3 -m pipeline.run report1c || true
 
       - name: Commit and Push Updated Data & Static Builds
         id: push

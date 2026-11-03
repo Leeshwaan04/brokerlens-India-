@@ -23,6 +23,7 @@ export SITE_URL="${SITE_URL:-https://www.brokerlens.in}"
 export SEBI_MAX_PAGES="${SEBI_MAX_PAGES:-100}"
 export PUBLISH_MODE=production
 
+pip install -q -r requirements.txt
 "$PY" -m pipeline.run fetch || true
 # Crawls each configured broker's own SEBI Annexure-B disclosure page for
 # real complaint counts (see pipeline/sources/complaints.py). This was built
@@ -32,5 +33,14 @@ export PUBLISH_MODE=production
 # build" tolerance as fetch: a bad run here leaves the existing file
 # untouched rather than failing the deploy.
 "$PY" -m pipeline.run complaints || true
+# NSE's own Report 1C (broker-wise active clients, UCCs, defaulter flag -
+# see pipeline/sources/nse_report1c.py). Only updates ~monthly on NSE's own
+# side, so running it on every deploy is harmless (the Fetcher's own 12h
+# cache + idempotent same-month overwrite means repeat runs within a month
+# just confirm the same figure, never duplicate it). Needs xlrd (the pip
+# install above) - the one documented exception to this project's
+# otherwise stdlib-only policy, since NSE only publishes this as legacy
+# binary .xls.
+"$PY" -m pipeline.run report1c || true
 "$PY" -m pipeline.run build
 "$PY" scripts/export_gsc_live.py || true

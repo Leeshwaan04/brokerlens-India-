@@ -18,7 +18,7 @@
     "of the page carrying the table. If a broker publishes only a PDF, leave it out",
     "for now and note it in `format`: PDF parsing is not implemented."
   ],
-  "last_reviewed": null,
+  "last_reviewed": "2026-11-03",
   "brokers": {
     "zerodha": {
       "url": "https://docs.google.com/spreadsheets/d/12_L4ku18tU12orNkyFJIY2Kkv03YNssT8GNK8tNdf_c/export?format=csv",
@@ -62,14 +62,16 @@
       "verified": null
     },
     "hdfc-securities": {
-      "url": "https://www.hdfcsec.com/investor-charter",
+      "url_template": "https://www.hdfcsec.com/number-of-investor-complaints-for-stock-broking-{mon}-{year}",
       "format": "html",
-      "verified": null
+      "verified": "2026-11-03",
+      "note": "The old /investor-charter URL has no complaints table at all (charter boilerplate only). HDFC publishes a dedicated page per month whose own URL encodes the month, so a static URL would go stale every month - complaints.py's _resolve_monthly_url() tries the current month, then steps back, each run. Also required two parser fixes (parse_annexure_b's total-row label search and page-month detection) since this page's Grand Total row has a blank SN column and its month-bearing heading sits past the page-text scan window."
     },
     "kotak-securities": {
-      "url": "https://www.kotaksecurities.com/investor-charter/",
+      "url": "https://www.kotakneo.com/disclaimer/investor-grievance-report-stock-brokers/",
       "format": "html",
-      "verified": null
+      "verified": "2026-11-03",
+      "note": "The old kotaksecurities.com/investor-charter/ URL 404s; Kotak Securities' own sitemap now points entirely to the rebranded kotakneo.com domain (same legal entity). This page's \"Trend of monthly disposal of complaints\" table carries real, non-template monthly data and parses cleanly with the existing parse_annexure_b (verified against 6 real months, Apr-Sep 2026)."
     },
     "motilal-oswal": {
       "url": "https://www.motilaloswal.com/investor-charter",

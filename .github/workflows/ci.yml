@@ -55,6 +55,12 @@ jobs:
       # actually exercises. This mirrors scripts/vercel-build.sh exactly
       # (fetch tolerates a source being down, build always runs), verified
       # locally in an isolated worktree to produce a clean 428/428 pass.
+      - name: Install Python dependencies
+        # xlrd is the one documented exception to this pipeline's otherwise
+        # stdlib-only policy - needed only for NSE's Report 1C, published as
+        # legacy binary .xls with no stdlib parsing path (see requirements.txt).
+        run: pip install -r requirements.txt
+
       - name: Build site data (mirrors scripts/vercel-build.sh)
         env:
           SITE_URL: https://www.brokerlens.in
@@ -62,6 +68,7 @@ jobs:
         run: |
           python3 -m pipeline.run fetch || true
           python3 -m pipeline.run complaints || true
+          python3 -m pipeline.run report1c || true
           python3 -m pipeline.run build
 
       # Both suites accept --url to additionally probe a running server

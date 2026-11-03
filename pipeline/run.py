@@ -14,6 +14,7 @@
   python3 -m pipeline.run fund-compare     generate mutual fund 1v1 comparisons
   python3 -m pipeline.run stock-compare    generate stock 1v1 comparisons
   python3 -m pipeline.run engines          run all programmatic engines
+  python3 -m pipeline.run report1c         pull NSE's own broker-wise active-clients report
 
 Exit code is non-zero if a source that was expected to return rows returned
 none, so cron can alert instead of silently publishing a hollow site.
@@ -224,6 +225,81 @@ def complaints():
     return 0
 
 
+def report1c():
+    """Pull NSE's own Report 1C and fold real active-client counts into
+    data/manual/active_clients.json, under provenance:"nse_ucc" - the real
+    source that field's existing "sample" placeholder was always meant to
+    be replaced by (see that file's own source_note). Matching a broker
+    name to a tracked id is NOT an adverse attribution (unlike the
+    defaulter flag below), so the ordinary fuzzy resolver is fine here;
+    only the DEFAULTER column gets the strict, exact-match-only treatment
+    defamation-risk data always gets in this codebase.
+
+    Each run adds one more real monthly data point for every tracked
+    broker NSE's own file names - it does not invent history, so trend
+    figures (month-over-month, year-over-year) only become real once
+    enough real months have accumulated this way.
+    """
+    from .sources import nse_report1c
+
+    data = nse_report1c.collect(common.nse_archives())
+    if not data:
+        log("report1c: nothing parsed; leaving the existing file untouched", "err")
+        return 1
+
+    master = read_json(os.path.join(CONFIG, "brokers_master.json"), {})
+    resolver = Resolver(master.get("brokers", []))
+
+    existing = read_json(os.path.join(MANUAL, "active_clients.json"), {}) or {}
+    # Only accumulate on top of a PRIOR real run of this same function - never
+    # on top of the sample-provenance placeholder file. That file's series
+    # are fabricated per-month figures invented to look like a real trend;
+    # carrying them forward under provenance:"nse_ucc" would publish fake
+    # history as if NSE itself had reported it.
+    brokers = dict(existing.get("brokers") or {}) if existing.get("provenance") == "nse_ucc" else {}
+    as_of = data["as_of"]
+    matched, unmatched = 0, 0
+    defaulters = {}
+    for row in data["rows"]:
+        bid, _method, _score = resolver.resolve(row["name"])
+        if not bid:
+            unmatched += 1
+            continue
+        matched += 1
+        series = {m: v for m, v in brokers.get(bid, [])}
+        series[as_of] = row["active_clients"]
+        brokers[bid] = sorted(series.items())
+        if row["defaulter"]:
+            strict_bid, _m, _s = resolver.resolve(row["name"], strict=True)
+            if strict_bid == bid:
+                defaulters[bid] = row["name"]
+
+    if not matched:
+        log("report1c: fetched %d real rows but matched none of them to a tracked broker"
+            % len(data["rows"]), "err")
+        return 1
+
+    months = sorted({m for series in brokers.values() for m, _v in series})
+    payload = {
+        "provenance": "nse_ucc",
+        "unit": "clients",
+        "months": months,
+        "source_note": ("NSE's own Report 1C (broker-wise active clients), pulled monthly. "
+                        "A broker's history here only covers the months this pipeline has "
+                        "actually run since - NSE itself keeps no public monthly archive."),
+        "exchange_active_clients": {as_of: data.get("exchange_active_clients")},
+        "generated_at": now_iso(),
+        "brokers": brokers,
+    }
+    if defaulters:
+        payload["defaulters_this_run"] = defaulters
+    write_json(os.path.join(MANUAL, "active_clients.json"), payload)
+    log("report1c: matched %d of %d real trading members to tracked brokers (%d unmatched, "
+        "expected - most of NSE's 263 members aren't brokers this site tracks); as of %s"
+        % (matched, len(data["rows"]), unmatched, as_of), "ok")
+    return 0
+
+
 def main(argv):
     cmd = argv[1] if len(argv) > 1 else "all"
     pages = int(os.environ.get("SEBI_MAX_PAGES", "0")) or None
@@ -242,6 +318,8 @@ def main(argv):
         return 0
     if cmd == "complaints":
         return complaints()
+    if cmd == "report1c":
+        return report1c()
     if cmd == "pulse":
         pulse()
         return 0

@@ -1,0 +1,14 @@
+# This pipeline is deliberately stdlib-only (see pipeline/common.py's own
+# docstring) for everything except this one, narrow exception: NSE's own
+# Report 1C (broker-wise active clients, UCCs and a defaulter flag for 263
+# real trading members) is published only as a legacy binary .xls (BIFF/OLE2)
+# file, which has no stdlib parsing path.
+#
+# xlrd 2.x specifically exists to read legacy .xls files - it dropped .xlsx
+# support in 2020 to focus on exactly this narrower, more stable format, so
+# it is the right tool for this one file, not a general-purpose dependency
+# creeping in. Pure Python, no C extensions, pinned to an exact version.
+#
+# Install before running anything that imports pipeline.sources.nse_report1c
+# (pipeline/run.py's "report1c" command): pip install -r requirements.txt
+xlrd==2.0.2

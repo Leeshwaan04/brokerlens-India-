@@ -28,6 +28,8 @@ from __future__ import annotations
 import os
 import re
 
+from datetime import datetime, timezone
+
 from ..common import CONFIG, Fetcher, log, snapshot, strip_tags, tables, to_num
 
 # Column headers, lowercased, that identify each quantity. Brokers word these
@@ -46,6 +48,7 @@ _MONTHS = {
     "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
     "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
 }
+_MONTH_ABBR = {v: k for k, v in _MONTHS.items()}
 
 # "for the month of March 2026", "March, 2026", "Mar-26", "01-03-2026"
 _MONTH_PATTERNS = (
@@ -91,6 +94,34 @@ def _match_column(header_cells, candidates):
     return best[0] if best else None
 
 
+def _title_month(html):
+    """Month from the page's own <title> tag, when it names one.
+
+    Tried before the stripped-body-text window below: a broker's own page
+    heading (e.g. "Number of Investor Complaints for Stock Broking Sep 2026")
+    is short, reliable, and near the top of the raw HTML - but on a page with
+    a large nav/menu before the visible heading, that same text can land well
+    past a fixed character budget once every tag is stripped out, so trying
+    the title first catches a real month a blunt text-window search would
+    miss entirely."""
+    m = re.search(r"<title[^>]*>(.*?)</title>", html, re.I | re.S)
+    return _parse_month(strip_tags(m.group(1))) if m else None
+
+
+def _row_label(row):
+    """The row's own label, checking the first couple of cells.
+
+    One broker's "Grand Total" row has a blank SN column, so the label text
+    sits in row[1], not row[0] - a label check that only ever looked at
+    row[0] silently never recognised that row as a total, no matter how
+    cleanly the rest of the table parsed."""
+    for cell in row[:2]:
+        label = re.sub(r"\s+", " ", (cell or "").strip().lower())
+        if label:
+            return label
+    return ""
+
+
 def parse_annexure_b(html, url=""):
     """Extract [{month, received, resolved, pending}] from a disclosure page.
 
@@ -100,7 +131,7 @@ def parse_annexure_b(html, url=""):
     if not html:
         return [], "empty response"
 
-    page_month = _parse_month(strip_tags(html)[:4000])
+    page_month = _title_month(html) or _parse_month(strip_tags(html)[:4000])
     out, saw_table = [], False
 
     for rows in tables(html):
@@ -121,7 +152,7 @@ def parse_annexure_b(html, url=""):
         for row in rows[1:]:
             if len(row) <= max(i_recv, i_res):
                 continue
-            label = re.sub(r"\s+", " ", (row[0] or "").strip().lower())
+            label = _row_label(row)
 
             month = None
             if i_month is not None and len(row) > i_month:
@@ -229,6 +260,32 @@ _PARSERS = {
 }
 
 
+def _resolve_monthly_url(f, template, max_back=3):
+    """Try `template` for the current month, then step back a month at a
+    time (some brokers publish a few days into the next month, so last
+    month's page is briefly the latest one that actually exists).
+
+    `template` uses {mon} (lowercase 3-letter, e.g. "sep") and {year}
+    (4-digit) placeholders - HDFC Securities' own URL literally encodes the
+    reporting month (.../stock-broking-sep-2026), so a static URL in config
+    would silently go stale on the first day of every new month.
+
+    Returns (url, html) for the first candidate that actually fetches, or
+    (None, None) if none of the recent months do.
+    """
+    now = datetime.now(timezone.utc)
+    y, m = now.year, now.month
+    for _ in range(max_back + 1):
+        url = template.format(mon=_MONTH_ABBR[m], year=y)
+        html = f.get_text(url, ttl=12 * 3600, retries=2)
+        if html:
+            return url, html
+        m -= 1
+        if m == 0:
+            m, y = 12, y - 1
+    return None, None
+
+
 def collect(sources=None, ttl=12 * 3600):
     """Crawl every configured broker disclosure page.
 
@@ -249,13 +306,20 @@ def collect(sources=None, ttl=12 * 3600):
     got, failures = {}, {}
     for bid, entry in entries.items():
         url = entry.get("url") if isinstance(entry, dict) else entry
+        template = entry.get("url_template") if isinstance(entry, dict) else None
         fmt = entry.get("format", "html") if isinstance(entry, dict) else "html"
         parser = _PARSERS.get(fmt, parse_annexure_b)
-        if not url:
+        if not url and not template:
             failures[bid] = "no url configured"
             continue
         try:
-            html = f.get_text(url, ttl=ttl, retries=2)
+            if template:
+                url, html = _resolve_monthly_url(f, template)
+                if not url:
+                    failures[bid] = "no recent month's page found (tried current + 3 back)"
+                    continue
+            else:
+                html = f.get_text(url, ttl=ttl, retries=2)
         except Exception as exc:                       # never let one broker kill the run
             failures[bid] = "fetch failed: %s" % str(exc)[:120]
             continue

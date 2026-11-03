@@ -1,7 +1,7 @@
 {
   "provenance": "sebi_annexure_b",
   "source_note": "Parsed from each broker's own SEBI Annexure-B disclosure. Brokers absent from this file did not publish a parseable table; they are listed under `gaps`.",
-  "generated_at": "2026-09-19T04:35:03+00:00",
+  "generated_at": "2026-11-03T08:42:17+00:00",
   "months": [
     "2021-12",
     "2022-01",
@@ -59,10 +59,11 @@
     "2026-05",
     "2026-06",
     "2026-07",
-    "2026-08"
+    "2026-08",
+    "2026-09"
   ],
   "coverage": {
-    "parsed": 1,
+    "parsed": 3,
     "attempted": 12
   },
   "gaps": {
@@ -73,8 +74,6 @@
     "dhan": "fetch returned nothing",
     "fyers": "fetch returned nothing",
     "icici-direct": "fetch returned nothing",
-    "hdfc-securities": "no Annexure-B table found on the page",
-    "kotak-securities": "no Annexure-B table found on the page",
     "motilal-oswal": "no Annexure-B table found on the page",
     "sharekhan": "fetch returned nothing"
   },
@@ -460,24 +459,84 @@
       },
       {
         "month": "2026-06",
-        "received": 121,
-        "resolved": 154,
+        "received": 122,
+        "resolved": 155,
         "pending": 9,
         "source_url": "https://docs.google.com/spreadsheets/d/12_L4ku18tU12orNkyFJIY2Kkv03YNssT8GNK8tNdf_c/export?format=csv"
       },
       {
         "month": "2026-07",
-        "received": 89,
-        "resolved": 82,
+        "received": 90,
+        "resolved": 83,
         "pending": 16,
         "source_url": "https://docs.google.com/spreadsheets/d/12_L4ku18tU12orNkyFJIY2Kkv03YNssT8GNK8tNdf_c/export?format=csv"
       },
       {
         "month": "2026-08",
-        "received": 100,
+        "received": 102,
         "resolved": 85,
-        "pending": 31,
+        "pending": 33,
         "source_url": "https://docs.google.com/spreadsheets/d/12_L4ku18tU12orNkyFJIY2Kkv03YNssT8GNK8tNdf_c/export?format=csv"
+      },
+      {
+        "month": "2026-09",
+        "received": 121,
+        "resolved": 127,
+        "pending": 27,
+        "source_url": "https://docs.google.com/spreadsheets/d/12_L4ku18tU12orNkyFJIY2Kkv03YNssT8GNK8tNdf_c/export?format=csv"
+      }
+    ],
+    "hdfc-securities": [
+      {
+        "month": "2026-09",
+        "received": 58,
+        "resolved": 92,
+        "pending": 14,
+        "source_url": "https://www.hdfcsec.com/number-of-investor-complaints-for-stock-broking-sep-2026"
+      }
+    ],
+    "kotak-securities": [
+      {
+        "month": "2026-04",
+        "received": 216,
+        "resolved": 194,
+        "pending": 46,
+        "source_url": "https://www.kotakneo.com/disclaimer/investor-grievance-report-stock-brokers/"
+      },
+      {
+        "month": "2026-05",
+        "received": 179,
+        "resolved": 180,
+        "pending": 45,
+        "source_url": "https://www.kotakneo.com/disclaimer/investor-grievance-report-stock-brokers/"
+      },
+      {
+        "month": "2026-06",
+        "received": 196,
+        "resolved": 197,
+        "pending": 44,
+        "source_url": "https://www.kotakneo.com/disclaimer/investor-grievance-report-stock-brokers/"
+      },
+      {
+        "month": "2026-07",
+        "received": 258,
+        "resolved": 214,
+        "pending": 88,
+        "source_url": "https://www.kotakneo.com/disclaimer/investor-grievance-report-stock-brokers/"
+      },
+      {
+        "month": "2026-08",
+        "received": 174,
+        "resolved": 230,
+        "pending": 32,
+        "source_url": "https://www.kotakneo.com/disclaimer/investor-grievance-report-stock-brokers/"
+      },
+      {
+        "month": "2026-09",
+        "received": 182,
+        "resolved": 180,
+        "pending": 34,
+        "source_url": "https://www.kotakneo.com/disclaimer/investor-grievance-report-stock-brokers/"
       }
     ]
   }
