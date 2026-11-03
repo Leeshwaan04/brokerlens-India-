@@ -10,5 +10,11 @@
 # creeping in. Pure Python, no C extensions, pinned to an exact version.
 #
 # Install before running anything that imports pipeline.sources.nse_report1c
-# (pipeline/run.py's "report1c" command): pip install -r requirements.txt
+# (pipeline/run.py's "report1c" command): pip install -r pipeline/requirements.txt
+#
+# Kept out of the repo root on purpose: a root requirements.txt makes Vercel
+# treat the whole project as Python, swap in its own uv-managed interpreter
+# (CPython 3.14 on 3 Nov 2026, not the python3 every earlier build used) and
+# mark it externally managed, so the pip install in scripts/vercel-build.sh
+# failed every deploy. See that script for how the build installs this now.
 xlrd==2.0.2

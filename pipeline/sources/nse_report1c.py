@@ -13,7 +13,7 @@ listing every isc_report1C_<FY>.xls back to FY2008-09).
 
 Legacy binary .xls (BIFF/OLE2), not xlsx or CSV - the one documented
 exception to this project's otherwise stdlib-only policy (see
-requirements.txt). xlrd 2.x is used specifically because it dropped xlsx
+pipeline/requirements.txt). xlrd 2.x is used specifically because it dropped xlsx
 support in 2020 to focus only on this older, narrower format.
 """
 from __future__ import annotations
@@ -29,7 +29,7 @@ from ..common import log, snapshot
 # Unitholding Patterns...") for this URL regardless of path, with the real
 # listing drawn in by JavaScript after load. Scraping it would need a real
 # browser, which this project's Fetcher deliberately isn't (same stdlib-only
-# stance requirements.txt's one xlrd exception doesn't extend to). India's
+# stance pipeline/requirements.txt's one xlrd exception doesn't extend to). India's
 # fiscal year (1 April - 31 March) is fixed and public, so the file name is
 # computed directly from today's date instead - confirmed live:
 # isc_report1C_2627.xls (FY2026-27, 2-digit+2-digit, no separator).
@@ -98,7 +98,7 @@ def parse_report1c(xls_bytes):
     clean number is skipped, not coerced - this is a real total other
     numbers (market share) divide against, so a wrong one is worse than
     a gap."""
-    import xlrd  # the one documented stdlib-dependency exception; see requirements.txt
+    import xlrd  # the one documented stdlib-dependency exception; see pipeline/requirements.txt
 
     book = xlrd.open_workbook(file_contents=xls_bytes)
     sh = book.sheet_by_index(0)
@@ -166,7 +166,7 @@ def collect(f_archives):
         snapshot("nse_report1c", data)
         return data
     except ImportError:
-        log("nse_report1c: xlrd not installed (pip install -r requirements.txt) - skipping", "err")
+        log("nse_report1c: xlrd not installed (pip install -r pipeline/requirements.txt) - skipping", "err")
         return None
     except Exception as exc:
         log("nse_report1c: parse failed: %s" % exc, "err")

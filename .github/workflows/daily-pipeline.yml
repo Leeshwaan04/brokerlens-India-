@@ -32,11 +32,11 @@ jobs:
           python-version: "3.12"
 
       - name: Install Python dependencies
-        # Deliberately minimal (see requirements.txt's own comment): xlrd is
+        # Deliberately minimal (see pipeline/requirements.txt's own comment): xlrd is
         # the one documented exception to this pipeline's otherwise
         # stdlib-only policy, needed only to read NSE's Report 1C (legacy
         # binary .xls - no stdlib parsing path exists for that format).
-        run: pip install -r requirements.txt
+        run: pip install -r pipeline/requirements.txt
 
       - name: Run Full Pipeline (Fetch + Build)
         env:

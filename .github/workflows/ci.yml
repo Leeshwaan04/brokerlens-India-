@@ -58,8 +58,9 @@ jobs:
       - name: Install Python dependencies
         # xlrd is the one documented exception to this pipeline's otherwise
         # stdlib-only policy - needed only for NSE's Report 1C, published as
-        # legacy binary .xls with no stdlib parsing path (see requirements.txt).
-        run: pip install -r requirements.txt
+        # legacy binary .xls with no stdlib parsing path (see
+        # pipeline/requirements.txt, and why it is not at the repo root).
+        run: pip install -r pipeline/requirements.txt
 
       - name: Build site data (mirrors scripts/vercel-build.sh)
         env:

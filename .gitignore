@@ -68,3 +68,6 @@ dist/
 
 # Raw source videos at the repo root (the optimised hero clip lives in site/assets/video/)
 /*.mp4
+
+# xlrd installed by scripts/vercel-build.sh with pip --target
+/.pydeps/
