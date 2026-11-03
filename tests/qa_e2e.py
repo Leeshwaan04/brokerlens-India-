@@ -343,13 +343,22 @@ def test_published():
     check("ranks start at 1", min(ranks) == 1 if ranks else True)
 
     # In production mode the client dataset is dropped, so there are no shares to
-    # sum. That is the correct state, not a failure.
+    # sum. That is the correct state, not a failure. With NSE's Report 1C the
+    # denominator is the exchange-wide total, so the tracked brokers' shares sum
+    # to their real slice of NSE (87.38% on the Sep 2026 file), not to 100; the
+    # invariant is that shares are clients over the market total the site states.
     shares = [b["share"] for b in brokers if b.get("share")]
     if shares:
-        check("market shares sum to ~100", abs(sum(shares) - 100) < 1.0, "sum=%.2f" % sum(shares))
+        total = (ov.get("aggregates") or {}).get("total_active_clients")
+        covered = sum(b["clients"] for b in brokers if b.get("share") and b.get("clients"))
+        expected = 100.0 * covered / total if total else None
+        check("market shares are each broker's clients over the stated market total",
+              expected is not None and abs(sum(shares) - expected) < 0.5 and sum(shares) <= 100.5,
+              "sum=%.2f expected=%s" % (sum(shares), ("%.2f" % expected) if expected is not None else "no total"))
         check("no share exceeds 100", all(s <= 100 for s in shares))
     else:
-        skip("market shares sum to ~100", "no client data published (production mode)")
+        skip("market shares are each broker's clients over the stated market total",
+             "no client data published (production mode)")
 
     # Production mode must publish nothing that is flagged sample.
     meta = ov.get("metadata") or {}
