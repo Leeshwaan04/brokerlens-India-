@@ -8,7 +8,9 @@ stock page itself the answer to that query without any forecast:
     says plainly that BrokerLens publishes no targets, and shows only exchange
     data already on file (last close, range) with its real window length;
   * a static "What-if price calculator" (arithmetic on the visitor's own
-    assumption, wired by assets/js/calculators.js, kind 'price-whatif');
+    assumption, wired by assets/js/calculators.js, kind 'price-whatif'), with
+    one-click picks for the years people search a target for, which set the
+    number of years and nothing else;
   * three FAQ entries and the title / meta wording.
 
 Nothing here invents a figure: every number comes from the NSE history passed
@@ -19,6 +21,7 @@ Stdlib only. No em or en dashes anywhere in the copy.
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 
 TITLE_SUFFIX = " | BrokerLens"
 _TITLE_MAX = 70   # about what a results page shows; beyond it the brand suffix goes first
@@ -101,19 +104,44 @@ def window_facts(history):
     }
 
 
+# The years people search a target for. Real GSC data for the retired per-year URLs, 28 days
+# to 1 Nov 2026: 2030 drew 14,601 impressions, 2026 7,531, 2027 5,780, 2050 4,177, 2040 4,036,
+# 2035 3,396 and 2028 2,130. Those URLs now 308 to the stock page, so when Google recrawls them
+# this page inherits their rankings; it has to actually name the year that was searched.
+# Demand clusters on the next two years and on round milestones.
+_MILESTONE_YEARS = (2030, 2035, 2040, 2050)
+
+
+def target_years(today=None):
+    """(this_year, future years offered as one-click picks), from the build date.
+
+    Only years the calculator's 1-to-30 range can reach are offered, so the set
+    rolls forward on its own as the daily build's date moves."""
+    y0 = (today or datetime.now(timezone.utc)).year
+    picks = sorted({y0 + 1, y0 + 2, *_MILESTONE_YEARS})
+    return y0, [y for y in picks if y0 < y <= y0 + 30]
+
+
+def _year_list(years):
+    """'2026, 2027 or 2030' from [2026, 2027, 2030]."""
+    names = [str(y) for y in years]
+    return names[0] if len(names) == 1 else "%s or %s" % (", ".join(names[:-1]), names[-1])
+
+
 def _tile(label, value_html, sub=""):
     return ('<div class="mega-seg"><div class="mega-seg-label">%s</div>'
             '<div style="margin-top:2px;font-weight:600">%s</div>%s</div>'
             % (label, value_html, ('<div class="xs faint" style="margin-top:2px">%s</div>' % sub) if sub else ""))
 
 
-def price_target_section_html(name, symbol, history, px, long_date, esc):
+def price_target_section_html(name, symbol, history, px, long_date, esc, today=None):
     """The explanatory section plus the what-if calculator, as one HTML block.
 
     px(n) -> formatted rupee price html; long_date(iso) -> '18 Sep 2026';
-    esc(text) -> HTML-escaped text."""
+    esc(text) -> HTML-escaped text; today defaults to the build date."""
     facts = window_facts(history)
     n_esc = esc(name)
+    y0, picks = target_years(today)
     intro = (
         '<div class="section-title"><h2>What is a share price target for %s?</h2></div>'
         '<div style="max-width:78ch">'
@@ -151,7 +179,19 @@ def price_target_section_html(name, symbol, history, px, long_date, esc):
         "Prefilled with the last close on file; change it to any price you like."
         if start else "No recent close is on file for this symbol, so enter a starting price yourself."
     )
-    calc = (
+    year_note = (
+        '<p class="small" style="margin-top:14px;max-width:78ch">Looking for a share price target for %s in %s? '
+        'Nobody can know where the share will trade in any of those years, and BrokerLens does not publish a number '
+        'for any of them. Pick a year in the calculator below and enter your own yearly growth assumption: it shows '
+        'the arithmetic from %s, nothing more.</p>'
+        % (n_esc, _year_list([y0] + picks), "the last close on file" if start else "a starting price you enter")
+    )
+    year_picks = "".join(
+        '<button type="button" class="btn btn-outline xs" data-preset-years="%d" data-year="%d" '
+        'aria-label="Years until %d" style="padding:2px 8px;font-size:11px">%d</button>' % (y - y0, y, y, y)
+        for y in picks
+    )
+    calc = year_note + (
         '<div class="card" data-calc="price-whatif" style="margin-top:16px;padding:20px;max-width:560px">'
         '<div class="card-title">What-if price calculator</div>'
         '<p class="xs muted" style="margin-top:4px">Work out what a price would become if it grew at a rate you choose. '
@@ -169,7 +209,9 @@ def price_target_section_html(name, symbol, history, px, long_date, esc):
         '<button type="button" class="btn btn-outline xs" data-preset-growth="20" style="padding:2px 8px;font-size:11px">+20%% CAGR</button>'
         '</div></div>'
         '<div class="field"><label for="pw-years">Years (1 to 30)</label>'
-        '<input id="pw-years" type="number" inputmode="numeric" min="1" max="30" step="1" value="5"></div>'
+        '<input id="pw-years" type="number" inputmode="numeric" min="1" max="30" step="1" value="5">'
+        '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">'
+        '<span class="xs muted" style="align-self:center">Or pick a year:</span>%s</div></div>'
         '<p class="xs faint" style="margin-top:6px">%s The growth box is left empty on purpose: the number in the placeholder '
         'is only an example of the format, not an estimate for %s.</p>'
         '<button type="button" id="calc-btn" class="btn" style="margin-top:8px">Calculate</button>'
@@ -181,7 +223,7 @@ def price_target_section_html(name, symbol, history, px, long_date, esc):
         '<a href="/calculators/sip-calculator/">SIP Calculator</a> &middot; '
         '<a href="/calculators/capital-gains-tax-calculator/">Capital Gains Tax</a> &middot; '
         '<a href="/trade-costs/">Trade Cost Calculator</a></div>'
-        '</div>' % (start, esc(start_note), n_esc)
+        '</div>' % (start, year_picks, esc(start_note), n_esc)
     )
     return intro + data_html + calc
 

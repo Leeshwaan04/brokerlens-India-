@@ -338,18 +338,22 @@ const CALCULATORS = {
     const end = at(years);
     if (!Number.isFinite(end)) { say('That combination is too large to show. Try fewer years or a lower rate.'); return; }
     const changePct = (end / price - 1) * 100;
+    // Set only by a year pick, and cleared as soon as the years box is edited by hand.
+    const box = document.querySelector('[data-calc="price-whatif"]');
+    const pickedYear = box && box.dataset.pickedYear ? Number(box.dataset.pickedYear) : 0;
+    const about = pickedYear ? `, about ${pickedYear}` : '';
     const marks = [1, 3, 5, 10];
     if (marks.indexOf(years) < 0) marks.push(years);
     marks.sort((a, b) => a - b);
     const rows = marks.map((y) => {
       const v = at(y);
-      return `<tr${y === years ? ' style="font-weight:700"' : ''}><td>${y} year${y === 1 ? '' : 's'}</td><td>${rs(v)}</td><td>${((v / price - 1) * 100).toFixed(1)}%</td></tr>`;
+      return `<tr${y === years ? ' style="font-weight:700"' : ''}><td>${y} year${y === 1 ? '' : 's'}${y === years ? about : ''}</td><td>${rs(v)}</td><td>${((v / price - 1) * 100).toFixed(1)}%</td></tr>`;
     }).join('');
     out.innerHTML = `
       <div class="grid g3">
         <div class="mega-seg"><div class="mega-seg-label">Starting price</div><div style="margin-top:2px">${rs(price)}</div></div>
         <div class="mega-seg"><div class="mega-seg-label">Your assumption</div><div style="margin-top:2px">${growth.toFixed(1)}% a year</div></div>
-        <div class="mega-seg"><div class="mega-seg-label">Value after ${years} year${years === 1 ? '' : 's'}</div><div style="margin-top:2px;font-weight:700">${rs(end)}</div><div class="xs faint" style="margin-top:2px">${changePct.toFixed(1)}% in total</div></div>
+        <div class="mega-seg"><div class="mega-seg-label">Value after ${years} year${years === 1 ? '' : 's'}${about}</div><div style="margin-top:2px;font-weight:700">${rs(end)}</div><div class="xs faint" style="margin-top:2px">${changePct.toFixed(1)}% in total</div></div>
       </div>
       <div class="table-scroll"><table class="data"><thead><tr><th>After</th><th>Value under your assumption</th><th>Total change</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     out.hidden = false;
@@ -379,6 +383,20 @@ function initCalculator() {
         }
       });
     });
+    // Year picks set the number of years only; the growth assumption stays the visitor's own.
+    const yearsInput = document.getElementById('pw-years');
+    container.querySelectorAll('[data-preset-years]').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!yearsInput) return;
+        yearsInput.value = el.dataset.presetYears;
+        container.dataset.pickedYear = el.dataset.year || '';
+        fn();
+        const growthInput = document.getElementById('pw-growth');
+        if (growthInput && growthInput.value === '') growthInput.focus();
+      });
+    });
+    if (yearsInput) yearsInput.addEventListener('input', () => { delete container.dataset.pickedYear; });
   }
 }
 

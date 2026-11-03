@@ -5,6 +5,7 @@ Sources are asserted as strings, and the section/FAQ/title builders are
 exercised on synthetic NSE-style history so nothing depends on a full build.
 When a built /stock/ page exists it is checked too; otherwise that block is
 reported as not applicable."""
+import datetime
 import os
 import re
 import sys
@@ -95,6 +96,27 @@ def run(check, ROOT, load):
     check("pricetarget: no advice wording in the section (buy, sell, best, upside, will reach)",
           not re.search(r"\b(buy|sell|best|upside|will reach|will hit|multibagger)\b", low), low[:120])
     check("pricetarget: no em or en dashes in generated section", not any(d in short for d in DASHES))
+
+    # The retired per-year URLs 308 here, so this page inherits their "share price target 2030"
+    # rankings once Google recrawls them; it has to name the year, and still assert no number.
+    yr = pts.price_target_section_html("Acme Ltd", "ACME", _candles(120), px, ld, esc,
+                                       today=datetime.date(2026, 11, 3))
+    check("pricetarget: section names the searched years and offers the future ones as year picks",
+          "Looking for a share price target for Acme Ltd in 2026, 2027, 2028, 2030, 2035, 2040 or 2050?" in yr
+          and "does not publish a number for any of them" in yr
+          and all('data-preset-years="%d" data-year="%d"' % (y - 2026, y) in yr for y in (2027, 2028, 2030, 2035, 2040, 2050))
+          and 'data-year="2026"' not in yr)
+    check("pricetarget: year picks leave the growth box empty",
+          'id="pw-growth" type="number" inputmode="decimal" min="-90" max="100" step="0.1" value=""' in yr)
+    check("pricetarget: year picks roll forward with the build date and stay inside the 1 to 30 year range",
+          pts.target_years(datetime.date(2026, 11, 3)) == (2026, [2027, 2028, 2030, 2035, 2040, 2050])
+          and pts.target_years(datetime.date(2029, 1, 2)) == (2029, [2030, 2031, 2035, 2040, 2050])
+          and pts.target_years(datetime.date(2040, 6, 1)) == (2040, [2041, 2042, 2050]),
+          str(pts.target_years(datetime.date(2029, 1, 2))))
+    whatif_js = js.split("'price-whatif'()")[-1]
+    check("pricetarget: calculators.js wires year picks to the years box only, never the growth box",
+          "[data-preset-years]" in whatif_js and "yearsInput.value = el.dataset.presetYears" in whatif_js
+          and not re.search(r"growthInput\.value\s*=(?!=)", whatif_js))
 
     faqs = pts.stock_target_faqs("Acme Ltd", "ACME", "")
     check("pricetarget: three FAQ entries, first keeps the pinned query wording and the no-forecast answer",
