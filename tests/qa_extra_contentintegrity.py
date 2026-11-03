@@ -1,7 +1,8 @@
 """Regression checks for content-integrity bugs fixed in commit f9dc713
 (area: contentintegrity): honest GMP trend, real news losers/active count,
 no FAQ dashes on broker-compare pages, no mega-cap "same sector" mislabel,
-and sitemap-wave gating for a newly added page family.
+sitemap-wave gating for a newly added page family, and market share divided
+by NSE's exchange-wide total rather than the sum of tracked brokers.
 
 Exposes run(check, ROOT, load) like every tests/qa_extra_<area>.py module.
 
@@ -267,6 +268,44 @@ def run(check, ROOT, load):
             check("contentintegrity: core (wave 1) URLs are always submitted regardless of the "
                   "current wave",
                   "sitemap-core" in idx_wave1 and "sitemap-core" in idx_wave2)
+
+    # ------------------------------------------------------------------
+    # 6. Market share divides by NSE's exchange-wide total from Report 1C,
+    #    not by the sum of the brokers this site tracks, which overstated
+    #    every share (Zerodha read 16.85% against its real 14.73%).
+    # ------------------------------------------------------------------
+    if P:
+        from pipeline import metrics as M
+        real = {"provenance": "nse_ucc", "exchange_active_clients": {"2026-09": 46120857},
+                "brokers": {"zerodha": [["2026-09", 6791541]], "groww": [["2026-09", 13448194]]}}
+        totals = P._market_totals(real)
+        share = M.client_metrics(real["brokers"]["zerodha"], totals).get("market_share_pct")
+        check("contentintegrity: market share for real (nse_ucc) data divides by NSE's exchange-wide "
+              "total, not the sum of tracked brokers",
+              totals == {"2026-09": 46120857} and share == round(6791541 / 46120857 * 100, 3), "share=%r" % share)
+        gap = P._market_totals({"provenance": "nse_ucc", "exchange_active_clients": {"2026-09": None},
+                                "brokers": real["brokers"]})
+        check("contentintegrity: a real month with no exchange total gets no market share, never an "
+              "overstated tracked-broker one",
+              gap == {} and M.client_metrics(real["brokers"]["zerodha"], gap).get("market_share_pct") is None)
+        check("contentintegrity: non-NSE data keeps the tracked-broker sum (sample data is dropped in "
+              "production anyway)",
+              P._market_totals({"provenance": "sample", "brokers": real["brokers"]}) == {"2026-09": 6791541 + 13448194})
+
+    try:
+        from pipeline.run import _merge_exchange_totals
+    except ImportError as e:
+        _merge_exchange_totals = None
+        check("contentintegrity: pipeline.run._merge_exchange_totals importable", False, str(e))
+    if _merge_exchange_totals:
+        prior = {"provenance": "nse_ucc", "exchange_active_clients": {"2026-09": 46120857}}
+        check("contentintegrity: report1c keeps earlier months' exchange totals (a later run must not "
+              "erase the denominator that older shares and year-on-year change need), never seeds from "
+              "the sample file, and skips a month whose total was not parsed",
+              _merge_exchange_totals(prior, "2026-10", 46500000) == {"2026-09": 46120857, "2026-10": 46500000}
+              and _merge_exchange_totals({"provenance": "sample", "exchange_active_clients": {"2026-08": 1}},
+                                         "2026-10", 46500000) == {"2026-10": 46500000}
+              and _merge_exchange_totals(prior, "2026-10", None) == {"2026-09": 46120857})
 
 
 def _read(ROOT, *parts):

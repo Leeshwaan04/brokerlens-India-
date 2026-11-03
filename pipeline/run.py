@@ -225,6 +225,17 @@ def complaints():
     return 0
 
 
+def _merge_exchange_totals(existing, as_of, total):
+    """NSE's exchange-wide active clients by month, the denominator for every
+    market share (see publish._market_totals). Accumulated like each broker's
+    series: only on top of a prior real run, never the sample file. A month
+    whose total was not parsed is left out rather than stored as a gap."""
+    totals = dict(existing.get("exchange_active_clients") or {}) if existing.get("provenance") == "nse_ucc" else {}
+    if isinstance(total, int) and total > 0:
+        totals[as_of] = total
+    return dict(sorted(totals.items()))
+
+
 def report1c():
     """Pull NSE's own Report 1C and fold real active-client counts into
     data/manual/active_clients.json, under provenance:"nse_ucc" - the real
@@ -287,7 +298,7 @@ def report1c():
         "source_note": ("NSE's own Report 1C (broker-wise active clients), pulled monthly. "
                         "A broker's history here only covers the months this pipeline has "
                         "actually run since - NSE itself keeps no public monthly archive."),
-        "exchange_active_clients": {as_of: data.get("exchange_active_clients")},
+        "exchange_active_clients": _merge_exchange_totals(existing, as_of, data.get("exchange_active_clients")),
         "generated_at": now_iso(),
         "brokers": brokers,
     }

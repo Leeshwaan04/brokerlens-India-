@@ -113,6 +113,26 @@ def _require_site_url():
 INGEST_PATH = os.path.join(DATA, "_ingest.json")
 
 
+def _market_totals(clients_raw):
+    """{YYYY-MM: total active clients} that market share and "Total active
+    clients" divide by.
+
+    NSE's Report 1C states the exchange-wide total, so real (nse_ucc) data uses
+    exactly that. Summing only the brokers tracked here made every share read
+    high: Zerodha showed 16.85% against its real 14.73% of NSE active clients.
+    A real month with no exchange total gets no share at all rather than an
+    overstated one. Any other provenance (the sample placeholder, which
+    production drops) keeps the tracked-broker sum."""
+    if clients_raw.get("provenance") == "nse_ucc":
+        return {m: v for m, v in (clients_raw.get("exchange_active_clients") or {}).items()
+                if isinstance(v, int) and not isinstance(v, bool) and v > 0}
+    totals = {}
+    for _bid, series in (clients_raw.get("brokers") or {}).items():
+        for m, v in series:
+            totals[m] = totals.get(m, 0) + (v or 0)
+    return totals
+
+
 def _profile(b):
     return {
         "id": b["id"],
@@ -342,11 +362,7 @@ def build():
         % (matched, len(profiles), len(untracked)),
         "ok" if matched else "warn")
 
-    # market totals per month, from whatever client data we have
-    market_totals = {}
-    for bid, series in (clients_raw.get("brokers") or {}).items():
-        for m, v in series:
-            market_totals[m] = market_totals.get(m, 0) + (v or 0)
+    market_totals = _market_totals(clients_raw)
 
     circulars = nse_d.get("circulars") or {}
     # The regulatory picture is only "checked" if both adverse sources actually
