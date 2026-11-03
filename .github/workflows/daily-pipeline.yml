@@ -36,7 +36,9 @@ jobs:
         # the one documented exception to this pipeline's otherwise
         # stdlib-only policy, needed only to read NSE's Report 1C (legacy
         # binary .xls - no stdlib parsing path exists for that format).
-        run: pip install -r pipeline/requirements.txt
+        # Only report1c needs it, and that step already keeps the committed data when
+        # xlrd is missing, so a PyPI hiccup must not stop the whole daily run.
+        run: pip install -r pipeline/requirements.txt || echo "::warning::pipeline/requirements.txt not installed; report1c will keep the committed data"
 
       - name: Run Full Pipeline (Fetch + Build)
         env:
@@ -45,13 +47,20 @@ jobs:
           SEBI_MAX_PAGES: "100"
         run: |
           echo "Starting daily pipeline ingest at $(date)..."
-          python3 -m pipeline.run all
-          # Real broker complaint disclosures and NSE's own active-client
-          # report update at most monthly on their own side - same
-          # "never let one source kill the build" tolerance as the main
-          # fetch, so a bad run here leaves the existing file untouched.
+          # Same order as scripts/vercel-build.sh: every data source first, then one
+          # build, so the committed site/ reflects the data committed with it. This
+          # used to run `all` (fetch + build) and then complaints/report1c, which left
+          # site/ a day behind their data, and skipped them entirely whenever fetch
+          # reported a gap (the step runs under bash -e).
+          fetch_rc=0
+          python3 -m pipeline.run fetch || fetch_rc=$?
+          # Broker complaint disclosures and NSE's own active-client report update at
+          # most monthly; a bad run here leaves the existing file untouched.
           python3 -m pipeline.run complaints || true
           python3 -m pipeline.run report1c || true
+          python3 -m pipeline.run build
+          # Keep `all`'s contract: a source gap still fails the run, after the build.
+          exit $fetch_rc
 
       - name: Commit and Push Updated Data & Static Builds
         id: push

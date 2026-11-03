@@ -190,6 +190,23 @@ def pulse():
     log("pulse refreshed", "ok")
 
 
+def _merge_complaints(existing, fresh):
+    """Per-broker monthly records, accumulated across runs.
+
+    HDFC Securities publishes one page per month, so a crawl only ever sees the
+    latest month; without this, its history never grew past one month and the
+    12-month rate never became computable, and one failed fetch dropped a broker
+    entirely. A fresh record wins for its month. Only a prior real (Annexure-B)
+    file is built on, never the sample placeholder."""
+    prior = (existing.get("brokers") or {}) if existing.get("provenance") == "sebi_annexure_b" else {}
+    merged = {}
+    for bid in sorted(set(prior) | set(fresh)):
+        by_month = {r["month"]: r for r in prior.get(bid, [])}
+        by_month.update({r["month"]: r for r in fresh.get(bid, [])})
+        merged[bid] = [by_month[m] for m in sorted(by_month)]
+    return merged
+
+
 def complaints():
     """Crawl each broker's SEBI Annexure-B disclosure and write the real dataset.
 
@@ -202,20 +219,23 @@ def complaints():
     from .sources import complaints as complaints_src
 
     res = complaints_src.collect()
-    brokers = res.get("brokers") or {}
-    if not brokers:
+    fresh = res.get("brokers") or {}
+    if not fresh:
         log("complaints: nothing parsed; leaving the existing file untouched", "err")
         return 1
 
+    existing = read_json(os.path.join(MANUAL, "complaints.json"), {}) or {}
+    brokers = _merge_complaints(existing, fresh)
     months = sorted({r["month"] for rows in brokers.values() for r in rows})
     payload = {
         "provenance": "sebi_annexure_b",
-        "source_note": ("Parsed from each broker's own SEBI Annexure-B disclosure. "
-                        "Brokers absent from this file did not publish a parseable "
+        "source_note": ("Parsed from each broker's own SEBI Annexure-B disclosure. Months "
+                        "accumulate across runs, since some brokers only ever show the latest "
+                        "month. Brokers absent from this file did not publish a parseable "
                         "table; they are listed under `gaps`."),
         "generated_at": now_iso(),
         "months": months,
-        "coverage": {"parsed": len(brokers), "attempted": res.get("attempted", 0)},
+        "coverage": {"parsed": len(fresh), "attempted": res.get("attempted", 0)},
         "gaps": res.get("failures") or {},
         "brokers": brokers,
     }
@@ -234,6 +254,44 @@ def _merge_exchange_totals(existing, as_of, total):
     if isinstance(total, int) and total > 0:
         totals[as_of] = total
     return dict(sorted(totals.items()))
+
+
+# Report 1C names each member by its legal entity. Only an exact name or alias match,
+# or one that differs by legal suffix alone ("Ltd." vs "Limited", the resolver's
+# "contains"), is trusted to carry a client count. The looser token match tied
+# "Bajaj Share & Stock Brokers Pvt. Ltd" (20 clients) to Bajaj Broking, whose own
+# entity, Bajaj Financial Securities, has 66,938, and the later row overwrote it.
+_REPORT1C_METHODS = ("exact", "contains")
+
+
+def _match_report1c(rows, resolver):
+    """-> ({broker_id: active_clients}, {broker_id: member_name}, [skip notes]).
+
+    A tracked broker claimed by two trusted matches is published for neither:
+    one firm's count must never silently stand in for another's. The DEFAULTER
+    column additionally needs a strict match, as all adverse attribution does."""
+    claims, skipped = {}, []
+    for row in rows:
+        bid, method, _score = resolver.resolve(row["name"])
+        if not bid:
+            continue
+        if method not in _REPORT1C_METHODS:
+            skipped.append("%r -> %s (%s match, not trusted for a client count)" % (row["name"], bid, method))
+            continue
+        claims.setdefault(bid, []).append(row)
+    counts, defaulters = {}, {}
+    for bid, claimants in claims.items():
+        if len(claimants) > 1:
+            skipped.append("%s: claimed by %d members (%s), published for neither"
+                           % (bid, len(claimants), "; ".join(r["name"] for r in claimants)))
+            continue
+        row = claimants[0]
+        counts[bid] = row["active_clients"]
+        if row["defaulter"]:
+            strict_bid, _m, _s = resolver.resolve(row["name"], strict=True)
+            if strict_bid == bid:
+                defaulters[bid] = row["name"]
+    return counts, defaulters, skipped
 
 
 def report1c():
@@ -269,26 +327,30 @@ def report1c():
     # history as if NSE itself had reported it.
     brokers = dict(existing.get("brokers") or {}) if existing.get("provenance") == "nse_ucc" else {}
     as_of = data["as_of"]
-    matched, unmatched = 0, 0
-    defaulters = {}
-    for row in data["rows"]:
-        bid, _method, _score = resolver.resolve(row["name"])
-        if not bid:
-            unmatched += 1
-            continue
-        matched += 1
-        series = {m: v for m, v in brokers.get(bid, [])}
-        series[as_of] = row["active_clients"]
-        brokers[bid] = sorted(series.items())
-        if row["defaulter"]:
-            strict_bid, _m, _s = resolver.resolve(row["name"], strict=True)
-            if strict_bid == bid:
-                defaulters[bid] = row["name"]
+    total = data.get("exchange_active_clients")
+    if not (isinstance(total, int) and total > 0):
+        log("report1c: %s rows parsed but the exchange-wide total did not; not writing a month whose "
+            "broker counts would have no denominator (every market share would silently vanish)" % as_of, "err")
+        return 1
 
-    if not matched:
+    counts, defaulters, skipped = _match_report1c(data["rows"], resolver)
+    for note in skipped:
+        log("report1c: skipped " + note, "warn")
+    if not counts:
         log("report1c: fetched %d real rows but matched none of them to a tracked broker"
             % len(data["rows"]), "err")
         return 1
+
+    # This run is the authority for its own month: a value an earlier run stored for
+    # as_of is replaced, or dropped if that broker no longer has a trusted match.
+    for bid in sorted(set(brokers) | set(counts)):
+        series = {m: v for m, v in brokers.get(bid, []) if m != as_of}
+        if bid in counts:
+            series[as_of] = counts[bid]
+        if series:
+            brokers[bid] = sorted(series.items())
+        else:
+            brokers.pop(bid, None)
 
     months = sorted({m for series in brokers.values() for m, _v in series})
     payload = {
@@ -298,16 +360,18 @@ def report1c():
         "source_note": ("NSE's own Report 1C (broker-wise active clients), pulled monthly. "
                         "A broker's history here only covers the months this pipeline has "
                         "actually run since - NSE itself keeps no public monthly archive."),
-        "exchange_active_clients": _merge_exchange_totals(existing, as_of, data.get("exchange_active_clients")),
+        "exchange_active_clients": _merge_exchange_totals(existing, as_of, total),
         "generated_at": now_iso(),
         "brokers": brokers,
     }
     if defaulters:
+        # Recorded for review only. An adverse flag reaches a public page solely through
+        # the SEBI defaulter path (registry_entity, regulatory_flags) with its own reviewed
+        # wording; nothing reads this key, and that is deliberate until it gets the same.
         payload["defaulters_this_run"] = defaulters
     write_json(os.path.join(MANUAL, "active_clients.json"), payload)
-    log("report1c: matched %d of %d real trading members to tracked brokers (%d unmatched, "
-        "expected - most of NSE's 263 members aren't brokers this site tracks); as of %s"
-        % (matched, len(data["rows"]), unmatched, as_of), "ok")
+    log("report1c: matched %d of %d real trading members to tracked brokers (the rest are "
+        "members this site doesn't track); as of %s" % (len(counts), len(data["rows"]), as_of), "ok")
     return 0
 
 

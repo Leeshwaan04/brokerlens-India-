@@ -60,7 +60,9 @@ jobs:
         # stdlib-only policy - needed only for NSE's Report 1C, published as
         # legacy binary .xls with no stdlib parsing path (see
         # pipeline/requirements.txt, and why it is not at the repo root).
-        run: pip install -r pipeline/requirements.txt
+        # Tolerated like in vercel-build.sh: only the report1c build step needs it,
+        # and no QA or VAPT check does, so a PyPI hiccup must not block the gate.
+        run: pip install -r pipeline/requirements.txt || echo "::warning::pipeline/requirements.txt not installed; report1c will keep the committed data"
 
       - name: Build site data (mirrors scripts/vercel-build.sh)
         env:

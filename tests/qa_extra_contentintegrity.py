@@ -307,6 +307,122 @@ def run(check, ROOT, load):
                                          "2026-10", 46500000) == {"2026-10": 46500000}
               and _merge_exchange_totals(prior, "2026-10", None) == {"2026-09": 46120857})
 
+    # ------------------------------------------------------------------
+    # 7. Report 1C attribution: a loose token match once gave Bajaj Broking
+    #    the 20 clients of an unrelated firm, overwriting its own 66,938.
+    # ------------------------------------------------------------------
+    try:
+        from pipeline.run import _match_report1c, _merge_complaints
+        from pipeline.identity import Resolver
+    except ImportError as e:
+        _match_report1c = None
+        check("contentintegrity: report1c matcher importable", False, str(e))
+    if _match_report1c:
+        master = load("config/brokers_master.json") or {}
+        res = Resolver(master.get("brokers", []))
+
+        def member(name, n, defaulter=False):
+            return {"name": name, "active_clients": n, "defaulter": defaulter, "ucc_start_of_year": None}
+        counts, _d, notes = _match_report1c([member("Bajaj Financial Securities Ltd.", 66938),
+                                             member("Bajaj Share & Stock Brokers Pvt. Ltd", 20)], res)
+        check("contentintegrity: report1c trusts only exact or suffix-only name matches, so an unrelated "
+              "firm's count never lands on a tracked broker (real Sep 2026 Bajaj pair)",
+              counts.get("bajaj-broking") == 66938 and any("token" in n for n in notes), str(counts))
+        counts2, _d2, notes2 = _match_report1c([member("Bajaj Financial Securities Ltd.", 66938),
+                                                member("Bajaj Financial Securities Limited", 5)], res)
+        check("contentintegrity: a broker claimed by two trusted Report 1C rows is published for neither",
+              "bajaj-broking" not in counts2 and any("published for neither" in n for n in notes2), str(counts2))
+
+        prior = {"provenance": "sebi_annexure_b", "brokers": {
+            "hdfc-securities": [{"month": "2026-09", "received": 58, "resolved": 92, "pending": 14}],
+            "kotak-securities": [{"month": "2026-09", "received": 182, "resolved": 180, "pending": 34}]}}
+        fresh = {"hdfc-securities": [{"month": "2026-10", "received": 40, "resolved": 41, "pending": 13}]}
+        merged = _merge_complaints(prior, fresh)
+        check("contentintegrity: complaint months accumulate across runs (HDFC shows one month per page) "
+              "and a broker whose fetch failed this run keeps its history",
+              [r["month"] for r in merged["hdfc-securities"]] == ["2026-09", "2026-10"]
+              and merged["kotak-securities"][0]["received"] == 182
+              and _merge_complaints({"provenance": "sample", "brokers": prior["brokers"]}, fresh)
+              == {"hdfc-securities": fresh["hdfc-securities"]})
+
+    # ------------------------------------------------------------------
+    # 8. Annexure-B parsing: only the single-month source table's Grand Total
+    #    may take the page's month. A trend table's cumulative Grand Total
+    #    once stamped Sep 2026 with 31,319 complaints instead of 182.
+    # ------------------------------------------------------------------
+    try:
+        from pipeline.sources import complaints as CS
+    except ImportError as e:
+        CS = None
+        check("contentintegrity: complaints source importable", False, str(e))
+    if CS:
+        def tbl(rows):
+            return "<table>%s</table>" % "".join(
+                "<tr>%s</tr>" % "".join("<td>%s</td>" % c for c in r) for r in rows)
+        source = tbl([["SN", "Received from", "Carried forward from previous month", "Received during the month",
+                       "Total Pending", "Resolved*", "Pending at the end of the month"],
+                      ["1", "Directly from Investors", "3", "14", "17", "16", "1"],
+                      ["2", "SEBI (SCORES)", "40", "40", "80", "70", "10"],
+                      ["", "Grand Total", "48", "58", "106", "92", "14"]])
+        annual = tbl([["SN", "Year", "Carried forward from previous year", "Received during the year",
+                       "Resolved during the year", "Pending at the end of the year"],
+                      ["1", "2021-2022", "84", "8636", "8647", "73"],
+                      ["", "Grand Total", "352", "31319", "31369", "302"]])
+        page = "<html><head><title>Investor Complaints Sep 2026</title></head><body>%s%s</body></html>" % (source, annual)
+        parsed, _why = CS.parse_annexure_b(page, "https://example.test/")
+        check("contentintegrity: a trend table's cumulative Grand Total is never stamped as the page's month, "
+              "while the source table's total still is",
+              [(r["month"], r["received"], r["resolved"], r["pending"]) for r in parsed] == [("2026-09", 58, 92, 14)],
+              str(parsed))
+
+        class _Fetch:
+            def __init__(self, pages):
+                self.pages, self.tried, self.ttls = pages, [], set()
+
+            def get_text(self, url, ttl=None, retries=None):
+                self.tried.append(url.rsplit("-", 2)[-2])
+                self.ttls.add(ttl)
+                return self.pages.get(url)
+        tmpl = "https://example.test/complaints-{mon}-{year}"
+        fake = _Fetch({tmpl.format(mon="oct", year=2026): "<html><body>Page not found</body></html>",
+                       tmpl.format(mon="sep", year=2026): page})
+        url, _html = CS._resolve_monthly_url(fake, tmpl, CS.parse_annexure_b, 60,
+                                             today=datetime.datetime(2026, 11, 3, tzinfo=datetime.timezone.utc))
+        check("contentintegrity: monthly URL resolver starts at last month, steps past a soft-404 page, "
+              "and honours the caller's cache ttl",
+              url == tmpl.format(mon="sep", year=2026) and fake.tried == ["oct", "sep"] and fake.ttls == {60},
+              "url=%s tried=%s ttls=%s" % (url, fake.tried, fake.ttls))
+
+    # ------------------------------------------------------------------
+    # 9. Report 1C sheet walk: a blank spacer row must not end the member
+    #    list, and the exchange total is found anywhere in the header block.
+    # ------------------------------------------------------------------
+    try:
+        from pipeline.sources import nse_report1c as R1
+    except ImportError as e:
+        R1 = None
+        check("contentintegrity: nse_report1c importable", False, str(e))
+    if R1:
+        class _Sheet:
+            def __init__(self, cells, nrows):
+                self.cells, self.nrows = cells, nrows
+
+            def cell_value(self, r, c):
+                return self.cells.get((r, c), "")
+        cells = {(6, R1.COL_NAME): "Total number of active clients", (6, R1.COL_NAME + 1): 46120857.0}
+        for r, (name, n) in enumerate([("Member A Ltd.", 100.0), ("", ""), ("Member B Ltd.", 200.0),
+                                       ("Total", 300.0), ("Note: figures as reported", "")], start=R1.DATA_START_ROW):
+            cells[(r, R1.COL_NAME)] = name
+            cells[(r, R1.COL_ACTIVE_CLIENTS)] = n
+            cells[(r, R1.COL_DEFAULTER)] = "No"
+        sh = _Sheet(cells, R1.DATA_START_ROW + 5)
+        names = [m["name"] for m in R1._member_rows(sh)]
+        check("contentintegrity: a blank row inside Report 1C's member list is skipped, not taken as its end, "
+              "and the list stops at the closing Total row",
+              names == ["Member A Ltd.", "Member B Ltd."], str(names))
+        check("contentintegrity: Report 1C's exchange total is found anywhere in the header block",
+              R1._exchange_total(sh) == 46120857)
+
 
 def _read(ROOT, *parts):
     try:

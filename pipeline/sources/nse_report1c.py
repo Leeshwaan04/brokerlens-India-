@@ -106,21 +106,40 @@ def parse_report1c(xls_bytes):
         return None
 
     as_of = _parse_as_of(str(sh.cell_value(0, 0)))
-    exchange_total = None
-    for r in range(min(5, sh.nrows)):
+    exchange_total = _exchange_total(sh)
+    rows = _member_rows(sh)
+    if not rows or not as_of:
+        return None
+    return {"as_of": as_of, "exchange_active_clients": exchange_total, "rows": rows}
+
+
+def _exchange_total(sh):
+    """The 'Total number of active clients' figure from the header block.
+    Searched across every header row, not a fixed few, so a title line added
+    above it does not lose the denominator every market share divides by."""
+    for r in range(min(DATA_START_ROW, sh.nrows)):
         label = str(sh.cell_value(r, COL_NAME)).strip().lower()
         if label.startswith("total number of active clients"):
             try:
-                exchange_total = int(sh.cell_value(r, COL_NAME + 1))
+                return int(sh.cell_value(r, COL_NAME + 1))
             except (ValueError, TypeError):
-                pass
-            break
+                return None
+    return None
 
+
+def _member_rows(sh):
+    """One dict per member row, from DATA_START_ROW to the closing 'Total' row.
+
+    `sh` is anything with nrows and cell_value(r, c), an xlrd sheet in use.
+    A blank row is skipped, not taken as the end: a spacer inside the member
+    list would otherwise silently drop every member below it."""
     rows = []
     for r in range(DATA_START_ROW, sh.nrows):
         name = str(sh.cell_value(r, COL_NAME)).strip()
-        if not name or name.lower() == "total":
-            break  # the closing Total row, then footnote text, follow immediately
+        if not name:
+            continue
+        if name.lower() == "total":
+            break  # footnote text follows the closing Total row
         try:
             active_raw = sh.cell_value(r, COL_ACTIVE_CLIENTS)
             active = int(active_raw) if active_raw not in ("", None) else None
@@ -140,10 +159,7 @@ def parse_report1c(xls_bytes):
             "ucc_start_of_year": ucc,
             "active_clients": active,
         })
-
-    if not rows or not as_of:
-        return None
-    return {"as_of": as_of, "exchange_active_clients": exchange_total, "rows": rows}
+    return rows
 
 
 def collect(f_archives):

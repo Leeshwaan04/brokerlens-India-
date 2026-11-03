@@ -44,6 +44,12 @@ _PENDING = ("pending at the end of the month", "pending at end of month", "pendi
 # The row that carries the month's totals. Brokers label it inconsistently.
 _TOTAL_ROW = ("grand total", "total")
 
+# SEBI's Annexure-B monthly table breaks the month's complaints down by source.
+# Its total row is the only "Grand Total" that is one month's figure: the trend
+# tables on the same page (month by month, year by year) end in a cumulative
+# Grand Total that must never be stamped with the page's month.
+_SOURCE_ROWS = ("directly from investor", "scores", "stock exchange", "other source")
+
 _MONTHS = {
     "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
     "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
@@ -122,6 +128,15 @@ def _row_label(row):
     return ""
 
 
+def _is_source_breakdown(rows):
+    """True for the single-month table whose rows name complaint sources."""
+    for row in rows[1:]:
+        text = " ".join((c or "") for c in row[:3]).lower()
+        if any(s in text for s in _SOURCE_ROWS):
+            return True
+    return False
+
+
 def parse_annexure_b(html, url=""):
     """Extract [{month, received, resolved, pending}] from a disclosure page.
 
@@ -148,6 +163,7 @@ def parse_annexure_b(html, url=""):
         # A month column makes the table self-describing; otherwise fall back to
         # the month named in the page text.
         i_month = _match_column(header, ("month", "period", "month ended", "for the month"))
+        source_table = _is_source_breakdown(rows)
 
         for row in rows[1:]:
             if len(row) <= max(i_recv, i_res):
@@ -157,8 +173,8 @@ def parse_annexure_b(html, url=""):
             month = None
             if i_month is not None and len(row) > i_month:
                 month = _parse_month(row[i_month])
-            if month is None and any(t == label or label.startswith(t) for t in _TOTAL_ROW):
-                month = page_month           # totals row of a single-month table
+            if month is None and source_table and any(t == label or label.startswith(t) for t in _TOTAL_ROW):
+                month = page_month           # totals row of the single-month source table
             if month is None:
                 month = _parse_month(row[0])
             if month is None:
@@ -260,29 +276,31 @@ _PARSERS = {
 }
 
 
-def _resolve_monthly_url(f, template, max_back=3):
-    """Try `template` for the current month, then step back a month at a
-    time (some brokers publish a few days into the next month, so last
-    month's page is briefly the latest one that actually exists).
+def _resolve_monthly_url(f, template, parser=None, ttl=12 * 3600, max_back=3, today=None):
+    """Try `template` for last month, then step back a month at a time.
 
     `template` uses {mon} (lowercase 3-letter, e.g. "sep") and {year}
     (4-digit) placeholders - HDFC Securities' own URL literally encodes the
     reporting month (.../stock-broking-sep-2026), so a static URL in config
-    would silently go stale on the first day of every new month.
+    would silently go stale on the first day of every new month. The current
+    month is never tried: its report cannot exist until the month is over.
 
-    Returns (url, html) for the first candidate that actually fetches, or
-    (None, None) if none of the recent months do.
+    A candidate counts only if `parser` finds real rows in it, so a soft-404
+    or placeholder page for a not-yet-published month moves the search back a
+    month instead of ending it. Returns (url, html), or (None, None) if none of
+    the recent months has a parseable page.
     """
-    now = datetime.now(timezone.utc)
+    parser = parser or parse_annexure_b
+    now = today or datetime.now(timezone.utc)
     y, m = now.year, now.month
     for _ in range(max_back + 1):
-        url = template.format(mon=_MONTH_ABBR[m], year=y)
-        html = f.get_text(url, ttl=12 * 3600, retries=2)
-        if html:
-            return url, html
         m -= 1
         if m == 0:
             m, y = 12, y - 1
+        url = template.format(mon=_MONTH_ABBR[m], year=y)
+        html = f.get_text(url, ttl=ttl, retries=2)
+        if html and parser(html, url)[0]:
+            return url, html
     return None, None
 
 
@@ -314,9 +332,9 @@ def collect(sources=None, ttl=12 * 3600):
             continue
         try:
             if template:
-                url, html = _resolve_monthly_url(f, template)
+                url, html = _resolve_monthly_url(f, template, parser, ttl)
                 if not url:
-                    failures[bid] = "no recent month's page found (tried current + 3 back)"
+                    failures[bid] = "no parseable page for any of the last 4 months"
                     continue
             else:
                 html = f.get_text(url, ttl=ttl, retries=2)
