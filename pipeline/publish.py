@@ -8251,13 +8251,25 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         except Exception:
             pass
 
+    # The archive (earlier market wraps and guides) exists only as committed pages,
+    # so it is listed by directory. Two rules keep that honest: a slug vercel.json
+    # redirects (the retired AI guides) is never listed, and an archived page is
+    # dated by the date in its slug or its recorded first-published date. It used
+    # to fall back to today, so 119 unchanged pages claimed a fresh lastmod daily.
+    redirected = {re.sub(r"^/news/|/$", "", r.get("source", ""))
+                  for r in ((read_json(os.path.join(ROOT, "vercel.json"), {}) or {}).get("redirects") or [])
+                  if r.get("source", "").startswith("/news/")}
+    first_published = (read_json(os.path.join(ROOT, "data", "manual", "news_first_published.json"), {}) or {}).get(
+        "first_published") or {}
     news_dir = os.path.join(ROOT, "site", "news")
     if os.path.isdir(news_dir):
         for item in sorted(os.listdir(news_dir)):
-            if item != "index.html" and os.path.isdir(os.path.join(news_dir, item)):
+            if item != "index.html" and item not in redirected and os.path.isdir(os.path.join(news_dir, item)):
                 art = news_meta_dict.get(item) or {}
                 art_title = _esc(art.get("title") or item.replace("-", " ").title())
-                art_date = art.get("date") or today
+                slug_date = re.search(r"\d{4}-\d{2}-\d{2}", item)
+                art_date = (art.get("date") or (slug_date.group(0) if slug_date else first_published.get(item))
+                            or today)
                 news_entries.append(
                     "<url><loc>%s/news/%s/</loc><lastmod>%s</lastmod><changefreq>daily</changefreq>"
                     "<news:news>"

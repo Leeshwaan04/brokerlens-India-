@@ -477,3 +477,14 @@ def run(check, ROOT, load):
     check("indexation: the 10 retired AI guides redirect permanently (with and without slash) to pages that exist",
           len(guide_redirects) == 20 and all(r.get("permanent") is True for r in guide_redirects) and targets_ok,
           "n=%d" % len(guide_redirects))
+    news_map = os.path.join(ROOT, "site", "sitemaps", "sitemap-news.xml")
+    if os.path.isfile(news_map):
+        nm = _read(news_map)
+        redirected = {r["source"].strip("/").split("/")[-1] for r in vj2.get("redirects", []) if r.get("source", "").startswith("/news/")}
+        listed = dict(re.findall(r"<loc>[^<]*/news/([^/<]+)/</loc><lastmod>([^<]+)</lastmod>", nm))
+        stale_dates = {s: d for s, d in listed.items() if re.search(r"\d{4}-\d{2}-\d{2}", s)
+                       and d != re.search(r"\d{4}-\d{2}-\d{2}", s).group(0)}
+        check("indexation: the news sitemap never lists a redirected (retired) article",
+              not (redirected & set(listed)), str(sorted(redirected & set(listed))[:3]))
+        check("indexation: archived dated news pages carry their own date as lastmod, not the build date (%d listed)" % len(listed),
+              listed and not stale_dates, str(list(stale_dates.items())[:3]))
