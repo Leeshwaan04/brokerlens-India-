@@ -15,6 +15,7 @@
   python3 -m pipeline.run stock-compare    generate stock 1v1 comparisons
   python3 -m pipeline.run engines          run all programmatic engines
   python3 -m pipeline.run report1c         pull NSE's own broker-wise active-clients report
+  python3 -m pipeline.run holidays         pull NSE's own trading holiday calendar
 
 Exit code is non-zero if a source that was expected to return rows returned
 none, so cron can alert instead of silently publishing a hollow site.
@@ -294,6 +295,27 @@ def _match_report1c(rows, resolver):
     return counts, defaulters, skipped
 
 
+def holidays():
+    """Write NSE's own trading holiday calendar to data/manual/nse_holidays.json,
+    which /stock-market-holidays/ is built from. A failed or empty pull leaves
+    the committed file untouched, so the page never loses its data to one bad
+    request."""
+    from .sources import nse_holidays
+
+    data = nse_holidays.collect(common.nse())
+    if not data:
+        log("holidays: nothing usable; leaving the existing file untouched", "err")
+        return 1
+    write_json(os.path.join(MANUAL, "nse_holidays.json"), {
+        "provenance": "nse_holiday_master",
+        "source_note": "NSE trading holiday calendar, equity (CM) and equity derivatives (FO) segments.",
+        "fetched_at": now_iso(),
+        "segments": data["segments"],
+    })
+    log("holidays: wrote %d equity holidays" % len(data["segments"]["CM"]), "ok")
+    return 0
+
+
 def report1c():
     """Pull NSE's own Report 1C and fold real active-client counts into
     data/manual/active_clients.json, under provenance:"nse_ucc" - the real
@@ -395,6 +417,8 @@ def main(argv):
         return complaints()
     if cmd == "report1c":
         return report1c()
+    if cmd == "holidays":
+        return holidays()
     if cmd == "pulse":
         pulse()
         return 0

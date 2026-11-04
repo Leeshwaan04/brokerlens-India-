@@ -305,6 +305,29 @@ def render_comparison_hub(all_pairs, site_url="https://www.brokerlens.in"):
 </html>"""
 
 
+# Pairs searched for a reason the generic template cannot see. Hand-written, one entry
+# per real relationship, every fact sourced; never generated. "tmpv vs tmcv which is
+# better" drew 209 impressions at position 7.5 and no clicks in 90 days (Search Console,
+# to 1 Nov 2026) against a title that never said Tata Motors or demerger.
+_PAIR_CONTEXT = {
+    frozenset({"TMCV", "TMPV"}): {
+        "title": "TMPV vs TMCV: Tata Motors Passenger vs Commercial Vehicles | BrokerLens",
+        "h1": "TMPV vs TMCV: Tata Motors after the demerger",
+        "desc": ("TMPV vs TMCV after the Tata Motors demerger (NSE record date 14 Oct 2025): Tata Motors "
+                 "Passenger Vehicles vs Tata Motors, the commercial vehicles company, on price range, "
+                 "returns ({returns}), volatility and trading costs."),
+        # Source: NSE corporate actions (TMPV, "Demerger", record date 14-Oct-2025); company names
+        # from NSE's equity master.
+        "intro": ("<strong>Why these two are compared:</strong> Tata Motors split into two listed companies "
+                  "through a demerger with a record date of 14 October 2025 (NSE corporate action), and "
+                  "shareholders on that date held both. TMPV is Tata Motors Passenger Vehicles Limited; TMCV "
+                  "is Tata Motors Limited, the commercial vehicles company. The figures below are exchange data "
+                  "for each share over the window shown. Which one suits you depends on your own view of each "
+                  "business: BrokerLens does not rate or recommend either, and nothing here is investment advice."),
+    },
+}
+
+
 def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://www.brokerlens.in", noindex=False):
     """Renders /compare/stocks/[sym1]-vs-[sym2]/.
 
@@ -324,6 +347,14 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
     canonical = f"{site_url}/compare/stocks/{slug}/"
     title = f"{sym1} vs {sym2}: Stock Comparison, Price, Returns & Volatility | BrokerLens"
     desc = f"Compare {sym1} ({name1}) vs {sym2} ({name2}) head to head. {range_label} range, {return_label.lower()} returns ({m1['return_1y']}% vs {m2['return_1y']}%), volatility, volume, and brokerage costs."
+    h1_text = f"{sym1} vs {sym2}: Stock Comparison"
+    context_html = ""
+    ctx = _PAIR_CONTEXT.get(frozenset({sym1, sym2}))
+    if ctx:
+        returns = f"{sym1} {m1['return_1y']}% vs {sym2} {m2['return_1y']}%"
+        title, h1_text = ctx["title"], ctx["h1"]
+        desc = ctx["desc"].format(returns=returns)
+        context_html = ('<p style="max-width:75ch;margin:-16px 0 28px 0;line-height:1.6">%s</p>' % ctx["intro"])
 
     # Compare returns winner
     if m1["return_1y"] > m2["return_1y"]:
@@ -421,10 +452,11 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 <main class="wrap" style="padding:24px 20px 60px 20px">
 {crumb_html}
 
-<h1 style="margin:20px 0 8px 0;font-size:26px">{sym1} vs {sym2}: Stock Comparison</h1>
+<h1 style="margin:20px 0 8px 0;font-size:26px">{_esc(h1_text)}</h1>
 <p class="muted" style="max-width:75ch;margin:0 0 28px 0;line-height:1.6">
   Head-to-head financial and trading comparison between <strong>{name1}</strong> ({sym1}) and <strong>{name2}</strong> ({sym2}){f" in the {sector_name} sector" if is_real_sector_pair else (" among India's largest mega-cap stocks" if is_market_cap_bucket else "")}.
 </p>
+{context_html}
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px">
   <div class="card" style="padding:20px;background:var(--bg-raised)">

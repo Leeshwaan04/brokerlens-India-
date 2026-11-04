@@ -54,5 +54,6 @@ fi
 # otherwise stdlib-only policy, since NSE only publishes this as legacy
 # binary .xls.
 "$PY" -m pipeline.run report1c || true
+"$PY" -m pipeline.run holidays || true
 "$PY" -m pipeline.run build
 "$PY" scripts/export_gsc_live.py || true

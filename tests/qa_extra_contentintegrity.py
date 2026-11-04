@@ -16,6 +16,7 @@ site/ tree.
 """
 import datetime
 import os
+import re
 import sys
 import tempfile
 
@@ -451,6 +452,56 @@ def run(check, ROOT, load):
               "'Fact-Checked & Verified'",
               "get_autopilot_articles(today_iso)" not in news_src and "Fact-Checked" not in news_src
               and "Generated from NSE, BSE and SEBI public data. Not investment advice." in news_src)
+
+    # ------------------------------------------------------------------
+    # 11. /stock-market-holidays/ comes only from NSE's own calendar, and
+    #     the TMPV vs TMCV page explains the demerger from NSE's record.
+    # ------------------------------------------------------------------
+    try:
+        from pipeline import holidays_page as HP
+        import pipeline.publish as PUB
+    except ImportError as e:
+        HP = None
+        check("contentintegrity: holidays_page importable", False, str(e))
+    if HP:
+        cal = {"segments": {
+            "CM": [{"date": "2026-11-08", "weekday": "Sunday", "name": "Diwali Laxmi Pujan", "muhurat": True},
+                   {"date": "2026-11-10", "weekday": "Tuesday", "name": "Diwali-Balipratipada", "muhurat": False}],
+            "FO": [{"date": "2026-11-08"}, {"date": "2026-11-10"}]}}
+        facts = HP.page_facts(cal, datetime.date(2026, 11, 4))
+        check("contentintegrity: holidays page's next holiday is the next weekday closure, not a weekend date "
+              "(8 Nov 2026 is a Sunday hosting the Muhurat session)",
+              facts["next"]["date"] == "2026-11-10" and facts["muhurat"]["date"] == "2026-11-08" and facts["weekend"] == 1)
+        page = HP.render(cal, datetime.date(2026, 11, 4), PUB._esc, PUB._REGISTRY_PAGE_HEAD, PUB._REGISTRY_PAGE_FOOT,
+                         PUB._breadcrumb, PUB.SITE_URL)
+        plain = re.sub(r"<[^>]+>", " ", page)
+        check("contentintegrity: the Muhurat day is named but no session time is asserted (NSE sets it by circular)",
+              "Muhurat trading" in page and "set by NSE circular" in page
+              and not re.search(r"\b\d{1,2}[:.]\d{2}\s*(am|pm|AM|PM)?\b", plain.split("Questions")[0].split("Diwali Muhurat")[1]))
+        check("contentintegrity: holidays page renders nothing without NSE data, so it can never publish an empty list",
+              HP.render({"segments": {"CM": []}}, datetime.date(2026, 11, 4), PUB._esc, PUB._REGISTRY_PAGE_HEAD,
+                        PUB._REGISTRY_PAGE_FOOT, PUB._breadcrumb, PUB.SITE_URL) is None)
+        stored = load("data/manual/nse_holidays.json") or {}
+        check("contentintegrity: the committed holiday file is NSE's own calendar (provenance, 2026 equity list)",
+              stored.get("provenance") == "nse_holiday_master" and len((stored.get("segments") or {}).get("CM") or []) >= 15)
+        pub_src = _read(ROOT, "pipeline", "publish.py")
+        check("contentintegrity: the sitemap lists /stock-market-holidays/ only when the page was built",
+              'if os.path.isfile(os.path.join(ROOT, "site", "stock-market-holidays", "index.html")):' in pub_src)
+    try:
+        from pipeline.stock_compare_engine import render_stock_comparison_page as RSC
+    except ImportError:
+        RSC = None
+    if RSC:
+        mm = lambda r: {"window_days": 120, "return_1y": r, "volatility_30d": 20.0, "cmp": 400.0,
+                        "high_52w": 450.0, "low_52w": 350.0, "avg_volume": 1000000}
+        tm = RSC({"symbol": "TMCV", "name": "Tata Motors Limited"}, mm(5.19),
+                 {"symbol": "TMPV", "name": "Tata Motors Passenger Vehicles Limited"}, mm(-17.86), "Automobiles & Electric Mobility")
+        other = RSC({"symbol": "MARUTI", "name": "Maruti Suzuki"}, mm(3), {"symbol": "TMPV", "name": "Tata Motors"}, mm(1),
+                    "Automobiles & Electric Mobility")
+        check("contentintegrity: TMPV vs TMCV says Tata Motors and the demerger (NSE record date 14 Oct 2025), recommends "
+              "neither, and other pairs keep the generic title",
+              "Tata Motors Passenger vs Commercial Vehicles" in tm and "record date of 14 October 2025" in tm
+              and "does not rate or recommend either" in tm and "Tata Motors after the demerger" not in other)
 
 
 def _read(ROOT, *parts):

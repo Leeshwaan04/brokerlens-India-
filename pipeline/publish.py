@@ -576,6 +576,10 @@ def build():
     build_equity_history(equity_history)
     from .news_engine import write_news_suite
     _news_count, news_articles = write_news_suite(ingest, SITE_URL)
+    from . import holidays_page
+    if not holidays_page.write(os.path.join(ROOT, "site"), _esc, _REGISTRY_PAGE_HEAD, _REGISTRY_PAGE_FOOT,
+                               _breadcrumb, _write_text, SITE_URL):
+        log("stock market holidays page skipped: no usable NSE holiday file", "warn")
     _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"),
                         index_universe, equity_history, bse_d.get("corporate_actions") or [], ipo_records=ipo_records,
                         news_articles=news_articles)
@@ -8118,6 +8122,9 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         "/branches/", "/news/", "/about", "/editorial-policy", "/contact",
         "/privacy-policy", "/terms-of-service"
     ]
+    # Listed only when it was actually built (it needs data/manual/nse_holidays.json).
+    if os.path.isfile(os.path.join(ROOT, "site", "stock-market-holidays", "index.html")):
+        core_urls.append("/stock-market-holidays/")
     for slug in (report_slugs or []):
         core_urls.append("/reports/%s/" % slug)
     for slug in (calc_slugs or []):

@@ -141,7 +141,7 @@ function renderMega(t) {
   megaBody.innerHTML = `${cols}
     <div class="mega-foot">
       All times IST. Now ${fmt12(now.min)}${tradingDay ? '' : ' (weekend, markets closed)'}.
-      Sessions run Mon to Fri except exchange holidays: ${holidays}.
+      Sessions run Mon to Fri except exchange holidays: <a href="/stock-market-holidays/">NSE holiday list</a>; exchange calendars: ${holidays}.
       * hover for detail. Curated from exchange material, last reviewed ${esc((t.last_reviewed || '').slice(0, 10))}.
       Verify with the exchange before relying on an edge case.
     </div>`;

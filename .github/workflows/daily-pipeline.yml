@@ -58,6 +58,7 @@ jobs:
           # most monthly; a bad run here leaves the existing file untouched.
           python3 -m pipeline.run complaints || true
           python3 -m pipeline.run report1c || true
+          python3 -m pipeline.run holidays || true
           python3 -m pipeline.run build
           # Keep `all`'s contract: a source gap still fails the run, after the build.
           exit $fetch_rc
