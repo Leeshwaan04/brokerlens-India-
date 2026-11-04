@@ -188,3 +188,73 @@ def add_home_footer_links(page_html):
     foot = after(foot, '<li><a href="/stocks/">Browse stocks A-Z</a></li>', ("/index/nifty-50/",))
     foot = after(foot, '<li><a href="/etfs/">Browse ETFs</a></li>', ("/etf/niftybees/",))
     return head + foot
+
+
+# ------------------------------------------------------------ index allowlist
+
+# The sitemap is the only set of pages Google may index. Every other built page
+# gets noindex,follow at the end of the build. "Left out of the sitemap" used to be
+# the whole gate, and it was not one: with no robots tag, internally linked pages
+# were indexed anyway (33.5K indexed against 4,823 submitted, mostly trade-cost
+# templates), and impressions fell 97% overnight on 2 Nov 2026. Promoting a family
+# into the sitemap (SITEMAP_WAVE) is now the one switch that makes it indexable.
+_ROBOTS_META_RE = re.compile(r'<meta\s+name=["\']robots["\'][^>]*>', re.I)
+_NOINDEX_RE = re.compile(r'<meta\s+name=["\']robots["\']\s+content=["\'][^"\']*noindex', re.I)
+_SKIP_DIRS = ("assets", "data", "sitemaps")
+
+
+def sitemap_paths(site_dir):
+    """URL paths (with a trailing slash) in every child sitemap the index lists."""
+    index = os.path.join(site_dir, "sitemap.xml")
+    try:
+        children = re.findall(r"<loc>([^<]+)</loc>", open(index, encoding="utf-8").read())
+    except OSError:
+        return set()
+    paths = set()
+    for child in children:
+        local = os.path.join(site_dir, re.sub(r"^https?://[^/]+/", "", child))
+        try:
+            locs = re.findall(r"<loc>([^<]+)</loc>", open(local, encoding="utf-8").read())
+        except OSError:
+            continue
+        for loc in locs:
+            path = re.sub(r"^https?://[^/]+", "", loc) or "/"
+            paths.add(path if path.endswith("/") else path + "/")
+    return paths
+
+
+def enforce_index_allowlist(site_dir, allowed=None):
+    """Give noindex,follow to every built page whose URL is not in a sitemap.
+
+    Returns (pages_checked, pages_changed). A page that already says noindex is
+    left alone; an existing index robots tag is replaced, otherwise the tag is
+    inserted right after <head>. Pages stay crawlable, so links still pass."""
+    allowed = sitemap_paths(site_dir) if allowed is None else allowed
+    if not allowed:
+        return 0, 0  # no sitemap written: never noindex a whole site by accident
+    checked = changed = 0
+    for root, dirs, files in os.walk(site_dir):
+        if root == site_dir:
+            dirs[:] = [d for d in dirs if d not in _SKIP_DIRS]
+        if "index.html" not in files:
+            continue
+        rel = os.path.relpath(root, site_dir).replace(os.sep, "/")
+        path = "/" if rel == "." else "/" + rel + "/"
+        checked += 1
+        if path in allowed:
+            continue
+        f = os.path.join(root, "index.html")
+        with open(f, encoding="utf-8", errors="surrogateescape") as fh:
+            page = fh.read()
+        head_end = page.find("</head>")
+        head = page[:head_end] if head_end != -1 else page[:8000]
+        if _NOINDEX_RE.search(head):
+            continue
+        if _ROBOTS_META_RE.search(head):
+            page = _ROBOTS_META_RE.sub(NOINDEX_META, page, count=1)
+        else:
+            page = re.sub(r"(<head[^>]*>)", r"\1\n" + NOINDEX_META, page, count=1, flags=re.I)
+        with open(f, "w", encoding="utf-8", errors="surrogateescape") as fh:
+            fh.write(page)
+        changed += 1
+    return checked, changed

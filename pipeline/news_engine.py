@@ -37,6 +37,32 @@ def _esc(s):
     return html.escape(str(s or ""), quote=True)
 
 
+NEWS_DATES_PATH = os.path.join(ROOT, "data", "manual", "news_first_published.json")
+_DATED_SLUG = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def stable_article_dates(articles, today_iso, registry):
+    """Give evergreen articles their real first-published date. Returns the
+    registry, updated with any evergreen slug seen for the first time.
+
+    Most of the corpus is built with today's date, so every daily rebuild
+    re-stamped unchanged guides as newly published (datePublished,
+    dateModified and the visible date all moved each day), which is the
+    faked freshness search engines discount. A slug that carries its own
+    date (the daily market wrap) genuinely is today's and is left alone."""
+    for art in articles:
+        slug = art.get("slug") or ""
+        if _DATED_SLUG.search(slug):
+            continue
+        first = registry.get(slug)
+        if first is None:
+            first = registry[slug] = art.get("date") or today_iso
+        if art.get("date") == today_iso and first != today_iso:
+            art["date"] = first
+            art["date_str"] = _format_date(first)
+    return registry
+
+
 def _format_date(d_str):
     if not d_str:
         return "Recent"
@@ -1613,13 +1639,11 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     for item in research_items:
         articles.append(item)
 
-    try:
-        from .autopilot_keyword_engine import get_autopilot_articles
-        autopilot_items = get_autopilot_articles(today_iso)
-        for item in autopilot_items:
-            articles.append(item)
-    except Exception as exc:
-        pass
+    # The 10 autopilot "share price target" guides (autopilot_keyword_engine) are
+    # retired: AI-written, unverified claims about small caps ("3D printing pivot",
+    # "global partnerships"), openly written for search volume, under a byline
+    # claiming a fact check that never happened. Each now 308s to the page it
+    # was about (vercel.json); get_autopilot_articles() is kept only for history.
 
     for a in articles:
         if a.get("body_html"):
@@ -1645,6 +1669,17 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
     )
 
     articles = generate_news_corpus(ingest_data, site_url)
+    try:
+        with open(NEWS_DATES_PATH, encoding="utf-8") as fh:
+            registry = json.load(fh).get("first_published") or {}
+    except (OSError, ValueError):
+        registry = {}
+    today_iso = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    registry = stable_article_dates(articles, today_iso, registry)
+    with open(NEWS_DATES_PATH, "w", encoding="utf-8") as fh:
+        json.dump({"note": "First-published date of each evergreen news slug; see news_engine.stable_article_dates.",
+                   "first_published": dict(sorted(registry.items()))}, fh, indent=1)
+        fh.write("\n")
     dest_base = os.path.join(ROOT, "site", "news")
     os.makedirs(dest_base, exist_ok=True)
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -1848,8 +1883,11 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
             + '<div style="display:flex;align-items:center;gap:10px">'
             + '<div style="width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">BL</div>'
             + '<div>'
-            + '<div style="font-weight:600;font-size:13px">Researched by BrokerLens Financial Research Desk</div>'
-            + '<div class="xs muted">Fact-Checked &amp; Verified against primary NSE, BSE and SEBI disclosures</div>'
+            + '<div style="font-weight:600;font-size:13px">BrokerLens</div>'
+            # Plain description of how these pages are made. The old line claimed
+            # a fact check and verification of automatically generated text that no one
+            # had checked; that is not a claim this site can make.
+            + '<div class="xs muted">Generated from NSE, BSE and SEBI public data. Not investment advice.</div>'
             + '</div>'
             + '</div>'
             + '<div class="xs"><a href="/editorial-policy" style="color:var(--accent);text-decoration:none;font-weight:600">Editorial Guidelines &rarr;</a></div>'

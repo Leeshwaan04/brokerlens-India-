@@ -423,6 +423,35 @@ def run(check, ROOT, load):
         check("contentintegrity: Report 1C's exchange total is found anywhere in the header block",
               R1._exchange_total(sh) == 46120857)
 
+    # ------------------------------------------------------------------
+    # 10. News: evergreen articles keep their real first-published date
+    #     (they were re-stamped as published today on every rebuild), the
+    #     retired AI guides are gone, and no byline claims verification.
+    # ------------------------------------------------------------------
+    try:
+        from pipeline import news_engine as NE
+    except ImportError as e:
+        NE = None
+        check("contentintegrity: news_engine importable", False, str(e))
+    if NE:
+        arts = [{"slug": "asba-vs-upi-ipo-application-rules", "date": "2026-11-04", "date_str": "04 November 2026"},
+                {"slug": "brand-new-guide", "date": "2026-11-04", "date_str": "04 November 2026"},
+                {"slug": "indian-stock-market-wrap-2026-11-04", "date": "2026-11-04", "date_str": "04 November 2026"}]
+        reg = NE.stable_article_dates(arts, "2026-11-04", {"asba-vs-upi-ipo-application-rules": "2026-10-08"})
+        check("contentintegrity: an evergreen article keeps its first-published date instead of today's, a new one "
+              "is recorded on first sight, and a dated market wrap keeps today's date",
+              arts[0]["date"] == "2026-10-08" and arts[0]["date_str"] == "08 October 2026"
+              and reg.get("brand-new-guide") == "2026-11-04" and arts[2]["date"] == "2026-11-04"
+              and "indian-stock-market-wrap-2026-11-04" not in reg, str(arts[0]))
+        seeded = (load("data/manual/news_first_published.json") or {}).get("first_published") or {}
+        check("contentintegrity: the first-published registry is seeded (from git history) for the evergreen guides",
+              seeded.get("asba-vs-upi-ipo-application-rules") == "2026-10-08" and len(seeded) >= 60, "n=%d" % len(seeded))
+        news_src = _read(ROOT, "pipeline", "news_engine.py")
+        check("contentintegrity: retired AI guides are no longer added to the news corpus, and no byline claims "
+              "'Fact-Checked & Verified'",
+              "get_autopilot_articles(today_iso)" not in news_src and "Fact-Checked" not in news_src
+              and "Generated from NSE, BSE and SEBI public data. Not investment advice." in news_src)
+
 
 def _read(ROOT, *parts):
     try:

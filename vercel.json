@@ -5,6 +5,106 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/news/money-view-ipo-valuation-price-target-guide",
+      "destination": "/ipo/moneyview/",
+      "permanent": true
+    },
+    {
+      "source": "/news/money-view-ipo-valuation-price-target-guide/",
+      "destination": "/ipo/moneyview/",
+      "permanent": true
+    },
+    {
+      "source": "/news/azad-india-mobility-share-price-target-valuation-guide",
+      "destination": "/stock/azadind/",
+      "permanent": true
+    },
+    {
+      "source": "/news/azad-india-mobility-share-price-target-valuation-guide/",
+      "destination": "/stock/azadind/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ardee-industries-financials-share-price-target-study",
+      "destination": "/stock/ardee/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ardee-industries-financials-share-price-target-study/",
+      "destination": "/stock/ardee/",
+      "permanent": true
+    },
+    {
+      "source": "/news/idbi-bank-strategic-divestment-share-price-target-guide",
+      "destination": "/stock/idbi/",
+      "permanent": true
+    },
+    {
+      "source": "/news/idbi-bank-strategic-divestment-share-price-target-guide/",
+      "destination": "/stock/idbi/",
+      "permanent": true
+    },
+    {
+      "source": "/news/oswal-greentech-share-price-target-valuation-guide",
+      "destination": "/stock/oswalgreen/",
+      "permanent": true
+    },
+    {
+      "source": "/news/oswal-greentech-share-price-target-valuation-guide/",
+      "destination": "/stock/oswalgreen/",
+      "permanent": true
+    },
+    {
+      "source": "/news/cupid-limited-share-price-target-financials-study",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/news/cupid-limited-share-price-target-financials-study/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/news/radhika-jeweltech-share-price-target-growth-study",
+      "destination": "/stock/radhikajwe/",
+      "permanent": true
+    },
+    {
+      "source": "/news/radhika-jeweltech-share-price-target-growth-study/",
+      "destination": "/stock/radhikajwe/",
+      "permanent": true
+    },
+    {
+      "source": "/news/walchandnagar-industries-share-price-target-guide",
+      "destination": "/stock/walchannag/",
+      "permanent": true
+    },
+    {
+      "source": "/news/walchandnagar-industries-share-price-target-guide/",
+      "destination": "/stock/walchannag/",
+      "permanent": true
+    },
+    {
+      "source": "/news/pashupati-cotspin-share-price-target-financials-guide",
+      "destination": "/stock/pashupati/",
+      "permanent": true
+    },
+    {
+      "source": "/news/pashupati-cotspin-share-price-target-financials-guide/",
+      "destination": "/stock/pashupati/",
+      "permanent": true
+    },
+    {
+      "source": "/news/jaykay-enterprises-share-price-target-valuation-guide",
+      "destination": "/stock/jaykay/",
+      "permanent": true
+    },
+    {
+      "source": "/news/jaykay-enterprises-share-price-target-valuation-guide/",
+      "destination": "/stock/jaykay/",
+      "permanent": true
+    },
+    {
       "source": "/stock/:symbol(autobees|bankbees|bfsi|bse500ietf|bslnifty|chemical|defence|egold|energy|evindia|fmcgietf|gold1|goldaxis|goldbees|goldcase|goldetf|goldietf|growwcapm|growwchem|growwgold|growwhospi|growwnet|growwnifty|growwpower|growwrlty|hdfcgold|hdfcpvtban|hdfcvalue|healthcare|hngsngbees|infrabees|infraietf|it|itbees|juniorbees|liquidcase|mafang|mahktech|makeindia|manufgbees|masptop50|metal|metalietf|mid150|mid150case|midcap|midcapetf|modefence|mogsec|mom50|mommidcap|mon100|monifty500|mosmall250|next50|next50ietf|nif100ietf|niftyaxis|niftybees|niftybetf|niftyetf|niftyietf|psubnkbees|sbismletf|sensexetf|sensexietf|setfnif50|setfnn50|silver001|silverbees|silvercase|smallcap|tatagold|tatsilv|valueaxis)/share-price-target-:year",
       "destination": "/etf/:symbol/",
       "permanent": true
@@ -87,5 +187,10 @@
         }
       ]
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "main": false
+    }
+  }
 }

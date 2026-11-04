@@ -661,6 +661,12 @@ def build():
     _restamp_js_media()
     _restamp_js_imports()
     _restamp_index_html_assets()
+    # Last, after every page and sitemap exists: the sitemap is the only set of
+    # pages Google may index (see indexation.enforce_index_allowlist).
+    from . import indexation
+    checked, changed = indexation.enforce_index_allowlist(os.path.join(ROOT, "site"))
+    log("index allowlist: %d pages checked, %d outside the sitemap set to noindex,follow"
+        % (checked, changed), "ok")
     return overview
 
 

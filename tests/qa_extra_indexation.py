@@ -417,3 +417,63 @@ def run(check, ROOT, load):
         if fn.endswith(".xml"):
             leaked += re.findall(r"<loc>[^<]*/broker/[^/<]+/trade/[^<]*</loc>", _read(os.path.join(site_dir, "sitemaps", fn)))
     check("indexation: no sitemap lists a noindexed trade-cost page", not leaked, str(leaked[:3]))
+
+    # ---- the sitemap is the index allowlist ---------------------------------------
+    tmp = tempfile.mkdtemp(prefix="qa_allowlist_")
+    try:
+        def page(rel, head_extra=""):
+            d = os.path.join(tmp, rel)
+            os.makedirs(d, exist_ok=True)
+            with open(os.path.join(d, "index.html"), "w", encoding="utf-8") as fh:
+                fh.write("<!doctype html><html><head><meta charset=\"utf-8\">%s<title>t</title></head><body>b</body></html>" % head_extra)
+            return os.path.join(d, "index.html")
+        os.makedirs(os.path.join(tmp, "sitemaps"))
+        with open(os.path.join(tmp, "sitemap.xml"), "w") as fh:
+            fh.write("<sitemapindex><sitemap><loc>https://www.brokerlens.in/sitemaps/sitemap-core.xml</loc></sitemap></sitemapindex>")
+        with open(os.path.join(tmp, "sitemaps", "sitemap-core.xml"), "w") as fh:
+            fh.write("<urlset><url><loc>https://www.brokerlens.in/</loc></url><url><loc>https://www.brokerlens.in/stock/irb/</loc></url>"
+                     "<url><loc>https://www.brokerlens.in/brokers</loc></url></urlset>")
+        root_p, listed, spa = page("."), page("stock/irb", '<meta name="robots" content="index, follow">'), page("brokers")
+        unlisted_plain = page("fund/some-fund")
+        unlisted_index = page("compare/stocks/a-vs-b", '<meta name="robots" content="index, follow, max-snippet:-1">')
+        already = page("broker/x/trade/y", ix.NOINDEX_META)
+        checked, changed = ix.enforce_index_allowlist(tmp)
+        r = lambda p: _read(p)
+        check("indexation: allowlist leaves every sitemap page indexable (incl. no-slash SPA routes and the root)",
+              "noindex" not in r(root_p) + r(listed) + r(spa) and 'content="index, follow"' in r(listed))
+        check("indexation: allowlist gives noindex,follow to pages outside the sitemap, replacing an index tag rather than adding a second one",
+              ix.NOINDEX_META in r(unlisted_plain) and ix.NOINDEX_META in r(unlisted_index)
+              and r(unlisted_index).count('name="robots"') == 1 and changed == 2 and checked == 6, "checked=%d changed=%d" % (checked, changed))
+        check("indexation: allowlist leaves an already-noindex page untouched", r(already).count('name="robots"') == 1)
+        os.remove(os.path.join(tmp, "sitemap.xml"))
+        check("indexation: with no sitemap written, the allowlist changes nothing (never noindexes a whole site by accident)",
+              ix.enforce_index_allowlist(tmp) == (0, 0))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    check("indexation: build() runs the allowlist after every page and sitemap is written",
+          "indexation.enforce_index_allowlist(" in pub_src
+          and pub_src.find("indexation.enforce_index_allowlist(") > pub_src.find("_restamp_index_html_assets()\n    #"))
+    fund_dir = os.path.join(ROOT, "site", "fund")
+    built_sitemap = ix.sitemap_paths(os.path.join(ROOT, "site"))
+    if os.path.isdir(fund_dir) and built_sitemap:
+        funds = [os.path.join(fund_dir, n, "index.html") for n in sorted(os.listdir(fund_dir))[:15]]
+        funds = [f for f in funds if os.path.isfile(f)]
+        listed_pages = [os.path.join(ROOT, "site", p.strip("/"), "index.html") for p in sorted(built_sitemap)[:40]]
+        listed_pages = [f for f in listed_pages if os.path.isfile(f)]
+        check("indexation: built pages outside the sitemap (fund pages, %d sampled) carry noindex" % len(funds),
+              funds and all(ix.NOINDEX_META in _read(f)[:6000] for f in funds))
+        check("indexation: built sitemap pages stay indexable (%d sampled)" % len(listed_pages),
+              listed_pages and not any(re.search(r'name="robots" content="noindex', _read(f)[:6000]) for f in listed_pages))
+    else:
+        check("indexation: built allowlist sample (not applicable: no built site)", True)
+
+    vj2 = load("vercel.json") or {}
+    check("indexation: pushes to main do not deploy straight to production; the QA-gated deploy hook does",
+          ((vj2.get("git") or {}).get("deploymentEnabled") or {}).get("main") is False)
+    guide_redirects = [r for r in vj2.get("redirects", [])
+                       if r.get("source", "").startswith("/news/") and "price-target" in r.get("source", "")]
+    targets_ok = all(os.path.isdir(os.path.join(ROOT, "site", r["destination"].strip("/"))) or not os.path.isdir(os.path.join(ROOT, "site", "stock"))
+                     for r in guide_redirects)
+    check("indexation: the 10 retired AI guides redirect permanently (with and without slash) to pages that exist",
+          len(guide_redirects) == 20 and all(r.get("permanent") is True for r in guide_redirects) and targets_ok,
+          "n=%d" % len(guide_redirects))
