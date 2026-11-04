@@ -375,3 +375,45 @@ def run(check, ROOT, load):
         check("indexation: title length log, %s family: n=%d min=%d median=%d p90=%d max=%d, over 60: %d, over 70: %d (report only)"
               % (fam, len(lens), lens[0], int(statistics.median(lens)), lens[int(len(lens) * 0.9) - 1], lens[-1],
                  sum(1 for n in lens if n > 60), sum(1 for n in lens if n > 70)), True)
+
+    # ---- trade-cost pages stay out of the index ---------------------------------
+    # ~30K of these broker x stock templates got indexed through internal links while
+    # held out of the sitemap (98% of a 500-URL indexed sample, 23 Oct 2026), and
+    # impressions fell 97% on 2 Nov. Out of the sitemap is not out of the index.
+    from pipeline import trade_cost_engine as tce
+    import inspect
+    check("indexation: trade-cost pages and each broker's /trade/ listing carry noindex,follow; the /trade-costs/ hub does not",
+          tce.TRADE_PAGE_ROBOTS == ix.NOINDEX_META
+          and "{TRADE_PAGE_ROBOTS}" in inspect.getsource(tce.render_trade_cost_page)
+          and "{TRADE_PAGE_ROBOTS}" in inspect.getsource(tce.render_broker_trade_index)
+          and "{TRADE_PAGE_ROBOTS}" not in inspect.getsource(tce.render_trade_costs_hub))
+    vj = load("vercel.json") or {}
+    rule = [h for h in vj.get("headers", []) if h.get("source") == "/broker/:broker/trade/(.*)"]
+    check("indexation: vercel.json also sends X-Robots-Tag noindex for /broker/:broker/trade/(.*), a second layer if a template loses the tag",
+          bool(rule) and any(x.get("key") == "X-Robots-Tag" and "noindex" in x.get("value", "")
+                             for x in rule[0].get("headers", [])))
+    site_dir = os.path.join(ROOT, "site")
+    trade_root = os.path.join(site_dir, "broker", "zerodha", "trade")
+    sample = []
+    if os.path.isdir(trade_root):
+        for name in sorted(os.listdir(trade_root))[:20]:
+            f = os.path.join(trade_root, name, "index.html")
+            if os.path.isfile(f):
+                sample.append(f)
+        listing = os.path.join(trade_root, "index.html")
+        if os.path.isfile(listing):
+            sample.append(listing)
+    if sample:
+        missing = [p for p in sample if 'name="robots" content="noindex' not in _read(p)[:4000]]
+        check("indexation: built trade-cost pages carry noindex (%d sampled)" % len(sample), not missing,
+              str([m.replace(site_dir, "") for m in missing[:3]]))
+    else:
+        check("indexation: built trade-cost pages carry noindex (not applicable: none built)", True)
+    hub = os.path.join(site_dir, "trade-costs", "index.html")
+    if os.path.isfile(hub):
+        check("indexation: the /trade-costs/ hub stays indexable", "noindex" not in _read(hub)[:4000])
+    leaked = []
+    for fn in (os.listdir(os.path.join(site_dir, "sitemaps")) if os.path.isdir(os.path.join(site_dir, "sitemaps")) else []):
+        if fn.endswith(".xml"):
+            leaked += re.findall(r"<loc>[^<]*/broker/[^/<]+/trade/[^<]*</loc>", _read(os.path.join(site_dir, "sitemaps", fn)))
+    check("indexation: no sitemap lists a noindexed trade-cost page", not leaked, str(leaked[:3]))

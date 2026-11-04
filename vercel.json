@@ -32,6 +32,15 @@
   ],
   "headers": [
     {
+      "source": "/broker/:broker/trade/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
       "source": "/data/(.*)",
       "headers": [
         {

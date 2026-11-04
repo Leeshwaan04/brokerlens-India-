@@ -28,8 +28,23 @@ import re
 import sys
 from datetime import datetime, timezone
 
+try:
+    from . import indexation as _ix
+except ImportError:  # run as a script
+    import indexation as _ix
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_DIR = os.path.join(ROOT, "site")
+
+# Every broker x stock page, and each broker's /trade/ listing, is noindex,follow.
+# Wave 3 kept them out of the sitemap, but with no robots tag they were indexable and
+# every stock page links to them, so Google indexed them anyway: 491 of a 500-URL
+# sample of the 33.5K indexed pages (Search Console, 23 Oct 2026) were these
+# near-identical templates, on a two-month-old finance domain, and impressions fell
+# 97% overnight on 2 Nov. They stay crawlable (follow) so Google sees the noindex and
+# drops them; the single /trade-costs/ hub stays indexable. Releasing this family is
+# a deliberate decision (remove this tag), never a side effect of a missing one.
+TRADE_PAGE_ROBOTS = _ix.NOINDEX_META
 DATA_DIR = os.path.join(ROOT, "data")
 CONFIG_DIR = os.path.join(ROOT, "config")
 
@@ -735,6 +750,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 <script src="/assets/js/theme-init.js"></script>
 <title>{_esc(page_title)}</title>
 <meta name="description" content="{_esc(meta_desc)}">
+{TRADE_PAGE_ROBOTS}
 <link rel="canonical" href="{canonical_url}">
 <meta name="theme-color" content="#2f4a8f">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -1200,6 +1216,7 @@ def render_broker_trade_index(broker_id, broker_info, stocks, site_url="https://
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{_esc(title)}</title>
 <meta name="description" content="{_esc(desc)}">
+{TRADE_PAGE_ROBOTS}
 <link rel="canonical" href="{canonical}">
 <link rel="stylesheet" href="/assets/css/app.css">
 </head>
