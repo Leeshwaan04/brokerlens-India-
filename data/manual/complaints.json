@@ -1,7 +1,7 @@
 {
   "provenance": "sebi_annexure_b",
   "source_note": "Parsed from each broker's own SEBI Annexure-B disclosure. Months accumulate across runs, since some brokers only ever show the latest month. Brokers absent from this file did not publish a parseable table; they are listed under `gaps`.",
-  "generated_at": "2026-11-04T19:57:09+00:00",
+  "generated_at": "2026-11-05T20:10:13+00:00",
   "months": [
     "2021-12",
     "2022-01",
@@ -60,7 +60,8 @@
     "2026-06",
     "2026-07",
     "2026-08",
-    "2026-09"
+    "2026-09",
+    "2026-10"
   ],
   "coverage": {
     "parsed": 2,
@@ -537,6 +538,13 @@
         "received": 121,
         "resolved": 127,
         "pending": 27,
+        "source_url": "https://docs.google.com/spreadsheets/d/12_L4ku18tU12orNkyFJIY2Kkv03YNssT8GNK8tNdf_c/export?format=csv"
+      },
+      {
+        "month": "2026-10",
+        "received": 105,
+        "resolved": 107,
+        "pending": 25,
         "source_url": "https://docs.google.com/spreadsheets/d/12_L4ku18tU12orNkyFJIY2Kkv03YNssT8GNK8tNdf_c/export?format=csv"
       }
     ]

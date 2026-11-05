@@ -4,23 +4,16 @@
   "source": "Google Search Console API",
   "property": "sc-domain:brokerlens.in",
   "auth_method": "OAuth2 Service Account (secrets/gsc-service-account.json)",
-  "report_date": "2026-11-04",
+  "report_date": "2026-11-05",
   "totals_28d": {
-    "clicks": 1085,
-    "impressions": 99152,
-    "ctr_pct": 1.09,
-    "avg_position": 25.8,
-    "date_range_start": "2026-10-04",
-    "date_range_end": "2026-11-01"
+    "clicks": 1082,
+    "impressions": 97944,
+    "ctr_pct": 1.1,
+    "avg_position": 25.9,
+    "date_range_start": "2026-10-05",
+    "date_range_end": "2026-11-02"
   },
   "daily_history": [
-    {
-      "date": "2026-10-06",
-      "clicks_28d": 102,
-      "impressions_28d": 31717,
-      "submitted": 9518,
-      "indexed": 0
-    },
     {
       "date": "2026-10-07",
       "clicks_28d": 107,
@@ -223,15 +216,22 @@
       "impressions_28d": 99152,
       "submitted": 4820,
       "indexed": 0
+    },
+    {
+      "date": "2026-11-05",
+      "clicks_28d": 1082,
+      "impressions_28d": 97944,
+      "submitted": 4824,
+      "indexed": 0
     }
   ],
   "top_queries": [
     {
       "query": "pashupati cotspin share price target 2030",
-      "clicks": 34,
-      "impressions": 643,
-      "ctr": 5.29,
-      "position": 4.3
+      "clicks": 35,
+      "impressions": 689,
+      "ctr": 5.08,
+      "position": 4.4
     },
     {
       "query": "jaykay enterprises share price target 2030",
@@ -355,8 +355,8 @@
     {
       "query": "pankaj mangaldas securities pvt. ltd",
       "clicks": 3,
-      "impressions": 97,
-      "ctr": 3.09,
+      "impressions": 96,
+      "ctr": 3.12,
       "position": 6.3
     },
     {
@@ -376,9 +376,9 @@
     {
       "query": "alkyl amines share price target 2030",
       "clicks": 2,
-      "impressions": 36,
-      "ctr": 5.56,
-      "position": 3.0
+      "impressions": 38,
+      "ctr": 5.26,
+      "position": 2.9
     },
     {
       "query": "alpine texworld share price target 2030",
@@ -404,9 +404,9 @@
     {
       "query": "broker lens",
       "clicks": 2,
-      "impressions": 5,
-      "ctr": 40.0,
-      "position": 1.8
+      "impressions": 4,
+      "ctr": 50.0,
+      "position": 2
     },
     {
       "query": "canara bank share price target 2026",
@@ -656,8 +656,8 @@
     {
       "query": "anush shares and securities pvt ltd",
       "clicks": 1,
-      "impressions": 15,
-      "ctr": 6.67,
+      "impressions": 14,
+      "ctr": 7.14,
       "position": 6.4
     },
     {
@@ -1069,9 +1069,9 @@
     {
       "query": "hilton metal share price target 2030",
       "clicks": 1,
-      "impressions": 10,
-      "ctr": 10.0,
-      "position": 4.7
+      "impressions": 11,
+      "ctr": 9.09,
+      "position": 4.4
     },
     {
       "query": "hindalco target price 2026",
@@ -1093,13 +1093,6 @@
       "impressions": 27,
       "ctr": 3.7,
       "position": 4.8
-    },
-    {
-      "query": "ikm investors pvt ltd noida",
-      "clicks": 1,
-      "impressions": 1,
-      "ctr": 100,
-      "position": 17
     },
     {
       "query": "indo thai share price target 2026",
@@ -1188,8 +1181,8 @@
     {
       "query": "jbv share broker",
       "clicks": 1,
-      "impressions": 17,
-      "ctr": 5.88,
+      "impressions": 16,
+      "ctr": 6.25,
       "position": 7.1
     },
     {
@@ -1256,6 +1249,13 @@
       "position": 5.9
     },
     {
+      "query": "l&t share price target 2050",
+      "clicks": 1,
+      "impressions": 4,
+      "ctr": 25.0,
+      "position": 1.8
+    },
+    {
       "query": "leap india share price target 2027",
       "clicks": 1,
       "impressions": 10,
@@ -1300,15 +1300,15 @@
     {
       "query": "mapmyindia share price target 2030",
       "clicks": 1,
-      "impressions": 34,
-      "ctr": 2.94,
-      "position": 4.3
+      "impressions": 37,
+      "ctr": 2.7,
+      "position": 4.0
     },
     {
       "query": "microcurves trading private limited",
       "clicks": 1,
-      "impressions": 56,
-      "ctr": 1.79,
+      "impressions": 55,
+      "ctr": 1.82,
       "position": 6.9
     },
     {
@@ -1510,9 +1510,9 @@
     {
       "query": "qe securities llp",
       "clicks": 1,
-      "impressions": 178,
-      "ctr": 0.56,
-      "position": 6.5
+      "impressions": 171,
+      "ctr": 0.58,
+      "position": 6.6
     },
     {
       "query": "r&b denims share price target 2030",
@@ -1566,8 +1566,8 @@
     {
       "query": "rlp securities",
       "clicks": 1,
-      "impressions": 368,
-      "ctr": 0.27,
+      "impressions": 354,
+      "ctr": 0.28,
       "position": 6.7
     },
     {
@@ -1657,8 +1657,8 @@
     {
       "query": "soaring peaks capital services private limited",
       "clicks": 1,
-      "impressions": 33,
-      "ctr": 3.03,
+      "impressions": 31,
+      "ctr": 3.23,
       "position": 5.9
     },
     {
@@ -1980,10 +1980,10 @@
   "sitemaps": [
     {
       "path": "https://www.brokerlens.in/sitemap.xml",
-      "lastDownloaded": "2026-10-31T09:55:25.759Z",
+      "lastDownloaded": "2026-11-05T01:02:21.899Z",
       "warnings": "0",
       "errors": "0",
-      "submitted": "4820",
+      "submitted": "4824",
       "indexed": "0"
     }
   ],
@@ -1998,7 +1998,7 @@
     "https://www.brokerlens.in/brokers": {
       "coverageState": "Submitted and indexed",
       "verdict": "PASS",
-      "lastCrawlTime": "2026-10-31T11:40:44Z",
+      "lastCrawlTime": "2026-11-05T03:49:34Z",
       "pageFetchState": "SUCCESSFUL",
       "robotsTxtState": "ALLOWED"
     },
