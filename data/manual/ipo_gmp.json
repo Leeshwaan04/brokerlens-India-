@@ -6,13 +6,9 @@
     "trend": "up",
     "fire_rating": 3,
     "kostak": 450,
-    "last_updated": "2026-11-05",
+    "last_updated": "2026-11-06",
     "source": "Indicative Market Quotes",
     "history": [
-      {
-        "date": "2026-10-22",
-        "gmp": 25.0
-      },
       {
         "date": "2026-10-26",
         "gmp": 25.0
@@ -47,6 +43,10 @@
       },
       {
         "date": "2026-11-05",
+        "gmp": 25.0
+      },
+      {
+        "date": "2026-11-06",
         "gmp": 25.0
       }
     ]
@@ -58,13 +58,9 @@
     "trend": "up",
     "fire_rating": 4,
     "kostak": 800,
-    "last_updated": "2026-11-05",
+    "last_updated": "2026-11-06",
     "source": "Indicative Market Quotes",
     "history": [
-      {
-        "date": "2026-10-22",
-        "gmp": 135.0
-      },
       {
         "date": "2026-10-26",
         "gmp": 135.0
@@ -99,6 +95,10 @@
       },
       {
         "date": "2026-11-05",
+        "gmp": 135.0
+      },
+      {
+        "date": "2026-11-06",
         "gmp": 135.0
       }
     ]
@@ -110,13 +110,9 @@
     "trend": "up",
     "fire_rating": 5,
     "kostak": 1200,
-    "last_updated": "2026-11-05",
+    "last_updated": "2026-11-06",
     "source": "Indicative Market Quotes",
     "history": [
-      {
-        "date": "2026-10-22",
-        "gmp": 95.0
-      },
       {
         "date": "2026-10-26",
         "gmp": 95.0
@@ -151,6 +147,10 @@
       },
       {
         "date": "2026-11-05",
+        "gmp": 95.0
+      },
+      {
+        "date": "2026-11-06",
         "gmp": 95.0
       }
     ]
@@ -162,13 +162,9 @@
     "trend": "up",
     "fire_rating": 5,
     "kostak": 2500,
-    "last_updated": "2026-11-05",
+    "last_updated": "2026-11-06",
     "source": "Indicative Market Quotes",
     "history": [
-      {
-        "date": "2026-10-22",
-        "gmp": 380.0
-      },
       {
         "date": "2026-10-26",
         "gmp": 380.0
@@ -203,6 +199,10 @@
       },
       {
         "date": "2026-11-05",
+        "gmp": 380.0
+      },
+      {
+        "date": "2026-11-06",
         "gmp": 380.0
       }
     ]
@@ -214,13 +214,9 @@
     "trend": "neutral",
     "fire_rating": 4,
     "kostak": 600,
-    "last_updated": "2026-11-05",
+    "last_updated": "2026-11-06",
     "source": "Indicative Market Quotes",
     "history": [
-      {
-        "date": "2026-10-22",
-        "gmp": 72.0
-      },
       {
         "date": "2026-10-26",
         "gmp": 72.0
@@ -255,6 +251,10 @@
       },
       {
         "date": "2026-11-05",
+        "gmp": 72.0
+      },
+      {
+        "date": "2026-11-06",
         "gmp": 72.0
       }
     ]
@@ -266,13 +266,9 @@
     "trend": "up",
     "fire_rating": 3,
     "kostak": 400,
-    "last_updated": "2026-11-05",
+    "last_updated": "2026-11-06",
     "source": "Indicative Market Quotes",
     "history": [
-      {
-        "date": "2026-10-22",
-        "gmp": 32.0
-      },
       {
         "date": "2026-10-26",
         "gmp": 32.0
@@ -307,6 +303,10 @@
       },
       {
         "date": "2026-11-05",
+        "gmp": 32.0
+      },
+      {
+        "date": "2026-11-06",
         "gmp": 32.0
       }
     ]
@@ -318,13 +318,9 @@
     "trend": "neutral",
     "fire_rating": 3,
     "kostak": 350,
-    "last_updated": "2026-11-05",
+    "last_updated": "2026-11-06",
     "source": "Indicative Market Quotes",
     "history": [
-      {
-        "date": "2026-10-22",
-        "gmp": 18.0
-      },
       {
         "date": "2026-10-26",
         "gmp": 18.0
@@ -359,6 +355,10 @@
       },
       {
         "date": "2026-11-05",
+        "gmp": 18.0
+      },
+      {
+        "date": "2026-11-06",
         "gmp": 18.0
       }
     ]
@@ -370,13 +370,9 @@
     "trend": "neutral",
     "fire_rating": 3,
     "kostak": 250,
-    "last_updated": "2026-11-05",
+    "last_updated": "2026-11-06",
     "source": "Indicative Market Quotes",
     "history": [
-      {
-        "date": "2026-10-05",
-        "gmp": 14.0
-      },
       {
         "date": "2026-10-26",
         "gmp": 14.0
@@ -411,6 +407,10 @@
       },
       {
         "date": "2026-11-05",
+        "gmp": 14.0
+      },
+      {
+        "date": "2026-11-06",
         "gmp": 14.0
       }
     ]
@@ -422,13 +422,9 @@
     "trend": "up",
     "fire_rating": 3,
     "kostak": 200,
-    "last_updated": "2026-11-05",
+    "last_updated": "2026-11-06",
     "source": "Indicative Market Quotes",
     "history": [
-      {
-        "date": "2026-10-05",
-        "gmp": 6.0
-      },
       {
         "date": "2026-10-26",
         "gmp": 6.0
@@ -463,6 +459,10 @@
       },
       {
         "date": "2026-11-05",
+        "gmp": 6.0
+      },
+      {
+        "date": "2026-11-06",
         "gmp": 6.0
       }
     ]
