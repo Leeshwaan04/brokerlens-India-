@@ -4,23 +4,16 @@
   "source": "Google Search Console API",
   "property": "sc-domain:brokerlens.in",
   "auth_method": "OAuth2 Service Account (secrets/gsc-service-account.json)",
-  "report_date": "2026-11-05",
+  "report_date": "2026-11-06",
   "totals_28d": {
-    "clicks": 1082,
-    "impressions": 97944,
-    "ctr_pct": 1.1,
+    "clicks": 1081,
+    "impressions": 95330,
+    "ctr_pct": 1.13,
     "avg_position": 25.9,
-    "date_range_start": "2026-10-05",
-    "date_range_end": "2026-11-02"
+    "date_range_start": "2026-10-06",
+    "date_range_end": "2026-11-03"
   },
   "daily_history": [
-    {
-      "date": "2026-10-07",
-      "clicks_28d": 107,
-      "impressions_28d": 33093,
-      "submitted": 41132,
-      "indexed": 0
-    },
     {
       "date": "2026-10-08",
       "clicks_28d": 112,
@@ -223,14 +216,21 @@
       "impressions_28d": 97944,
       "submitted": 4824,
       "indexed": 0
+    },
+    {
+      "date": "2026-11-06",
+      "clicks_28d": 1081,
+      "impressions_28d": 95330,
+      "submitted": 4826,
+      "indexed": 0
     }
   ],
   "top_queries": [
     {
       "query": "pashupati cotspin share price target 2030",
-      "clicks": 35,
-      "impressions": 689,
-      "ctr": 5.08,
+      "clicks": 38,
+      "impressions": 779,
+      "ctr": 4.88,
       "position": 4.4
     },
     {
@@ -355,8 +355,8 @@
     {
       "query": "pankaj mangaldas securities pvt. ltd",
       "clicks": 3,
-      "impressions": 96,
-      "ctr": 3.12,
+      "impressions": 93,
+      "ctr": 3.23,
       "position": 6.3
     },
     {
@@ -376,9 +376,9 @@
     {
       "query": "alkyl amines share price target 2030",
       "clicks": 2,
-      "impressions": 38,
-      "ctr": 5.26,
-      "position": 2.9
+      "impressions": 43,
+      "ctr": 4.65,
+      "position": 2.7
     },
     {
       "query": "alpine texworld share price target 2030",
@@ -607,8 +607,8 @@
     {
       "query": "absolute broking",
       "clicks": 1,
-      "impressions": 33,
-      "ctr": 3.03,
+      "impressions": 27,
+      "ctr": 3.7,
       "position": 7.2
     },
     {
@@ -830,6 +830,13 @@
     },
     {
       "query": "cupid result date",
+      "clicks": 1,
+      "impressions": 1,
+      "ctr": 100,
+      "position": 3
+    },
+    {
+      "query": "cupid share future target",
       "clicks": 1,
       "impressions": 1,
       "ctr": 100,
@@ -1069,9 +1076,9 @@
     {
       "query": "hilton metal share price target 2030",
       "clicks": 1,
-      "impressions": 11,
-      "ctr": 9.09,
-      "position": 4.4
+      "impressions": 14,
+      "ctr": 7.14,
+      "position": 3.6
     },
     {
       "query": "hindalco target price 2026",
@@ -1181,16 +1188,16 @@
     {
       "query": "jbv share broker",
       "clicks": 1,
-      "impressions": 16,
-      "ctr": 6.25,
-      "position": 7.1
+      "impressions": 13,
+      "ctr": 7.69,
+      "position": 7.2
     },
     {
       "query": "jyoti resins share price target 2030",
       "clicks": 1,
-      "impressions": 23,
-      "ctr": 4.35,
-      "position": 3.6
+      "impressions": 24,
+      "ctr": 4.17,
+      "position": 3.5
     },
     {
       "query": "kanohar electricals ltd share price target 2030",
@@ -1300,9 +1307,9 @@
     {
       "query": "mapmyindia share price target 2030",
       "clicks": 1,
-      "impressions": 37,
-      "ctr": 2.7,
-      "position": 4.0
+      "impressions": 39,
+      "ctr": 2.56,
+      "position": 3.9
     },
     {
       "query": "microcurves trading private limited",
@@ -1508,13 +1515,6 @@
       "position": 3.7
     },
     {
-      "query": "qe securities llp",
-      "clicks": 1,
-      "impressions": 171,
-      "ctr": 0.58,
-      "position": 6.6
-    },
-    {
       "query": "r&b denims share price target 2030",
       "clicks": 1,
       "impressions": 14,
@@ -1566,9 +1566,9 @@
     {
       "query": "rlp securities",
       "clicks": 1,
-      "impressions": 354,
-      "ctr": 0.28,
-      "position": 6.7
+      "impressions": 330,
+      "ctr": 0.3,
+      "position": 6.8
     },
     {
       "query": "rpp infra share price target 2030",
@@ -1657,8 +1657,8 @@
     {
       "query": "soaring peaks capital services private limited",
       "clicks": 1,
-      "impressions": 31,
-      "ctr": 3.23,
+      "impressions": 30,
+      "ctr": 3.33,
       "position": 5.9
     },
     {
@@ -1865,6 +1865,13 @@
       "position": 1
     },
     {
+      "query": "\"reliablemarketinsights.com\" site:http://inkrich.com/",
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 1
+    },
+    {
       "query": "\"samco\"",
       "clicks": 0,
       "impressions": 2,
@@ -1963,13 +1970,6 @@
       "position": 1
     },
     {
-      "query": "100 best mid cap stocks companies",
-      "clicks": 0,
-      "impressions": 1,
-      "ctr": 0,
-      "position": 38
-    },
-    {
       "query": "100 mrf share price",
       "clicks": 0,
       "impressions": 1,
@@ -1983,7 +1983,7 @@
       "lastDownloaded": "2026-11-05T01:02:21.899Z",
       "warnings": "0",
       "errors": "0",
-      "submitted": "4824",
+      "submitted": "4826",
       "indexed": "0"
     }
   ],
