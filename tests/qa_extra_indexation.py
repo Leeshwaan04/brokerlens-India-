@@ -456,7 +456,10 @@ def run(check, ROOT, load):
     fund_dir = os.path.join(ROOT, "site", "fund")
     built_sitemap = ix.sitemap_paths(os.path.join(ROOT, "site"))
     if os.path.isdir(fund_dir) and built_sitemap:
-        funds = [os.path.join(fund_dir, n, "index.html") for n in sorted(os.listdir(fund_dir))[:15]]
+        # Only funds the sitemap does not list: a fund with real search demand is listed
+        # (demand sitemap) and rightly stays indexable.
+        funds = [os.path.join(fund_dir, n, "index.html") for n in sorted(os.listdir(fund_dir))
+                 if "/fund/%s/" % n not in built_sitemap][:15]
         funds = [f for f in funds if os.path.isfile(f)]
         listed_pages = [os.path.join(ROOT, "site", p.strip("/"), "index.html") for p in sorted(built_sitemap)[:40]]
         listed_pages = [f for f in listed_pages if os.path.isfile(f)]
