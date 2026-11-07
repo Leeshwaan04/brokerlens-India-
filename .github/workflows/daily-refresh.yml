@@ -13,18 +13,22 @@ on:
     - cron: "13 21 * * *"  # 21:13 UTC = 02:43 IST - well outside market hours
   workflow_dispatch: {}
 
-# This job never checks out the repo and only fires a webhook - it needs no
-# access to anything, so say so explicitly rather than inheriting whatever
-# the repo's default token permissions happen to be.
-permissions: {}
+# It only dispatches ci.yml, so the one permission it needs is to start a
+# workflow; nothing else is inherited from the repo's default token.
+permissions:
+  actions: write
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Vercel rebuild
-        run: |
-          curl -fsS -X POST "$DEPLOY_HOOK_URL" -o /dev/null
-          echo "Deploy triggered."
+      - name: Rebuild through the QA + VAPT gate
+        # This used to call the deploy hook directly, so the nightly rebuild
+        # shipped whatever the build produced, untested. On 5 to 7 Nov 2026
+        # ci.yml failed every run (NSE renamed the mainboard IPO type, and ~490
+        # IPO pages vanished) while this job kept deploying the broken build.
+        # ci.yml runs the same fresh fetch + build, then QA and VAPT, and only
+        # then calls the hook.
+        run: gh workflow run ci.yml --ref main --repo "$GITHUB_REPOSITORY"
         env:
-          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+          GH_TOKEN: ${{ github.token }}

@@ -255,6 +255,28 @@ def ipo_upcoming(f: Fetcher, ttl=None):
     return rows
 
 
+# NSE's own securityType codes, normalised to the short form the pipeline filters on
+# (publish._IPO_SEC_TYPES, ipo_facts._EQUITY_TYPES, ipo_apply_engine). By 5 Nov 2026 the
+# public-past-issues feed had switched "EQ" to "Equity" (and IV/RR to InvIT/REIT), the
+# filter stopped recognising any mainboard IPO, and ~490 IPO pages silently became 404s
+# (UTI AMC, Polycab, Laurus Labs, KFintech). Both spellings map to one code; a value never
+# seen before is logged so the next rename is visible the day it happens.
+_SEC_TYPE_CODES = {"EQ": "EQ", "EQUITY": "EQ", "SME": "SME", "BE": "BE", "DEBT": "DEBT",
+                   "IV": "IV", "INVIT": "IV", "RR": "RR", "REIT": "RR"}
+_unknown_sec_types = set()
+
+
+def _sec_type(raw):
+    key = str(raw or "").strip().upper()
+    if not key:
+        return None
+    code = _SEC_TYPE_CODES.get(key)
+    if code is None and key not in _unknown_sec_types:
+        _unknown_sec_types.add(key)
+        log("nse ipo: unrecognised securityType %r kept as-is; add it to _SEC_TYPE_CODES" % raw, "warn")
+    return code or key
+
+
 def ipo_past(f: Fetcher, ttl=None):
     """Recently closed / already-listed IPOs - final issue price and
     listing date, once NSE has them. A blank issuePrice/listingDate ('-')
@@ -282,7 +304,7 @@ def ipo_past(f: Fetcher, ttl=None):
             "company": r.get("company") or r.get("companyName"),
             "price_band": r.get("priceRange"),
             "issue_price": issue_price,
-            "security_type": r.get("securityType"),
+            "security_type": _sec_type(r.get("securityType")),
             "bidding_start": _ipo_date(r.get("ipoStartDate")),
             "bidding_end": _ipo_date(r.get("ipoEndDate")),
             "listing_date": _ipo_date(r.get("listingDate")),

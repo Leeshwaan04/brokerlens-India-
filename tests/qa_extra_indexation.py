@@ -575,3 +575,13 @@ def run(check, ROOT, load):
         check("indexation: the Muhurat 2026 article's equity timings match NSE circular 149/2026 and cite it",
               "13:50 to 14:05" in muh and "14:20 to 15:30" in muh and "NSE/CMTR/76941" in muh
               and "13:45 to 14:00" not in muh and "14:15 to 15:15" not in muh)
+    # NSE renamed securityType in public-past-issues ("EQ" -> "Equity", IV -> InvIT, RR -> REIT)
+    # and the IPO filter silently dropped every mainboard IPO (~490 pages 404, 5 to 7 Nov 2026).
+    from pipeline.sources import nse as _nse
+    check("indexation: NSE's old and new securityType spellings normalise to the codes the IPO filter keeps",
+          [_nse._sec_type(x) for x in ("Equity", "EQ", "SME", "InvIT", "REIT", "DEBT", None)]
+          == ["EQ", "EQ", "SME", "IV", "RR", "DEBT", None]
+          and "EQ" in pub._IPO_SEC_TYPES and _nse._sec_type("Equity") in pub._IPO_SEC_TYPES)
+    wf = _read(os.path.join(ROOT, ".github", "workflows", "daily-refresh.yml"))
+    check("indexation: the nightly rebuild deploys only through ci.yml's QA + VAPT gate, never the bare deploy hook",
+          "gh workflow run ci.yml" in wf and "DEPLOY_HOOK" not in wf)
