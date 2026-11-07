@@ -56,24 +56,40 @@ def update_stock_demand(token, start, end):
     share-price-target URL) over 28 days joins wave 1. The set only ever grows:
     the 28-day window slides daily, and letting slugs drop out again would churn
     the sitemap every day, which is its own crawl-trust problem. Leaves the file
-    untouched if the API call fails."""
-    rows = _safe(lambda: gsc._api(
-        "%s/sites/%s/searchAnalytics/query" % (gsc.API_ROOT, SITE_QUOTED), token, "POST",
-        {"startDate": start.isoformat(), "endDate": end.isoformat(), "dimensions": ["page"], "rowLimit": 25000},
-    ))
-    if not isinstance(rows, dict) or "error" in rows:
-        return None
-    impressions = {}
-    for r in rows.get("rows", []):
-        m = _STOCK_PATH_RE.match(r["keys"][0].split("brokerlens.in", 1)[-1])
+    untouched if the API call fails.
+
+    A slug whose retired share-price-target URL took even one impression joins
+    too. That URL 308s to the stock (or ETF) page, and the build gives noindex to
+    anything outside the sitemap, so leaving the target out throws away whatever
+    ranking the redirect carries: on 7 Nov 2026 that was 240 targets."""
+    rows, start_row = [], 0
+    while True:
+        page = _safe(lambda s=start_row: gsc._api(
+            "%s/sites/%s/searchAnalytics/query" % (gsc.API_ROOT, SITE_QUOTED), token, "POST",
+            {"startDate": start.isoformat(), "endDate": end.isoformat(), "dimensions": ["page"],
+             "rowLimit": 25000, "startRow": s},
+        ))
+        if not isinstance(page, dict) or "error" in page:
+            return None
+        batch = page.get("rows", [])
+        rows += batch
+        if len(batch) < 25000:
+            break
+        start_row += 25000
+    impressions, redirect_targets = {}, set()
+    for r in rows:
+        path = r["keys"][0].split("brokerlens.in", 1)[-1]
+        m = _STOCK_PATH_RE.match(path)
         if m:
             impressions[m.group(1)] = impressions.get(m.group(1), 0) + r.get("impressions", 0)
+            if "share-price-target-" in path and r.get("impressions", 0) > 0:
+                redirect_targets.add(m.group(1))
     try:
         with open(DEMAND_PATH, encoding="utf-8") as f:
             slugs = set(json.load(f).get("slugs", []))
     except (OSError, ValueError):
         slugs = set()
-    slugs |= {s for s, n in impressions.items() if n >= DEMAND_MIN_IMPRESSIONS}
+    slugs |= {s for s, n in impressions.items() if n >= DEMAND_MIN_IMPRESSIONS} | redirect_targets
     with open(DEMAND_PATH, "w", encoding="utf-8") as f:
         json.dump({"updated": datetime.date.today().isoformat(), "min_impressions_28d": DEMAND_MIN_IMPRESSIONS,
                    "slugs": sorted(slugs)}, f, indent=1)

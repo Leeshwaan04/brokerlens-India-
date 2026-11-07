@@ -488,3 +488,33 @@ def run(check, ROOT, load):
               not (redirected & set(listed)), str(sorted(redirected & set(listed))[:3]))
         check("indexation: archived dated news pages carry their own date as lastmod, not the build date (%d listed)" % len(listed),
               listed and not stale_dates, str(list(stale_dates.items())[:3]))
+
+    # ---- retired-URL redirect targets always stay indexable ------------------------
+    # The build noindexes anything outside the sitemap; a stock whose retired per-year URL
+    # still ranks must therefore be in the sitemap, or the redirect lands on a noindexed page
+    # (240 such targets on 7 Nov 2026).
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        import gsc_report as GR
+    except Exception as e:  # noqa: BLE001
+        GR = None
+        check("indexation: scripts/gsc_report.py importable", False, repr(e))
+    if GR:
+        tmpd = tempfile.mkdtemp(prefix="qa_demand_")
+        old_path, old_api = GR.DEMAND_PATH, GR.gsc._api
+        try:
+            GR.DEMAND_PATH = os.path.join(tmpd, "stock_demand.json")
+            fake = {"rows": [
+                {"keys": ["https://www.brokerlens.in/stock/aaa/share-price-target-2030/"], "impressions": 1},
+                {"keys": ["https://www.brokerlens.in/stock/bbb/"], "impressions": 3},
+                {"keys": ["https://www.brokerlens.in/stock/ccc/"], "impressions": 6}]}
+            GR.gsc._api = lambda *a, **k: fake
+            import datetime as _dt
+            GR.update_stock_demand("t", _dt.date(2026, 10, 1), _dt.date(2026, 10, 28))
+            got = set(json.load(open(GR.DEMAND_PATH))["slugs"])
+            check("indexation: a stock whose retired price-target URL took even one impression joins the sitemap demand "
+                  "list; a canonical page still needs the normal threshold",
+                  got == {"aaa", "ccc"}, str(sorted(got)))
+        finally:
+            GR.DEMAND_PATH, GR.gsc._api = old_path, old_api
+            shutil.rmtree(tmpd, ignore_errors=True)
