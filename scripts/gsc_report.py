@@ -96,6 +96,47 @@ def update_stock_demand(token, start, end):
     return len(slugs)
 
 
+PAGE_DEMAND_PATH = os.path.join(OUT_DIR, "page_demand.json")
+
+
+def update_page_demand(token, start, end):
+    """Every page path Google has shown for a real search, read by publish.py's
+    sitemap writer so a page that already earns impressions is never noindexed
+    by the build's sitemap allowlist. That allowlist, on its first day, silenced
+    about 3,200 such pages (registry entities, curated compares, funds, AMC
+    hubs). Trade-cost pages and the retired per-year price-target URLs are
+    excluded: they stay out on purpose. Grows only, like the stock list."""
+    rows, start_row = [], 0
+    while True:
+        page = _safe(lambda s=start_row: gsc._api(
+            "%s/sites/%s/searchAnalytics/query" % (gsc.API_ROOT, SITE_QUOTED), token, "POST",
+            {"startDate": start.isoformat(), "endDate": end.isoformat(), "dimensions": ["page"],
+             "rowLimit": 25000, "startRow": s},
+        ))
+        if not isinstance(page, dict) or "error" in page:
+            return None
+        batch = page.get("rows", [])
+        rows += batch
+        if len(batch) < 25000:
+            break
+        start_row += 25000
+    found = set()
+    for r in rows:
+        path = r["keys"][0].split("brokerlens.in", 1)[-1].split("?", 1)[0].split("#", 1)[0]
+        if (r.get("impressions", 0) > 0 and path.startswith("/") and path.endswith("/")
+                and "/trade/" not in path and "share-price-target-" not in path):
+            found.add(path)
+    try:
+        with open(PAGE_DEMAND_PATH, encoding="utf-8") as f:
+            paths = set(json.load(f).get("paths", []))
+    except (OSError, ValueError):
+        paths = set()
+    paths |= found
+    with open(PAGE_DEMAND_PATH, "w", encoding="utf-8") as f:
+        json.dump({"updated": datetime.date.today().isoformat(), "paths": sorted(paths)}, f, indent=0)
+    return len(paths)
+
+
 def _safe(fn, *args):
     try:
         return fn(*args)
@@ -171,6 +212,9 @@ def main():
     n_demand = update_stock_demand(token, start, end)
     if n_demand is not None:
         print("stock demand: %d slugs with proven search demand" % n_demand)
+    n_pages = update_page_demand(token, start, end)
+    if n_pages is not None:
+        print("page demand: %d page paths with real impressions" % n_pages)
 
     indexed_total = sum(int(s["indexed"] or 0) for s in sitemap_summary if s.get("indexed") not in (None, ""))
     submitted_total = sum(int(s["submitted"] or 0) for s in sitemap_summary if s.get("submitted") not in (None, ""))

@@ -518,3 +518,57 @@ def run(check, ROOT, load):
         finally:
             GR.DEMAND_PATH, GR.gsc._api = old_path, old_api
             shutil.rmtree(tmpd, ignore_errors=True)
+
+    # ---- pages with real search demand stay indexable; past IPOs never vanish ----------
+    tmp3 = tempfile.mkdtemp(prefix="qa_demand_sitemap_")
+    old_root = pub.ROOT
+    try:
+        pub.ROOT = tmp3
+        os.makedirs(os.path.join(tmp3, "reports", "gsc"))
+
+        def mk(rel, robots="", canon=None):
+            d = os.path.join(tmp3, "site", rel)
+            os.makedirs(d, exist_ok=True)
+            c = canon if canon is not None else pub.SITE_URL + "/" + rel + "/"
+            with open(os.path.join(d, "index.html"), "w", encoding="utf-8") as fh:
+                fh.write('<html><head><link rel="canonical" href="%s">%s</head><body>x</body></html>' % (c, robots))
+        mk("compare/stocks/aaa-vs-bbb")
+        mk("broker/x/branches/pune", robots='<meta name="robots" content="noindex,follow">')
+        mk("sebi-registry/old-slug", canon=pub.SITE_URL + "/sebi-registry/new-slug/")
+        mk("broker/x/trade/aaa")
+        with open(os.path.join(tmp3, "reports", "gsc", "page_demand.json"), "w") as fh:
+            json.dump({"paths": ["/compare/stocks/aaa-vs-bbb/", "/broker/x/branches/pune/", "/sebi-registry/old-slug/",
+                                 "/broker/x/trade/aaa/", "/stock/never-built/"]}, fh)
+        got = [re.search(r"<loc>([^<]+)</loc>", e).group(1) for e in pub._demand_sitemap_entries(
+            lambda loc, lm, fq="monthly": "<url><loc>%s</loc></url>" % loc, "2026-11-07")]
+        check("indexation: a page with real impressions stays in the sitemap (so the allowlist keeps it indexable), "
+              "but never a noindex, non-canonical, trade-cost or unbuilt page",
+              got == [pub.SITE_URL + "/compare/stocks/aaa-vs-bbb/"], str(got))
+
+        archive = os.path.join(tmp3, "ipo_archive.json")
+        with open(archive, "w") as fh:
+            json.dump({"past": [{"symbol": "LAURUSLABS", "listing_date": "2016-12-19", "issue_price": 428.0},
+                                {"symbol": "OLDNAME", "listing_date": "2020-01-01", "issue_price": 10.0}]}, fh)
+        old_arch = pub.IPO_ARCHIVE_PATH
+        pub.IPO_ARCHIVE_PATH = archive
+        try:
+            merged = pub._with_ipo_archive({"past": [{"symbol": "OLDNAME", "listing_date": "2020-01-01", "issue_price": 11.0},
+                                                     {"symbol": "NEWIPO", "listing_date": "2026-11-05", "issue_price": 50.0}]})
+        finally:
+            pub.IPO_ARCHIVE_PATH = old_arch
+        syms = {r["symbol"]: r for r in merged["past"]}
+        check("indexation: a past IPO NSE's feed no longer returns keeps its page (archive), and fresh data wins for a symbol",
+              set(syms) == {"LAURUSLABS", "OLDNAME", "NEWIPO"} and syms["OLDNAME"]["issue_price"] == 11.0
+              and json.load(open(archive))["past"][-1]["symbol"] == "NEWIPO", str(sorted(syms)))
+    finally:
+        pub.ROOT = old_root
+        shutil.rmtree(tmp3, ignore_errors=True)
+    stored = (load("data/manual/ipo_archive.json") or {}).get("past") or []
+    check("indexation: the committed IPO archive holds the long history (UTI AMC, Laurus Labs, KFintech on file)",
+          len(stored) >= 1000 and {"UTIAMC", "LAURUSLABS", "KFINTECH"} <= {r.get("symbol") for r in stored}, "n=%d" % len(stored))
+    news_src = _read(os.path.join(ROOT, "pipeline", "news_engine.py"))
+    muh = news_src[news_src.find("diwali-muhurat-trading-2026-timings-schedule-guide"):][:9000]
+    if muh:
+        check("indexation: the Muhurat 2026 article's equity timings match NSE circular 149/2026 and cite it",
+              "13:50 to 14:05" in muh and "14:20 to 15:30" in muh and "NSE/CMTR/76941" in muh
+              and "13:45 to 14:00" not in muh and "14:15 to 15:15" not in muh)

@@ -297,7 +297,7 @@ def build():
     bse_d = ingest.get("bse") or {}
     sebi_d = ingest.get("sebi") or {}
     crypto_coins = (ingest.get("crypto") or {}).get("coins") or []
-    ipo_records = _ipo_merge(nse_d.get("ipo") or {})
+    ipo_records = _ipo_merge(_with_ipo_archive(nse_d.get("ipo") or {}))
     amfi_d = ingest.get("amfi") or {}
 
     clients_raw = read_json(os.path.join(MANUAL, "active_clients.json"), {}) or {}
@@ -5197,6 +5197,34 @@ def _ipo_long_date(iso_date):
         return iso_date
 
 
+IPO_ARCHIVE_PATH = os.path.join(ROOT, "data", "manual", "ipo_archive.json")
+
+
+def _with_ipo_archive(ipo_data):
+    """NSE's past-issues feed is a window, not a history. By 7 Nov 2026 it
+    returned about half of the 1,425 issues it once did, and every IPO page it
+    stopped mentioning became a 404: 399 pages that had earned 5,702
+    impressions in the month before (UTI AMC, Polycab, Laurus Labs, KFintech
+    among them). A past issue is a fact that does not expire, so past records
+    accumulate in data/manual/ipo_archive.json: a fresh record wins for its
+    symbol, and nothing is dropped because the feed got shorter."""
+    archive = read_json(IPO_ARCHIVE_PATH, {}) or {}
+    by_sym = {r["symbol"]: r for r in (archive.get("past") or []) if isinstance(r, dict) and r.get("symbol")}
+    fresh = [r for r in (ipo_data.get("past") or []) if isinstance(r, dict) and r.get("symbol")]
+    for r in fresh:
+        by_sym[r["symbol"]] = r
+    past = sorted(by_sym.values(), key=lambda r: (r.get("listing_date") or r.get("bidding_end") or "", r["symbol"]))
+    if past != (archive.get("past") or []):
+        write_json(IPO_ARCHIVE_PATH, {
+            "provenance": "nse_public_past_issues",
+            "note": "Every past issue NSE's public-past-issues feed has ever returned, so a page never disappears "
+                    "because the feed's window moved. Fresh records replace archived ones for the same symbol.",
+            "past": past,
+        })
+    log("ipo archive: %d past issues on file (%d in today's feed)" % (len(past), len(fresh)), "ok")
+    return dict(ipo_data, past=past)
+
+
 def _ipo_merge(ipo_data):
     """Merge NSE's three separately-shaped IPO feeds into one record per
     symbol, scoped to genuine equity IPOs.
@@ -8091,6 +8119,41 @@ SITEMAP_WAVES = {
     "trade-costs": 3, "branches": 3, "price-targets": 3,
 }
 SITEMAP_WAVES["broker-charges"] = 1  # per-broker calculator and charges pages: few, high intent
+SITEMAP_WAVES["demand"] = 1  # pages with real search impressions, see _demand_sitemap_entries()
+
+
+def _demand_sitemap_entries(xml_url, today):
+    """Pages Google already shows for real searches stay indexable.
+
+    The build gives noindex,follow to every page outside the sitemap
+    (indexation.enforce_index_allowlist). On its first day that silenced about
+    3,200 pages that had earned ~18,800 impressions in the month before:
+    registry entities, curated stock and fund compares, funds, AMC hubs. A path
+    in reports/gsc/page_demand.json (maintained by scripts/gsc_report.py) is
+    listed here when its page is built, names itself as canonical and does not
+    mark itself noindex. Trade-cost pages and retired per-year URLs never
+    qualify. Runs after every page family has been written."""
+    paths = (read_json(os.path.join(ROOT, "reports", "gsc", "page_demand.json"), {}) or {}).get("paths") or []
+    canon_re = re.compile(r'<link rel="canonical" href="([^"]+)"')
+    out = []
+    for path in paths:
+        if (not path.startswith("/") or not path.endswith("/") or "/trade/" in path
+                or "share-price-target-" in path):
+            continue
+        f = os.path.join(ROOT, "site", path.strip("/"), "index.html") if path != "/" else os.path.join(ROOT, "site", "index.html")
+        try:
+            with open(f, encoding="utf-8", errors="ignore") as fh:
+                head = fh.read(20000)
+        except OSError:
+            continue
+        head = head.split("</head>", 1)[0]
+        m = canon_re.search(head)
+        if not m or m.group(1) != SITE_URL + path:
+            continue
+        if re.search(r'<meta name="robots" content="[^"]*noindex', head):
+            continue
+        out.append(xml_url(SITE_URL + path, today, "monthly"))
+    return out
 
 
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
@@ -8382,6 +8445,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         ("fund-compare", fund_compare_entries),
         ("price-targets", price_target_entries),
         ("broker-charges", broker_charges_entries),
+        ("demand", _demand_sitemap_entries(_xml_url, today)),
     ]
 
     sitemap_index_entries = []
