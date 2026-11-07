@@ -1,0 +1,21 @@
+{
+  "_comment": "Equity (capital market) Muhurat trading session timings, transcribed only from the exchange's own circular for that year. /stock-market-holidays/ shows a year's timings only when its entry exists here; otherwise it names the day and points to NSE. Times are IST.",
+  "2026-11-08": {
+    "source": "NSE circular 149/2026 (NSE/CMTR/76941), 19 October 2026",
+    "url": "https://nsearchives.nseindia.com/content/circulars/CMTR76941.pdf",
+    "rows": [
+      ["Block deal session", "13:50", "14:05"],
+      ["Pre-open: order entry (limit-order cancellation only from 14:10)", "14:05", "14:15"],
+      ["Pre-open: order matching and buffer", "14:15", "14:20"],
+      ["Normal market (continuous trading)", "14:20", "15:30"],
+      ["Closing auction session, for CAS securities", "15:15", "15:50"],
+      ["Post-close session", "15:50", "16:00"],
+      ["IPO and relisted securities: special pre-open", "14:05", "14:50"],
+      ["IPO and relisted securities: normal market", "15:05", "15:30"]
+    ],
+    "notes": [
+      "The normal market closes at 15:15 for securities in the closing auction session (CAS) and at 15:30 for the rest.",
+      "All trades executed in the session result in settlement obligations."
+    ]
+  }
+}

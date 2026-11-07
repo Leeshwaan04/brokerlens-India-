@@ -475,9 +475,18 @@ def run(check, ROOT, load):
         page = HP.render(cal, datetime.date(2026, 11, 4), PUB._esc, PUB._REGISTRY_PAGE_HEAD, PUB._REGISTRY_PAGE_FOOT,
                          PUB._breadcrumb, PUB.SITE_URL)
         plain = re.sub(r"<[^>]+>", " ", page)
-        check("contentintegrity: the Muhurat day is named but no session time is asserted (NSE sets it by circular)",
-              "Muhurat trading" in page and "set by NSE circular" in page
-              and not re.search(r"\b\d{1,2}[:.]\d{2}\s*(am|pm|AM|PM)?\b", plain.split("Questions")[0].split("Diwali Muhurat")[1]))
+        check("contentintegrity: the Muhurat timings shown are exactly those transcribed from NSE circular 149/2026, "
+              "and the circular is cited",
+              "14:20 to 15:30" in page and "13:50 to 14:05" in page and "NSE/CMTR/76941" in page
+              and "CMTR76941.pdf" in page and "13:45" not in page)
+        other_year = {"segments": {"CM": [{"date": "2027-10-29", "weekday": "Friday", "name": "Diwali Laxmi Pujan", "muhurat": True}],
+                                   "FO": [{"date": "2027-10-29"}]}}
+        page27 = HP.render(other_year, datetime.date(2027, 10, 1), PUB._esc, PUB._REGISTRY_PAGE_HEAD, PUB._REGISTRY_PAGE_FOOT,
+                           PUB._breadcrumb, PUB.SITE_URL)
+        plain27 = re.sub(r"<[^>]+>", " ", page27)
+        check("contentintegrity: a Muhurat day with no circular on file names the day but asserts no session time",
+              "set by NSE circular" in page27
+              and not re.search(r"\b\d{1,2}[:.]\d{2}\b", plain27.split("Questions")[0].split("Diwali Muhurat")[1]))
         check("contentintegrity: holidays page renders nothing without NSE data, so it can never publish an empty list",
               HP.render({"segments": {"CM": []}}, datetime.date(2026, 11, 4), PUB._esc, PUB._REGISTRY_PAGE_HEAD,
                         PUB._REGISTRY_PAGE_FOOT, PUB._breadcrumb, PUB.SITE_URL) is None)

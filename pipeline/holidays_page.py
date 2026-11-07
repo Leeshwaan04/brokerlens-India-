@@ -15,6 +15,18 @@ from datetime import date, datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH = os.path.join(ROOT, "data", "manual", "nse_holidays.json")
+MUHURAT_PATH = os.path.join(ROOT, "config", "muhurat_sessions.json")
+
+
+def muhurat_sessions(iso_date):
+    """The session timings for that Muhurat day, transcribed from the exchange's
+    own circular into config/muhurat_sessions.json, or None if not on file."""
+    try:
+        with open(MUHURAT_PATH, encoding="utf-8") as fh:
+            entry = json.load(fh).get(iso_date)
+    except (OSError, ValueError):
+        return None
+    return entry if isinstance(entry, dict) and entry.get("rows") and entry.get("source") else None
 URL_PATH = "/stock-market-holidays/"
 NSE_HOLIDAYS_URL = "https://www.nseindia.com/resources/exchange-communication-holidays"
 
@@ -65,7 +77,15 @@ def render(data, today, esc, head, foot, breadcrumb, site_url):
     if nxt:
         faqs.append(("When is the next stock market holiday?",
                      "%s, %s. NSE's equity and F&O markets are closed that day." % (_long(nxt["date"]), nxt["name"])))
-    if muh:
+    sess = muhurat_sessions(muh["date"]) if muh else None
+    normal = next((r for r in (sess or {}).get("rows", []) if r[0].startswith("Normal market")), None)
+    if muh and normal:
+        desc = desc.replace(", from NSE's own calendar.",
+                            ": normal market %s to %s IST, per NSE circular." % (normal[1], normal[2]))
+        faqs.append(("When is Muhurat trading in %d?" % year,
+                     "On %s (%s). The normal market runs %s to %s IST, per %s." % (
+                         _long(muh["date"]), muh["name"], normal[1], normal[2], sess["source"])))
+    elif muh:
         faqs.append(("When is Muhurat trading in %d?" % year,
                      "On %s (%s). NSE holds a special Muhurat trading session that day; its timings are set by "
                      "NSE circular, so check NSE before placing orders." % (_long(muh["date"]), muh["name"])))
@@ -95,7 +115,18 @@ def render(data, today, esc, head, foot, breadcrumb, site_url):
             {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faqs]},
     ]}
     muhurat_html = ""
-    if muh:
+    if muh and sess and normal:
+        trs = "".join('<tr><td>%s</td><td>%s to %s</td></tr>' % (esc(r[0]), esc(r[1]), esc(r[2])) for r in sess["rows"])
+        notes = " ".join(esc(n) for n in sess.get("notes") or [])
+        muhurat_html = (
+            '<div class="card" style="margin:16px 0;padding:16px 18px;border-left:3px solid var(--accent)">'
+            '<div style="font-weight:700">Diwali Muhurat trading: %s, normal market %s to %s IST</div>'
+            '<div class="table-scroll" style="margin-top:10px"><table class="data"><thead><tr><th>Session (equity)</th>'
+            '<th>Time (IST)</th></tr></thead><tbody>%s</tbody></table></div>'
+            '<p class="xs muted" style="margin:8px 0 0 0;max-width:75ch">%s Source: <a href="%s" rel="noopener" '
+            'target="_blank">%s</a>.</p></div>'
+            % (esc(_long(muh["date"])), esc(normal[1]), esc(normal[2]), trs, notes, esc(sess["url"]), esc(sess["source"])))
+    elif muh:
         muhurat_html = (
             '<div class="card" style="margin:16px 0;padding:16px 18px;border-left:3px solid var(--accent)">'
             '<div style="font-weight:700">Diwali Muhurat trading: %s</div>'
