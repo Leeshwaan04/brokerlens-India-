@@ -8192,7 +8192,9 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
             lastmod = hist[-1]["date"] if hist else today
             entry = ("<url><loc>%s/stock/%s/</loc><lastmod>%s</lastmod><changefreq>monthly</changefreq></url>"
                      % (SITE_URL, slug, lastmod))
-            wave1 = (c.get("symbol") or "").upper() in top_syms or slug in demand
+            # All NSE-listed equities on file are included in wave 1 (stocks-top) so
+            # real company profiles are never blocked by the index allowlist.
+            wave1 = True
             (stock_top_entries if wave1 else stock_entries).append(entry)
     for slug in (indices or {}):
         stock_top_entries.append(

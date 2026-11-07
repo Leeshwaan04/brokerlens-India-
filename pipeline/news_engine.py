@@ -946,6 +946,122 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
             """
         },
         {
+            "slug": "diwali-muhurat-trading-2026-timings-schedule-guide",
+            "title": "Diwali Muhurat Trading 2026: Official Date, Timings (NSE & BSE Schedule), Samvat 2083 Rules & Stock Settlement",
+            "description": "Complete official schedule for Diwali Muhurat Trading on Sunday, 8 November 2026: NSE and BSE pre-open, normal market, closing session timings, and settlement rules.",
+            "category": "Blog & Guide",
+            "category_badge": "badge-verified",
+            "type": "BlogPosting",
+            "read_time": "6 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              The National Stock Exchange (NSE) and Bombay Stock Exchange (BSE) conduct a special one-hour Diwali Muhurat
+              trading session on the occasion of Diwali Laxmi Pujan. This annual ritual marks the beginning of the
+              new Hindu accounting year, <strong>Samvat 2083</strong>.
+            </p>
+
+            <div class="section-title"><h2>1. Official Date and Exchange Session Timings</h2></div>
+            <p>
+              Muhurat trading for 2026 is scheduled for <strong>Sunday, 8 November 2026</strong>. While regular trading is closed
+              on weekends and on Tuesday, 10 November 2026 (Diwali-Balipratipada), the exchanges open for this designated one-hour live session.
+            </p>
+            <div class="table-scroll">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>Session Stage</th>
+                    <th>Equity &amp; F&amp;O Window (IST)</th>
+                    <th>Commodity Derivatives (IST)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Block Deal Window</strong></td>
+                    <td>13:45 to 14:00</td>
+                    <td>Not Applicable</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Pre-Open Session</strong></td>
+                    <td>14:00 to 14:08</td>
+                    <td>Not Applicable</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Normal Market Session</strong></td>
+                    <td>14:15 to 15:15</td>
+                    <td>14:20 to 15:30 (NSE Circular NSE/COM/76978)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Call Auction (Illiquid Equities)</strong></td>
+                    <td>14:20 to 15:05</td>
+                    <td>Not Applicable</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Closing Session</strong></td>
+                    <td>15:25 to 15:35</td>
+                    <td>Not Applicable</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Trade Modification Cut-off</strong></td>
+                    <td>Until 15:40</td>
+                    <td>Until 15:40</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="section-title"><h2>2. Important Trading and Settlement Rules</h2></div>
+            <ul>
+              <li><strong>Compulsory Settlement Obligations:</strong> All trades executed during the Muhurat trading session are firm and result in regular clearing corporation settlement obligations under standard rolling cycles.</li>
+              <li><strong>No Intraday Carry-Forward:</strong> Intraday squared-off positions (MIS/CO) are automatically closed by your broker's risk management system before the session concludes.</li>
+              <li><strong>Market Holiday Calendar:</strong> The market remains shut on Monday, 9 November 2026, and is an official exchange holiday on Tuesday, 10 November 2026 (Diwali-Balipratipada). Regular trading resumes on Wednesday, 11 November 2026.</li>
+            </ul>
+
+            <div class="card" style="margin-top:20px;padding:16px;border-left:4px solid var(--accent)">
+              <p style="margin:0"><strong>Exchange Reference:</strong> Verify full dates on the
+              <a href="/stock-market-holidays/" data-link>NSE Trading Holidays Calendar</a> and evaluate brokerage fee structures using our
+              <a href="/trade-costs/" data-link>Trade Cost Calculator</a>.</p>
+            </div>
+            """
+        },
+        {
+            "slug": "tata-motors-demerger-tmcv-vs-tmpv-shareholders-guide",
+            "title": "Tata Motors Demerger Guide: TMCV vs TMPV Share Allocation Ratio, Listing Date & Stock Price Action",
+            "description": "What Tata Motors shareholders need to know about the commercial vehicles (TMCV) and passenger vehicles (TMPV) demerger: record date, allotment ratio, and trading facts.",
+            "category": "Blog & Guide",
+            "category_badge": "badge-verified",
+            "type": "BlogPosting",
+            "read_time": "6 min read",
+            "body_html": """
+            <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
+              The National Company Law Tribunal (NCLT) approved composite scheme of arrangement for the demerger of Tata Motors
+              Limited into two separate listed entities represents one of the largest corporate restructuring exercises in Indian automotive history.
+            </p>
+
+            <div class="section-title"><h2>1. Two Distinct Listed Automotive Entities</h2></div>
+            <p>
+              Following the demerger with an NSE corporate action record date of <strong>14 October 2025</strong>, the businesses are separated as:
+            </p>
+            <ul>
+              <li><strong>TMCV (Tata Motors Limited):</strong> The commercial vehicles business comprising medium and heavy commercial vehicles, intermediate light commercial vehicles, small commercial vehicles, and buses, alongside related automotive investments.</li>
+              <li><strong>TMPV (Tata Motors Passenger Vehicles Limited):</strong> The passenger vehicle company housing the domestic passenger vehicles business, electric mobility initiatives (EVs), Jaguar Land Rover (JLR), and allied vehicle technology subsidiaries.</li>
+            </ul>
+
+            <div class="section-title"><h2>2. Share Entitlement Ratio and Corporate Action Record</h2></div>
+            <p>
+              Under the approved scheme of arrangement, eligible shareholders of Tata Motors Limited received shares in the resulting entity on a <strong>1:1 ratio</strong>:
+            </p>
+            <ul>
+              <li>For every 1 fully paid-up equity share of Rs 2 each held in Tata Motors, shareholders were allotted 1 fully paid-up equity share of Rs 2 each in Tata Motors Passenger Vehicles Limited.</li>
+              <li>No cash consideration or capital reduction was involved in the share entitlement process.</li>
+            </ul>
+
+            <div class="card" style="margin-top:20px;padding:16px;border-left:4px solid var(--accent)">
+              <p style="margin:0"><strong>Head-to-Head Comparison:</strong> Review financial performance, historical price range, returns, and delivery volume side by side on our dedicated
+              <a href="/compare/stocks/tmcv-vs-tmpv/" data-link>TMCV vs TMPV Comparison Page</a>.</p>
+            </div>
+            """
+        },
+        {
             "slug": "fo-trading-taxation-rules-india-stcg-audit",
             "title": "F&O Trading Taxation in India: Section 44AD, STCG vs Business Income & New STT Rules",
             "description": "Everything Indian derivative traders must know about tax filing: calculating turnover under Section 44AB, speculative vs non-speculative income, and carrying forward losses.",
