@@ -60,7 +60,7 @@ def stock_title(name, symbol):
     return head + tail
 
 
-def stock_description(name, symbol):
+def stock_description(name, symbol, exchange="NSE"):
     """Plain text meta description (caller escapes and caps the length).
 
     Leads with the "share price target <years>" query match and what the page
@@ -71,9 +71,9 @@ def stock_description(name, symbol):
     Google may not even render past its own truncation from reading, in
     effect, as a reason not to click."""
     return (
-        "%s (NSE: %s) share price target 2026-2050: see the real last close and NSE trading "
+        "%s (%s: %s) share price target 2026-2050: see the real last close and %s trading "
         "range, and run your own what-if price calculator with any growth assumption you choose."
-        % (name, symbol)
+        % (name, exchange, symbol, exchange)
     )
 
 
@@ -134,7 +134,7 @@ def _tile(label, value_html, sub=""):
             % (label, value_html, ('<div class="xs faint" style="margin-top:2px">%s</div>' % sub) if sub else ""))
 
 
-def price_target_section_html(name, symbol, history, px, long_date, esc, today=None):
+def price_target_section_html(name, symbol, history, px, long_date, esc, today=None, exchange="NSE"):
     """The explanatory section plus the what-if calculator, as one HTML block.
 
     px(n) -> formatted rupee price html; long_date(iso) -> '18 Sep 2026';
@@ -163,8 +163,8 @@ def price_target_section_html(name, symbol, history, px, long_date, esc, today=N
             tiles.append(_tile("High, %s" % span, px(facts["hi"])))
         if facts["lo"] is not None:
             tiles.append(_tile("Low, %s" % span, px(facts["lo"])))
-        note = "Exchange data from NSE daily history, %s to %s (%d trading sessions)." % (
-            esc(long_date(facts["first_date"])), esc(long_date(facts["last_date"])), facts["n"])
+        note = "Exchange data from %s daily history, %s to %s (%d trading sessions)." % (
+            exchange, esc(long_date(facts["first_date"])), esc(long_date(facts["last_date"])), facts["n"])
         if not facts["is_52w"]:
             note += " BrokerLens holds fewer than 252 sessions for this symbol, so no 52-week figure is shown."
         data_html = (
@@ -228,7 +228,7 @@ def price_target_section_html(name, symbol, history, px, long_date, esc, today=N
     return intro + data_html + calc
 
 
-def stock_target_faqs(name, symbol, facts_line=""):
+def stock_target_faqs(name, symbol, facts_line="", exchange="NSE"):
     """Three (question, answer) pairs. The first keeps the wording the page has
     always used for this query (a QA check pins it); facts_line is the
     existing 'what the data shows' sentence, appended only when there is data."""
@@ -248,5 +248,6 @@ def stock_target_faqs(name, symbol, facts_line=""):
         ("Where can I find analyst price targets for %s?" % name,
          "Price targets are published by the research analysts and brokerages that issue them, in their own reports. "
          "Check that the analyst is registered with SEBI, read the assumptions behind the number, and compare it with "
-         "the company's own disclosures on the NSE and BSE websites. BrokerLens does not collect or rate targets."),
+         "the company's own disclosures on the %s. BrokerLens does not collect or rate targets."
+         % ("BSE website" if exchange == "BSE" else "NSE and BSE websites")),
     ]

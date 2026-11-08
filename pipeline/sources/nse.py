@@ -432,6 +432,19 @@ def index_universe(fa: Fetcher):
     return out
 
 
+def sme_isins(fa: Fetcher):
+    """ISINs of every company on NSE's SME platform (Emerge), from NSE's own
+    SME_EQUITY_L.csv. Used only to tell which BSE stocks NSE does not list at
+    all; an empty list just means that check falls back to the main board."""
+    text = fa.get_text("%s/emerge/corporates/content/SME_EQUITY_L.csv" % ARCH, ttl=86400)
+    out = []
+    for r in csv.DictReader(io.StringIO(text or "")):
+        for k, v in r.items():
+            if k and "ISIN" in k.upper() and (v or "").strip():
+                out.append(v.strip().upper())
+    return out
+
+
 def etf_universe(fa: Fetcher):
     """NSE's own list of listed ETFs - a separate instrument universe from
     EQUITY_L.csv (confirmed: zero symbol overlap), same archive host and
@@ -672,6 +685,7 @@ def collect(broker_aliases):
         "live": live_quotes(f, want_losers=True),
         "fii_dii": fii_dii(f),
         "universe": equity_universe(fa),
+        "sme_isins": sme_isins(fa),
         "indices": index_universe(fa),
         "etfs": etf_universe(fa),
         "circulars": member_circulars(f, broker_aliases),

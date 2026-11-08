@@ -580,9 +580,14 @@ def build():
     if not holidays_page.write(os.path.join(ROOT, "site"), _esc, _REGISTRY_PAGE_HEAD, _REGISTRY_PAGE_FOOT,
                                _breadcrumb, _write_text, SITE_URL):
         log("stock market holidays page skipped: no usable NSE holiday file", "warn")
+    from . import bse_only as _bse_only
+    bse_scrips, bse_fresh = _bse_only.load_universe(bse_d.get("bse_only"), equity_companies, _stock_slug)
     _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"),
                         index_universe, equity_history, bse_d.get("corporate_actions") or [], ipo_records=ipo_records,
-                        news_articles=news_articles)
+                        news_articles=news_articles, extra_keep={s["slug"] for s in bse_scrips})
+    nse_stock_slugs = {_stock_slug(c.get("symbol")) for c in equity_companies} - {""}
+    bse_written = _bse_only.write_pages(bse_scrips, bse_fresh, bse_d.get("corporate_actions") or [],
+                                        news_articles, nse_stock_slugs)
     _write_index_pages(index_universe, equity_companies)
     etf_universe = nse_d.get("etfs") or []
     mf_schemes = amfi_d.get("schemes") or []
@@ -611,7 +616,8 @@ def build():
     _write_brokers_page(overview)
     _write_calculator_tool_page(built)
     _prerender_home(overview)
-    stock_letters = _write_stock_directory(equity_companies, index_universe)
+    stock_letters = _write_stock_directory(equity_companies, index_universe, bse_only_count=len(bse_written))
+    _bse_only.write_hub(bse_scrips, bse_fresh, bse_written)
     amc_slugs = _write_fund_amc_pages(fund_slugs, _funds)
     _write_etf_directory(etf_universe)
     crypto_slugs = _write_crypto_pages(crypto_coins)
@@ -651,11 +657,14 @@ def build():
                     branch_urls=branch_urls, fund_compare_urls=fund_compare_urls,
                     fund_category_urls=fund_category_urls, ipo_sub_urls=ipo_sub_urls,
                     share_price_target_urls=share_price_target_urls,
-                    broker_charges_urls=broker_charges_urls)
+                    broker_charges_urls=broker_charges_urls,
+                    bse_stock_entries=_bse_only.sitemap_entries(
+                        bse_scrips, bse_fresh, bse_written, SITE_URL, datetime.now(timezone.utc).strftime("%Y-%m-%d")))
     _write_search_index(built, reg_rows, hub_groups, equity_companies, index_universe, etf_universe,
                          fund_slugs, report_slugs, amc_slugs, crypto_coins, ipo_records, comparison_pairs=comparison_pairs,
                          news_articles=news_articles, stock_compare_search=stock_compare_search,
-                         fund_compare_search=fund_compare_search)
+                         fund_compare_search=fund_compare_search,
+                         extra_rows=_bse_only.search_rows(bse_scrips, bse_written))
     _write_feed(built, aggregates)
     build_ticker()
     build_crypto_ticker()
@@ -2332,7 +2341,7 @@ def _stock_ohlc_html(history):
 _EQUITY_BREAKS = {}   # symbol -> date of the split/bonus-sized break after which history is kept
 
 
-def _stock_perf(history, break_date=None):
+def _stock_perf(history, break_date=None, exchange="NSE"):
     """Real performance measures computed only from the daily closes already on
     file (NSE bhavcopy). Every window is labelled by the sessions actually
     available, never as 1-year/52-week when the cache is shorter, and nothing
@@ -2372,10 +2381,10 @@ def _stock_perf(history, break_date=None):
     html = (
         '<div class="section-title"><h2>Performance snapshot</h2></div>'
         '<div class="grid g3">%s</div>'
-        '<p class="xs faint" style="margin-top:8px;max-width:78ch">Computed from %d daily closes in NSE\'s bhavcopy, %s to %s. '
+        '<p class="xs faint" style="margin-top:8px;max-width:78ch">Computed from %d daily closes in %s\'s bhavcopy, %s to %s. '
         'This is the history BrokerLens holds, not a full year, so no 1-year or 52-week figure is shown. '
         'Past performance does not indicate future results.%s</p>'
-        % ("".join(tiles), n, _esc(_iso_to_long_date(first_date)), _esc(_iso_to_long_date(last_date)),
+        % ("".join(tiles), n, exchange, _esc(_iso_to_long_date(first_date)), _esc(_iso_to_long_date(last_date)),
            (" Prices before %s are left out: a split or bonus around that date would make them incomparable, and "
             "BrokerLens does not yet adjust for corporate actions." % _esc(_iso_to_long_date(break_date))) if break_date else "")
     )
@@ -2554,7 +2563,8 @@ def _stock_news_section_html(matched_articles, esc_fn):
     ) % "".join(cards)
 
 
-def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None, corporate_actions=None, ipo_records=None, news_articles=None):
+def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None, corporate_actions=None, ipo_records=None, news_articles=None,
+                       extra_keep=()):
     """One static page per NSE-listed equity - Phase 1 of docs/SCALE_TO_60K_PLAN.md,
     completed: sector, a real price snapshot and corporate actions were named
     in that plan as in-scope "from data this pipeline already pulls" but
@@ -2976,7 +2986,8 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
         _write_text(os.path.join(dest_dir, "index.html"), body)
         written += 1
 
-    keep = {_stock_slug(c.get("symbol")) for c in companies if _stock_slug(c.get("symbol"))}
+    # extra_keep: BSE-only stock pages (pipeline/bse_only.py), written right after this.
+    keep = {_stock_slug(c.get("symbol")) for c in companies if _stock_slug(c.get("symbol"))} | set(extra_keep or ())
     pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "stock"), keep)
     log("stock pages: %d NSE-listed equity pages written%s" % (
         written, (", %d stale pruned" % pruned) if pruned else ""), "ok")
@@ -4477,7 +4488,7 @@ def _index_chips_html(indices):
             '<div class="row-wrap" style="gap:8px;margin-top:12px">%s</div>' % chips)
 
 
-def _write_stock_directory(companies, indices=None):
+def _write_stock_directory(companies, indices=None, bse_only_count=0):
     """A-Z browse pages for every NSE-listed equity.
 
     Index-membership links already reach a stock page for anything in a
@@ -4578,6 +4589,9 @@ def _write_stock_directory(companies, indices=None):
         '<p class="muted" style="max-width:70ch">%d companies across %d letters, sourced from NSE\'s own '
         'listed-securities master file.</p>' % (total, len(letters))
         + '<div class="grid g4" style="margin-top:16px">' + counts_html + '</div>'
+        + ('<div class="card" style="margin-top:16px"><div class="card-title"><a href="/stocks/bse/">Stocks listed only on BSE</a></div>'
+           '<p class="small muted" style="margin-top:4px">%d actively traded companies that are listed on BSE but not on NSE, '
+           'each with its own price history page.</p></div>' % bse_only_count if bse_only_count else "")
         + _index_chips_html(indices)
     )
     body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
@@ -4586,7 +4600,8 @@ def _write_stock_directory(companies, indices=None):
     os.makedirs(dest_dir, exist_ok=True)
     _write_text(os.path.join(dest_dir, "index.html"), body)
 
-    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "stocks"), {slugify(l) for l in letters})
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "stocks"),
+                               {slugify(l) for l in letters} | ({"bse"} if bse_only_count else set()))
     log("stock directory: %d letter pages written, %d stocks linked%s" % (
         written, total, (", %d stale pruned" % pruned) if pruned else ""), "ok")
     return letters
@@ -8120,6 +8135,7 @@ SITEMAP_WAVES = {
 }
 SITEMAP_WAVES["broker-charges"] = 1  # per-broker calculator and charges pages: few, high intent
 SITEMAP_WAVES["demand"] = 1  # pages with real search impressions, see _demand_sitemap_entries()
+SITEMAP_WAVES["stocks-bse"] = 1  # companies listed only on BSE, see pipeline/bse_only.py
 
 
 def _demand_sitemap_entries(xml_url, today):
@@ -8162,7 +8178,8 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
                     fund_nav_dates=None, comparison_pairs=None, trade_cost_urls=None,
                     ipo_apply_urls=None, stock_compare_urls=None, sip_calc_urls=None,
                     branch_urls=None, fund_compare_urls=None, fund_category_urls=None,
-                    ipo_sub_urls=None, share_price_target_urls=None, broker_charges_urls=None):
+                    ipo_sub_urls=None, share_price_target_urls=None, broker_charges_urls=None,
+                    bse_stock_entries=None):
     _require_site_url()
     import math
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -8431,6 +8448,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         ("brokers", broker_entries),
         ("ipos", ipo_entries),
         ("stocks-top", stock_top_entries),
+        ("stocks-bse", bse_stock_entries or []),
         ("stocks", stock_entries),
         ("funds", fund_entries),
         ("registry", registry_entries),
@@ -8559,7 +8577,7 @@ _CORE_PAGES = [
 
 def _write_search_index(built, reg_rows, hub_groups, companies, indices, etfs, fund_slugs, report_slugs,
                          amc_slugs=None, crypto_coins=None, ipo_records=None, comparison_pairs=None,
-                         news_articles=None, stock_compare_search=None, fund_compare_search=None):
+                         news_articles=None, stock_compare_search=None, fund_compare_search=None, extra_rows=None):
     """One flat, client-side search index covering every page family this
     pipeline writes, not just the 48 tracked brokers the original search.json
     carried (which had no reader anywhere in the codebase - confirmed by
@@ -8650,6 +8668,7 @@ def _write_search_index(built, reg_rows, hub_groups, companies, indices, etfs, f
     for name, url, sub in (fund_compare_search or []):
         rows.append([name, url, "compare", sub])
 
+    rows.extend(extra_rows or [])
     write_json(os.path.join(SITE_DATA, "search.json"), rows, compact=True)
     log("search.json: %d entries indexed" % len(rows), "ok")
 

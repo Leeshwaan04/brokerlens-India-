@@ -2256,8 +2256,8 @@ def test_instrument_pages():
     listed = re.findall(r"/sitemaps/sitemap-([a-z0-9-]+?)(?:-\d+)?\.xml", smx)
     # "demand" lists pages from held-back families that already earn real search impressions
     # (publish._demand_sitemap_entries), so the index allowlist never noindexes them.
-    check("sitemap index lists only wave-1 files (core, brokers, broker-charges, ipos, registry, news, crypto, top stocks, demand)",
-          set(listed) <= {"core", "brokers", "broker-charges", "ipos", "registry", "news", "crypto", "stocks-top", "demand"} and len(listed) >= 5, str(sorted(set(listed))))
+    check("sitemap index lists only wave-1 files (core, brokers, broker-charges, ipos, registry, news, crypto, top stocks, BSE-only stocks, demand)",
+          set(listed) <= {"core", "brokers", "broker-charges", "ipos", "registry", "news", "crypto", "stocks-top", "stocks-bse", "demand"} and len(listed) >= 5, str(sorted(set(listed))))
     heldback = [n for n in ("trade-costs", "branches", "fund-compare", "stock-compare", "funds") if os.path.exists(os.path.join(site, "sitemaps", "sitemap-%s.xml" % n))]
     check("held-back waves are not written to the sitemaps folder (nothing stale left to submit)", not heldback, str(heldback))
     all_loc = "".join(open(os.path.join(site, "sitemaps", f), encoding="utf-8").read() for f in os.listdir(os.path.join(site, "sitemaps")) if f.endswith(".xml"))

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import csv
 import io
+import re
 from datetime import datetime, timedelta, timezone
 
 from ..common import Fetcher, bse, log, snapshot, to_num
@@ -168,10 +169,176 @@ def _aggregate_delivery(text):
     }
 
 
-def collect(watchlist=None):
+BHAVCOPY_URL = WWW + "/download/BhavCopy/Equity/BhavCopy_BSE_CM_0_0_0_%s_F_0000.CSV"
+SCRIP_MASTER_URL = API + "/ListofScripData/w?Group=&Scripcode=&industry=&segment=Equity&status=Active"
+
+# BSE's main-board equity groups. X holds companies listed only on BSE and XT the
+# same companies settled trade-for-trade; A, B and T also carry BSE-only names.
+# Z (companies that have not met BSE's listing compliances) is kept: a liquid
+# Z-group stock is still bought and sold every day, and its page says plainly
+# which group BSE has put it in. Left out: the SME platform (M, MT) and anything
+# that is not an equity share (fund units, debt, rights entitlements).
+MAINBOARD_GROUPS = ("A", "B", "T", "X", "XT", "Z")
+
+# A BSE-only stock gets its own /stock/ page only once it is genuinely traded:
+# present on at least 75% of the sessions fetched, with an average daily traded
+# value of at least Rs 10 lakh across all of them (a missed session counts as zero).
+LIQUID_MIN_SESSION_SHARE = 0.75
+LIQUID_MIN_AVG_VALUE_INR = 1_000_000
+
+
+def is_equity_isin(isin):
+    """INE + 4-character issuer code + "01" (equity shares) + serial + check digit."""
+    isin = (isin or "").strip().upper()
+    return len(isin) == 12 and isin.startswith("INE") and isin[7:9] == "01"
+
+
+def isin_issuer_key(isin):
+    """The part of an equity ISIN that survives a split or bonus.
+
+    A face-value split re-issues the ISIN with a new serial (Bansal Wire went from
+    INE0B9K01025 to INE0B9K01033), so comparing full ISINs across exchanges, or
+    across dates, wrongly treats one company as two."""
+    isin = (isin or "").strip().upper()
+    return isin[:9] if is_equity_isin(isin) else None
+
+
+def scrip_master(f: Fetcher):
+    """BSE's own list of active equity scrips: full company name, scrip code,
+    ticker, group, face value, ISIN and market capitalisation (Rs crore). The
+    daily bhavcopy cuts names at 30 characters, so names come from here."""
+    data = f.get_json(SCRIP_MASTER_URL, ttl=86400, retries=1)
+    if not isinstance(data, list):
+        log("bse scrip master: no list returned", "warn")
+        return {}
+    out = {}
+    for r in data:
+        if not isinstance(r, dict) or (r.get("Status") or "").strip() != "Active":
+            continue
+        code = str(r.get("SCRIP_CD") or "").strip()
+        isin = (r.get("ISIN_NUMBER") or "").strip().upper()
+        if not code or not is_equity_isin(isin):
+            continue
+        out[code] = {
+            "code": code,
+            "symbol": (r.get("scrip_id") or "").strip(),
+            "name": _display_name(r.get("Issuer_Name"), r.get("Scrip_Name")),
+            "group": (r.get("GROUP") or "").strip().upper(),
+            "face_value": to_num(r.get("FACE_VALUE")),
+            "isin": isin,
+            "mktcap_cr": to_num(r.get("Mktcap")),
+            "bse_url": (r.get("NSURL") or "").strip() or None,
+        }
+    log("bse scrip master: %d active equity scrips" % len(out), "ok" if out else "warn")
+    return out
+
+
+def _display_name(issuer, short):
+    """The issuer's registered name, else BSE's short name, whichever is not
+    written in capitals; title-casing is the last resort because it mangles
+    acronyms ("BMW" becomes "Bmw")."""
+    names = [" ".join((raw or "").split()) for raw in (issuer, short)]
+    names = [n for n in names if n]
+    for name in names:
+        if not name.isupper():
+            return re.sub(r" (limited|ltd\.?)$", lambda m: " " + m.group(1).capitalize(), name)
+    return names[0].title() if names else ""
+
+
+def bse_only_history(f: Fetcher, nse_issuer_keys, keep_codes=(), days_back=120):
+    """Daily OHLCV for BSE main-board equities that are not listed on NSE.
+
+    Built from BSE's own daily bhavcopy, the same way nse.equity_history() reads
+    NSE's. nse_issuer_keys is the set of isin_issuer_key() values for everything
+    NSE lists (main board and SME); a stock NSE also lists already has an NSE
+    page and is skipped. Without that set nothing can be called BSE-only, so this
+    returns None rather than guess.
+
+    History is kept only for stocks that pass the liquidity rule above or are
+    already in keep_codes (stocks that already have a page), which keeps the
+    ingest file small. Returns {"asof", "sessions", "scrips": {code: {...,
+    "candles": [...], "liquid": bool}}} keyed by BSE scrip code, which unlike
+    the ISIN does not change on a split.
+    """
+    if not nse_issuer_keys or len(nse_issuer_keys) < 1500:
+        log("bse-only history skipped: NSE's listed-securities list was not available", "warn")
+        return None
+    master = scrip_master(f)
+    keep_codes = set(keep_codes or ())
+    by_code, last_seen, stats = {}, {}, {}
+    day = datetime.now(timezone.utc).date()
+    tried = sessions = 0
+    asof = None
+    while sessions < days_back and tried < days_back * 2:
+        tried += 1
+        day = day - timedelta(days=1)
+        if day.weekday() >= 5:
+            continue
+        text = f.get_text(BHAVCOPY_URL % day.strftime("%Y%m%d"), ttl=30 * 86400, retries=1)
+        if not text:
+            continue
+        rows = list(csv.DictReader(io.StringIO(text)))
+        if not rows or "ClsPric" not in rows[0]:
+            continue
+        sessions += 1
+        asof = asof or day.isoformat()
+        for r in rows:
+            isin = (r.get("ISIN") or "").strip().upper()
+            group = (r.get("SctySrs") or "").strip().upper()
+            if group not in MAINBOARD_GROUPS or not is_equity_isin(isin) or isin_issuer_key(isin) in nse_issuer_keys:
+                continue
+            code = (r.get("FinInstrmId") or "").strip()
+            close = to_num(r.get("ClsPric"))
+            if not code or close is None:
+                continue
+            if code not in last_seen:   # walking backwards, so the first row seen is the latest
+                last_seen[code] = {"symbol": (r.get("TckrSymb") or "").strip(),
+                                   "name": " ".join((r.get("FinInstrmNm") or "").split()),
+                                   "group": group, "isin": isin,
+                                   "lot": to_num(r.get("NewBrdLotQty"))}
+            s = stats.setdefault(code, [0, 0.0])
+            s[0] += 1
+            s[1] += to_num(r.get("TtlTrfVal")) or 0
+            by_code.setdefault(code, []).append({
+                "date": day.isoformat(), "open": to_num(r.get("OpnPric")), "high": to_num(r.get("HghPric")),
+                "low": to_num(r.get("LwPric")), "close": close, "volume": to_num(r.get("TtlTradgVol")),
+            })
+    if not sessions:
+        log("bse-only history: no bhavcopy file reachable", "warn")
+        return None
+    scrips = {}
+    for code, candles in by_code.items():
+        n, value = stats[code]
+        liquid = n >= LIQUID_MIN_SESSION_SHARE * sessions and value / sessions >= LIQUID_MIN_AVG_VALUE_INR
+        if not liquid and code not in keep_codes:
+            continue
+        meta = dict(last_seen[code])
+        m = master.get(code)
+        if m and isin_issuer_key(m["isin"]) in nse_issuer_keys:
+            continue
+        if m:
+            meta.update({k: m[k] for k in ("symbol", "name", "group", "face_value", "isin", "mktcap_cr", "bse_url")
+                         if m.get(k) not in (None, "")})
+        # "master": the name and facts came from BSE's scrip list, not the bhavcopy's
+        # 30-character name; only such a record may name a page (see bse_only.py).
+        meta.update({"code": code, "liquid": liquid, "master": bool(m), "sessions_traded": n,
+                     "avg_value_inr": round(value / sessions), "candles": sorted(candles, key=lambda p: p["date"])})
+        scrips[code] = meta
+    log("bse-only history: %d stocks kept (%d pass the liquidity rule), %d sessions to %s"
+        % (len(scrips), sum(1 for s in scrips.values() if s["liquid"]), sessions, asof), "ok")
+    return {"asof": asof, "sessions": sessions, "scrips": scrips}
+
+
+def collect(watchlist=None, nse_issuer_keys=None, keep_codes=()):
     f = bse()
-    return {
+    out = {
         "delivery": delivery_stats(f),
         "corporate_actions": corporate_actions(f),
         "live": live_quotes(f, watchlist),
     }
+    try:
+        out["bse_only"] = bse_only_history(f, nse_issuer_keys, keep_codes)
+    except Exception as exc:   # an enrichment; never let it cost the rest of BSE's data
+        log("bse-only history failed: %s" % exc, "warn")
+        out["bse_only"] = None
+    return out

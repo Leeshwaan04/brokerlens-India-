@@ -80,6 +80,22 @@ def _shortfalls(key, val):
     return missing
 
 
+def _nse_issuer_keys(nse_out):
+    """isin_issuer_key() of every NSE-listed company (main board and SME), so the
+    BSE adapter can tell which BSE stocks NSE does not list."""
+    nse_out = nse_out or {}
+    isins = [c.get("isin") for c in ((nse_out.get("universe") or {}).get("companies") or [])]
+    isins += [e.get("isin") for e in (nse_out.get("etfs") or [])]
+    isins += list(nse_out.get("sme_isins") or [])
+    return {k for k in (bse_src.isin_issuer_key(i) for i in isins) if k}
+
+
+def _bse_only_codes():
+    """Scrip codes that already have a BSE-only stock page; their history is
+    always fetched, whatever their latest liquidity."""
+    return set(((read_json(os.path.join(MANUAL, "bse_only_equities.json"), {}) or {}).get("scrips") or {}).keys())
+
+
 def fetch(sebi_pages=None):
     out = {"_status": {}, "fetched_at": now_iso()}
     problems = []
@@ -120,7 +136,7 @@ def fetch(sebi_pages=None):
     run("nse", lambda: nse_src.collect(_aliases()),
         ["nse_market_status", "nse_all_indices", "nse_fii_dii", "nse_equity_master",
          "nse_circulars", "nse_cm_bhavcopy", "nse_live_quotes"])
-    run("bse", lambda: bse_src.collect(wl.get("bse")),
+    run("bse", lambda: bse_src.collect(wl.get("bse"), _nse_issuer_keys(out.get("nse")), _bse_only_codes()),
         ["bse_delivery", "bse_corporate_actions", "bse_live_quotes"])
     run("mcx", lambda: mcx_src.collect(wl.get("mcx")), ["mcx_market_watch"])
     run("sebi", lambda: sebi_src.collect(max_pages=sebi_pages),
