@@ -5,6 +5,56 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/news/pre-market-cues-gift-nifty-(.*)",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/nifty-bank-financial-services-pulse-(.*)",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-24",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-24/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-29",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-29/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-31",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-31/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-07",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-07/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
       "source": "/news/money-view-ipo-valuation-price-target-guide",
       "destination": "/ipo/moneyview/",
       "permanent": true

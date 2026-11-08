@@ -355,7 +355,7 @@ export async function home() {
       <dl class="kv" style="margin-top:8px">
         ${nifty ? `<dt>NIFTY 50</dt><dd class="num">${full(nifty.last)}
           <span class="${cls(nifty.change_pct)}">${pct(nifty.change_pct)}</span></dd>` : ''}
-        ${breadth ? `<dt>NSE breadth</dt><dd class="num"><span class="up">${full(breadth.advances)} ▲</span> /
+        ${breadth ? `<dt>Nifty 500 breadth</dt><dd class="num"><span class="up">${full(breadth.advances)} ▲</span> /
           <span class="down">${full(breadth.declines)} ▼</span></dd>` : ''}
         ${delivery ? `<dt>BSE delivery</dt><dd class="num">${delivery.delivery_pct.toFixed(2)}%</dd>` : ''}
         ${m.universe?.nse_symbols ? `<dt>NSE symbols</dt><dd class="num">${full(m.universe.nse_symbols)}</dd>` : ''}

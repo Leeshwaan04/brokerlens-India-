@@ -15,6 +15,7 @@ duration of the call, then restored, so this file never touches the real
 site/ tree.
 """
 import datetime
+import json
 import os
 import re
 import sys
@@ -185,43 +186,61 @@ def run(check, ROOT, load):
         check("contentintegrity: pipeline.news_engine.generate_news_corpus importable", False, str(e))
 
     if generate_news_corpus:
-        today_iso = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
-        wrap_slug = "indian-stock-market-wrap-%s" % today_iso
-
+        # A real session (Friday 6 Nov 2026), as NSE's allIndices stamps it; the build itself may
+        # run on any later day, a Saturday included.
+        session_stamp, wrap_slug = "06-Nov-2026 15:30", "indian-stock-market-wrap-2026-11-06"
+        pulse = {"asof": session_stamp,
+                 "indices": [{"name": "NIFTY 50", "last": 25030.35, "change": 493.75, "change_pct": 2.01}],
+                 "breadth": {"advances": 341, "declines": 154, "basis": "Nifty 500"}}
         with_data = {"nse": {
-            "pulse": {"indices": [{"last": 25000.0, "change": 10.0, "change_pct": 0.1}],
-                      "breadth": {"advances": 1200, "declines": 800}},
+            "pulse": pulse,
             "live": {"gainers": [{"symbol": "ABC", "last": 100.0, "change_pct": 2.0}],
                      "losers": [{"symbol": "QAXYZCORP", "last": 50.0, "change_pct": -3.5}],
                      "most_active": []},
-            "universe": ["SYM%d" % i for i in range(3142)],
+            "universe": {"symbol_count": 3142, "companies": [], "company_names": []},
             "ipo": {},
         }}
         arts = generate_news_corpus(with_data, site_url="https://www.brokerlens.in")
         wrap = next((a for a in arts if a.get("slug") == wrap_slug), None)
-        check("contentintegrity: generate_news_corpus() emits the daily market-wrap article", wrap is not None)
+        check("contentintegrity: the market wrap is dated by NSE's session, not by the day the build ran",
+              wrap is not None and wrap.get("date") == "2026-11-06" and "06 November 2026" in wrap.get("title", ""),
+              str([a.get("slug") for a in arts if "wrap" in a.get("slug", "")]))
         if wrap:
             body = wrap.get("body_html", "")
             check("contentintegrity: market-wrap 'Key Consolidators' list shows a real NSE loser when "
                   "collect() supplied one, not the generic consolidation placeholder",
                   "QAXYZCORP" in body and "Equities tracking broader market consolidation" not in body)
-            check("contentintegrity: market-wrap 'Active Equities' stat reflects the real ingested "
-                  "universe size, not the hardcoded 2,578",
-                  "3,142" in body and "2,578" not in body)
+            check("contentintegrity: market-wrap 'Active Equities' reads the ingested universe (a dict), "
+                  "not the number of its keys and not a hardcoded count",
+                  "3,142" in body and "2,578" not in body and ">3<" not in body)
+            check("contentintegrity: market-wrap breadth is the Nifty 500's own count, labelled as such, "
+                  "and never says 'today' for a past session",
+                  "Among Nifty 500 companies, 341 advanced and 154 declined" in body and "today's" not in body)
 
-        without_data = {"nse": {
-            "pulse": {"indices": [{"last": 25000.0, "change": 10.0, "change_pct": 0.1}],
-                      "breadth": {"advances": 1200, "declines": 800}},
-            "live": {"gainers": [], "losers": [], "most_active": []},
-            "ipo": {},
-        }}
-        arts2 = generate_news_corpus(without_data, site_url="https://www.brokerlens.in")
-        wrap2 = next((a for a in arts2 if a.get("slug") == wrap_slug), None)
-        if wrap2:
-            body2 = wrap2.get("body_html", "")
-            check("contentintegrity: market-wrap falls back to the honest placeholder (not a fabricated "
-                  "loser) when NSE supplied none, and to 2,578 only when no universe was ingested at all",
-                  "Equities tracking broader market consolidation" in body2 and "2,578" in body2)
+        for label, pulse_bad in (("an empty NSE index feed", {"indices": [], "breadth": None}),
+                                 ("a Nifty level with no session date", dict(pulse, asof=None)),
+                                 ("a feed with no Nifty 50 row", dict(pulse, indices=[dict(pulse["indices"][0], name="NIFTY BANK")]))):
+            arts_bad = generate_news_corpus({"nse": {"pulse": pulse_bad, "live": {}, "ipo": {}}},
+                                            site_url="https://www.brokerlens.in")
+            check("contentintegrity: no market wrap is published from %s (it used to print a made-up 25,150.00)" % label,
+                  not any(a.get("slug", "").startswith("indian-stock-market-wrap-") for a in arts_bad)
+                  and not any("25,150" in (a.get("title", "") + a.get("body_html", "")) for a in arts_bad))
+        check("contentintegrity: the data-free daily templates (pre-market brief, bank pulse) are no longer generated",
+              not any(a.get("slug", "").startswith(("pre-market-cues-gift-nifty-", "nifty-bank-financial-services-pulse-"))
+                      for a in arts))
+        vj = json.load(open(os.path.join(ROOT, "vercel.json"), encoding="utf-8"))
+        srcs = {r.get("source"): r.get("destination") for r in vj.get("redirects") or []}
+        check("contentintegrity: retired template articles redirect to /news/ instead of 404ing",
+              srcs.get("/news/pre-market-cues-gift-nifty-(.*)") == "/news/"
+              and srcs.get("/news/nifty-bank-financial-services-pulse-(.*)") == "/news/"
+              and srcs.get("/news/indian-stock-market-wrap-2026-11-07/") == "/news/")
+        news_dir = os.path.join(ROOT, "site", "news")
+        if os.path.isdir(news_dir):
+            left = [d for d in os.listdir(news_dir) if d.startswith(("pre-market-cues-gift-nifty-", "nifty-bank-financial-services-pulse-"))]
+            check("contentintegrity: no retired template article is still on disk", not left, str(left[:3]))
+            fake = [d for d in os.listdir(news_dir) if d.startswith("indian-stock-market-wrap-")
+                    and "25,150.00" in open(os.path.join(news_dir, d, "index.html"), encoding="utf-8").read()]
+            check("contentintegrity: no published market wrap carries the invented 25,150.00 level", not fake, str(fake))
 
     # ------------------------------------------------------------------
     # 5. Sitemap wave gating: a page family tagged wave 2+ in SITEMAP_WAVES

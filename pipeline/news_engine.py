@@ -26,9 +26,11 @@ import sys
 
 try:
     from . import ipo_facts
+    from .common import log
 except ImportError:  # run as a script
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from pipeline import ipo_facts
+    from pipeline.common import log
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -126,6 +128,16 @@ def _inject_mid_article_breaks(body_html):
     return body_html + mid_break
 
 
+def _session_date(stamp):
+    """NSE's allIndices timestamp ('08-Nov-2026 15:30') as a date, else None."""
+    for fmt in ("%d-%b-%Y %H:%M", "%d-%b-%Y %H:%M:%S", "%d-%b-%Y"):
+        try:
+            return datetime.datetime.strptime((stamp or "").strip(), fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
 def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     """Builds a rich collection of data-driven news, educational blogs, and empirical articles."""
     articles = []
@@ -136,12 +148,17 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     nse_d = ingest_data.get("nse") or {}
     mkt = nse_d.get("pulse") or {}
     indices = mkt.get("indices") or []
-    nifty = indices[0] if indices else {}
+    nifty = next((i for i in indices if (i.get("name") or "").upper() == "NIFTY 50"), {})
     breadth = mkt.get("breadth") or {}
     gainers = nse_d.get("live", {}).get("gainers") or []
     losers = nse_d.get("live", {}).get("losers") or []
     most_active = nse_d.get("live", {}).get("most_active") or []
-    active_count_str = "{:,}".format(len(nse_d.get("universe") or []) or 2578)
+    # The ingest's universe is a dict ({symbol_count, companies, ...}); len() of it was
+    # the number of keys, so the live wrap said "Active Equities: 3".
+    _uni = nse_d.get("universe")
+    _n_eq = ((_uni.get("symbol_count") or len(_uni.get("companies") or [])) if isinstance(_uni, dict)
+             else len(_uni or []))
+    active_count_str = "{:,}".format(_n_eq) if _n_eq else "-"
     ipos = nse_d.get("ipo") or {}
     current_ipos = ipos.get("current") or []
     upcoming_ipos = ipos.get("upcoming") or []
@@ -149,9 +166,18 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
     # =========================================================================
     # 1. REAL-TIME MARKET NEWS & DISPATCHES
     # =========================================================================
-    nifty_last = nifty.get("last") or 25150.0
-    nifty_chg = nifty.get("change") or 0.0
-    nifty_pct = nifty.get("change_pct") or 0.0
+    # Only real NSE figures, dated by the session they come from. This used to fall back
+    # to a made-up 25,150.00 with a 0.00 change whenever NSE's index feed came back empty,
+    # and to stamp the build date on it, so builds on 24 Oct, 29 Oct, 31 Oct and 7 Nov 2026
+    # (three of them Saturdays) published "today's session" articles with that invented level.
+    # No real level or no session date: no article.
+    nifty_last, nifty_chg, nifty_pct = nifty.get("last"), nifty.get("change"), nifty.get("change_pct")
+    session = _session_date(mkt.get("asof"))
+    wrap_ok = session is not None and all(isinstance(v, (int, float)) for v in (nifty_last, nifty_chg, nifty_pct))
+    if not wrap_ok:
+        nifty_last = nifty_chg = nifty_pct = 0.0   # only so the template formats; the article is not published
+    session_iso = session.isoformat() if session else today_iso
+    session_str = session.strftime("%d %B %Y") if session else today_str
     sentiment = "advanced" if nifty_chg >= 0 else "declined"
     sign_str = "+" if nifty_chg >= 0 else ""
 
@@ -167,22 +193,22 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
         for l in losers[:5]
     ) or '<li>Equities tracking broader market consolidation.</li>'
 
-    market_article_slug = "indian-stock-market-wrap-%s" % today_iso
+    market_article_slug = "indian-stock-market-wrap-%s" % session_iso
     market_article_title = "Indian Stock Market Today: Nifty 50 at %s, Key Gainers and Sectoral Action (%s)" % (
         "{:,.2f}".format(nifty_last) if isinstance(nifty_last, (int, float)) else str(nifty_last),
-        today_str
+        session_str
     )
     market_article_desc = (
         "NSE market summary for %s: Nifty 50 %s by %s%.2f points. Review top gainers, losers, "
         "turnover, and exchange breadth disclosures."
-        % (today_str, sentiment, sign_str, nifty_chg)
+        % (session_str, sentiment, sign_str, nifty_chg)
     )[:300]
 
     market_article_body = """
     <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
-      Indian benchmark indices %s in today's trading session, with the <strong>Nifty 50</strong>
+      Indian benchmark indices %s in the NSE session of %s, with the <strong>Nifty 50</strong>
       settling at <strong>%s</strong> (%s%.2f%%).
-      Market breadth on the National Stock Exchange reflected %s advancing stocks against %s declining stocks.
+      Among Nifty 500 companies, %s advanced and %s declined.
     </p>
 
     <div class="section-title"><h2>Key Exchange Highlights</h2></div>
@@ -193,14 +219,14 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
         <div class="stat-sub">%s%.2f pts (%s%.2f%%)</div>
       </div>
       <div class="card stat">
-        <div class="stat-label">NSE Advances / Declines</div>
+        <div class="stat-label">Nifty 500 Advances / Declines</div>
         <div class="stat-value">%s / %s</div>
         <div class="stat-sub">Market Breadth Ratio</div>
       </div>
       <div class="card stat">
         <div class="stat-label">Active Equities</div>
         <div class="stat-value">%s</div>
-        <div class="stat-sub">Tracked on NSE Primary Feeds</div>
+        <div class="stat-sub">Listed on NSE</div>
       </div>
     </div>
 
@@ -229,7 +255,7 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
       <a href="/compare/zerodha-vs-upstox/" data-link>Zerodha vs Upstox</a> to optimize monthly trading expenses.</p>
     </div>
     """ % (
-        sentiment,
+        sentiment, session_str,
         "{:,.2f}".format(nifty_last) if isinstance(nifty_last, (int, float)) else str(nifty_last),
         sign_str, nifty_pct,
         breadth.get("advances", "-"), breadth.get("declines", "-"),
@@ -241,117 +267,25 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
         top_losers_html
     )
 
-    articles.append({
+    if not wrap_ok:
+        log("news: no market wrap, NSE's index feed gave no Nifty 50 level with a session date", "warn")
+    articles.extend([] if not wrap_ok else [{
         "slug": market_article_slug,
         "title": market_article_title,
         "description": market_article_desc,
-        "date": today_iso,
-        "date_str": today_str,
+        "date": session_iso,
+        "date_str": session_str,
         "category": "Market News",
         "category_badge": "badge-verified",
         "type": "NewsArticle",
         "read_time": "3 min read",
         "body_html": market_article_body,
-    })
+    }])
 
-    # Banking & Financial Sector Pulse
-    bank_slug = "nifty-bank-financial-services-pulse-%s" % today_iso
-    bank_title = "Nifty Bank & Financial Services Pulse: Credit Growth and Rate Expectations (%s)" % today_str
-    bank_desc = (
-        "Analysis of Indian banking and financial sector stocks on NSE. Tracking HDFC Bank, ICICI Bank, "
-        "State Bank of India, and systemic liquidity trends."
-    )
-    bank_body = """
-    <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
-      The financial services cluster on the National Stock Exchange accounts for the largest weighting
-      in the benchmark Nifty 50. In recent sessions, institutional flows have reflected a focus on net interest
-      margins (NIMs) and credit expansion across private and public sector lenders.
-    </p>
-
-    <div class="section-title"><h2>Structural Drivers for Indian Banking</h2></div>
-    <ul>
-      <li><strong>Credit Expansion:</strong> Systemic bank credit growth continues at healthy double-digit rates, supported by retail personal loans, auto finance, and corporate working capital.</li>
-      <li><strong>Asset Quality:</strong> Gross Non-Performing Assets (GNPA) across commercial banks remain at multi-year lows, supported by stringent SARFAESI and IBC resolution frameworks.</li>
-      <li><strong>Deposit Competition:</strong> Banks continue to offer competitive term deposit rates to match ongoing retail credit appetite.</li>
-    </ul>
-
-    <div class="card" style="margin-top:16px;padding:16px;border-left:4px solid var(--accent)">
-      <p style="margin:0"><strong>Evaluate Banking Stocks:</strong> Review detailed financial ratios and brokerage costs for leading banks like
-      <a href="/stock/hdfcbank/" data-link>HDFC Bank</a>,
-      <a href="/stock/icicibank/" data-link>ICICI Bank</a>, and
-      <a href="/stock/sbin/" data-link>State Bank of India</a>.</p>
-    </div>
-    """
-    articles.append({
-        "slug": bank_slug,
-        "title": bank_title,
-        "description": bank_desc,
-        "date": today_iso,
-        "date_str": today_str,
-        "category": "Market News",
-        "category_badge": "badge-verified",
-        "type": "NewsArticle",
-        "read_time": "4 min read",
-        "body_html": bank_body,
-    })
-
-    # Morning Pre-Market Briefing
-    pre_slug = "pre-market-cues-gift-nifty-%s" % today_iso
-    pre_title = "Pre-Market Brief: GIFT Nifty, FII & DII Flows, Global Cues & Stocks in Focus (%s)" % today_str
-    pre_desc = (
-        "Daily morning pre-market setup for Indian equities (%s). GIFT Nifty trend, FII/DII institutional "
-        "positioning from NSE disclosures, Asian market cues, and derivative contracts in F&O ban."
-        % today_str
-    )[:300]
-    pre_body = """
-    <p class="lead" style="font-size:16px;line-height:1.6;color:var(--text)">
-      Indian equity benchmarks enter today's trading session following overnight global macroeconomic developments
-      and institutional portfolio adjustments. Ahead of the 9:15 AM IST opening bell on the National Stock Exchange (NSE)
-      and Bombay Stock Exchange (BSE), here are the critical market cues every retail investor and active derivative trader must track.
-    </p>
-
-    <div class="section-title"><h2>1. GIFT Nifty &amp; Global Setup</h2></div>
-    <p>
-      GIFT Nifty futures trading on the NSE International Exchange (NSE IX) in GIFT City provide the primary early indication
-      for domestic opening momentum. Traders evaluate the spread between GIFT Nifty and the previous closing level of the
-      benchmark Nifty 50 to gauge gap-up or gap-down opening probabilities. Global macro factors including Brent crude oil benchmarks
-      and the US Dollar Index (DXY) continue to influence emerging market currency pairs and corporate input cost projections.
-    </p>
-
-    <div class="section-title"><h2>2. Institutional Flow Dynamics (FII &amp; DII)</h2></div>
-    <p>
-      Foreign Institutional Investors (FIIs) and Domestic Institutional Investors (DIIs) represent the dominant liquidity drivers
-      in the Indian cash delivery and derivative segments. Under SEBI regulatory transparency standards, daily net provisional figures
-      are disclosed immediately post-market. Persistent DII inflows via retail Systematic Investment Plans (SIPs) continue to provide
-      structural counter-cyclical support during periods of foreign portfolio volatility.
-    </p>
-
-    <div class="section-title"><h2>3. Derivatives Watch &amp; F&amp;O Ban Period</h2></div>
-    <p>
-      Under exchange regulations, derivative contracts enter the F&amp;O ban period when aggregate open interest across all available
-      series crosses 95% of the Market Wide Position Limit (MWPL). During the ban period, no fresh positions are permitted for any
-      trader; existing positions can only be closed or rolled over to reduce open interest below the 80% exit threshold.
-    </p>
-
-    <div class="card" style="margin-top:16px;padding:16px;border-left:4px solid var(--accent)">
-      <p style="margin:0"><strong>Optimize Your Trade Execution:</strong> Review exact statutory charges, STT, and breakeven points before placing orders:
-      <a href="/trade-costs/" data-link>Stock Trade Cost Directory</a> &middot;
-      <a href="/compare/stocks/" data-link>Head-to-Head Stock Comparisons</a> &middot;
-      <a href="/ipo/" data-link>Live IPO Tracker</a>.</p>
-    </div>
-    """
-    articles.append({
-        "slug": pre_slug,
-        "title": pre_title,
-        "description": pre_desc,
-        "date": today_iso,
-        "date_str": today_str,
-        "category": "Market News",
-        "category_badge": "badge-verified",
-        "type": "NewsArticle",
-        "read_time": "3 min read",
-        "body_html": pre_body,
-    })
+    # The daily "Nifty Bank & Financial Services Pulse" and "Pre-Market Brief" are gone: both
+    # were the same fixed text republished every day (weekends too) under a new date, with no
+    # data in them, as NewsArticle pages. 57 of them were live by 7 Nov 2026; vercel.json now
+    # redirects them to /news/.
 
     # =========================================================================
     # 2. LIVE IPO BIDDING & ALLOTMENT BULLETINS

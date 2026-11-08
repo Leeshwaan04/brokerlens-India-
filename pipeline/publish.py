@@ -7695,7 +7695,7 @@ def _prerender_home(overview):
             ('<dt>NIFTY 50</dt><dd class="num">%s <span class="%s">%s</span></dd>' % (
                 _full_html(nifty.get("last")), _cls_class(nifty.get("change_pct")), _pct_html(nifty.get("change_pct")))
              if nifty.get("last") is not None else ""),
-            ('<dt>NSE breadth</dt><dd class="num"><span class="up">%s &#9650;</span> / <span class="down">%s &#9660;</span></dd>' % (
+            ('<dt>Nifty 500 breadth</dt><dd class="num"><span class="up">%s &#9650;</span> / <span class="down">%s &#9660;</span></dd>' % (
                 _full_html(breadth.get("advances")), _full_html(breadth.get("declines")))
              if breadth else ""),
             ('<dt>BSE delivery</dt><dd class="num">%.2f%%</dd>' % delivery["delivery_pct"] if delivery else ""),

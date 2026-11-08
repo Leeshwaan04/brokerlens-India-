@@ -27,7 +27,7 @@ ARCH = "https://nsearchives.nseindia.com"
 
 def market_pulse(f: Fetcher, ttl=None):
     """Live-ish market context for the site header. Cheap, safe to poll."""
-    out = {"exchange": "NSE", "status": None, "indices": [], "breadth": None}
+    out = {"exchange": "NSE", "status": None, "indices": [], "breadth": None, "asof": None}
 
     ms = f.get_json("%s/marketStatus" % API, ttl=60 if ttl is None else ttl)
     if ms:
@@ -55,12 +55,16 @@ def market_pulse(f: Fetcher, ttl=None):
             "NIFTY METAL", "NIFTY REALTY", "NIFTY ENERGY", "NIFTY PSU BANK",
             "NIFTY 100", "NIFTY 500",
         }
-        adv = dec = unc = 0
+        out["asof"] = ai.get("timestamp")   # e.g. '08-Nov-2026 15:30': the session these figures are from
         for idx in ai.get("data", []) or []:
             name = (idx.get("index") or "").upper()
-            adv += to_num(idx.get("advances")) or 0
-            dec += to_num(idx.get("declines")) or 0
-            unc += to_num(idx.get("unchanged")) or 0
+            # Breadth is the Nifty 500's own count, each company once. NSE's top-level
+            # advances/declines add up every index's constituents, so one stock counts once
+            # per index it sits in (6,151 "advances" on 8 Nov 2026, with ~2,900 listed equities).
+            if name == "NIFTY 500" and (to_num(idx.get("advances")) or to_num(idx.get("declines"))):
+                out["breadth"] = {"advances": to_num(idx.get("advances")) or 0,
+                                  "declines": to_num(idx.get("declines")) or 0,
+                                  "unchanged": to_num(idx.get("unchanged")) or 0, "basis": "Nifty 500"}
             if name in want:
                 out["indices"].append(
                     {
@@ -77,8 +81,6 @@ def market_pulse(f: Fetcher, ttl=None):
                 )
         # NIFTY 50 first, then by name, so the header order is stable
         out["indices"].sort(key=lambda i: (i["name"] != "NIFTY 50", i["name"] or ""))
-        if adv or dec:
-            out["breadth"] = {"advances": adv, "declines": dec, "unchanged": unc}
 
     snapshot("nse_market_pulse", out)
     return out
