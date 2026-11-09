@@ -241,6 +241,13 @@ def run(check, ROOT, load):
             fake = [d for d in os.listdir(news_dir) if d.startswith("indian-stock-market-wrap-")
                     and "25,150.00" in open(os.path.join(news_dir, d, "index.html"), encoding="utf-8").read()]
             check("contentintegrity: no published market wrap carries the invented 25,150.00 level", not fake, str(fake))
+            # The pre-fix template also summed breadth across indices, printed a hardcoded
+            # 2,578 (or 3) as "Active Equities" and repeated one close on six dates; all 26
+            # such wraps were retired on 9 Nov 2026 (308 to /news/).
+            old_tpl = [d for d in os.listdir(news_dir) if d.startswith("indian-stock-market-wrap-")
+                       and "Among Nifty 500 companies" not in open(os.path.join(news_dir, d, "index.html"), encoding="utf-8").read()]
+            check("contentintegrity: every market wrap on disk comes from the fixed template (session date, Nifty 500 breadth)",
+                  not old_tpl, str(old_tpl[:3]))
 
     # ------------------------------------------------------------------
     # 5. Sitemap wave gating: a page family tagged wave 2+ in SITEMAP_WAVES

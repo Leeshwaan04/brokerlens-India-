@@ -15,6 +15,266 @@
       "permanent": true
     },
     {
+      "source": "/news/indian-stock-market-wrap-2026-09-25",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-09-25/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-09-26",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-09-26/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-02",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-02/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-06",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-06/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-07",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-07/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-12",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-12/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-13",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-13/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-14",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-14/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-15",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-15/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-16",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-16/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-17",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-17/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-18",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-18/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-19",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-19/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-20",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-20/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-21",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-21/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-22",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-22/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-23",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-23/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-26",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-26/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-27",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-27/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-28",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-28/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-30",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-10-30/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-02",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-02/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-03",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-03/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-04",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-04/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-05",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-05/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-06",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
+      "source": "/news/indian-stock-market-wrap-2026-11-06/",
+      "destination": "/news/",
+      "permanent": true
+    },
+    {
       "source": "/news/indian-stock-market-wrap-2026-10-24",
       "destination": "/news/",
       "permanent": true
