@@ -75,11 +75,12 @@ jobs:
           git add reports/autopilot/LOG.md reports/gsc/
           if ! git diff --staged --quiet; then
             git commit -m "SEO autopilot: daily Search Console optimization $(date -u +%Y-%m-%d)"
+            git checkout -- .
             if git pull --rebase origin main; then
               git push origin main
               echo "pushed=true" >> "$GITHUB_ENV"
             else
-              git rebase --abort
+              git rebase --abort || true
               echo "::warning::Rebase conflict with concurrent push - skipping this run's push."
             fi
           fi
