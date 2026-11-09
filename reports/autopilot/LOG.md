@@ -15,3 +15,25 @@ One entry per run, newest last. Each change states its evidence, the effect it s
 - 8f1b502: no page carries noindex together with a canonical to another URL (481 secondary SEBI registrations, 2,548 IPO sub-pages). Expect the main registry pages to gain the roughly 4,300 monthly impressions the secondary pages drew. Check by 2026-11-30.
 - ad6e53c: removed invented GMP quotes and price bands for IPOs never filed; hand-written IPO titles replaced by fact-based ones (e.g. "Laurus Labs IPO Date, Price Band and Listing Date"). Expect IPO CTR to rise from about 0.04% (15,136 impressions, 6 clicks in 60 days). Check by 2026-11-30.
 - edd06cf: IPO pages no longer show a return since issue across splits and bonuses.
+
+## 2026-11-09 (Automated SEO Autopilot)
+
+- Weekly 28-day snapshot comparison (2026-11-09 vs 2026-11-02):
+  - Clicks: 1168 (+155 vs prior week)
+  - Impressions: 101225 (+5393 vs prior week)
+  - Submitted indexable URLs: 7196
+
+- Striking distance search queries identified (positions 4 to 20, high impressions):
+  - "pashupati cotspin share price target 2030": pos 4.5, 704 impressions, 25 clicks, 3.55% CTR
+  - "irb infra share price target 2030": pos 7.8, 543 impressions, 3 clicks, 0.55% CTR
+  - "cupid share price target 2026": pos 6.8, 489 impressions, 2 clicks, 0.41% CTR
+  - "econo broking": pos 10.2, 352 impressions, 0 clicks, 0% CTR
+  - "fourdegreewater services private limited": pos 10.0, 336 impressions, 0 clicks, 0% CTR
+  - "morepen lab share price target 2030": pos 7.5, 301 impressions, 3 clicks, 1.0% CTR
+  - "praj industries share price target 2030": pos 8.8, 250 impressions, 4 clicks, 1.6% CTR
+  - "comfort intech share price target 2030": pos 5.9, 236 impressions, 0 clicks, 0% CTR
+
+- Synchronized 1 pages with verified search demand into sitemap-demand.xml:
+  - /brokers/
+- Expected effect: increase search visibility and CTR across striking-distance terms without adding thin doorway pages.
+- Check impact by: 2026-11-23
