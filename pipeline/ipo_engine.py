@@ -1381,6 +1381,67 @@ def render_sme_ipo_hub(records, equity_history, head_template, foot_template,
     return body
 
 
+def _render_gmp_explainer(head_template, foot_template, breadcrumb_fn, source_note_fn, site_url, today_iso):
+    """/ipo/gmp/ when no GMP quote with a cited source is on file, which is the normal case.
+
+    Until 9 Nov 2026 this page was a "live" board of hand-typed figures that a script
+    re-dated every day (Jio and Tata Sons, which have no IPO, among them). A grey-market
+    quote has no exchange record behind it, so the page explains what GMP is and points
+    to the official subscription and allotment data instead of showing a number."""
+    canonical = f"{site_url}/ipo/gmp/"
+    title = "IPO GMP Explained: What Grey Market Premium Means and Why It Is Unofficial | BrokerLens"
+    description = ("What an IPO grey market premium (GMP) and kostak rate are, why neither is an official or "
+                   "verifiable price, and where to find the exchange's own subscription and allotment data.")
+    faqs = [
+        ("What is IPO Grey Market Premium (GMP)?",
+         "Grey Market Premium (GMP) is an unofficial, off-exchange rate at which IPO applications or shares are traded "
+         "between private parties before the shares list. A positive GMP is read as buyers expecting a listing above the "
+         "issue price; a negative one as soft demand."),
+        ("Does GMP guarantee listing day profits?",
+         "No. GMP has no regulatory oversight and can move sharply before listing. The listing price is set by the "
+         "exchange's pre-open call auction on the listing morning."),
+        ("What is the difference between Kostak rate and GMP?",
+         "GMP is a premium quoted per share. A kostak rate is a fixed amount offered for a whole retail application "
+         "before allotment, whether or not the application is allotted shares."),
+        ("Why does BrokerLens not show GMP figures?",
+         "Grey-market deals are private and are not reported to any exchange or to SEBI, so there is no record a quoted "
+         "figure can be checked against. BrokerLens publishes only data it can trace to a source. For demand, use the "
+         "exchange's own subscription figures."),
+    ]
+    crumb_html, crumb_jsonld = breadcrumb_fn([("BrokerLens", "/"), ("IPO", "/ipo/"), ("IPO GMP", None)])
+    jsonld = {"@context": "https://schema.org", "@graph": [
+        {"@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faqs]},
+        crumb_jsonld]}
+    body = head_template % {"title": _esc(title), "description": _esc(description),
+                            "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False)}
+    body += (
+        crumb_html
+        + '<h1 style="margin-top:0">IPO GMP (grey market premium), explained</h1>'
+        + '<div style="max-width:75ch">'
+        + '<p class="muted">BrokerLens does not publish GMP figures. A grey market premium is a price agreed in private, '
+          'off-exchange deals before an IPO lists. No exchange or regulator records those deals, so a quoted GMP cannot '
+          'be checked against anything, and different sources often quote different numbers for the same issue.</p>'
+        + '<h2 style="font-size:18px;margin-top:20px">What to look at instead</h2>'
+        + '<ul class="small" style="line-height:1.7">'
+          '<li><a href="/ipo/subscription/">Subscription status</a>: how many times each category of an open issue has '
+          'been bid for, from the exchange\'s own disclosures. This is the official measure of demand.</li>'
+          '<li><a href="/ipo/upcoming/">Upcoming IPOs</a>: price bands and bidding dates as the exchange lists them.</li>'
+          '<li><a href="/ipo/allotment-status/">Allotment status</a>: how to check whether you were allotted shares '
+          'with the registrar or the exchange.</li>'
+          '<li><a href="/ipo/">IPO tracker</a>: issue price, listing date and, where the price history on file covers it, '
+          'the listing-day price of past issues.</li>'
+          '</ul>'
+        + '</div>'
+        + '<div style="margin-top:28px;max-width:75ch"><h2 style="font-size:18px;margin-bottom:12px">Frequently asked questions about IPO GMP</h2>'
+        + "".join(f'<details class="faq-item"><summary>{_esc(q)}</summary><p>{_esc(a)}</p></details>' for q, a in faqs)
+        + '</div>'
+    )
+    body += foot_template % {"source_note": source_note_fn(
+        "This page explains grey market premium; it does not publish GMP figures, which no exchange or regulator records.")}
+    return body
+
+
 def render_gmp_hub(records, equity_history, head_template, foot_template,
                    breadcrumb_fn, source_note_fn, site_url="https://www.brokerlens.in", ibsl_html=""):
     """Renders /ipo/gmp/ central Grey Market Premium tracker board."""
@@ -1420,6 +1481,8 @@ def render_gmp_hub(records, equity_history, head_template, foot_template,
             })
 
     gmp_rows.sort(key=lambda x: x["gain_pct"], reverse=True)
+    if not gmp_rows:
+        return _render_gmp_explainer(head_template, foot_template, breadcrumb_fn, source_note_fn, site_url, today_iso)
 
     title = "IPO GMP Today: Live Grey Market Premium, Kostak Rates and Estimated Listing Gains | BrokerLens"
     description = (

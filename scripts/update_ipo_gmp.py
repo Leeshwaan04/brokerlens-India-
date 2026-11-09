@@ -50,17 +50,11 @@ def refresh_gmp_data():
     with open(GMP_PATH, "r", encoding="utf-8") as f:
         gmp_data = json.load(f)
 
-    # Refresh timestamps and maintain date history
-    for sym, entry in gmp_data.items():
-        entry["last_updated"] = today_iso
-        history = entry.setdefault("history", [])
-        if not history or history[-1].get("date") != today_iso:
-            history.append({
-                "date": today_iso,
-                "gmp": entry.get("gmp", 0.0),
-            })
-        if len(history) > 10:
-            entry["history"] = history[-10:]
+    # This used to stamp today's date on every stored value and append it to a
+    # "history", so hand-typed numbers (Jio +Rs 95, Tata Sons +Rs 380, Swiggy a
+    # year after listing) were published daily as a live GMP board with a trend.
+    # Nothing here fetches a quote, so nothing here may date one: an entry's
+    # last_updated and history must come from the cited source it was read from.
 
     gmp_data = clean_dashes(gmp_data)
 

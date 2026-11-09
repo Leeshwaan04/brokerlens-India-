@@ -574,35 +574,14 @@ def _title_name(r):
     return name
 
 
-_RESCUE_TITLES = {
-    "lauruslabs": "Laurus Labs IPO: Issue Price Rs 428, Listing Price & Current Price | " + BRAND,
-    "bandhanbnk": "Bandhan Bank IPO: Issue Price Rs 375, Listing Price & Current Price | " + BRAND,
-    "utiamc": "UTI AMC IPO: Issue Price Rs 554, Listing Price & Current Price | " + BRAND,
-    "khadim": "Khadim India IPO: Issue Price Rs 750, Listing Price & Current Price | " + BRAND,
-    "gml": "Galaxy Medicare (GML) IPO: Issue Price, Allotment & Listing | " + BRAND,
-    "jio": "Reliance Jio IPO: Expected Date, Valuation, Price Band & Details | " + BRAND,
-    "tatasons": "Tata Sons IPO: Expected Valuation, Reserve Bank Timeline & Details | " + BRAND,
-    "swiggy": "Swiggy IPO: Issue Price, Bidding Dates & Valuation Details | " + BRAND,
-    "boat": "boAt IPO (Imagine Marketing): Expected Price Band & Issue Details | " + BRAND,
-    "nsdl": "NSDL IPO: Expected Price Band, Offer for Sale & Listing Details | " + BRAND,
-    "hdbfs": "HDB Financial Services IPO: Issue Details & HDFC Bank Shareholder Quota | " + BRAND,
-    "ather": "Ather Energy IPO: Issue Size, Valuation & Electric Vehicle Growth Facts | " + BRAND,
-}
-
-_RESCUE_DESCRIPTIONS = {
-    "lauruslabs": "Laurus Labs IPO (LAURUSLABS): issued at Rs 428 per equity. Listing price, post-listing gain, and latest close from NSE/BSE disclosures, with dates and subscription.",
-    "bandhanbnk": "Bandhan Bank IPO (BANDHANBNK): issued at Rs 375 per equity. Listing price, post-listing performance, latest close and issue dates from NSE/BSE disclosures, with lot size and subscription.",
-    "utiamc": "UTI Asset Management Company (UTIAMC) IPO: issued at Rs 554 per equity. Listing price, post-listing gain and latest close from NSE/BSE disclosures, with issue dates and subscription.",
-    "khadim": "Khadim India IPO (KHADIM): issued at Rs 750 per equity. Listing price, post-listing performance, latest close and issue dates from NSE/BSE disclosures, with lot size and subscription.",
-    "gml": "Galaxy Medicare Limited (GML) IPO closed 12 Sep 2025. Issue price, how to check allotment, expected listing timeline and price band, from NSE/BSE disclosures.",
-    "jio": "Reliance Jio Infocomm IPO (JIO): expected timeline, valuation details, business metrics, and how to apply online via UPI/ASBA, from public disclosures.",
-    "tatasons": "Tata Sons IPO: RBI upper-layer NBFC listing mandate, expected valuation, corporate structure and holding discount facts from public records.",
-    "swiggy": "Swiggy Limited IPO: issue size, quick-commerce growth, financial disclosures and step-by-step UPI bidding guide from offer filings.",
-    "boat": "boAt (Imagine Marketing) IPO: wearable market share, valuation history, revenue disclosures and application steps from regulatory filings.",
-    "nsdl": "National Securities Depository Limited (NSDL) IPO: depository market share, active demat accounts, shareholding disclosures and listing details.",
-    "hdbfs": "HDB Financial Services IPO: retail lending metrics, parent HDFC Bank shareholding, shareholder reservation quota and issue timeline.",
-    "ather": "Ather Energy IPO: electric two-wheeler market share, charging infrastructure growth, revenue disclosures and offer details.",
-}
+# Hand-written title and description overrides used to live here. All were retired on
+# 9 Nov 2026: four promised a "Listing Price" and "post-listing gain" for IPOs whose
+# listing day predates the price history on file (the page said so), and the rest
+# described Jio, Tata Sons and boAt IPOs with invented price bands, or called long
+# listed issues (NSDL, Swiggy, HDB Financial, Ather) "expected". Titles come only from
+# facts on file (build_title below).
+_RESCUE_TITLES = {}
+_RESCUE_DESCRIPTIONS = {}
 
 
 def build_title(r, pf, status, group=None):

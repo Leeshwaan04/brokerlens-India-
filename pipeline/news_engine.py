@@ -504,7 +504,9 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
       <a href="/ipo/allotment-status/" data-link>Check Allotment Status Online</a>.</p>
     </div>
     """
-    articles.append({
+    # Only with sourced quotes. data/manual/ipo_gmp.json held hand-typed values that a
+    # script re-dated every day; with nothing sourced there is no bulletin to publish.
+    articles.extend([] if not gmp_items_enriched else [{
         "slug": gmp_article_slug,
         "title": gmp_article_title,
         "description": gmp_article_desc,
@@ -515,7 +517,7 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
         "type": "NewsArticle",
         "read_time": "4 min read",
         "body_html": gmp_article_body,
-    })
+    }])
 
     # Individual High-Intent IPO GMP Bulletins
     for item in gmp_items_enriched:

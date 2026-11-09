@@ -538,6 +538,47 @@ def run(check, ROOT, load):
               "Tata Motors Passenger vs Commercial Vehicles" in tm and "record date of 14 October 2025" in tm
               and "does not rate or recommend either" in tm and "Tata Motors after the demerger" not in other)
 
+    # ------------------------------------------------------------------
+    # IPO data with no source. Until 9 Nov 2026 ipo_gmp.json held hand-typed GMP values
+    # that scripts/update_ipo_gmp.py re-dated every day, and curated_ipos.json gave Jio,
+    # Tata Sons and boAt (no IPO filed) price bands, all shown as live or upcoming facts.
+    gmp = load("data/manual/ipo_gmp.json") or {}
+    check("contentintegrity: every stored GMP quote names the source it was read from (none are hand-typed)",
+          all(isinstance(e, dict) and e.get("source") for e in gmp.values()), str(sorted(gmp)[:5]))
+    curated = load("data/manual/curated_ipos.json") or []
+    check("contentintegrity: no curated IPO carries a price band or issue size without a cited source",
+          all(r.get("source") for r in curated if r.get("price_band") or r.get("issue_size_shares")),
+          str([r.get("symbol") for r in curated][:5]))
+    gmp_script = _read(ROOT, "scripts", "update_ipo_gmp.py")
+    check("contentintegrity: the GMP refresh script never stamps today's date on a stored quote",
+          'entry["last_updated"] = today_iso' not in gmp_script and '"date": today_iso' not in gmp_script)
+    from pipeline import ipo_facts as _ipf
+    check("contentintegrity: no hand-written IPO title or description overrides the facts on file",
+          not _ipf._RESCUE_TITLES and not _ipf._RESCUE_DESCRIPTIONS)
+    gmp_hub = _read(ROOT, "site", "ipo", "gmp", "index.html")
+    if gmp_hub and not gmp:
+        check("contentintegrity: with no sourced GMP, /ipo/gmp/ explains GMP and shows no figures or 'live' claims",
+              "BrokerLens does not publish GMP figures" in gmp_hub and "Current GMP" not in gmp_hub
+              and "Live Grey Market Premium" not in gmp_hub and "Kostak Rate Rs" not in gmp_hub)
+    site_ipo = os.path.join(ROOT, "site", "ipo")
+    if os.path.isdir(site_ipo):
+        check("contentintegrity: no page exists for an IPO that was never filed (Jio, Tata Sons, boAt)",
+              not any(os.path.isdir(os.path.join(site_ipo, s)) for s in ("jio", "tatasons", "boat")))
+    news_dir = os.path.join(ROOT, "site", "news")
+    if os.path.isdir(news_dir):
+        fake = [d for d in os.listdir(news_dir) if "gmp-today" in d and not gmp]
+        check("contentintegrity: no GMP news article is on disk without sourced quotes", not fake, str(fake[:3]))
+    jiofin = _read(ROOT, "site", "stock", "jiofin", "index.html")
+    if jiofin:
+        check("contentintegrity: the JioFin stock page no longer advertises a Reliance Jio IPO page",
+              "/ipo/jio/" not in jiofin)
+    vj = json.load(open(os.path.join(ROOT, "vercel.json"), encoding="utf-8"))
+    srcs = {r.get("source"): r.get("destination") for r in vj.get("redirects") or []}
+    check("contentintegrity: retired IPO pages and GMP articles redirect instead of 404ing",
+          srcs.get("/ipo/jio/(.*)") == "/ipo/upcoming/" and srcs.get("/ipo/ather/(.*)") == "/ipo/atherenerg/"
+          and srcs.get("/news/ipo-gmp-today-live-grey-market-premium-rates/") == "/ipo/gmp/"
+          and srcs.get("/news/how-to-check-jio-ipo-allotment-status-online/") == "/ipo/allotment-status/")
+
 
 def _read(ROOT, *parts):
     try:

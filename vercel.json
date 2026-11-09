@@ -5,6 +5,206 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/news/how-to-check-ather-ipo-allotment-status-online",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-ather-ipo-allotment-status-online/",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-hdbfs-ipo-allotment-status-online",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-hdbfs-ipo-allotment-status-online/",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-jio-ipo-allotment-status-online",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-jio-ipo-allotment-status-online/",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-nsdl-ipo-allotment-status-online",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-nsdl-ipo-allotment-status-online/",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-swiggy-ipo-allotment-status-online",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-swiggy-ipo-allotment-status-online/",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-tatasons-ipo-allotment-status-online",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/how-to-check-tatasons-ipo-allotment-status-online/",
+      "destination": "/ipo/allotment-status/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-ather-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-ather-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-boat-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-boat-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-gmp-today-live-grey-market-premium-rates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-gmp-today-live-grey-market-premium-rates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-hdbfs-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-hdbfs-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-jio-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-jio-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-nityas-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-nityas-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-nsdl-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-nsdl-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-swiggy-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-swiggy-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-tatasons-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-tatasons-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-vnl-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-vnl-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/ipo/jio",
+      "destination": "/ipo/upcoming/",
+      "permanent": true
+    },
+    {
+      "source": "/ipo/jio/(.*)",
+      "destination": "/ipo/upcoming/",
+      "permanent": true
+    },
+    {
+      "source": "/ipo/tatasons",
+      "destination": "/ipo/upcoming/",
+      "permanent": true
+    },
+    {
+      "source": "/ipo/tatasons/(.*)",
+      "destination": "/ipo/upcoming/",
+      "permanent": true
+    },
+    {
+      "source": "/ipo/boat",
+      "destination": "/ipo/upcoming/",
+      "permanent": true
+    },
+    {
+      "source": "/ipo/boat/(.*)",
+      "destination": "/ipo/upcoming/",
+      "permanent": true
+    },
+    {
+      "source": "/ipo/ather",
+      "destination": "/ipo/atherenerg/",
+      "permanent": true
+    },
+    {
+      "source": "/ipo/ather/(.*)",
+      "destination": "/ipo/atherenerg/",
+      "permanent": true
+    },
+    {
       "source": "/news/pre-market-cues-gift-nifty-(.*)",
       "destination": "/news/",
       "permanent": true

@@ -2867,15 +2867,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
         ) % (_esc(symbol), _esc(name))
 
         ipo_callout_html = ""
-        if slug == "jiofin":
-            ipo_callout_html = (
-                '<div class="card" style="margin-top:20px;padding:18px 20px;background:var(--bg-raised);border-left:4px solid var(--accent);box-shadow:var(--shadow-sm)">'
-                '<div style="font-weight:700;font-size:15px;color:var(--text)">Upcoming Reliance Jio Infocomm IPO</div>'
-                '<p class="small muted" style="margin:6px 0 12px 0;line-height:1.5">Tracking the Reliance Jio telecom IPO? View expected valuation, timeline, DRHP status and demat account application steps.</p>'
-                '<a class="btn btn-primary btn-sm" href="/ipo/jio/">View Reliance Jio IPO Details &rarr;</a>'
-                '</div>'
-            )
-        elif slug in ipo_by_slug:
+        if slug in ipo_by_slug:
             ipo_info = ipo_by_slug[slug]
             comp_name = ipo_info.get("company") or name
             ipo_callout_html = (
