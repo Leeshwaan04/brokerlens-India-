@@ -2297,11 +2297,21 @@ def test_instrument_pages():
     hist = {"AAA": [{"date": "2026-06-01", "open": 900, "high": 950, "low": 880, "close": 940},
                     {"date": "2026-10-01", "open": 960, "high": 970, "low": 950, "close": 965}]}
     old_ipo = clp("AAA", 366, hist, "2022-12-29")
-    check("an IPO whose listing day is before our price history shows no listing-day gain (only return since issue)",
-          not old_ipo["has_listing_data"] and old_ipo["has_current_data"] and abs(old_ipo["current_gain_pct"] - (965 / 366 - 1) * 100) < 1e-9)
+    # No return since issue either: splits and bonus issues since an old listing are unknown (Laurus
+    # Labs read 4.64x on its Rs 428 issue price after a 1:5 split). The latest close is still shown.
+    check("an IPO whose listing day is before our price history shows its latest close but no listing-day gain and no return since issue",
+          not old_ipo["has_listing_data"] and old_ipo["has_current_data"] and old_ipo["cmp"] == 965
+          and "current_gain_pct" not in old_ipo and "gain_multiple" not in old_ipo)
+    from pipeline.ipo_engine import render_performance_card as rpc
+    old_card = rpc(old_ipo, "aaa")
+    check("the performance card of an old IPO shows no return multiple and no 'vs issue price' move",
+          "Return Multiple" not in old_card and "vs issue price" not in old_card and "965.00" in old_card
+          and "not adjusted for splits or bonuses" in old_card)
     fresh = clp("AAA", 900, hist, "2026-06-01")
     check("an IPO whose listing-day candle is on file gets the exact listing-day open and gain",
           fresh["has_listing_data"] and fresh["listing_open"] == 900 and abs(fresh["listing_gain_pct"]) < 1e-9)
+    check("an IPO whose listing-day candle is on file keeps its return since issue",
+          abs(fresh["current_gain_pct"] - (965 / 900 - 1) * 100) < 1e-9 and "Return Multiple" in rpc(fresh, "aaa"))
     noprice = clp("AAA", 0, hist, "2026-06-01")
     check("with no issue price on record, no gain is invented from a candle", not noprice["has_listing_data"] and not noprice["has_current_data"])
     ao = read("ipo", "aonesteels", "index.html") or ""

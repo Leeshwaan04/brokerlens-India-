@@ -124,8 +124,8 @@ def parse_price_band(band_str, issue_price=None):
 
 
 def compute_listing_performance(symbol, effective_issue_price, equity_history, listing_date=None):
-    """Returns since issue (latest close vs issue price) and, only when the real
-    listing-day candle is on file, the listing-day gain.
+    """Returns the latest close and, only when the real listing-day candle is on
+    file, the listing-day gain and the return since issue.
 
     BrokerLens holds a short price history (about 120 sessions), so for most
     listed IPOs the listing day lies before the first candle. The old code treated
@@ -169,6 +169,16 @@ def compute_listing_performance(symbol, effective_issue_price, equity_history, l
                 "listing_close": float(lc.get("close") or 0.0),
                 "listing_gain_inr": lo - ip, "listing_gain_pct": (lo - ip) / ip * 100.0,
             })
+    if not out["has_listing_data"]:
+        # The listing day is older than the price history on file, so any split or bonus
+        # issue since listing is unknown, and the latest close cannot be set against the
+        # issue price: Laurus Labs read 4.64x on its Rs 428 issue price after a 1:5 split
+        # in 2020. The latest close is still shown, just not as a return. (Within the
+        # history, a split after listing would have cut the listing candle away, see
+        # common.trim_to_last_break, so a return is only ever computed across clean data.)
+        for k in ("current_gain_inr", "current_gain_pct", "gain_multiple"):
+            out.pop(k, None)
+        out["since_issue_comparable"] = False
     return out
 
 
@@ -187,8 +197,9 @@ def render_performance_card(perf, sym_slug):
     lg_pct = perf["listing_gain_pct"] if has_ld else 0.0
     lg_cls = "var(--green)" if lg_pct >= 0 else "var(--red)"
 
-    cg_pct = perf["current_gain_pct"]
-    cg_cls = "var(--green)" if cg_pct >= 0 else "var(--red)"
+    comparable = "current_gain_pct" in perf
+    cg_pct = perf.get("current_gain_pct") or 0.0
+    cg_cls = ("var(--green)" if cg_pct >= 0 else "var(--red)") if comparable else "var(--border)"
 
     if has_ld:
         badge_label = "Listing Open Above Issue" if lg_pct >= 0 else "Listing Open Below Issue"
@@ -198,9 +209,10 @@ def render_performance_card(perf, sym_slug):
                         f'<div style="font-size:18px;font-weight:700;margin-top:4px">Rs {perf["listing_open"]:,.2f}</div>'
                         f'<div class="xs" style="color:{lg_cls};font-weight:600">{_signed_move(lg_pct, perf["listing_gain_inr"])} vs issue price</div>')
     else:
-        badge_label, badge_cls = "Since Issue", ""
-        sub_note = ("Latest close versus the issue price. The listing-day candle is before the price history BrokerLens holds, "
-                    "so no listing-day gain is shown rather than a guessed one.")
+        badge_label, badge_cls = "Issue price and latest close", ""
+        sub_note = ("The listing day is older than the price history BrokerLens holds, so no listing-day gain is shown, and the "
+                    "latest close is not compared with the issue price: splits and bonus issues since listing change the share "
+                    "count and the price, and BrokerLens does not hold that history.")
         listing_cell = ('<div class="xs muted">Listing Day Open</div>'
                         '<div style="font-size:14px;font-weight:600;margin-top:6px">Not on file</div>'
                         '<div class="xs faint">before our price history</div>')
@@ -215,10 +227,8 @@ def render_performance_card(perf, sym_slug):
           <h2 style="margin:8px 0 2px 0;font-size:18px">Post-Listing Performance Track Record</h2>
           <p class="muted small" style="margin:0">{sub_note}</p>
         </div>
-        <div class="right">
-          <div class="xs muted">Return Multiple</div>
-          <div style="font-size:24px;font-weight:700;color:{cg_cls}">{perf['gain_multiple']:.2f}x</div>
-        </div>
+        {(f'<div class="right"><div class="xs muted">Return Multiple</div>'
+           f'<div style="font-size:24px;font-weight:700;color:{cg_cls}">{perf["gain_multiple"]:.2f}x</div></div>') if comparable else ""}
       </div>
 
       <div class="grid g4" style="margin-top:18px;gap:12px">
@@ -233,7 +243,7 @@ def render_performance_card(perf, sym_slug):
         <div style="padding:12px;background:var(--bg);border-radius:6px">
           <div class="xs muted">Latest Close (as of {_esc(_long_date(perf['cmp_date']))})</div>
           <div style="font-size:18px;font-weight:700;margin-top:4px">Rs {perf['cmp']:,.2f}</div>
-          <div class="xs" style="color:{cg_cls};font-weight:600">{_signed_move(cg_pct, perf['current_gain_inr'])} vs issue price</div>
+          {(f'<div class="xs" style="color:{cg_cls};font-weight:600">{_signed_move(cg_pct, perf["current_gain_inr"])} vs issue price</div>') if comparable else '<div class="xs faint">not adjusted for splits or bonuses</div>'}
         </div>
         <div style="padding:12px;background:var(--bg);border-radius:6px">
           <div class="xs muted">{range_label}</div>
@@ -910,9 +920,13 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
                 lg_str = f"<span style='color:{lg_cls};font-weight:600'>{lg_pct:+.1f}%</span>"
             if perf.get("has_current_data"):
                 cmp_str = _rs(perf["cmp"])
-                cg_pct = perf["current_gain_pct"]
-                cg_cls = "var(--green)" if cg_pct >= 0 else "var(--red)"
-                cg_str = f"<span style='color:{cg_cls};font-weight:600'>{cg_pct:+.1f}%</span>"
+                if "current_gain_pct" in perf:
+                    cg_pct = perf["current_gain_pct"]
+                    cg_cls = "var(--green)" if cg_pct >= 0 else "var(--red)"
+                    cg_str = f"<span style='color:{cg_cls};font-weight:600'>{cg_pct:+.1f}%</span>"
+                else:
+                    # listed before the price history on file: splits and bonuses since then are unknown
+                    cg_str = '<span class="faint">Not comparable</span>'
             stock_link = (f'<a href="/stock/{slug}/" class="btn btn-xs">Stock &rarr;</a>' if perf.get("has_current_data")
                           else f'<a href="/ipo/{slug}/" class="btn btn-xs">View &rarr;</a>')
             if perf.get("has_listing_data") or perf.get("has_current_data"):
