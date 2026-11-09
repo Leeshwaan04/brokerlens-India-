@@ -177,7 +177,7 @@
       "company": "National Highways Authority of India",
       "price_band": "1000",
       "issue_price": 1000,
-      "security_type": "NC",
+      "security_type": "DEBT",
       "bidding_start": "2016-02-24",
       "bidding_end": "2016-02-26",
       "listing_date": "2016-03-11"
@@ -517,7 +517,7 @@
       "company": "CL Educate Limited",
       "price_band": "Rs 500 to Rs 502\r",
       "issue_price": 502,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2017-03-20",
       "bidding_end": "2017-03-22",
       "listing_date": "2017-03-31"
@@ -587,7 +587,7 @@
       "company": "PSP Projects Limited",
       "price_band": "Rs 205 to Rs 210\r",
       "issue_price": 210,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2017-05-17",
       "bidding_end": "2017-05-19",
       "listing_date": "2017-05-29"
@@ -717,7 +717,7 @@
       "company": "Salasar Techno Engineering Limited",
       "price_band": "Rs 108\r",
       "issue_price": 108,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2017-07-12",
       "bidding_end": "2017-07-17",
       "listing_date": "2017-07-25"
@@ -817,7 +817,7 @@
       "company": "Reliance Home Finance Limited",
       "price_band": "Rs 1000",
       "issue_price": 10,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2016-12-22",
       "bidding_end": "2016-12-23",
       "listing_date": "2017-09-22"
@@ -1157,7 +1157,7 @@
       "company": "Apollo Micro Systems Limited",
       "price_band": "Rs 270 to Rs 275\r",
       "issue_price": 275,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2018-01-10",
       "bidding_end": "2018-01-12",
       "listing_date": "2018-01-22"
@@ -1277,7 +1277,7 @@
       "company": "Srei Infrastructure Finance Limited",
       "price_band": "Rs 1000",
       "issue_price": 1000,
-      "security_type": "YC",
+      "security_type": "DEBT",
       "bidding_start": "2016-09-07",
       "bidding_end": "2016-09-28",
       "listing_date": "2018-03-21"
@@ -1317,7 +1317,7 @@
       "company": "Edelweiss Retail Finance Limited",
       "price_band": "Rs 1000\r",
       "issue_price": 1000,
-      "security_type": "N6",
+      "security_type": "DEBT",
       "bidding_start": "2018-03-07",
       "bidding_end": "2018-03-14",
       "listing_date": "2018-03-26"
@@ -1517,7 +1517,7 @@
       "company": "Dewan Housing Finance Corporation Limited",
       "price_band": "Rs 1000",
       "issue_price": 1000,
-      "security_type": "NZ",
+      "security_type": "DEBT",
       "bidding_start": "2016-08-03",
       "bidding_end": "2016-08-04",
       "listing_date": "2018-06-06"
@@ -1767,7 +1767,7 @@
       "company": "Xelpmoc Design and Tech Limited",
       "price_band": "Rs.62 to Rs.66\r",
       "issue_price": 66,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2019-01-23",
       "bidding_end": "2019-01-25",
       "listing_date": "2019-02-04"
@@ -1907,7 +1907,7 @@
       "company": "Neogen Chemicals Limited",
       "price_band": "Rs 212 to Rs 215\r",
       "issue_price": 215,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2019-04-24",
       "bidding_end": "2019-04-26",
       "listing_date": "2019-05-08"
@@ -1917,7 +1917,7 @@
       "company": "Magma Fincorp Limited",
       "price_band": "Rs.1000\r",
       "issue_price": 1000,
-      "security_type": "N7",
+      "security_type": "DEBT",
       "bidding_start": "2019-04-08",
       "bidding_end": "2019-04-30",
       "listing_date": "2019-05-09"
@@ -1931,16 +1931,6 @@
       "bidding_start": "2017-12-13",
       "bidding_end": "2017-12-15",
       "listing_date": "2019-05-09"
-    },
-    {
-      "symbol": "SUDARSHAN",
-      "company": "Sudarshan Pharma Industries Limited",
-      "price_band": "72",
-      "issue_price": 72,
-      "security_type": "SME",
-      "bidding_start": "2019-06-12",
-      "bidding_end": "2019-06-21",
-      "listing_date": null
     },
     {
       "symbol": "STEELCITY",
@@ -2137,7 +2127,7 @@
       "company": "Shriram Transport Finance Company Limited",
       "price_band": "Rs.1000\r",
       "issue_price": 1000,
-      "security_type": "ZB",
+      "security_type": "DEBT",
       "bidding_start": "2018-10-15",
       "bidding_end": "2018-10-29",
       "listing_date": "2019-08-26"
@@ -2147,7 +2137,7 @@
       "company": "India Infoline Finance Limited",
       "price_band": "Rs.1000\r",
       "issue_price": 1000,
-      "security_type": "NL",
+      "security_type": "DEBT",
       "bidding_start": "2019-01-22",
       "bidding_end": "2019-02-01",
       "listing_date": "2019-09-09"
@@ -2157,7 +2147,7 @@
       "company": "Indiabulls Consumer Finance Limited",
       "price_band": "Rs.1000\r",
       "issue_price": 1000,
-      "security_type": "NM",
+      "security_type": "DEBT",
       "bidding_start": "2019-02-04",
       "bidding_end": "2019-03-01",
       "listing_date": "2019-09-11"
@@ -2207,7 +2197,7 @@
       "company": "Vishwaraj Sugar Industries Limited",
       "price_band": "Rs.55 to Rs.60\r",
       "issue_price": 60,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2019-09-30",
       "bidding_end": "2019-10-04",
       "listing_date": "2019-10-15"
@@ -2367,7 +2357,7 @@
       "company": "Srei Equipment Finance Limited",
       "price_band": "Rs 1000",
       "issue_price": 1000,
-      "security_type": "NX",
+      "security_type": "DEBT",
       "bidding_start": "2017-01-03",
       "bidding_end": "2017-01-06",
       "listing_date": "2020-02-27"
@@ -2657,7 +2647,7 @@
       "company": "Likhitha Infrastructure Limited",
       "price_band": "Rs.116 to Rs.120",
       "issue_price": 120,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2020-09-29",
       "bidding_end": "2020-10-07",
       "listing_date": "2020-10-15"
@@ -2947,7 +2937,7 @@
       "company": "Nureca Limited",
       "price_band": "Rs.396 to Rs.400",
       "issue_price": 400,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2021-02-15",
       "bidding_end": "2021-02-17",
       "listing_date": "2021-02-25"
@@ -3137,7 +3127,7 @@
       "company": "India Grid Trust",
       "price_band": "Rs 98 to Rs 100\r",
       "issue_price": 1000,
-      "security_type": "NF",
+      "security_type": "DEBT",
       "bidding_start": "2017-05-17",
       "bidding_end": "2017-05-19",
       "listing_date": "2021-05-10"
@@ -3347,7 +3337,7 @@
       "company": "Exxaro Tiles Limited",
       "price_band": "Rs.118 to Rs.120",
       "issue_price": 120,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2021-08-04",
       "bidding_end": "2021-08-06",
       "listing_date": "2021-08-16"
@@ -3527,7 +3517,7 @@
       "company": "Paras Defence and Space Technologies Limited",
       "price_band": "Rs.165 to Rs.175",
       "issue_price": 175,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2021-09-21",
       "bidding_end": "2021-09-23",
       "listing_date": "2021-10-01"
@@ -3707,7 +3697,7 @@
       "company": "Sigachi Industries Limited",
       "price_band": "Rs.161 to Rs.163",
       "issue_price": 163,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2021-11-01",
       "bidding_end": "2021-11-03",
       "listing_date": "2021-11-15"
@@ -3917,7 +3907,7 @@
       "company": "HP Adhesives Limited",
       "price_band": "Rs. 262 to Rs.274",
       "issue_price": 274,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2021-12-15",
       "bidding_end": "2021-12-17",
       "listing_date": "2021-12-27"
@@ -4187,7 +4177,7 @@
       "company": "UMA Exports Limited",
       "price_band": "Rs.65 to Rs.68",
       "issue_price": 68,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2022-03-28",
       "bidding_end": "2022-03-30",
       "listing_date": "2022-04-07"
@@ -4197,7 +4187,7 @@
       "company": "Veranda Learning Solutions Limited",
       "price_band": "Rs.130 to Rs.137",
       "issue_price": 137,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2022-03-29",
       "bidding_end": "2022-03-31",
       "listing_date": "2022-04-11"
@@ -4217,7 +4207,7 @@
       "company": "Hariom Pipe Industries Limited",
       "price_band": "Rs.144 to Rs.153",
       "issue_price": 153,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2022-03-30",
       "bidding_end": "2022-04-05",
       "listing_date": "2022-04-13"
@@ -4297,7 +4287,7 @@
       "company": "Dhani Loans and Services Limited",
       "price_band": "Rs.1000",
       "issue_price": 1000,
-      "security_type": "Y5",
+      "security_type": "DEBT",
       "bidding_start": "2022-01-04",
       "bidding_end": "2022-01-27",
       "listing_date": "2022-05-19"
@@ -4527,7 +4517,7 @@
       "company": "Tamilnad Mercantile Bank Limited",
       "price_band": "Rs.500 to Rs.525",
       "issue_price": 510,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2022-09-05",
       "bidding_end": "2022-09-07",
       "listing_date": "2022-09-15"
@@ -4727,7 +4717,7 @@
       "company": "National Highways Infra Trust",
       "price_band": "Rs.1000",
       "issue_price": 400,
-      "security_type": "N3",
+      "security_type": "DEBT",
       "bidding_start": "2022-10-17",
       "bidding_end": "2022-10-18",
       "listing_date": "2022-10-28"
@@ -4903,16 +4893,6 @@
       "listing_date": "2022-12-01"
     },
     {
-      "symbol": "BAHETI",
-      "company": "Baheti Recycling Industries Limited",
-      "price_band": "Rs.45",
-      "issue_price": 45,
-      "security_type": "SME",
-      "bidding_start": "2022-11-28",
-      "bidding_end": "2022-11-30",
-      "listing_date": "2022-12-08"
-    },
-    {
       "symbol": "DHARMAJ",
       "company": "Dharmaj Crop Guard Limited",
       "price_band": "Rs.216 to Rs.237\t",
@@ -4951,16 +4931,6 @@
       "bidding_start": "2022-11-30",
       "bidding_end": "2022-12-02",
       "listing_date": "2022-12-12"
-    },
-    {
-      "symbol": "ARHAM",
-      "company": "Arham Technologies Limited",
-      "price_band": "Rs.42",
-      "issue_price": 42,
-      "security_type": "SME",
-      "bidding_start": "2022-12-05",
-      "bidding_end": "2022-12-07",
-      "listing_date": "2022-12-15"
     },
     {
       "symbol": "ALLETEC",
@@ -5097,7 +5067,7 @@
       "company": "Sah Polymers Limited",
       "price_band": "Rs.61 to Rs.65",
       "issue_price": 65,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2022-12-30",
       "bidding_end": "2023-01-04",
       "listing_date": "2023-01-12"
@@ -5147,7 +5117,7 @@
       "company": "InCred Financial Services Limited",
       "price_band": "Rs.1000",
       "issue_price": 1000,
-      "security_type": "N7",
+      "security_type": "DEBT",
       "bidding_start": "2022-01-24",
       "bidding_end": "2022-02-14",
       "listing_date": "2023-02-06"
@@ -5177,7 +5147,7 @@
       "company": "Indore Municipal Corporation",
       "price_band": "Rs.1000",
       "issue_price": 250,
-      "security_type": "N3",
+      "security_type": "DEBT",
       "bidding_start": "2023-02-10",
       "bidding_end": "2023-02-14",
       "listing_date": "2023-02-21"
@@ -5297,7 +5267,7 @@
       "company": "Global Surfaces Limited",
       "price_band": "Rs.133 to Rs.140",
       "issue_price": 140,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2023-03-13",
       "bidding_end": "2023-03-15",
       "listing_date": "2023-03-23"
@@ -5327,7 +5297,7 @@
       "company": "Udayshivakumar Infra Limited",
       "price_band": "Rs.33 to Rs.35",
       "issue_price": 35,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2023-03-20",
       "bidding_end": "2023-03-23",
       "listing_date": "2023-04-03"
@@ -5377,7 +5347,7 @@
       "company": "Music Broadcast Limited",
       "price_band": "Rs 324 to Rs 333",
       "issue_price": 100,
-      "security_type": "P1",
+      "security_type": "DEBT",
       "bidding_start": "2017-03-06",
       "bidding_end": "2017-03-08",
       "listing_date": "2023-04-20"
@@ -5417,7 +5387,7 @@
       "company": "Indiabulls Commercial Credit Limited",
       "price_band": "Rs.1000\r",
       "issue_price": 1000,
-      "security_type": "NZ",
+      "security_type": "DEBT",
       "bidding_start": "2018-09-11",
       "bidding_end": "2018-09-14",
       "listing_date": "2023-04-27"
@@ -5664,7 +5634,7 @@
     },
     {
       "symbol": "PKH",
-      "company": "PKH Ventures Limited - Issue Withdrawn",
+      "company": "PKH Ventures Limited",
       "price_band": "Rs.140 to Rs.148",
       "issue_price": null,
       "security_type": "EQ",
@@ -5947,7 +5917,7 @@
       "company": "Pyramid Technoplast Limited",
       "price_band": "Rs.151 to Rs.166",
       "issue_price": 166,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2023-08-18",
       "bidding_end": "2023-08-22",
       "listing_date": "2023-08-29"
@@ -6037,7 +6007,7 @@
       "company": "CreditAccess Grameen Limited",
       "price_band": "Rs 418 to Rs 422\r",
       "issue_price": 1000,
-      "security_type": "NE",
+      "security_type": "DEBT",
       "bidding_start": "2018-08-08",
       "bidding_end": "2018-08-10",
       "listing_date": "2023-09-11"
@@ -6047,7 +6017,7 @@
       "company": "Ratnaveer Precision Engineering Limited",
       "price_band": "Rs.93 to Rs.98",
       "issue_price": 98,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2023-09-04",
       "bidding_end": "2023-09-06",
       "listing_date": "2023-09-11"
@@ -6357,7 +6327,7 @@
       "company": "Valiant Laboratories Limited",
       "price_band": "Rs.133 to Rs.140",
       "issue_price": 140,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2023-09-27",
       "bidding_end": "2023-10-03",
       "listing_date": "2023-10-06"
@@ -6457,7 +6427,7 @@
       "company": "Plaza Wires Limited",
       "price_band": "Rs.51 to Rs.54",
       "issue_price": 54,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2023-09-29",
       "bidding_end": "2023-10-05",
       "listing_date": "2023-10-12"
@@ -6767,7 +6737,7 @@
       "company": "Tata Capital Financial Services Limited",
       "price_band": "Rs.1000\r",
       "issue_price": null,
-      "security_type": "YD",
+      "security_type": "DEBT",
       "bidding_start": "2018-09-10",
       "bidding_end": "2018-09-18",
       "listing_date": "2023-12-12"
@@ -6857,7 +6827,7 @@
       "company": "Motisons Jewellers Limited",
       "price_band": "Rs.52 to Rs.55",
       "issue_price": 55,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2023-12-18",
       "bidding_end": "2023-12-20",
       "listing_date": "2023-12-26"
@@ -6917,7 +6887,7 @@
       "company": "RBZ Jewellers Limited",
       "price_band": "Rs.95 to Rs.100",
       "issue_price": 100,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2023-12-19",
       "bidding_end": "2023-12-21",
       "listing_date": "2023-12-27"
@@ -7107,7 +7077,7 @@
       "company": "Nova Agritech Limited",
       "price_band": "Rs.39 to Rs.41",
       "issue_price": 41,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-01-23",
       "bidding_end": "2024-01-25",
       "listing_date": "2024-01-31"
@@ -7267,7 +7237,7 @@
       "company": "Vibhor Steel Tubes Limited",
       "price_band": "Rs.141 to Rs.151",
       "issue_price": 151,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-02-13",
       "bidding_end": "2024-02-15",
       "listing_date": "2024-02-20"
@@ -7397,7 +7367,7 @@
       "company": "Platinum Industries Limited",
       "price_band": "Rs.162 to Rs.171",
       "issue_price": 171,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-02-27",
       "bidding_end": "2024-02-29",
       "listing_date": "2024-03-05"
@@ -7417,7 +7387,7 @@
       "company": "Mukka Proteins Limited",
       "price_band": "Rs.26 to Rs.28",
       "issue_price": 28,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-02-29",
       "bidding_end": "2024-03-04",
       "listing_date": "2024-03-07"
@@ -7507,7 +7477,7 @@
       "company": "Navi Finserv Limited",
       "price_band": "Rs.1000",
       "issue_price": 1000,
-      "security_type": "ND",
+      "security_type": "DEBT",
       "bidding_start": "2022-05-23",
       "bidding_end": "2022-06-02",
       "listing_date": "2024-03-18"
@@ -7627,7 +7597,7 @@
       "company": "SRM Contractors Limited",
       "price_band": "Rs.200 to Rs.210",
       "issue_price": 210,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-03-26",
       "bidding_end": "2024-03-28",
       "listing_date": "2024-04-03"
@@ -7707,7 +7677,7 @@
       "company": "Indiabulls Housing Finance Limited",
       "price_band": "Rs 1000",
       "issue_price": null,
-      "security_type": "Z9",
+      "security_type": "DEBT",
       "bidding_start": "2016-09-15",
       "bidding_end": "2016-09-16",
       "listing_date": "2024-04-09"
@@ -7767,7 +7737,7 @@
       "company": "Aditya Birla Finance Limited",
       "price_band": "Rs.1000",
       "issue_price": null,
-      "security_type": "NF",
+      "security_type": "DEBT",
       "bidding_start": "2023-09-27",
       "bidding_end": "2023-10-03",
       "listing_date": "2024-04-24"
@@ -7797,7 +7767,7 @@
       "company": "Anupam Rasayan India Limited",
       "price_band": "Rs.553 to Rs.555",
       "issue_price": 236,
-      "security_type": "W1",
+      "security_type": "DEBT",
       "bidding_start": "2021-03-12",
       "bidding_end": "2021-03-16",
       "listing_date": "2024-05-10"
@@ -8237,7 +8207,7 @@
       "company": "Vraj Iron and Steel Limited",
       "price_band": "Rs.195 to Rs.207",
       "issue_price": 207,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-06-26",
       "bidding_end": "2024-06-28",
       "listing_date": "2024-07-03"
@@ -8627,7 +8597,7 @@
       "company": "Saraswati Saree Depot Limited",
       "price_band": "Rs.152 to Rs.160",
       "issue_price": 160,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-08-12",
       "bidding_end": "2024-08-14",
       "listing_date": "2024-08-20"
@@ -8697,7 +8667,7 @@
       "company": "Orient Technologies Limited",
       "price_band": "Rs.195 to Rs.206",
       "issue_price": 206,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-08-21",
       "bidding_end": "2024-08-23",
       "listing_date": "2024-08-28"
@@ -8807,7 +8777,7 @@
       "company": "Gala Precision Engineering Limited",
       "price_band": "Rs.503 to Rs.529",
       "issue_price": 529,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-09-02",
       "bidding_end": "2024-09-04",
       "listing_date": "2024-09-09"
@@ -8837,7 +8807,7 @@
       "company": "Shree Tirupati Balajee Agro Trading Company Limited",
       "price_band": "Rs.78 to Rs.83",
       "issue_price": 83,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-09-05",
       "bidding_end": "2024-09-09",
       "listing_date": "2024-09-12"
@@ -8907,7 +8877,7 @@
       "company": "Tolins Tyres Limited",
       "price_band": "Rs.215 to Rs.226",
       "issue_price": 226,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-09-09",
       "bidding_end": "2024-09-11",
       "listing_date": "2024-09-16"
@@ -9077,7 +9047,7 @@
       "company": "Manba Finance Limited",
       "price_band": "Rs.114 to Rs.120",
       "issue_price": 120,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-09-23",
       "bidding_end": "2024-09-25",
       "listing_date": "2024-09-30"
@@ -9147,7 +9117,7 @@
       "company": "Diffusion Engineers Limited",
       "price_band": "Rs.159 to Rs.168",
       "issue_price": 168,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-09-26",
       "bidding_end": "2024-09-30",
       "listing_date": "2024-10-04"
@@ -9647,7 +9617,7 @@
       "company": "Mamata Machinery Limited",
       "price_band": "Rs.230 to Rs.243",
       "issue_price": 243,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2024-12-19",
       "bidding_end": "2024-12-23",
       "listing_date": "2024-12-27"
@@ -9827,7 +9797,7 @@
       "company": "Stallion India Fluorochemicals Limited",
       "price_band": "Rs.85 to Rs.90",
       "issue_price": 90,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-01-16",
       "bidding_end": "2025-01-20",
       "listing_date": "2025-01-23"
@@ -9847,7 +9817,7 @@
       "company": "Denta Water and Infra Solutions Limited",
       "price_band": "Rs.279 to Rs.294",
       "issue_price": 294,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-01-22",
       "bidding_end": "2025-01-24",
       "listing_date": "2025-01-29"
@@ -10237,7 +10207,7 @@
       "company": "Borana Weaves Limited",
       "price_band": "Rs.205 to Rs.216",
       "issue_price": 216,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-05-20",
       "bidding_end": "2025-05-22",
       "listing_date": "2025-05-27"
@@ -10287,7 +10257,7 @@
       "company": "Prostarm Info Systems Limited",
       "price_band": "Rs.95 to Rs.105",
       "issue_price": 105,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-05-27",
       "bidding_end": "2025-05-29",
       "listing_date": "2025-06-03"
@@ -10317,7 +10287,7 @@
       "company": "Scoda Tubes Limited",
       "price_band": "Rs.130 Rs.140",
       "issue_price": 140,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-05-28",
       "bidding_end": "2025-05-30",
       "listing_date": "2025-06-04"
@@ -10467,7 +10437,7 @@
       "company": "Globe Civil Projects Limited",
       "price_band": "Rs.67 to Rs.71",
       "issue_price": 71,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-06-24",
       "bidding_end": "2025-06-26",
       "listing_date": "2025-07-01"
@@ -10537,7 +10507,7 @@
       "company": "Indogulf Cropsciences Limited",
       "price_band": "Rs.105 to Rs.111",
       "issue_price": 111,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-06-26",
       "bidding_end": "2025-06-30",
       "listing_date": "2025-07-03"
@@ -10907,7 +10877,7 @@
       "company": "Highway Infrastructure Limited",
       "price_band": "Rs.65 to Rs.70",
       "issue_price": 70,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-08-05",
       "bidding_end": "2025-08-07",
       "listing_date": "2025-08-12"
@@ -10987,7 +10957,7 @@
       "company": "Spandana Sphoorty Financial Limited",
       "price_band": "Rs.853 to Rs.856\r",
       "issue_price": 115,
-      "security_type": "E1",
+      "security_type": "DEBT",
       "bidding_start": "2019-08-05",
       "bidding_end": "2019-08-07",
       "listing_date": "2025-08-18"
@@ -11047,7 +11017,7 @@
       "company": "Patel Retail Limited",
       "price_band": "Rs.237 to Rs.255",
       "issue_price": 255,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-08-19",
       "bidding_end": "2025-08-21",
       "listing_date": "2025-08-26"
@@ -11127,7 +11097,7 @@
       "company": "Anlon Healthcare Limited",
       "price_band": "Rs.86 to Rs.91",
       "issue_price": 91,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-08-26",
       "bidding_end": "2025-08-29",
       "listing_date": "2025-09-03"
@@ -11177,7 +11147,7 @@
       "company": "Amanta Healthcare Limited",
       "price_band": "Rs.120 to Rs.126",
       "issue_price": 126,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-09-01",
       "bidding_end": "2025-09-03",
       "listing_date": "2025-09-09"
@@ -11217,7 +11187,7 @@
       "company": "Dev Accelerator Limited",
       "price_band": "Rs.56 to Rs.61",
       "issue_price": 61,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-09-10",
       "bidding_end": "2025-09-12",
       "listing_date": "2025-09-17"
@@ -11277,7 +11247,7 @@
       "company": "VMS TMT Limited",
       "price_band": "Rs.94 to Rs.99",
       "issue_price": 99,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-09-17",
       "bidding_end": "2025-09-19",
       "listing_date": "2025-09-24"
@@ -11417,7 +11387,7 @@
       "company": "BMW Ventures Limited",
       "price_band": "Rs.94 to Rs.99",
       "issue_price": 99,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-09-24",
       "bidding_end": "2025-09-26",
       "listing_date": "2025-10-01"
@@ -11457,7 +11427,7 @@
       "company": "Jinkushal Industries Limited",
       "price_band": "Rs.115 to Rs.121",
       "issue_price": 121,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-09-25",
       "bidding_end": "2025-09-29",
       "listing_date": "2025-10-03"
@@ -11497,7 +11467,7 @@
       "company": "Fabtech Technologies Limited",
       "price_band": "Rs.181 to Rs.191",
       "issue_price": 191,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-09-29",
       "bidding_end": "2025-10-01",
       "listing_date": "2025-10-07"
@@ -11537,7 +11507,7 @@
       "company": "Advance Agrolife Limited",
       "price_band": "Rs.95 to Rs.100",
       "issue_price": 100,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-09-30",
       "bidding_end": "2025-10-03",
       "listing_date": "2025-10-08"
@@ -11567,7 +11537,7 @@
       "company": "Om Freight Forwarders Limited",
       "price_band": "Rs.128 to Rs.135",
       "issue_price": 135,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2025-09-29",
       "bidding_end": "2025-10-03",
       "listing_date": "2025-10-08"
@@ -12147,7 +12117,7 @@
       "company": "Aegis Vopak Terminals Limited",
       "price_band": "Rs.223 to Rs.235",
       "issue_price": null,
-      "security_type": "N0",
+      "security_type": "DEBT",
       "bidding_start": "2025-05-26",
       "bidding_end": "2025-05-28",
       "listing_date": "2026-01-08"
@@ -12347,7 +12317,7 @@
       "company": "Gaudium IVF and Women Health Limited",
       "price_band": "Rs.75 to Rs.79",
       "issue_price": 79,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-02-20",
       "bidding_end": "2026-02-24",
       "listing_date": "2026-02-27"
@@ -12387,7 +12357,7 @@
       "company": "Shree Ram Twistex Limited",
       "price_band": "Rs.95 to Rs.104",
       "issue_price": 104,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-02-23",
       "bidding_end": "2026-02-25",
       "listing_date": "2026-03-02"
@@ -12597,7 +12567,7 @@
       "company": "Om Power Transmission Limited",
       "price_band": "Rs.166 to Rs.175",
       "issue_price": 175,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-04-09",
       "bidding_end": "2026-04-13",
       "listing_date": "2026-04-17"
@@ -12747,7 +12717,7 @@
       "company": "Hexagon Nutrition Limited",
       "price_band": "Rs.42 to Rs.45",
       "issue_price": 45,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-06-05",
       "bidding_end": "2026-06-09",
       "listing_date": "2026-06-12"
@@ -12837,7 +12807,7 @@
       "company": "Advit Jewels Limited",
       "price_band": "Rs.130 to Rs.138",
       "issue_price": 138,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-06-23",
       "bidding_end": "2026-06-25",
       "listing_date": "2026-07-01"
@@ -12857,7 +12827,7 @@
       "company": "CSM Technologies Limited",
       "price_band": "Rs.107 to Rs.113 ",
       "issue_price": 113,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-06-24",
       "bidding_end": "2026-06-29",
       "listing_date": "2026-07-02"
@@ -12867,7 +12837,7 @@
       "company": "Aastha Spintex Limited",
       "price_band": "Rs.125 to Rs.136 ",
       "issue_price": 136,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-06-29",
       "bidding_end": "2026-07-01",
       "listing_date": "2026-07-06"
@@ -12947,7 +12917,7 @@
       "company": "Alpine Texworld Limited",
       "price_band": "Rs.100 to Rs.105",
       "issue_price": 105,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-07-14",
       "bidding_end": "2026-07-16",
       "listing_date": "2026-07-21"
@@ -13007,7 +12977,7 @@
       "company": "Xtranet Technologies Limited",
       "price_band": "Rs.120 to Rs.127",
       "issue_price": 127,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-07-23",
       "bidding_end": "2026-07-27",
       "listing_date": "2026-07-30"
@@ -13307,7 +13277,7 @@
       "company": "Hy-Tech Engineers Limited",
       "price_band": "Rs.50 to Rs.53",
       "issue_price": 53,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-08-24",
       "bidding_end": "2026-08-27",
       "listing_date": "2026-09-01"
@@ -13347,7 +13317,7 @@
       "company": "Annu Projects Limited",
       "price_band": "Rs.94 to Rs.99",
       "issue_price": 99,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-08-25",
       "bidding_end": "2026-08-28",
       "listing_date": "2026-09-02"
@@ -13397,7 +13367,7 @@
       "company": "Priority Jewels Limited",
       "price_band": "Rs.190 to Rs.200",
       "issue_price": 200,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-08-28",
       "bidding_end": "2026-09-01",
       "listing_date": "2026-09-04"
@@ -13617,7 +13587,7 @@
       "company": "Veegaland Developers Limited",
       "price_band": "Rs.130 to Rs.140",
       "issue_price": 140,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-09-10",
       "bidding_end": "2026-09-15",
       "listing_date": "2026-09-18"
@@ -13627,7 +13597,7 @@
       "company": "Manika Plastech Limited",
       "price_band": "Rs.40 to Rs.43",
       "issue_price": 43,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-09-11",
       "bidding_end": "2026-09-16",
       "listing_date": "2026-09-21"
@@ -13657,7 +13627,7 @@
       "company": "Jindal Supreme (India) Limited",
       "price_band": "Rs.88 to Rs.93",
       "issue_price": 93,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-09-16",
       "bidding_end": "2026-09-18",
       "listing_date": "2026-09-23"
@@ -13687,7 +13657,7 @@
       "company": "Sonaselection India Limited",
       "price_band": "Rs.94 to Rs.99",
       "issue_price": 99,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-09-17",
       "bidding_end": "2026-09-21",
       "listing_date": "2026-09-24"
@@ -13713,66 +13683,6 @@
       "listing_date": "2026-09-25"
     },
     {
-      "symbol": "ACEVECTOR",
-      "company": "AceVector Limited",
-      "price_band": "Rs.30 to Rs.32",
-      "issue_price": null,
-      "security_type": "EQ",
-      "bidding_start": "2026-09-25",
-      "bidding_end": "2026-09-29",
-      "listing_date": null
-    },
-    {
-      "symbol": "BMISL",
-      "company": "Bench Mark Infotech Services Limited",
-      "price_band": "Rs.104 to Rs.110",
-      "issue_price": null,
-      "security_type": "SME",
-      "bidding_start": "2026-09-25",
-      "bidding_end": "2026-09-29",
-      "listing_date": null
-    },
-    {
-      "symbol": "GERMAN",
-      "company": "German Green Steel and Power Limited",
-      "price_band": "Rs.132 to Rs.139",
-      "issue_price": null,
-      "security_type": "EQ",
-      "bidding_start": "2026-09-25",
-      "bidding_end": "2026-09-29",
-      "listing_date": null
-    },
-    {
-      "symbol": "HIMALAYAN",
-      "company": "Himalayan Solar Limited",
-      "price_band": "Rs.98 to Rs.103",
-      "issue_price": null,
-      "security_type": "SME",
-      "bidding_start": "2026-09-25",
-      "bidding_end": "2026-09-29",
-      "listing_date": null
-    },
-    {
-      "symbol": "ORIENTCABL",
-      "company": "Orient Cables (India) Limited",
-      "price_band": "Rs.258 to Rs.272",
-      "issue_price": null,
-      "security_type": "EQ",
-      "bidding_start": "2026-09-25",
-      "bidding_end": "2026-09-29",
-      "listing_date": null
-    },
-    {
-      "symbol": "RUNWALENTR",
-      "company": "Runwal Enterprises Limited",
-      "price_band": "Rs.290 to Rs.302",
-      "issue_price": null,
-      "security_type": "EQ",
-      "bidding_start": "2026-09-25",
-      "bidding_end": "2026-09-29",
-      "listing_date": null
-    },
-    {
       "symbol": "VARMORA",
       "company": "Varmora Granito Limited",
       "price_band": "Rs.140 to Rs.148",
@@ -13787,7 +13697,7 @@
       "company": "Adroit Industries (India) Limited",
       "price_band": "Rs.126 to Rs.134",
       "issue_price": 134,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-09-23",
       "bidding_end": "2026-09-25",
       "listing_date": "2026-09-30"
@@ -13833,31 +13743,11 @@
       "listing_date": "2026-09-30"
     },
     {
-      "symbol": "SHAHINVEST",
-      "company": "Shah Investor's Home Limited",
-      "price_band": "Rs.159 to Rs.167",
-      "issue_price": null,
-      "security_type": "EQ",
-      "bidding_start": "2026-09-28",
-      "bidding_end": "2026-09-30",
-      "listing_date": null
-    },
-    {
-      "symbol": "SRIT",
-      "company": "Srit India Limited",
-      "price_band": "Rs.123 to Rs.130",
-      "issue_price": null,
-      "security_type": "EQ",
-      "bidding_start": "2026-09-28",
-      "bidding_end": "2026-09-30",
-      "listing_date": null
-    },
-    {
       "symbol": "SWASTIKAIN",
       "company": "Swastika Infra Limited",
       "price_band": "Rs.175 to Rs.185",
       "issue_price": 185,
-      "security_type": "BE",
+      "security_type": "EQ",
       "bidding_start": "2026-09-23",
       "bidding_end": "2026-09-25",
       "listing_date": "2026-09-30"
@@ -13883,6 +13773,66 @@
       "listing_date": "2026-10-01"
     },
     {
+      "symbol": "ACEVECTOR",
+      "company": "AceVector Limited",
+      "price_band": "Rs.30 to Rs.32",
+      "issue_price": 32,
+      "security_type": "EQ",
+      "bidding_start": "2026-09-25",
+      "bidding_end": "2026-09-29",
+      "listing_date": "2026-10-05"
+    },
+    {
+      "symbol": "BMISL",
+      "company": "Bench Mark Infotech Services Limited",
+      "price_band": "Rs.104 to Rs.110",
+      "issue_price": 110,
+      "security_type": "SME",
+      "bidding_start": "2026-09-25",
+      "bidding_end": "2026-09-29",
+      "listing_date": "2026-10-05"
+    },
+    {
+      "symbol": "GERMAN",
+      "company": "German Green Steel and Power Limited",
+      "price_band": "Rs.132 to Rs.139",
+      "issue_price": 139,
+      "security_type": "EQ",
+      "bidding_start": "2026-09-25",
+      "bidding_end": "2026-09-29",
+      "listing_date": "2026-10-05"
+    },
+    {
+      "symbol": "HIMALAYAN",
+      "company": "Himalayan Solar Limited",
+      "price_band": "Rs.98 to Rs.103",
+      "issue_price": 103,
+      "security_type": "SME",
+      "bidding_start": "2026-09-25",
+      "bidding_end": "2026-09-29",
+      "listing_date": "2026-10-05"
+    },
+    {
+      "symbol": "ORIENTCABL",
+      "company": "Orient Cables (India) Limited",
+      "price_band": "Rs.258 to Rs.272",
+      "issue_price": 272,
+      "security_type": "EQ",
+      "bidding_start": "2026-09-25",
+      "bidding_end": "2026-09-29",
+      "listing_date": "2026-10-05"
+    },
+    {
+      "symbol": "RUNWALENTR",
+      "company": "Runwal Enterprises Limited",
+      "price_band": "Rs.290 to Rs.302",
+      "issue_price": 305,
+      "security_type": "EQ",
+      "bidding_start": "2026-09-25",
+      "bidding_end": "2026-09-29",
+      "listing_date": "2026-10-05"
+    },
+    {
       "symbol": "MOFS29",
       "company": "Motilal Oswal Financial Services Limited",
       "price_band": "Rs.1000",
@@ -13890,6 +13840,26 @@
       "security_type": "DEBT",
       "bidding_start": "2024-04-23",
       "bidding_end": "2024-05-03",
+      "listing_date": "2026-10-06"
+    },
+    {
+      "symbol": "SHAHINVEST",
+      "company": "Shah Investor's Home Limited",
+      "price_band": "Rs.159 to Rs.167",
+      "issue_price": 167,
+      "security_type": "EQ",
+      "bidding_start": "2026-09-28",
+      "bidding_end": "2026-09-30",
+      "listing_date": "2026-10-06"
+    },
+    {
+      "symbol": "SRIT",
+      "company": "Srit India Limited",
+      "price_band": "Rs.123 to Rs.130",
+      "issue_price": 130,
+      "security_type": "EQ",
+      "bidding_start": "2026-09-28",
+      "bidding_end": "2026-09-30",
       "listing_date": "2026-10-06"
     },
     {
@@ -14063,6 +14033,16 @@
       "listing_date": "2026-10-23"
     },
     {
+      "symbol": "SUDARSHAN",
+      "company": "Sudarshan Pharma Industries Limited",
+      "price_band": "72",
+      "issue_price": 32.57,
+      "security_type": "SME",
+      "bidding_start": "2019-06-12",
+      "bidding_end": "2019-06-21",
+      "listing_date": "2026-10-27"
+    },
+    {
       "symbol": "JPL",
       "company": "Jio Platforms Limited",
       "price_band": "Rs.1065 to Rs.1119",
@@ -14081,6 +14061,16 @@
       "bidding_start": "2026-10-21",
       "bidding_end": "2026-10-23",
       "listing_date": "2026-10-28"
+    },
+    {
+      "symbol": "ARHAM",
+      "company": "Arham Technologies Limited",
+      "price_band": "Rs.42",
+      "issue_price": 193,
+      "security_type": "SME",
+      "bidding_start": "2022-12-05",
+      "bidding_end": "2022-12-07",
+      "listing_date": "2026-10-30"
     },
     {
       "symbol": "EDELALTS",
@@ -14123,16 +14113,6 @@
       "listing_date": "2026-11-04"
     },
     {
-      "symbol": "VPFL",
-      "company": "Vedant Poly Fabs Limited",
-      "price_band": "Rs.88 to Rs.94",
-      "issue_price": null,
-      "security_type": "SME",
-      "bidding_start": "2026-11-02",
-      "bidding_end": "2026-11-04",
-      "listing_date": null
-    },
-    {
       "symbol": "BCSSL",
       "company": "Bombay Coated and Special Steels Limited",
       "price_band": "Rs.78 to Rs.82",
@@ -14141,6 +14121,16 @@
       "bidding_start": "2026-10-29",
       "bidding_end": "2026-11-02",
       "listing_date": "2026-11-05"
+    },
+    {
+      "symbol": "BAHETI",
+      "company": "Baheti Recycling Industries Limited",
+      "price_band": "Rs.45",
+      "issue_price": 774,
+      "security_type": "SME",
+      "bidding_start": "2022-11-28",
+      "bidding_end": "2022-11-30",
+      "listing_date": "2026-11-06"
     },
     {
       "symbol": "HGSINDIALT",
@@ -14171,6 +14161,16 @@
       "bidding_start": "2024-08-02",
       "bidding_end": "2024-08-06",
       "listing_date": "2026-11-06"
+    },
+    {
+      "symbol": "VPFL",
+      "company": "Vedant Poly Fabs Limited",
+      "price_band": "Rs.88 to Rs.94",
+      "issue_price": 94,
+      "security_type": "SME",
+      "bidding_start": "2026-11-02",
+      "bidding_end": "2026-11-04",
+      "listing_date": "2026-11-09"
     }
   ]
 }

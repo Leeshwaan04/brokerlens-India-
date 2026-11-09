@@ -4,23 +4,16 @@
   "source": "Google Search Console API",
   "property": "sc-domain:brokerlens.in",
   "auth_method": "OAuth2 Service Account (secrets/gsc-service-account.json)",
-  "report_date": "2026-11-08",
+  "report_date": "2026-11-09",
   "totals_28d": {
-    "clicks": 1146,
-    "impressions": 99588,
+    "clicks": 1168,
+    "impressions": 101225,
     "ctr_pct": 1.15,
-    "avg_position": 25.8,
-    "date_range_start": "2026-10-08",
-    "date_range_end": "2026-11-05"
+    "avg_position": 26.1,
+    "date_range_start": "2026-10-09",
+    "date_range_end": "2026-11-06"
   },
   "daily_history": [
-    {
-      "date": "2026-10-10",
-      "clicks_28d": 121,
-      "impressions_28d": 37973,
-      "submitted": 41132,
-      "indexed": 0
-    },
     {
       "date": "2026-10-11",
       "clicks_28d": 140,
@@ -223,28 +216,35 @@
       "impressions_28d": 99588,
       "submitted": 7196,
       "indexed": 0
+    },
+    {
+      "date": "2026-11-09",
+      "clicks_28d": 1168,
+      "impressions_28d": 101225,
+      "submitted": 7196,
+      "indexed": 0
     }
   ],
   "top_queries": [
     {
       "query": "pashupati cotspin share price target 2030",
       "clicks": 38,
-      "impressions": 902,
-      "ctr": 4.21,
+      "impressions": 935,
+      "ctr": 4.06,
       "position": 4.6
     },
     {
       "query": "jaykay enterprises share price target 2030",
       "clicks": 14,
-      "impressions": 51,
-      "ctr": 27.45,
+      "impressions": 50,
+      "ctr": 28.0,
       "position": 5.1
     },
     {
       "query": "cupid share price target 2050",
       "clicks": 9,
-      "impressions": 144,
-      "ctr": 6.25,
+      "impressions": 146,
+      "ctr": 6.16,
       "position": 3.6
     },
     {
@@ -257,9 +257,9 @@
     {
       "query": "azad india mobility share price target 2030",
       "clicks": 8,
-      "impressions": 205,
-      "ctr": 3.9,
-      "position": 3.0
+      "impressions": 199,
+      "ctr": 4.02,
+      "position": 2.8
     },
     {
       "query": "mon100 share price target 2030",
@@ -278,9 +278,9 @@
     {
       "query": "oswal greentech share price target 2030",
       "clicks": 5,
-      "impressions": 32,
-      "ctr": 15.62,
-      "position": 3.3
+      "impressions": 33,
+      "ctr": 15.15,
+      "position": 3.4
     },
     {
       "query": "birlasoft share price target 2030",
@@ -292,8 +292,8 @@
     {
       "query": "milky mist share price target 2030",
       "clicks": 4,
-      "impressions": 98,
-      "ctr": 4.08,
+      "impressions": 99,
+      "ctr": 4.04,
       "position": 6.1
     },
     {
@@ -318,53 +318,60 @@
       "position": 5.0
     },
     {
-      "query": "cupid share price target 2026",
-      "clicks": 3,
-      "impressions": 506,
-      "ctr": 0.59,
-      "position": 6.8
-    },
-    {
       "query": "irb infra share price target 2030",
       "clicks": 3,
-      "impressions": 531,
-      "ctr": 0.56,
-      "position": 7.7
+      "impressions": 543,
+      "ctr": 0.55,
+      "position": 7.8
     },
     {
       "query": "kmc speciality share price target 2030",
       "clicks": 3,
-      "impressions": 19,
-      "ctr": 15.79,
-      "position": 8.6
+      "impressions": 16,
+      "ctr": 18.75,
+      "position": 8.5
+    },
+    {
+      "query": "mac power share price target 2030",
+      "clicks": 3,
+      "impressions": 20,
+      "ctr": 15.0,
+      "position": 4.2
     },
     {
       "query": "mapmyindia share price target 2030",
       "clicks": 3,
-      "impressions": 51,
-      "ctr": 5.88,
-      "position": 3.5
+      "impressions": 54,
+      "ctr": 5.56,
+      "position": 3.3
     },
     {
       "query": "morepen lab share price target 2030",
       "clicks": 3,
-      "impressions": 276,
-      "ctr": 1.09,
+      "impressions": 301,
+      "ctr": 1.0,
       "position": 7.5
     },
     {
       "query": "motisons jewellers share price target 2030",
       "clicks": 3,
-      "impressions": 163,
-      "ctr": 1.84,
+      "impressions": 166,
+      "ctr": 1.81,
       "position": 5.3
     },
     {
       "query": "pankaj mangaldas securities pvt. ltd",
       "clicks": 3,
-      "impressions": 88,
-      "ctr": 3.41,
+      "impressions": 87,
+      "ctr": 3.45,
       "position": 6.3
+    },
+    {
+      "query": "pc jeweller share price target 2027",
+      "clicks": 3,
+      "impressions": 113,
+      "ctr": 2.65,
+      "position": 4.5
     },
     {
       "query": "sansera engineering share price target 2030",
@@ -383,8 +390,8 @@
     {
       "query": "alkyl amines share price target 2030",
       "clicks": 2,
-      "impressions": 43,
-      "ctr": 4.65,
+      "impressions": 42,
+      "ctr": 4.76,
       "position": 2.7
     },
     {
@@ -395,11 +402,18 @@
       "position": 4.6
     },
     {
+      "query": "apar industries share price target 2027",
+      "clicks": 2,
+      "impressions": 28,
+      "ctr": 7.14,
+      "position": 6.1
+    },
+    {
       "query": "apar industries share price target 2030",
       "clicks": 2,
-      "impressions": 110,
-      "ctr": 1.82,
-      "position": 5.5
+      "impressions": 124,
+      "ctr": 1.61,
+      "position": 5.8
     },
     {
       "query": "ardee industries share price 2030",
@@ -418,16 +432,16 @@
     {
       "query": "bajaj housing finance share price target 2027",
       "clicks": 2,
-      "impressions": 190,
-      "ctr": 1.05,
+      "impressions": 192,
+      "ctr": 1.04,
       "position": 6.5
     },
     {
       "query": "broker lens",
       "clicks": 2,
-      "impressions": 4,
-      "ctr": 50.0,
-      "position": 2
+      "impressions": 6,
+      "ctr": 33.33,
+      "position": 1.7
     },
     {
       "query": "canara bank share price target 2026",
@@ -439,36 +453,50 @@
     {
       "query": "cochin shipyard share price target 2027",
       "clicks": 2,
-      "impressions": 101,
-      "ctr": 1.98,
-      "position": 6.5
+      "impressions": 97,
+      "ctr": 2.06,
+      "position": 6.4
+    },
+    {
+      "query": "cupid share price target 2026",
+      "clicks": 2,
+      "impressions": 489,
+      "ctr": 0.41,
+      "position": 6.8
     },
     {
       "query": "deepa jewellers share price target 2027",
       "clicks": 2,
-      "impressions": 39,
-      "ctr": 5.13,
+      "impressions": 38,
+      "ctr": 5.26,
       "position": 7.5
     },
     {
       "query": "fischer medical ventures share price target 2030",
       "clicks": 2,
-      "impressions": 43,
-      "ctr": 4.65,
+      "impressions": 47,
+      "ctr": 4.26,
       "position": 7.7
     },
     {
       "query": "gateway share price target 2030",
       "clicks": 2,
-      "impressions": 15,
-      "ctr": 13.33,
+      "impressions": 16,
+      "ctr": 12.5,
       "position": 8.1
+    },
+    {
+      "query": "gujarat natural resources share price target 2030",
+      "clicks": 2,
+      "impressions": 127,
+      "ctr": 1.57,
+      "position": 4.1
     },
     {
       "query": "hfcl share price target 2028",
       "clicks": 2,
-      "impressions": 21,
-      "ctr": 9.52,
+      "impressions": 25,
+      "ctr": 8.0,
       "position": 3.3
     },
     {
@@ -481,8 +509,8 @@
     {
       "query": "jagran prakashan share price target 2030",
       "clicks": 2,
-      "impressions": 106,
-      "ctr": 1.89,
+      "impressions": 110,
+      "ctr": 1.82,
       "position": 5.0
     },
     {
@@ -493,32 +521,25 @@
       "position": 4.5
     },
     {
-      "query": "mac power share price target 2030",
-      "clicks": 2,
-      "impressions": 19,
-      "ctr": 10.53,
-      "position": 4.2
-    },
-    {
       "query": "media matrix share price target 2030",
       "clicks": 2,
-      "impressions": 21,
-      "ctr": 9.52,
-      "position": 4
+      "impressions": 23,
+      "ctr": 8.7,
+      "position": 4.1
     },
     {
       "query": "muthoot finance share price target 2030",
       "clicks": 2,
-      "impressions": 94,
-      "ctr": 2.13,
-      "position": 6.3
+      "impressions": 100,
+      "ctr": 2.0,
+      "position": 6.4
     },
     {
       "query": "onix solar share price target 2030",
       "clicks": 2,
-      "impressions": 14,
-      "ctr": 14.29,
-      "position": 1.8
+      "impressions": 16,
+      "ctr": 12.5,
+      "position": 1.9
     },
     {
       "query": "oswal green share price target 2030",
@@ -526,13 +547,6 @@
       "impressions": 14,
       "ctr": 14.29,
       "position": 1.6
-    },
-    {
-      "query": "pc jeweller share price target 2027",
-      "clicks": 2,
-      "impressions": 81,
-      "ctr": 2.47,
-      "position": 4.6
     },
     {
       "query": "piramal pharma share price target 2040",
@@ -544,8 +558,8 @@
     {
       "query": "radhika jeweltech share price target 2030",
       "clicks": 2,
-      "impressions": 28,
-      "ctr": 7.14,
+      "impressions": 29,
+      "ctr": 6.9,
       "position": 6.0
     },
     {
@@ -558,15 +572,15 @@
     {
       "query": "raymond lifestyle share price target 2030",
       "clicks": 2,
-      "impressions": 34,
-      "ctr": 5.88,
-      "position": 3.7
+      "impressions": 32,
+      "ctr": 6.25,
+      "position": 3.8
     },
     {
       "query": "rba share price target 2026",
       "clicks": 2,
-      "impressions": 47,
-      "ctr": 4.26,
+      "impressions": 48,
+      "ctr": 4.17,
       "position": 3.4
     },
     {
@@ -579,9 +593,9 @@
     {
       "query": "sakuma exports share price target 2027",
       "clicks": 2,
-      "impressions": 39,
-      "ctr": 5.13,
-      "position": 2.5
+      "impressions": 41,
+      "ctr": 4.88,
+      "position": 2.6
     },
     {
       "query": "sarveshwar foods share price target 2027",
@@ -593,8 +607,8 @@
     {
       "query": "shakti pumps share price target 2027",
       "clicks": 2,
-      "impressions": 52,
-      "ctr": 3.85,
+      "impressions": 56,
+      "ctr": 3.57,
       "position": 4.2
     },
     {
@@ -614,8 +628,8 @@
     {
       "query": "tata elxsi share price target 2028",
       "clicks": 2,
-      "impressions": 19,
-      "ctr": 10.53,
+      "impressions": 20,
+      "ctr": 10.0,
       "position": 4.5
     },
     {
@@ -647,6 +661,13 @@
       "position": 4
     },
     {
+      "query": "63 moons share price target 2030",
+      "clicks": 1,
+      "impressions": 13,
+      "ctr": 7.69,
+      "position": 7.6
+    },
+    {
       "query": "aadhar housing finance share price target 2030",
       "clicks": 1,
       "impressions": 10,
@@ -656,8 +677,8 @@
     {
       "query": "absolute broking",
       "clicks": 1,
-      "impressions": 19,
-      "ctr": 5.26,
+      "impressions": 16,
+      "ctr": 6.25,
       "position": 7
     },
     {
@@ -705,16 +726,9 @@
     {
       "query": "anush shares and securities pvt ltd",
       "clicks": 1,
-      "impressions": 7,
-      "ctr": 14.29,
-      "position": 6.4
-    },
-    {
-      "query": "apar industries share price target 2027",
-      "clicks": 1,
-      "impressions": 26,
-      "ctr": 3.85,
-      "position": 6.1
+      "impressions": 3,
+      "ctr": 33.33,
+      "position": 7
     },
     {
       "query": "ardee industries share price target 2027",
@@ -733,16 +747,9 @@
     {
       "query": "asian energy share price target 2030",
       "clicks": 1,
-      "impressions": 14,
-      "ctr": 7.14,
+      "impressions": 16,
+      "ctr": 6.25,
       "position": 7.6
-    },
-    {
-      "query": "avance technologies share price target 2027",
-      "clicks": 1,
-      "impressions": 145,
-      "ctr": 0.69,
-      "position": 5.3
     },
     {
       "query": "avantel share price target 2026",
@@ -768,16 +775,16 @@
     {
       "query": "awl share price target 2026",
       "clicks": 1,
-      "impressions": 46,
-      "ctr": 2.17,
-      "position": 9.2
+      "impressions": 47,
+      "ctr": 2.13,
+      "position": 9.1
     },
     {
       "query": "azad engineering share price target 2027",
       "clicks": 1,
-      "impressions": 24,
-      "ctr": 4.17,
-      "position": 5.8
+      "impressions": 25,
+      "ctr": 4.0,
+      "position": 5.7
     },
     {
       "query": "bahubali stock broking",
@@ -810,16 +817,23 @@
     {
       "query": "bhagyanagar share price target 2030",
       "clicks": 1,
-      "impressions": 110,
-      "ctr": 0.91,
-      "position": 5.1
+      "impressions": 117,
+      "ctr": 0.85,
+      "position": 5.2
     },
     {
       "query": "bluspring enterprises ltd share price target 2030",
       "clicks": 1,
-      "impressions": 9,
-      "ctr": 11.11,
-      "position": 8
+      "impressions": 10,
+      "ctr": 10.0,
+      "position": 8.3
+    },
+    {
+      "query": "brightcom group share price target 2040",
+      "clicks": 1,
+      "impressions": 3,
+      "ctr": 33.33,
+      "position": 9
     },
     {
       "query": "campus share price target",
@@ -831,16 +845,16 @@
     {
       "query": "cochin shipyard target price 2027",
       "clicks": 1,
-      "impressions": 24,
-      "ctr": 4.17,
+      "impressions": 25,
+      "ctr": 4.0,
       "position": 5.6
     },
     {
       "query": "cohance life sciences share price target 2026",
       "clicks": 1,
-      "impressions": 19,
-      "ctr": 5.26,
-      "position": 11.5
+      "impressions": 21,
+      "ctr": 4.76,
+      "position": 11
     },
     {
       "query": "cohance life sciences share price target 2030",
@@ -852,8 +866,8 @@
     {
       "query": "cordelia share price target 2030",
       "clicks": 1,
-      "impressions": 15,
-      "ctr": 6.67,
+      "impressions": 17,
+      "ctr": 5.88,
       "position": 6.9
     },
     {
@@ -950,8 +964,8 @@
     {
       "query": "emil share price target 2026",
       "clicks": 1,
-      "impressions": 16,
-      "ctr": 6.25,
+      "impressions": 17,
+      "ctr": 5.88,
       "position": 4.4
     },
     {
@@ -971,16 +985,9 @@
     {
       "query": "fcs software solutions share price target 2040",
       "clicks": 1,
-      "impressions": 14,
-      "ctr": 7.14,
-      "position": 4.5
-    },
-    {
-      "query": "filatex broker",
-      "clicks": 1,
-      "impressions": 3,
-      "ctr": 33.33,
-      "position": 5
+      "impressions": 16,
+      "ctr": 6.25,
+      "position": 4.4
     },
     {
       "query": "find target",
@@ -992,9 +999,9 @@
     {
       "query": "flat trade is sebi registered or not",
       "clicks": 1,
-      "impressions": 13,
-      "ctr": 7.69,
-      "position": 8.3
+      "impressions": 12,
+      "ctr": 8.33,
+      "position": 8.4
     },
     {
       "query": "fredun pharma share price target 2030",
@@ -1020,29 +1027,29 @@
     {
       "query": "gmm pfaudler share price target 2030",
       "clicks": 1,
-      "impressions": 6,
-      "ctr": 16.67,
-      "position": 4.2
+      "impressions": 7,
+      "ctr": 14.29,
+      "position": 4.1
     },
     {
       "query": "gocl corporation share price target 2030",
       "clicks": 1,
-      "impressions": 48,
-      "ctr": 2.08,
-      "position": 5.1
+      "impressions": 50,
+      "ctr": 2.0,
+      "position": 5.2
     },
     {
       "query": "grauer and weil share price target 2030",
       "clicks": 1,
-      "impressions": 21,
-      "ctr": 4.76,
-      "position": 3.0
+      "impressions": 19,
+      "ctr": 5.26,
+      "position": 3.3
     },
     {
       "query": "gravita share price target 2030",
       "clicks": 1,
-      "impressions": 104,
-      "ctr": 0.96,
+      "impressions": 106,
+      "ctr": 0.94,
       "position": 6.6
     },
     {
@@ -1055,9 +1062,16 @@
     {
       "query": "grow target 2030",
       "clicks": 1,
-      "impressions": 4,
-      "ctr": 25.0,
-      "position": 6.5
+      "impressions": 3,
+      "ctr": 33.33,
+      "position": 6.3
+    },
+    {
+      "query": "grow target price 2030",
+      "clicks": 1,
+      "impressions": 9,
+      "ctr": 11.11,
+      "position": 4.8
     },
     {
       "query": "groww power etf share price target 2030",
@@ -1095,18 +1109,11 @@
       "position": 4.8
     },
     {
-      "query": "gujarat natural resources share price target 2030",
-      "clicks": 1,
-      "impressions": 122,
-      "ctr": 0.82,
-      "position": 4.1
-    },
-    {
       "query": "havells share price target 2040",
       "clicks": 1,
-      "impressions": 6,
-      "ctr": 16.67,
-      "position": 5.2
+      "impressions": 7,
+      "ctr": 14.29,
+      "position": 5
     },
     {
       "query": "hcg share price target 2030",
@@ -1118,23 +1125,23 @@
     {
       "query": "hcl tech share price target 2030",
       "clicks": 1,
-      "impressions": 113,
-      "ctr": 0.88,
-      "position": 6.8
+      "impressions": 120,
+      "ctr": 0.83,
+      "position": 6.9
     },
     {
       "query": "hdfc bank share price target 2028",
       "clicks": 1,
-      "impressions": 16,
-      "ctr": 6.25,
-      "position": 3.8
+      "impressions": 19,
+      "ctr": 5.26,
+      "position": 4.2
     },
     {
       "query": "hexagon nutrition share price target 2030",
       "clicks": 1,
-      "impressions": 24,
-      "ctr": 4.17,
-      "position": 11.6
+      "impressions": 27,
+      "ctr": 3.7,
+      "position": 11.5
     },
     {
       "query": "hexagon share price target",
@@ -1146,9 +1153,9 @@
     {
       "query": "hilton metal share price target 2030",
       "clicks": 1,
-      "impressions": 18,
-      "ctr": 5.56,
-      "position": 3.3
+      "impressions": 19,
+      "ctr": 5.26,
+      "position": 3.2
     },
     {
       "query": "hindalco target price 2026",
@@ -1174,8 +1181,8 @@
     {
       "query": "icici bank share price target 2040",
       "clicks": 1,
-      "impressions": 32,
-      "ctr": 3.12,
+      "impressions": 33,
+      "ctr": 3.03,
       "position": 4.9
     },
     {
@@ -1184,6 +1191,13 @@
       "impressions": 35,
       "ctr": 2.86,
       "position": 5.6
+    },
+    {
+      "query": "indo borax share price target 2030",
+      "clicks": 1,
+      "impressions": 27,
+      "ctr": 3.7,
+      "position": 3.2
     },
     {
       "query": "indo thai share price target 2026",
@@ -1195,16 +1209,16 @@
     {
       "query": "indo thai share price target 2027",
       "clicks": 1,
-      "impressions": 6,
-      "ctr": 16.67,
-      "position": 5.2
+      "impressions": 7,
+      "ctr": 14.29,
+      "position": 5.1
     },
     {
       "query": "indo thai share price target 2030",
       "clicks": 1,
-      "impressions": 46,
-      "ctr": 2.17,
-      "position": 5.8
+      "impressions": 47,
+      "ctr": 2.13,
+      "position": 6.0
     },
     {
       "query": "ine013p01021",
@@ -1219,6 +1233,13 @@
       "impressions": 2,
       "ctr": 50.0,
       "position": 8.5
+    },
+    {
+      "query": "inox wind share price target 2035",
+      "clicks": 1,
+      "impressions": 16,
+      "ctr": 6.25,
+      "position": 4
     },
     {
       "query": "inox wind share target 2026",
@@ -1237,8 +1258,8 @@
     {
       "query": "ioc share price target 2050",
       "clicks": 1,
-      "impressions": 18,
-      "ctr": 5.56,
+      "impressions": 17,
+      "ctr": 5.88,
       "position": 3.5
     },
     {
@@ -1265,23 +1286,23 @@
     {
       "query": "j&k bank share price target 2030",
       "clicks": 1,
-      "impressions": 94,
-      "ctr": 1.06,
+      "impressions": 101,
+      "ctr": 0.99,
       "position": 8.2
     },
     {
       "query": "jbv share broker",
       "clicks": 1,
-      "impressions": 8,
-      "ctr": 12.5,
-      "position": 7.1
+      "impressions": 7,
+      "ctr": 14.29,
+      "position": 7
     },
     {
       "query": "jyoti resins share price target 2030",
       "clicks": 1,
-      "impressions": 24,
-      "ctr": 4.17,
-      "position": 3.5
+      "impressions": 25,
+      "ctr": 4.0,
+      "position": 3.4
     },
     {
       "query": "kanohar electricals ltd share price target 2030",
@@ -1300,8 +1321,8 @@
     {
       "query": "kaveri seeds share price target 2030",
       "clicks": 1,
-      "impressions": 15,
-      "ctr": 6.67,
+      "impressions": 16,
+      "ctr": 6.25,
       "position": 7.5
     },
     {
@@ -1335,23 +1356,23 @@
     {
       "query": "krishna defence share price target 2030",
       "clicks": 1,
-      "impressions": 18,
-      "ctr": 5.56,
+      "impressions": 19,
+      "ctr": 5.26,
       "position": 6.1
     },
     {
       "query": "l&t share price target 2050",
       "clicks": 1,
-      "impressions": 6,
-      "ctr": 16.67,
-      "position": 2.7
+      "impressions": 7,
+      "ctr": 14.29,
+      "position": 3.1
     },
     {
       "query": "leap india share price target 2027",
       "clicks": 1,
-      "impressions": 10,
-      "ctr": 10.0,
-      "position": 4.8
+      "impressions": 11,
+      "ctr": 9.09,
+      "position": 4.7
     },
     {
       "query": "leap india share price target 2030",
@@ -1377,8 +1398,8 @@
     {
       "query": "man industries share price target 2030",
       "clicks": 1,
-      "impressions": 36,
-      "ctr": 2.78,
+      "impressions": 38,
+      "ctr": 2.63,
       "position": 3.9
     },
     {
@@ -1398,9 +1419,9 @@
     {
       "query": "microcurves trading private limited",
       "clicks": 1,
-      "impressions": 50,
-      "ctr": 2.0,
-      "position": 7.0
+      "impressions": 49,
+      "ctr": 2.04,
+      "position": 6.9
     },
     {
       "query": "midwest share price target 2026",
@@ -1412,9 +1433,9 @@
     {
       "query": "milky mist share price 2030",
       "clicks": 1,
-      "impressions": 32,
-      "ctr": 3.12,
-      "position": 4.4
+      "impressions": 33,
+      "ctr": 3.03,
+      "position": 4.6
     },
     {
       "query": "milky mist share price target 2027",
@@ -1454,9 +1475,9 @@
     {
       "query": "mold-tek technologies share price target 2030",
       "clicks": 1,
-      "impressions": 9,
-      "ctr": 11.11,
-      "position": 4.3
+      "impressions": 11,
+      "ctr": 9.09,
+      "position": 4.1
     },
     {
       "query": "money view share price target 2030",
@@ -1468,9 +1489,9 @@
     {
       "query": "moneywise finvest limited",
       "clicks": 1,
-      "impressions": 6,
-      "ctr": 16.67,
-      "position": 13.7
+      "impressions": 5,
+      "ctr": 20.0,
+      "position": 14.2
     },
     {
       "query": "morepen lab target price 2030",
@@ -1489,15 +1510,15 @@
     {
       "query": "morepen laboratories share price target 2030",
       "clicks": 1,
-      "impressions": 20,
-      "ctr": 5.0,
-      "position": 7.5
+      "impressions": 24,
+      "ctr": 4.17,
+      "position": 7.1
     },
     {
       "query": "morepen labs share price target 2030",
       "clicks": 1,
-      "impressions": 11,
-      "ctr": 9.09,
+      "impressions": 13,
+      "ctr": 7.69,
       "position": 7.5
     },
     {
@@ -1508,17 +1529,24 @@
       "position": 6.5
     },
     {
+      "query": "mtar share price target 2027",
+      "clicks": 1,
+      "impressions": 16,
+      "ctr": 6.25,
+      "position": 5
+    },
+    {
       "query": "ncc share price target 2026",
       "clicks": 1,
-      "impressions": 28,
-      "ctr": 3.57,
-      "position": 8
+      "impressions": 30,
+      "ctr": 3.33,
+      "position": 8.1
     },
     {
       "query": "neogen chemicals share price target 2030",
       "clicks": 1,
-      "impressions": 44,
-      "ctr": 2.27,
+      "impressions": 46,
+      "ctr": 2.17,
       "position": 5.2
     },
     {
@@ -1571,18 +1599,11 @@
       "position": 5.7
     },
     {
-      "query": "panama petro share price target 2030",
-      "clicks": 1,
-      "impressions": 18,
-      "ctr": 5.56,
-      "position": 6.8
-    },
-    {
       "query": "pc jeweller target price 2027",
       "clicks": 1,
-      "impressions": 8,
-      "ctr": 12.5,
-      "position": 4.5
+      "impressions": 9,
+      "ctr": 11.11,
+      "position": 4.7
     },
     {
       "query": "pg electroplast share price target 2030",
@@ -1601,9 +1622,9 @@
     {
       "query": "platinum industries share price target 2030",
       "clicks": 1,
-      "impressions": 21,
-      "ctr": 4.76,
-      "position": 5.2
+      "impressions": 20,
+      "ctr": 5.0,
+      "position": 5.3
     },
     {
       "query": "poly medicure ipo price",
@@ -1622,23 +1643,23 @@
     {
       "query": "powerindia share price target 2030",
       "clicks": 1,
-      "impressions": 49,
-      "ctr": 2.04,
+      "impressions": 46,
+      "ctr": 2.17,
       "position": 3.7
     },
     {
       "query": "protean share price target 2030",
       "clicks": 1,
-      "impressions": 34,
-      "ctr": 2.94,
+      "impressions": 35,
+      "ctr": 2.86,
       "position": 4.9
     },
     {
       "query": "r&b denims share price target 2030",
       "clicks": 1,
-      "impressions": 18,
-      "ctr": 5.56,
-      "position": 9.1
+      "impressions": 17,
+      "ctr": 5.88,
+      "position": 9
     },
     {
       "query": "rattanindia power share price target 2026",
@@ -1669,17 +1690,10 @@
       "position": 19
     },
     {
-      "query": "rlp securities",
-      "clicks": 1,
-      "impressions": 272,
-      "ctr": 0.37,
-      "position": 6.9
-    },
-    {
       "query": "rpp infra share price target 2030",
       "clicks": 1,
-      "impressions": 18,
-      "ctr": 5.56,
+      "impressions": 20,
+      "ctr": 5.0,
       "position": 4.2
     },
     {
@@ -1720,15 +1734,15 @@
     {
       "query": "shreeji shipping share price target 2030",
       "clicks": 1,
-      "impressions": 21,
-      "ctr": 4.76,
-      "position": 7.1
+      "impressions": 23,
+      "ctr": 4.35,
+      "position": 7.0
     },
     {
       "query": "shringar house of mangalsutra share price target 2030",
       "clicks": 1,
-      "impressions": 9,
-      "ctr": 11.11,
+      "impressions": 10,
+      "ctr": 10.0,
       "position": 5.4
     },
     {
@@ -1748,16 +1762,16 @@
     {
       "query": "sky gold share price target 2027",
       "clicks": 1,
-      "impressions": 115,
-      "ctr": 0.87,
-      "position": 6.2
+      "impressions": 120,
+      "ctr": 0.83,
+      "position": 6.3
     },
     {
       "query": "soaring peaks capital services private limited",
       "clicks": 1,
-      "impressions": 28,
-      "ctr": 3.57,
-      "position": 6.4
+      "impressions": 26,
+      "ctr": 3.85,
+      "position": 6.5
     },
     {
       "query": "sonam ltd share price target 2030",
@@ -1769,22 +1783,22 @@
     {
       "query": "spectrum electrical industries ltd share price target 2030",
       "clicks": 1,
-      "impressions": 18,
-      "ctr": 5.56,
-      "position": 4.9
+      "impressions": 19,
+      "ctr": 5.26,
+      "position": 5.1
     },
     {
       "query": "sterlite technologies share price target 2027",
       "clicks": 1,
-      "impressions": 73,
-      "ctr": 1.37,
-      "position": 4.2
+      "impressions": 75,
+      "ctr": 1.33,
+      "position": 4.1
     },
     {
       "query": "sterlite technologies share price target 2050",
       "clicks": 1,
-      "impressions": 21,
-      "ctr": 4.76,
+      "impressions": 22,
+      "ctr": 4.55,
       "position": 3.1
     },
     {
@@ -1818,30 +1832,30 @@
     {
       "query": "symbiotec pharmalab share price target 2027",
       "clicks": 1,
-      "impressions": 24,
-      "ctr": 4.17,
-      "position": 7.8
+      "impressions": 31,
+      "ctr": 3.23,
+      "position": 7.9
     },
     {
       "query": "tbz share price target 2030",
       "clicks": 1,
-      "impressions": 110,
-      "ctr": 0.91,
-      "position": 6
+      "impressions": 117,
+      "ctr": 0.85,
+      "position": 6.0
     },
     {
       "query": "tolins tyres share price target 2030",
       "clicks": 1,
-      "impressions": 30,
-      "ctr": 3.33,
-      "position": 2.9
+      "impressions": 31,
+      "ctr": 3.23,
+      "position": 3.0
     },
     {
       "query": "tradepure stock broking private limited",
       "clicks": 1,
-      "impressions": 11,
-      "ctr": 9.09,
-      "position": 7.3
+      "impressions": 8,
+      "ctr": 12.5,
+      "position": 9
     },
     {
       "query": "uflex share price target 2030",
@@ -1888,8 +1902,8 @@
     {
       "query": "vip industries share price target 2030",
       "clicks": 1,
-      "impressions": 33,
-      "ctr": 3.03,
+      "impressions": 32,
+      "ctr": 3.12,
       "position": 5.5
     },
     {
@@ -1916,9 +1930,9 @@
     {
       "query": "waterways leisure tourism share price target 2030",
       "clicks": 1,
-      "impressions": 8,
-      "ctr": 12.5,
-      "position": 2.1
+      "impressions": 9,
+      "ctr": 11.11,
+      "position": 2.6
     },
     {
       "query": "xxx india 12",
@@ -1944,9 +1958,9 @@
     {
       "query": "zeel share price target 2027",
       "clicks": 1,
-      "impressions": 27,
-      "ctr": 3.7,
-      "position": 5.6
+      "impressions": 28,
+      "ctr": 3.57,
+      "position": 5.5
     },
     {
       "query": "\"cressanda solutions penny stock\" -site:bseindia.com -site:facebook.com -site:instagram.com -site:threads.com -site:threads.net -site:linkedin.com -site:x.com -site:twitter.com -site:tiktok.com -site:youtube.com -site:youtu.be -site:reddit.com -site:t.me -site:telegram.me -site:telegram.org -site:pinterest.com -site:vimeo.com",
@@ -1961,20 +1975,6 @@
       "impressions": 1,
       "ctr": 0,
       "position": 1
-    },
-    {
-      "query": "\"reliablemarketinsights.com\" site:http://inkrich.com/",
-      "clicks": 0,
-      "impressions": 1,
-      "ctr": 0,
-      "position": 1
-    },
-    {
-      "query": "\"samco\"",
-      "clicks": 0,
-      "impressions": 2,
-      "ctr": 0,
-      "position": 4.5
     }
   ],
   "sitemaps": [
@@ -1999,7 +1999,7 @@
     "https://www.brokerlens.in/": {
       "coverageState": "Submitted and indexed",
       "verdict": "PASS",
-      "lastCrawlTime": "2026-11-01T16:56:01Z",
+      "lastCrawlTime": "2026-11-08T17:55:06Z",
       "pageFetchState": "SUCCESSFUL",
       "robotsTxtState": "ALLOWED"
     },

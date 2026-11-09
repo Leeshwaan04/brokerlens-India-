@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-08",
+  "updated": "2026-11-09",
   "rule": "A BSE main-board company not listed on NSE joins when it is traded on at least 75% of the sessions on file, with an average daily traded value of at least Rs 10 lakh. Entries are never dropped for low trading; one leaves only when the company lists on NSE.",
   "scrips": {
     "500012": {
@@ -790,17 +790,6 @@
       "bse_url": "https://www.bseindia.com/stock-share-price/jetking-infotrain-ltd/jetkingq/517063/",
       "code": "517063",
       "slug": "jetkingq",
-      "added": "2026-11-08"
-    },
-    "517166": {
-      "symbol": "SPELS",
-      "name": "SPEL Semiconductor Ltd.",
-      "isin": "INE252A01019",
-      "group": "B",
-      "face_value": 10,
-      "bse_url": "https://www.bseindia.com/stock-share-price/spel-semiconductor-ltd/spels/517166/",
-      "code": "517166",
-      "slug": "spels",
       "added": "2026-11-08"
     },
     "517246": {
