@@ -437,13 +437,18 @@ def run(check, ROOT, load):
         unlisted_plain = page("fund/some-fund")
         unlisted_index = page("compare/stocks/a-vs-b", '<meta name="robots" content="index, follow, max-snippet:-1">')
         already = page("broker/x/trade/y", ix.NOINDEX_META)
+        secondary = page("sebi-registry/acme-dp-2016", '<link rel="canonical" href="https://www.brokerlens.in/sebi-registry/acme/">')
+        self_canon = page("fund/other-fund", '<link rel="canonical" href="https://www.brokerlens.in/fund/other-fund/">')
         checked, changed = ix.enforce_index_allowlist(tmp)
         r = lambda p: _read(p)
         check("indexation: allowlist leaves every sitemap page indexable (incl. no-slash SPA routes and the root)",
               "noindex" not in r(root_p) + r(listed) + r(spa) and 'content="index, follow"' in r(listed))
         check("indexation: allowlist gives noindex,follow to pages outside the sitemap, replacing an index tag rather than adding a second one",
               ix.NOINDEX_META in r(unlisted_plain) and ix.NOINDEX_META in r(unlisted_index)
-              and r(unlisted_index).count('name="robots"') == 1 and changed == 2 and checked == 6, "checked=%d changed=%d" % (checked, changed))
+              and r(unlisted_index).count('name="robots"') == 1 and ix.NOINDEX_META in r(self_canon)
+              and changed == 3 and checked == 8, "checked=%d changed=%d" % (checked, changed))
+        check("indexation: allowlist never adds noindex to a page whose canonical names another URL (no noindex + canonical mix)",
+              "noindex" not in r(secondary))
         check("indexation: allowlist leaves an already-noindex page untouched", r(already).count('name="robots"') == 1)
         os.remove(os.path.join(tmp, "sitemap.xml"))
         check("indexation: with no sitemap written, the allowlist changes nothing (never noindexes a whole site by accident)",

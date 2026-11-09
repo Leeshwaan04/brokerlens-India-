@@ -233,9 +233,12 @@ def run(check, ROOT, load):
 
     # ---------------------------------------------------------- sub-pages of listed IPOs
     robots = '<meta name="robots" content="noindex,follow">'
-    check("ipo: listed IPO sub-pages canonical to the main page and are noindex,follow",
-          '<link rel="canonical" href="https://www.brokerlens.in/ipo/kfintech/">' in sub_kf and robots in sub_kf
-          and '<link rel="canonical" href="https://www.brokerlens.in/ipo/kfintech/">' in boa_kf and robots in boa_kf)
+    # Self canonical, as the generator's docstring says: noindex plus a canonical to the main IPO
+    # page is a mixed signal Google can resolve by carrying the noindex over to the main page.
+    check("ipo: listed IPO sub-pages are noindex,follow with a self canonical (never noindex + canonical to the main page)",
+          '<link rel="canonical" href="https://www.brokerlens.in/ipo/kfintech/subscription-status/">' in sub_kf and robots in sub_kf
+          and '<link rel="canonical" href="https://www.brokerlens.in/ipo/kfintech/basis-of-allotment/">' in boa_kf and robots in boa_kf
+          and '<link rel="canonical" href="https://www.brokerlens.in/ipo/kfintech/">' not in sub_kf + boa_kf)
     sub_open = sube.render_subscription_page(dict(open_ipo))
     boa_open = sube.render_basis_of_allotment_page(dict(open_ipo))
     check("ipo: open IPO sub-pages stay indexable with a self canonical",

@@ -200,6 +200,7 @@ def add_home_footer_links(page_html):
 # into the sitemap (SITEMAP_WAVE) is now the one switch that makes it indexable.
 _ROBOTS_META_RE = re.compile(r'<meta\s+name=["\']robots["\'][^>]*>', re.I)
 _NOINDEX_RE = re.compile(r'<meta\s+name=["\']robots["\']\s+content=["\'][^"\']*noindex', re.I)
+_CANONICAL_RE = re.compile(r'<link\s+rel=["\']canonical["\']\s+href=["\']([^"\']+)["\']', re.I)
 _SKIP_DIRS = ("assets", "data", "sitemaps")
 
 
@@ -228,7 +229,13 @@ def enforce_index_allowlist(site_dir, allowed=None):
 
     Returns (pages_checked, pages_changed). A page that already says noindex is
     left alone; an existing index robots tag is replaced, otherwise the tag is
-    inserted right after <head>. Pages stay crawlable, so links still pass."""
+    inserted right after <head>. Pages stay crawlable, so links still pass.
+
+    A page whose canonical names another URL is also left alone: the canonical
+    already keeps it out of the index in favour of that URL, and adding noindex
+    on top is the mixed signal Google can resolve by carrying the noindex over to
+    the canonical target. That was 481 secondary SEBI registrations pointing at
+    their company's main registry page (about 4,300 impressions a month)."""
     allowed = sitemap_paths(site_dir) if allowed is None else allowed
     if not allowed:
         return 0, 0  # no sitemap written: never noindex a whole site by accident
@@ -250,6 +257,11 @@ def enforce_index_allowlist(site_dir, allowed=None):
         head = page[:head_end] if head_end != -1 else page[:8000]
         if _NOINDEX_RE.search(head):
             continue
+        canon = _CANONICAL_RE.search(head)
+        if canon:
+            target = re.sub(r"^https?://[^/]+", "", canon.group(1)).split("?", 1)[0].split("#", 1)[0] or "/"
+            if (target if target.endswith("/") else target + "/") != path:
+                continue
         if _ROBOTS_META_RE.search(head):
             page = _ROBOTS_META_RE.sub(NOINDEX_META, page, count=1)
         else:

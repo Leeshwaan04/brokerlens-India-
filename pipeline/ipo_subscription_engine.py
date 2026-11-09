@@ -69,7 +69,7 @@ def _robots_and_canonical(ipo_row, slug, page_path, site_url):
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     canonical = f"{site_url}{page_path}"
     if ipo_facts.is_settled(ipo_row, today):
-        return (f"{site_url}/ipo/{slug}/", '<meta name="robots" content="noindex,follow">')
+        return (canonical, '<meta name="robots" content="noindex,follow">')
     return (canonical, "")
 
 
