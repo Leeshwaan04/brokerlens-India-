@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-09",
+ "updated": "2026-11-10",
  "min_impressions_28d": 5,
  "slugs": [
   "20microns",
@@ -729,6 +729,7 @@
   "hdfcvalue",
   "hdil",
   "healthcare",
+  "healthx",
   "hecproject",
   "heg",
   "hegam",
@@ -1271,6 +1272,7 @@
   "nrbbearing",
   "nrl",
   "nsil",
+  "nslnisp",
   "ntpc",
   "ntpcgreen",
   "nuvama",
@@ -1407,6 +1409,7 @@
   "pvp",
   "pvrinox",
   "pvsl",
+  "pvtbanietf",
   "pwl",
   "pyramid",
   "qmsmedi",
@@ -1759,6 +1762,7 @@
   "tcs",
   "tdpowersys",
   "teamlease",
+  "techm",
   "technocraf",
   "technvisn",
   "tennind",
