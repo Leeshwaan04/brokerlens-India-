@@ -66,3 +66,24 @@ One entry per run, newest last. Each change states its evidence, the effect it s
 - Change: the build no longer writes /broker/<id>/trade/ pages; every such URL 308s to the broker's charges page (11 brokers), else its profile, else /trade-costs/ (vercel.json, one rule set generated from broker_charges_engine.cost_page_path). Stock, profile, charges, branch and stock-compare pages now link the charges calculators. The /trade-costs/ hub no longer labels an unverified schedule "Verified Tariff".
 - Expected effect: Google's crawl moves to pages that can rank (IPO hub, broker profiles, charges pages, BSE-only stocks) and the 33.5K thin pages leave the index as they are recrawled; charges pages gain the "<broker> brokerage charges / calculator" queries the trade pages drew at position 80 or worse. Check by 2026-12-01: count of /broker/*/trade/ URLs with impressions (1,312 in 4 to 9 Nov), impressions on /broker/*/charges/ (37 in 90 days), and index status of /ipo/ and the broker profiles.
 - Follow-up: temporary /sitemap-retired.xml (robots.txt only, never in sitemap.xml) lists the 3,932 trade URLs Search Console showed in results (10 Aug to 10 Nov), lastmod 2026-11-10, so Google recrawls them and sees the 308s sooner. It stops being written after 2026-12-31 (data/manual/retired_urls.json).
+
+## 2026-11-10 (Automated SEO Autopilot)
+
+- Weekly 28-day snapshot comparison (2026-11-10 vs 2026-11-03):
+  - Clicks: 1176 (+122 vs prior week)
+  - Impressions: 102452 (+4040 vs prior week)
+  - Submitted indexable URLs: 7197
+
+- Striking distance search queries identified (positions 4 to 20, high impressions):
+  - "pashupati cotspin share price target 2030": pos 4.6, 715 impressions, 25 clicks, 3.5% CTR
+  - "irb infra share price target 2030": pos 7.8, 550 impressions, 3 clicks, 0.55% CTR
+  - "cupid share price target 2026": pos 6.8, 439 impressions, 2 clicks, 0.46% CTR
+  - "econo broking": pos 10.1, 340 impressions, 0 clicks, 0% CTR
+  - "fourdegreewater services private limited": pos 10.0, 328 impressions, 0 clicks, 0% CTR
+  - "morepen lab share price target 2030": pos 7.5, 310 impressions, 3 clicks, 0.97% CTR
+  - "praj industries share price target 2030": pos 8.8, 247 impressions, 4 clicks, 1.62% CTR
+  - "comfort intech share price target 2030": pos 6.0, 241 impressions, 0 clicks, 0% CTR
+
+- Demand sitemap verified: all current high-demand pages remain indexed in Wave 1.
+- Expected effect: increase search visibility and CTR across striking-distance terms without adding thin doorway pages.
+- Check impact by: 2026-11-24
