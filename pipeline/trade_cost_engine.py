@@ -969,18 +969,23 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
     """Renders the master /trade-costs/ directory and fee comparator hub."""
     canonical = f"{site_url}/trade-costs/"
     title = "Stock Trading Cost & Brokerage Calculator Hub | BrokerLens"
-    desc = "Compare exact rupee-by-rupee trading costs, STT, NSE turnover charges, stamp duty, GST, and DP charges across top Indian stock brokers for 500+ NSE stocks."
+    desc = "Compare rupee-by-rupee trading costs, STT, NSE turnover charges, stamp duty, GST, and DP charges across top Indian stock brokers."
+    try:
+        from .broker_charges_engine import cost_page_path
+    except Exception:  # run as a script
+        cost_page_path = lambda k: "/trade-costs/"  # noqa: E731
 
     broker_cards = []
     for b_id, b in brokers.items():
+        cost_href = cost_page_path(b_id)
         deliv = _rule_short(b["delivery_flat"], b["delivery_pct"])
         intra = _rule_short(b["intraday_flat"], b["intraday_pct"])
         broker_cards.append(f"""
         <div class="card" style="padding:20px;display:flex;flex-direction:column;justify-content:space-between">
           <div>
             <div class="row-between" style="align-items:center;margin-bottom:10px">
-              <h3 style="margin:0;font-size:18px"><a href="/broker/{b_id}/trade/" style="color:inherit;text-decoration:none">{_esc(b['brand'])}</a></h3>
-              <span class="badge badge-verified">Verified Tariff</span>
+              <h3 style="margin:0;font-size:18px"><a href="{cost_href}" style="color:inherit;text-decoration:none">{_esc(b['brand'])}</a></h3>
+              <span class="badge">Indicative schedule</span>
             </div>
             <p class="xs muted" style="margin:0 0 14px 0">{_esc(b['tagline'])}</p>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;margin-bottom:16px">
@@ -1002,9 +1007,6 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
               </div>
             </div>
           </div>
-          <div style="display:flex;gap:8px">
-            <a class="btn btn-outline small" href="/broker/{b_id}/trade/" style="flex:1;text-align:center">Browse {b['brand']} Stocks &rarr;</a>
-          </div>
           {_charges_link_block(b_id)}
         </div>
         """)
@@ -1012,7 +1014,7 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
     stock_pills = []
     for s in popular_stocks[:48]:
         slug = _stock_slug(s["symbol"])
-        stock_pills.append(f"""<a href="/broker/zerodha/trade/{slug}/" class="badge" style="padding:8px 12px;font-size:13px;text-decoration:none;background:var(--bg-raised);border:1px solid var(--border)"><strong>{_esc(s['symbol'])}</strong> <span class="muted" style="margin-left:4px">₹{s['price']:,.1f}</span></a>""")
+        stock_pills.append(f"""<a href="/stock/{slug}/" class="badge" style="padding:8px 12px;font-size:13px;text-decoration:none;background:var(--bg-raised);border:1px solid var(--border)"><strong>{_esc(s['symbol'])}</strong> <span class="muted" style="margin-left:4px">₹{s['price']:,.1f}</span></a>""")
 
     crumb_html = '<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li class="muted">Trade Costs</li></ol></nav>'
     jsonld = {
@@ -1124,8 +1126,8 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
   {''.join(broker_cards)}
 </div>
 
-<h2 style="font-size:20px;margin-bottom:12px">Popular NSE Stocks Cost Calculators</h2>
-<p class="xs muted" style="margin-bottom:16px">Click any ticker to audit exact roundtrip brokerage and breakeven point movements.</p>
+<h2 style="font-size:20px;margin-bottom:12px">Most traded NSE stocks</h2>
+<p class="xs muted" style="margin-bottom:16px">Last close from NSE's daily bhavcopy. Open a stock for its price history and trading range.</p>
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:40px">
   {''.join(stock_pills)}
 </div>
@@ -1306,13 +1308,14 @@ def get_trade_cost_stocks(limit_stocks: int = 1000):
 
 
 def build_trade_cost_pages(limit_stocks: int = 1000, site_url: str = "https://www.brokerlens.in"):
-    """Compiles programmatic trade cost pages across top brokers and liquid NSE equities."""
+    """Writes the /trade-costs/ hub. The broker x stock pages are retired (see below)."""
+    removed = remove_retired_trade_pages()
+    if removed:
+        print(f"[trade_cost_engine] Removed {removed} retired /broker/<id>/trade/ directories")
     valid_stocks = get_trade_cost_stocks(limit_stocks=limit_stocks)
     if not valid_stocks:
         print("[trade_cost_engine] Error: no valid stocks found")
         return []
-
-    print(f"[trade_cost_engine] Selected {len(valid_stocks)} liquid NSE stocks across {len(BROKER_RATES)} brokers...")
 
     generated_urls = []
 
@@ -1324,40 +1327,29 @@ def build_trade_cost_pages(limit_stocks: int = 1000, site_url: str = "https://ww
         out.write(hub_html)
     generated_urls.append("/trade-costs/")
 
-    # 2. Broker Directories and Stock Pages
-    for b_id, b_info in BROKER_RATES.items():
-        b_dir = os.path.join(SITE_DIR, "broker", b_id, "trade")
-        os.makedirs(b_dir, exist_ok=True)
-
-        # Broker trade directory (/broker/[b_id]/trade/)
-        b_index_html = render_broker_trade_index(b_id, b_info, valid_stocks, site_url=site_url)
-        with open(os.path.join(b_dir, "index.html"), "w", encoding="utf-8") as out:
-            out.write(b_index_html)
-        generated_urls.append(f"/broker/{b_id}/trade/")
-
-        for s in valid_stocks:
-            stock_slug = _stock_slug(s["symbol"])
-            page_dir = os.path.join(b_dir, stock_slug)
-            os.makedirs(page_dir, exist_ok=True)
-
-            page_html = render_trade_cost_page(
-                broker_id=b_id,
-                stock_sym=s["symbol"],
-                stock_name=s["name"],
-                isin=s["isin"],
-                price=s["price"],
-                sector=s["sector"],
-                site_url=site_url
-            )
-
-            file_path = os.path.join(page_dir, "index.html")
-            with open(file_path, "w", encoding="utf-8") as out:
-                out.write(page_html)
-
-            generated_urls.append(f"/broker/{b_id}/trade/{stock_slug}/")
-
-    print(f"[trade_cost_engine] Successfully generated {len(generated_urls)} transactional trade cost pages & hubs!")
+    # 2. The broker x stock pages are retired (10 Nov 2026). 30 brokers x 2,500 stocks made
+    # 75,000 near-identical pages: Google indexed 33.5K of them, impressions fell 97% on
+    # 2 Nov, and on 10 Nov URL Inspection showed Google still spending its crawl on them
+    # (last crawls 17 to 25 Oct, so it had not even seen their noindex) while the /ipo/ hub
+    # and most broker profiles sat in "Discovered - currently not indexed". Each one now
+    # 308s to its broker's cost page (broker_charges_engine.cost_page_path, vercel.json),
+    # whose calculator takes any order value. Never regenerate them.
+    print("[trade_cost_engine] Wrote the /trade-costs/ hub")
     return generated_urls
+
+
+def remove_retired_trade_pages(site_dir=None):
+    """Delete /broker/<id>/trade/ output left by an older build; returns how many dirs went."""
+    import shutil
+    broker_dir = os.path.join(site_dir or SITE_DIR, "broker")
+    n = 0
+    if os.path.isdir(broker_dir):
+        for b_id in os.listdir(broker_dir):
+            t_dir = os.path.join(broker_dir, b_id, "trade")
+            if os.path.isdir(t_dir):
+                shutil.rmtree(t_dir, ignore_errors=True)
+                n += 1
+    return n
 
 
 if __name__ == "__main__":

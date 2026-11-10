@@ -208,6 +208,35 @@ def has_page(rate_key):
     return rate_key in tce.BROKER_RATES and schedule_complete(tce.BROKER_RATES[rate_key]) and not is_withheld(rate_key)
 
 
+_PROFILE_IDS = None
+
+
+def _profile_ids():
+    """Broker ids that have a /broker/<id>/ profile (config/brokers_master.json)."""
+    global _PROFILE_IDS
+    if _PROFILE_IDS is None:
+        try:
+            with open(os.path.join(ROOT, "config", "brokers_master.json"), encoding="utf-8") as fh:
+                _PROFILE_IDS = {b.get("id") for b in (json.load(fh).get("brokers") or []) if b.get("id")}
+        except (OSError, ValueError):
+            _PROFILE_IDS = set()
+    return _PROFILE_IDS
+
+
+def cost_page_path(rate_key):
+    """The one page that answers cost questions about this broker.
+
+    The charges page when the broker has one, else its profile, else the /trade-costs/
+    hub. The retired /broker/<key>/trade/... pages 308 here (vercel.json), and every link
+    that used to point at them now points here instead."""
+    if has_page(rate_key):
+        return charges_path(rate_key)
+    pid = PROFILE_ALIAS.get(rate_key, rate_key)
+    if pid in _profile_ids():
+        return "/broker/%s/" % pid
+    return "/trade-costs/"
+
+
 def _schedule_signature(rates):
     return tuple(rates.get(k) for k in _NUM_FIELDS)
 
@@ -712,26 +741,21 @@ def render_charges_page(rate_key, built_by_id=None, registry=None, site_url="htt
         'brokerage plan variants or discounts, no call-and-trade or other add-on fees, and no futures, options, currency or '
         'commodity trades. Real contract notes can differ by a few paise.</p>' % stat_html)
 
-    more = [
-        '<a class="chip" href="/broker/%s/trade/">%s charges on a specific stock &rarr;</a>' % (_esc(rate_key), _esc(brand))]
+    # The per-stock /broker/<id>/trade/<symbol>/ pages are retired (308 here, vercel.json):
+    # this calculator takes any order value, so it answers what each of those pages did.
+    more = []
     if ident["profile_id"]:
-        more.insert(0, '<a class="chip" href="/broker/%s/">%s profile, registration and complaints &rarr;</a>' % (
+        more.append('<a class="chip" href="/broker/%s/">%s profile, registration and complaints &rarr;</a>' % (
             _esc(ident["profile_id"]), _esc(profile.get("brand") or brand)))
     more += ['<a class="chip" href="/calculator">Compare monthly brokerage across brokers &rarr;</a>',
-             '<a class="chip" href="/trade-costs/">All stock trade cost pages &rarr;</a>']
-    stock_chips = "".join(
-        '<a class="chip" href="/broker/%s/trade/%s/">%s &rarr;</a>' % (_esc(rate_key), _esc(tce._stock_slug(s["symbol"])), _esc(s["symbol"]))
-        for s in (stocks or []))
+             '<a class="chip" href="/trade-costs/">Trading cost hub &rarr;</a>']
     others = "".join('<a class="chip" href="%s">%s</a>' % (charges_path(k), _esc(tce.BROKER_RATES[k]["brand"]))
                      for k in eligible_keys() if k != rate_key)
     more_html = (
-        '<h2 style="margin-top:28px;font-size:18px">More on %s</h2><div class="row-wrap" style="gap:8px">%s</div>%s'
+        '<h2 style="margin-top:28px;font-size:18px">More on %s</h2><div class="row-wrap" style="gap:8px">%s</div>'
         '<h2 style="margin-top:28px;font-size:18px">Brokerage calculators for other brokers</h2>'
         '<div class="row-wrap" style="gap:8px">%s</div>'
-    ) % (_esc(brand), "".join(more),
-         ('<p class="small" style="margin-top:12px">Charges at %s on a trade in a popular stock:</p>'
-          '<div class="row-wrap" style="gap:8px;margin-top:6px">%s</div>' % (_esc(brand), stock_chips)) if stock_chips else "",
-         others)
+    ) % (_esc(brand), "".join(more), others)
 
     faq_html = ('<h2 style="margin-top:28px;font-size:18px">Frequently asked questions</h2><div style="max-width:68ch">%s</div>'
                 % "".join('<details class="faq-item"><summary>%s</summary><p>%s</p></details>' % (_esc(q), _esc(a)) for q, a in faqs))

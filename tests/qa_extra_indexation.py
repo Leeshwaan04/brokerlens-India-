@@ -418,6 +418,79 @@ def run(check, ROOT, load):
             leaked += re.findall(r"<loc>[^<]*/broker/[^/<]+/trade/[^<]*</loc>", _read(os.path.join(site_dir, "sitemaps", fn)))
     check("indexation: no sitemap lists a noindexed trade-cost page", not leaked, str(leaked[:3]))
 
+    # ---- the broker x stock trade pages are retired (10 Nov 2026) ----------------
+    # 75,000 near-identical pages took Google's crawl (URL Inspection, 10 Nov: last crawls
+    # 17 to 25 Oct, noindex never seen) while the /ipo/ hub and broker profiles sat in
+    # "Discovered - currently not indexed". They 308 to the broker's cost page now.
+    from pipeline import broker_charges_engine as bce
+    build_src = inspect.getsource(tce.build_trade_cost_pages)
+    check("trade retirement: the build writes only the /trade-costs/ hub and deletes any old /broker/<id>/trade/ output",
+          "render_trade_cost_page(" not in build_src and "render_broker_trade_index(" not in build_src
+          and "remove_retired_trade_pages()" in build_src)
+    gen_links = []
+    for fn in sorted(os.listdir(os.path.join(ROOT, "pipeline"))):
+        if fn.endswith(".py") and fn != "trade_cost_engine.py":
+            gen_links += ["%s: %s" % (fn, m) for m in re.findall(r'href="/broker/[^"]*/trade/[^"]*"', _read(os.path.join(ROOT, "pipeline", fn)))]
+    gen_links += ["trade_cost_engine hub: %s" % m for m in re.findall(r'href="/broker/[^"]*/trade/[^"]*"', inspect.getsource(tce.render_trade_costs_hub))]
+    check("trade retirement: no page template links a /broker/<id>/trade/ URL", not gen_links, str(gen_links[:3]))
+
+    def _vercel_redirect(path):
+        """First vercel.json redirect matching `path` (path-to-regexp subset the file uses)."""
+        for r in vj.get("redirects", []):
+            src = r["source"]
+            rx, names, i = "", [], 0
+            while i < len(src):
+                m = re.match(r":(\w+)(\(([^()]*(?:\([^()]*\))?[^()]*)\))?", src[i:])
+                if m:
+                    names.append(m.group(1))
+                    rx += "(?P<%s>%s)" % (m.group(1), m.group(3) or "[^/]+")
+                    i += m.end()
+                elif src.startswith("(.*)", i):
+                    rx += "(?:.*)"
+                    i += 4
+                else:
+                    rx += re.escape(src[i])
+                    i += 1
+            hit = re.fullmatch(rx, path)
+            if hit:
+                dest = r["destination"]
+                for n in names:
+                    dest = dest.replace(":" + n, hit.group(n))
+                return dest, r.get("permanent")
+        return None, None
+
+    wrong = []
+    for k in sorted(tce.BROKER_RATES):
+        want = bce.cost_page_path(k)
+        for path in ("/broker/%s/trade" % k, "/broker/%s/trade/" % k, "/broker/%s/trade/reliance/" % k):
+            got, perm = _vercel_redirect(path)
+            if got != want or perm is not True:
+                wrong.append((path, got, want))
+    check("trade retirement: every broker's /trade/ URLs 308 to its cost page (charges page, else profile, else /trade-costs/)",
+          not wrong, str(wrong[:3]))
+    check("trade retirement: no other path is caught by the trade redirects",
+          _vercel_redirect("/broker/zerodha/")[0] is None and _vercel_redirect("/broker/zerodha/charges/")[0] is None
+          and _vercel_redirect("/stock/reliance/")[0] is None)
+    if os.path.isdir(os.path.join(site_dir, "broker", "zerodha")):
+        left = [b for b in os.listdir(os.path.join(site_dir, "broker")) if os.path.isdir(os.path.join(site_dir, "broker", b, "trade"))]
+        check("trade retirement: the build leaves no /broker/<id>/trade/ directory behind", not left, str(left[:5]))
+        dests = sorted({bce.cost_page_path(k) for k in tce.BROKER_RATES})
+        dead = [d for d in dests if not os.path.isfile(os.path.join(site_dir, d.strip("/"), "index.html"))]
+        check("trade retirement: every redirect destination is a page this build wrote", not dead, str(dead))
+        for rel in ("stock/reliance", "broker/zerodha", "broker/zerodha/charges", "trade-costs"):
+            html_ = _read(os.path.join(site_dir, rel, "index.html"))
+            if html_:
+                check("trade retirement: /%s/ links no retired trade page" % rel,
+                      not re.search(r'href="/broker/[^"]*/trade/', html_))
+        rel_html = _read(os.path.join(site_dir, "stock", "reliance", "index.html"))
+        if rel_html:
+            check("trade retirement: stock pages link the brokers' charges calculators instead",
+                  'href="/broker/zerodha/charges/"' in rel_html and 'href="/broker/groww/charges/"' in rel_html)
+        hub_html = _read(os.path.join(site_dir, "trade-costs", "index.html"))
+        if hub_html:
+            check("trade retirement: the hub no longer calls an unverified schedule a 'Verified Tariff'",
+                  "Verified Tariff" not in hub_html)
+
     # ---- the sitemap is the index allowlist ---------------------------------------
     tmp = tempfile.mkdtemp(prefix="qa_allowlist_")
     try:

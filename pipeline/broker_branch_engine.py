@@ -1048,6 +1048,11 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
     office, address or registered city only when the data places the broker in
     this city, and otherwise says that nothing is on file."""
     brand = meta["brand"]
+    try:  # the per-stock /broker/<id>/trade/ pages are retired; link the broker's cost page
+        from .broker_charges_engine import cost_page_path
+        cost_href = cost_page_path(b_id)
+    except Exception:
+        cost_href = "/broker/%s/" % b_id
     c_name = city_data["name"]
     state = city_data["state"]
     tier = city_data["tier"]
@@ -1358,7 +1363,7 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
     <p style="margin-top:8px;">
       <a href="/branches/">All Broker Branches</a> &bull;
       <a href="/broker/{b_id}/">Full {brand} Review</a> &bull;
-      <a href="/broker/{b_id}/trade/">{brand} Trade Costs</a> &bull;
+      <a href="{cost_href}">{brand} Charges</a> &bull;
       <a href="/registry">SEBI Registry</a> &bull;
       <a href="/methodology">Methodology</a> &bull;
       <a href="/privacy-policy">Privacy Policy</a>

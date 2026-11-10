@@ -58,3 +58,10 @@ One entry per run, newest last. Each change states its evidence, the effect it s
 - Demand sitemap verified: all current high-demand pages remain indexed in Wave 1.
 - Expected effect: increase search visibility and CTR across striking-distance terms without adding thin doorway pages.
 - Check impact by: 2026-11-23
+
+## 2026-11-10 (Claude: retire the broker x stock trade pages)
+
+- Last 6 weekdays (4 to 9 Nov): 25 to 41 clicks and 2.5K to 4.1K impressions a day, against 46 to 83 clicks and 3.8K to 8.0K on 26 to 31 Oct. 55 of 57 clicks in the week to 10 Nov came from "share price target" queries (average position 8); every other query family sits at position 45 to 90.
+- Evidence: URL Inspection on 10 Nov. Trade pages were last crawled 17 to 25 Oct (still "Submitted and indexed", so Google never saw the 4 Nov noindex); retired price-target URLs last crawled 7 to 16 Oct; /ipo/ hub and the Groww, Alice Blue, Samco and HDFC Securities profiles "Discovered - currently not indexed"; Zerodha profile "Soft 404". The build wrote 73,786 trade pages (30 brokers x 2,500 stocks) and every stock page linked four of them.
+- Change: the build no longer writes /broker/<id>/trade/ pages; every such URL 308s to the broker's charges page (11 brokers), else its profile, else /trade-costs/ (vercel.json, one rule set generated from broker_charges_engine.cost_page_path). Stock, profile, charges, branch and stock-compare pages now link the charges calculators. The /trade-costs/ hub no longer labels an unverified schedule "Verified Tariff".
+- Expected effect: Google's crawl moves to pages that can rank (IPO hub, broker profiles, charges pages, BSE-only stocks) and the 33.5K thin pages leave the index as they are recrawled; charges pages gain the "<broker> brokerage charges / calculator" queries the trade pages drew at position 80 or worse. Check by 2026-12-01: count of /broker/*/trade/ URLs with impressions (1,312 in 4 to 9 Nov), impressions on /broker/*/charges/ (37 in 90 days), and index status of /ipo/ and the broker profiles.

@@ -474,7 +474,7 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
       <div>{range_label} Low: <strong>₹{m1['low_52w']:,.2f}</strong></div>
       <div>Annual Volatility: <strong>{m1['volatility_30d']}%</strong></div>
     </div>
-    <a href="/broker/zerodha/trade/{sym1.lower()}/" class="btn btn-outline small" style="margin-top:14px;width:100%;text-align:center">Check {sym1} Trade Fees &rarr;</a>
+    <a href="/broker/zerodha/charges/" class="btn btn-outline small" style="margin-top:14px;width:100%;text-align:center">Zerodha brokerage calculator &rarr;</a>
   </div>
 
   <div class="card" style="padding:20px;background:var(--bg-raised)">
@@ -492,7 +492,7 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
       <div>{range_label} Low: <strong>₹{m2['low_52w']:,.2f}</strong></div>
       <div>Annual Volatility: <strong>{m2['volatility_30d']}%</strong></div>
     </div>
-    <a href="/broker/zerodha/trade/{sym2.lower()}/" class="btn btn-outline small" style="margin-top:14px;width:100%;text-align:center">Check {sym2} Trade Fees &rarr;</a>
+    <a href="/broker/zerodha/charges/" class="btn btn-outline small" style="margin-top:14px;width:100%;text-align:center">Zerodha brokerage calculator &rarr;</a>
   </div>
 </div>
 

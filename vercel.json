@@ -638,6 +638,66 @@
       "source": "/sebi-registry/fourdegreewater-services-private-limited/",
       "destination": "/sebi-registry/wint-securities-private-limited/",
       "permanent": true
+    },
+    {
+      "source": "/broker/:broker(5paisa|alice-blue|angel-one|dhan|fyers|groww|paytm-money|prostocks|tradejini|upstox|zerodha)/trade",
+      "destination": "/broker/:broker/charges/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/:broker(5paisa|alice-blue|angel-one|dhan|fyers|groww|paytm-money|prostocks|tradejini|upstox|zerodha)/trade/(.*)",
+      "destination": "/broker/:broker/charges/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/choice-broking/trade",
+      "destination": "/broker/choice/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/choice-broking/trade/(.*)",
+      "destination": "/broker/choice/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/hdfc-sky/trade",
+      "destination": "/broker/hdfc-securities/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/hdfc-sky/trade/(.*)",
+      "destination": "/broker/hdfc-securities/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/swastika-investmart/trade",
+      "destination": "/broker/swastika/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/swastika-investmart/trade/(.*)",
+      "destination": "/broker/swastika/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/yes-securities/trade",
+      "destination": "/trade-costs/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/yes-securities/trade/(.*)",
+      "destination": "/trade-costs/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/:broker/trade",
+      "destination": "/broker/:broker/",
+      "permanent": true
+    },
+    {
+      "source": "/broker/:broker/trade/(.*)",
+      "destination": "/broker/:broker/",
+      "permanent": true
     }
   ],
   "headers": [

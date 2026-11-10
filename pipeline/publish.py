@@ -1926,24 +1926,10 @@ def _broker_depth(b, built):
         'for unresolved disputes with market intermediaries.</p>' % _esc(brand)
     )
 
-    # Links into pages this build writes later (trade costs, branches).
+    # Links into pages this build writes later (charges, branches). The per-stock
+    # /broker/<id>/trade/<symbol>/ pages these chips used to list are retired (308 to
+    # the broker's charges page); profile_links_html() below links that page.
     extra = []
-    try:
-        from .trade_cost_engine import BROKER_RATES, get_trade_cost_stocks
-        if bid in BROKER_RATES:
-            stocks = get_trade_cost_stocks(limit_stocks=12)
-            if stocks:
-                extra.append(
-                    '<div class="section-title"><h2>%s charges on a trade</h2></div>'
-                    '<p class="small" style="max-width:72ch">BrokerLens works out brokerage, STT, exchange charges, stamp duty, SEBI fee and GST for '
-                    'a trade in each liquid stock under %s\'s rate card. Start with a popular one, or use the '
-                    '<a href="/calculator">cost calculator</a>:</p>'
-                    '<div class="row-wrap" style="gap:8px;margin-top:10px">%s</div>'
-                    % (_esc(brand), _esc(brand), "".join(
-                        '<a class="chip" href="/broker/%s/trade/%s/">%s &rarr;</a>'
-                        % (_esc(bid), _esc(_stock_slug(s["symbol"])), _esc(s["symbol"])) for s in stocks)))
-    except Exception:
-        pass
     try:
         from .broker_charges_engine import profile_links_html
         extra.append(profile_links_html(bid))
@@ -2597,10 +2583,12 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
     # by a day (a recent delisting, a symbol change), and a dead link is
     valid_symbols = {(c.get("symbol") or "").strip().upper() for c in companies} - {""}
     try:
-        from .trade_cost_engine import get_trade_cost_stocks
-        trade_cost_slugs = {_stock_slug(s["symbol"]) for s in get_trade_cost_stocks(limit_stocks=2500)}
+        from .broker_charges_engine import has_page as _has_charges, charges_path as _charges_path
+        from .trade_cost_engine import BROKER_RATES as _rates
+        stock_cost_links = [(_rates[k]["brand"], _charges_path(k))
+                            for k in ("zerodha", "groww", "angel-one", "upstox") if _has_charges(k)]
     except Exception:
-        trade_cost_slugs = set()
+        stock_cost_links = []
     ipo_by_slug = {}
     for r in (ipo_records or []):
         sym_r = (r.get("symbol") or "").strip().lower()
@@ -2824,23 +2812,16 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                 + '<p class="xs faint" style="margin-top:8px">Side-by-side price range, return and volume from NSE daily data.</p>'
             )
 
-        if slug in trade_cost_slugs:
-            trade_badges = (
-                '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">'
-                '<a class="badge" href="/broker/zerodha/trade/%s/" style="text-decoration:none;padding:5px 9px">Zerodha %s Fees &rarr;</a>'
-                '<a class="badge" href="/broker/groww/trade/%s/" style="text-decoration:none;padding:5px 9px">Groww %s Fees &rarr;</a>'
-                '<a class="badge" href="/broker/angel-one/trade/%s/" style="text-decoration:none;padding:5px 9px">Angel One %s Fees &rarr;</a>'
-                '<a class="badge" href="/broker/upstox/trade/%s/" style="text-decoration:none;padding:5px 9px">Upstox %s Fees &rarr;</a>'
-                '<a class="badge" href="/trade-costs/" style="text-decoration:none;padding:5px 9px">All Brokers Cost Calculator &rarr;</a>'
-                '</div>'
-            ) % (slug, _esc(symbol), slug, _esc(symbol), slug, _esc(symbol), slug, _esc(symbol))
-        else:
-            trade_badges = (
-                '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">'
-                '<a class="badge" href="/trade-costs/" style="text-decoration:none;padding:5px 9px">Stock Trade Cost Calculator &rarr;</a>'
-                '<a class="badge" href="/compare/" style="text-decoration:none;padding:5px 9px">Compare Top Brokers &rarr;</a>'
-                '</div>'
-            )
+        # Links go to each broker's one charges page (its calculator takes any order
+        # value); the per-stock /broker/<id>/trade/<symbol>/ pages are retired.
+        trade_badges = (
+            '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">%s'
+            '<a class="badge" href="/trade-costs/" style="text-decoration:none;padding:5px 9px">Stock Trade Cost Calculator &rarr;</a>'
+            '<a class="badge" href="/compare/" style="text-decoration:none;padding:5px 9px">Compare Top Brokers &rarr;</a>'
+            '</div>'
+        ) % "".join(
+            '<a class="badge" href="%s" style="text-decoration:none;padding:5px 9px">%s brokerage calculator &rarr;</a>'
+            % (_esc(path), _esc(brand)) for brand, path in stock_cost_links)
 
         demat_cta_html = (
             '<div style="margin-top:14px;background:var(--bg-raised);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow-sm)">'
@@ -8371,19 +8352,9 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     ]
 
     # 9. TRADE COSTS SITEMAP (Transactional stock x broker calculations)
-    trade_cost_entries = []
-    if trade_cost_urls:
-        for u in trade_cost_urls:
-            trade_cost_entries.append(_xml_url(SITE_URL + u, today, "monthly"))
-    else:
-        broker_dir = os.path.join(ROOT, "site", "broker")
-        if os.path.isdir(broker_dir):
-            for b_id in os.listdir(broker_dir):
-                t_dir = os.path.join(broker_dir, b_id, "trade")
-                if os.path.isdir(t_dir):
-                    for s_slug in os.listdir(t_dir):
-                        if os.path.isdir(os.path.join(t_dir, s_slug)):
-                            trade_cost_entries.append(_xml_url(f"{SITE_URL}/broker/{b_id}/trade/{s_slug}/", today, "monthly"))
+    # Only the /trade-costs/ hub now: the broker x stock pages are retired (308s in vercel.json).
+    trade_cost_entries = [_xml_url(SITE_URL + u, today, "monthly") for u in (trade_cost_urls or [])
+                          if "/trade/" not in u]
 
     # 10. IPO APPLICATION WALKTHROUGHS SITEMAP
     ipo_apply_entries = []
