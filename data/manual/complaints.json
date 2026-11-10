@@ -1,7 +1,7 @@
 {
   "provenance": "sebi_annexure_b",
   "source_note": "Parsed from each broker's own SEBI Annexure-B disclosure. Months accumulate across runs, since some brokers only ever show the latest month. Brokers absent from this file did not publish a parseable table; they are listed under `gaps`.",
-  "generated_at": "2026-11-09T22:35:33+00:00",
+  "generated_at": "2026-11-10T19:56:38+00:00",
   "months": [
     "2021-12",
     "2022-01",

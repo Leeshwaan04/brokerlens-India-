@@ -5,3 +5,4 @@ Disallow: /data/
 Disallow: /cms
 
 Sitemap: https://www.brokerlens.in/sitemap.xml
+Sitemap: https://www.brokerlens.in/sitemap-retired.xml

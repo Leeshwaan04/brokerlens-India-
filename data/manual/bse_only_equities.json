@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-09",
+  "updated": "2026-11-10",
   "rule": "A BSE main-board company not listed on NSE joins when it is traded on at least 75% of the sessions on file, with an average daily traded value of at least Rs 10 lakh. Entries are never dropped for low trading; one leaves only when the company lists on NSE.",
   "scrips": {
     "500012": {
@@ -345,7 +345,7 @@
     },
     "506579": {
       "symbol": "AGVENTURES",
-      "name": "AG Ventures Ltd",
+      "name": "AG Ventures Ltd-$",
       "isin": "INE321D01016",
       "group": "X",
       "face_value": 10,
@@ -1498,7 +1498,7 @@
     },
     "526827": {
       "symbol": "SPICEISLIN",
-      "name": "Spice Islands Industries Ltd",
+      "name": "Spice Islands Industries Ltd-$",
       "isin": "INE882D01025",
       "group": "XT",
       "face_value": 2,
@@ -2573,6 +2573,17 @@
       "code": "539132",
       "slug": "wardwizfbl",
       "added": "2026-11-08"
+    },
+    "539143": {
+      "symbol": "PANTH",
+      "name": "Panth Infinity Ltd",
+      "isin": "INE945O01019",
+      "group": "X",
+      "face_value": 10,
+      "bse_url": "https://www.bseindia.com/stock-share-price/panth-infinity-ltd/panth/539143/",
+      "code": "539143",
+      "slug": "panth",
+      "added": "2026-11-10"
     },
     "539217": {
       "symbol": "SRESTHA",
