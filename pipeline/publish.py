@@ -8659,7 +8659,7 @@ def _write_feed(built, aggregates):
            "<link>%s</link><description>Broker statistics from NSE, BSE and SEBI disclosures.</description>"
            "%s</channel></rss>" % (SITE_URL, "".join(items)))
     _write_text(os.path.join(SITE_DATA, "..", "feed.xml"), xml)
-    _write_robots()
+    _write_robots(extra_sitemaps=[_write_retired_sitemap()])
     _write_ads_txt()
 
 
@@ -8688,7 +8688,38 @@ def _prune_stale_dirs(base_dir, keep_slugs):
     return removed
 
 
-def _write_robots():
+RETIRED_URLS_PATH = os.path.join(ROOT, "data", "manual", "retired_urls.json")
+
+
+def _write_retired_sitemap(today=None):
+    """Write /sitemap-retired.xml (temporary) and return its URL, or None.
+
+    Lists URLs Google showed in search before they were retired, each now a 308 in
+    vercel.json, with the retirement date as lastmod, so Google recrawls them sooner
+    and sees the redirect (Google's site-move guidance: keep a sitemap of the old URLs
+    for a while). It is NOT in sitemap.xml's index, so the index allowlist
+    (indexation.sitemap_paths) never reads it, and it is advertised only in robots.txt.
+    It stops being written after the file's "until" date, and a path that is a built
+    page again is never listed."""
+    target = os.path.join(SITE_DATA, "..", "sitemap-retired.xml")
+    data = read_json(RETIRED_URLS_PATH, {}) or {}
+    today = today or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    retired, until = data.get("retired"), data.get("until")
+    site_root = os.path.join(SITE_DATA, "..")
+    paths = [p for p in (data.get("paths") or [])
+             if isinstance(p, str) and p.startswith("/") and p.endswith("/")
+             and not os.path.isfile(os.path.join(site_root, p.strip("/"), "index.html"))]
+    if not (retired and until and paths and today <= until):
+        if os.path.exists(target):
+            os.remove(target)
+        return None
+    body = "".join("<url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SITE_URL, _esc(p), retired) for p in paths)
+    _write_text(target, '<?xml version="1.0" encoding="UTF-8"?>'
+                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % body)
+    return "%s/sitemap-retired.xml" % SITE_URL
+
+
+def _write_robots(extra_sitemaps=()):
     """Advertise the sitemap; keep crawlers out of raw JSON and the API.
 
     Without this, /data/*.json competes with the rendered pages in search
@@ -8702,8 +8733,7 @@ def _write_robots():
         "Disallow: /cms",
         "",
         "Sitemap: %s/sitemap.xml" % SITE_URL,
-        "",
-    ])
+    ] + ["Sitemap: %s" % u for u in extra_sitemaps if u] + [""])
     _write_text(os.path.join(SITE_DATA, "..", "robots.txt"), body)
 
 

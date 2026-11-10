@@ -491,6 +491,32 @@ def run(check, ROOT, load):
             check("trade retirement: the hub no longer calls an unverified schedule a 'Verified Tariff'",
                   "Verified Tariff" not in hub_html)
 
+    # ---- temporary recrawl sitemap of retired URLs --------------------------------
+    retired = load("data/manual/retired_urls.json") or {}
+    rpaths = retired.get("paths") or []
+    not_redirected = [p for p in rpaths if _vercel_redirect(p)[1] is not True]
+    check("retired sitemap: every listed URL is a permanent redirect in vercel.json (only retired URLs, never live pages)",
+          rpaths and not not_redirected, str(not_redirected[:3]))
+    check("retired sitemap: the list expires (an 'until' date) and states the retirement date used as lastmod",
+          bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", retired.get("until") or ""))
+          and bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", retired.get("retired") or "")))
+    smi = _read(os.path.join(site_dir, "sitemap.xml"))
+    check("retired sitemap: never listed in sitemap.xml, so the index allowlist cannot read it",
+          "sitemap-retired" not in smi and not (set(rpaths) & ix.sitemap_paths(site_dir)))
+    rs = _read(os.path.join(site_dir, "sitemap-retired.xml"))
+    robots = _read(os.path.join(site_dir, "robots.txt"))
+    if rs:
+        locs = re.findall(r"<loc>https://www\.brokerlens\.in([^<]+)</loc>", rs)
+        built_again = [p for p in locs if os.path.isfile(os.path.join(site_dir, p.strip("/"), "index.html"))]
+        check("retired sitemap: lists the retired URLs with the retirement date, none of them a built page",
+              len(locs) == len(set(locs)) and set(locs) <= set(rpaths) and not built_again
+              and rs.count("<lastmod>%s</lastmod>" % retired.get("retired")) == len(locs), str(built_again[:3]))
+        check("retired sitemap: advertised in robots.txt next to sitemap.xml",
+              "Sitemap: https://www.brokerlens.in/sitemap-retired.xml" in robots
+              and "Sitemap: https://www.brokerlens.in/sitemap.xml" in robots)
+    elif robots:
+        check("retired sitemap: not written, so robots.txt does not advertise it", "sitemap-retired" not in robots)
+
     # ---- the sitemap is the index allowlist ---------------------------------------
     tmp = tempfile.mkdtemp(prefix="qa_allowlist_")
     try:
