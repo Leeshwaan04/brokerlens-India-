@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-10",
+  "updated": "2026-11-12",
   "rule": "A BSE main-board company not listed on NSE joins when it is traded on at least 75% of the sessions on file, with an average daily traded value of at least Rs 10 lakh. Entries are never dropped for low trading; one leaves only when the company lists on NSE.",
   "scrips": {
     "500012": {
@@ -345,7 +345,7 @@
     },
     "506579": {
       "symbol": "AGVENTURES",
-      "name": "AG Ventures Ltd-$",
+      "name": "AG Ventures Ltd",
       "isin": "INE321D01016",
       "group": "X",
       "face_value": 10,
@@ -1225,7 +1225,7 @@
       "symbol": "BACPHAR",
       "name": "Bacil Pharma Ltd.",
       "isin": "INE711D01018",
-      "group": "X",
+      "group": "XT",
       "face_value": 10,
       "bse_url": "https://www.bseindia.com/stock-share-price/bacil-pharma-ltd/bacphar/524516/",
       "code": "524516",
@@ -1498,7 +1498,7 @@
     },
     "526827": {
       "symbol": "SPICEISLIN",
-      "name": "Spice Islands Industries Ltd-$",
+      "name": "Spice Islands Industries Ltd",
       "isin": "INE882D01025",
       "group": "XT",
       "face_value": 2,
@@ -1991,6 +1991,17 @@
       "slug": "uvs",
       "added": "2026-11-08"
     },
+    "531676": {
+      "symbol": "EMROCK",
+      "name": "Emrock Corporation Ltd",
+      "isin": "INE554H01021",
+      "group": "X",
+      "face_value": 10,
+      "bse_url": "https://www.bseindia.com/stock-share-price/emrock-corporation-ltd/emrock/531676/",
+      "code": "531676",
+      "slug": "emrock",
+      "added": "2026-11-12"
+    },
     "531726": {
       "symbol": "PANCHSHEEL",
       "name": "Panchsheel Organic Ltd.",
@@ -2133,6 +2144,17 @@
       "code": "532090",
       "slug": "atvoent",
       "added": "2026-11-08"
+    },
+    "532275": {
+      "symbol": "LANDMARC",
+      "name": "Landmarc Leisure Corporation Ltd.",
+      "isin": "INE394C01023",
+      "group": "XT",
+      "face_value": 1,
+      "bse_url": "https://www.bseindia.com/stock-share-price/landmarc-leisure-corporation-ltd/landmarc/532275/",
+      "code": "532275",
+      "slug": "landmarc",
+      "added": "2026-11-12"
     },
     "532329": {
       "symbol": "DANLAW",

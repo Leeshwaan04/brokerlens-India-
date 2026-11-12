@@ -5653,16 +5653,6 @@
       "listing_date": "2023-07-05"
     },
     {
-      "symbol": "ESFL",
-      "company": "Essen Speciality Films Limited",
-      "price_band": "Rs.101 to Rs.107",
-      "issue_price": 107,
-      "security_type": "SME",
-      "bidding_start": "2023-06-23",
-      "bidding_end": "2023-06-27",
-      "listing_date": "2023-07-06"
-    },
-    {
       "symbol": "GREENCHEF",
       "company": "Greenchef Appliances Limited",
       "price_band": "Rs.82 to Rs.87",
@@ -14171,6 +14161,16 @@
       "bidding_start": "2026-11-02",
       "bidding_end": "2026-11-04",
       "listing_date": "2026-11-09"
+    },
+    {
+      "symbol": "ESFL",
+      "company": "Essen Speciality Films Limited",
+      "price_band": "Rs.101 to Rs.107",
+      "issue_price": 115,
+      "security_type": "SME",
+      "bidding_start": "2023-06-23",
+      "bidding_end": "2023-06-27",
+      "listing_date": "2026-11-13"
     }
   ]
 }
