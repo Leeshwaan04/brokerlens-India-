@@ -108,3 +108,24 @@ One entry per run, newest last. Each change states its evidence, the effect it s
 - Demand sitemap verified: all current high-demand pages remain indexed in Wave 1.
 - Expected effect: increase search visibility and CTR across striking-distance terms without adding thin doorway pages.
 - Check impact by: 2026-11-26
+
+## 2026-11-13 (Automated SEO Autopilot)
+
+- Weekly 28-day snapshot comparison (2026-11-13 vs 2026-11-06):
+  - Clicks: 1203 (+122 vs prior week)
+  - Impressions: 107599 (+12269 vs prior week)
+  - Submitted indexable URLs: 7197
+
+- Striking distance search queries identified (positions 4 to 20, high impressions):
+  - "pashupati cotspin share price target 2030": pos 4.7, 797 impressions, 26 clicks, 3.26% CTR
+  - "irb infra share price target 2030": pos 8.2, 661 impressions, 3 clicks, 0.45% CTR
+  - "morepen lab share price target 2030": pos 7.7, 365 impressions, 3 clicks, 0.82% CTR
+  - "cupid share price target 2026": pos 6.7, 339 impressions, 1 clicks, 0.29% CTR
+  - "econo broking": pos 10.1, 310 impressions, 0 clicks, 0% CTR
+  - "fourdegreewater services private limited": pos 10.0, 301 impressions, 0 clicks, 0% CTR
+  - "comfort intech share price target 2030": pos 6.0, 253 impressions, 0 clicks, 0% CTR
+  - "praj industries share price target 2030": pos 8.8, 229 impressions, 4 clicks, 1.75% CTR
+
+- Demand sitemap verified: all current high-demand pages remain indexed in Wave 1.
+- Expected effect: increase search visibility and CTR across striking-distance terms without adding thin doorway pages.
+- Check impact by: 2026-11-27
