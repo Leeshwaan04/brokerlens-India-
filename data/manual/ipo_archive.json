@@ -5634,7 +5634,7 @@
     },
     {
       "symbol": "PKH",
-      "company": "PKH Ventures Limited",
+      "company": "PKH Ventures Limited - Issue Withdrawn",
       "price_band": "Rs.140 to Rs.148",
       "issue_price": null,
       "security_type": "EQ",
@@ -13497,7 +13497,7 @@
       "company": "Sammaan Capital Limited",
       "price_band": "Rs.1000",
       "issue_price": null,
-      "security_type": "N1",
+      "security_type": "DEBT",
       "bidding_start": "2024-09-06",
       "bidding_end": "2024-09-19",
       "listing_date": "2026-09-16"
