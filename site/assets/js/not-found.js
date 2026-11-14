@@ -5,7 +5,7 @@
  * 2. Reads the requested URL path and attempts client-side suggestion resolution
  *    to prevent user drop-off and retain high-intent search traffic.
  */
-import { esc, safeUrl } from './store.js?v=f96dfa9225';
+import { esc, safeUrl } from './store.js?v=b59cf0df04';
 
 try {
   if (typeof window.gtag === 'function') {

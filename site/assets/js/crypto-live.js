@@ -5,7 +5,7 @@
  * JSON snapshot, never a live call to Binance itself - the browser never
  * calls a third-party market API directly, same rule as store.js's ticker.
  */
-import { esc, cls, pct } from './store.js?v=f96dfa9225';
+import { esc, cls, pct } from './store.js?v=b59cf0df04';
 
 async function loadCryptoTicker() {
   const r = await fetch('/data/crypto-ticker.json');

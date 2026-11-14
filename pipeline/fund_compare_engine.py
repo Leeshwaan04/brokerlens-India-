@@ -658,7 +658,7 @@ def _render_master_compare_hub(comparisons_by_cat, site_url):
 </html>"""
 
 
-CURATED_TOP_N = 20  # funds per category that get indexed 1v1 comparison pages
+CURATED_TOP_N = 4  # funds per category that get indexed 1v1 comparison pages
 
 
 def assign_fund_slugs(funds):
@@ -812,43 +812,45 @@ def generate_all(site_url="https://www.brokerlens.in", universe_top_n=200):
         return first_key, CATEGORIES[first_key]
 
     phase2_count = 0
-    print(f"[fund_compare_engine] Phase 2: generating all-pairs for top {len(top_universe)} funds ...")
+    generate_all = os.environ.get("GENERATE_ALL_PAIRS") == "1"
+    if generate_all and universe_top_n > 0:
+        print(f"[fund_compare_engine] Phase 2: generating all-pairs for top {len(top_universe)} funds ...")
 
-    for i in range(len(top_universe)):
-        f1 = top_universe[i]
-        for j in range(i + 1, len(top_universe)):
-            f2 = top_universe[j]
-            pair_slug = f"{f1['slug']}-vs-{f2['slug']}"
-            if pair_slug in emitted_pair_slugs:
-                continue
-            emitted_pair_slugs.add(pair_slug)
+        for i in range(len(top_universe)):
+            f1 = top_universe[i]
+            for j in range(i + 1, len(top_universe)):
+                f2 = top_universe[j]
+                pair_slug = f"{f1['slug']}-vs-{f2['slug']}"
+                if pair_slug in emitted_pair_slugs:
+                    continue
+                emitted_pair_slugs.add(pair_slug)
 
-            # Use fund 1's category as the comparison context, but look up
-            # fund 2's own real category too, since cross-category pairs are
-            # common here and the page must not claim they share a category
-            # when they don't.
-            cat_key, cat_meta = _fund_category(f1)
-            cat2_key, cat2_meta = _fund_category(f2)
-            same_category = cat_key == cat2_key
+                # Use fund 1's category as the comparison context, but look up
+                # fund 2's own real category too, since cross-category pairs are
+                # common here and the page must not claim they share a category
+                # when they don't.
+                cat_key, cat_meta = _fund_category(f1)
+                cat2_key, cat2_meta = _fund_category(f2)
+                same_category = cat_key == cat2_key
 
-            comp_dir = os.path.join(SITE_DIR, "compare", "mutual-funds", pair_slug)
-            os.makedirs(comp_dir, exist_ok=True)
-            comp_html = _render_fund_comparison_page(
-                f1, f2, cat_key, cat_meta, site_url,
-                same_category=same_category, noindex=True, cat_meta2=cat2_meta,
-            )
-            with open(os.path.join(comp_dir, "index.html"), "w", encoding="utf-8") as f:
-                f.write(comp_html)
-            # Random all-pairs combinations are written to disk and remain
-            # reachable, but are noindex and deliberately left out of
-            # comparison_urls/the sitemap (same reasoning as stock_compare_engine).
-            phase2_count += 1
+                comp_dir = os.path.join(SITE_DIR, "compare", "mutual-funds", pair_slug)
+                os.makedirs(comp_dir, exist_ok=True)
+                comp_html = _render_fund_comparison_page(
+                    f1, f2, cat_key, cat_meta, site_url,
+                    same_category=same_category, noindex=True, cat_meta2=cat2_meta,
+                )
+                with open(os.path.join(comp_dir, "index.html"), "w", encoding="utf-8") as f:
+                    f.write(comp_html)
 
-        # Progress log every 25 funds
-        if (i + 1) % 25 == 0:
-            print(f"[fund_compare_engine]   ... processed {i + 1}/{len(top_universe)} funds ({phase2_count} cross-category pairs so far)")
+                phase2_count += 1
 
-    print(f"[fund_compare_engine] Phase 2: {phase2_count} cross-category all-pairs generated")
+            # Progress log every 25 funds
+            if (i + 1) % 25 == 0:
+                print(f"[fund_compare_engine]   ... processed {i + 1}/{len(top_universe)} funds ({phase2_count} cross-category pairs so far)")
+
+        print(f"[fund_compare_engine] Phase 2: {phase2_count} cross-category all-pairs generated")
+    else:
+        print("[fund_compare_engine] Phase 2 skipped (curated category pairs only; set GENERATE_ALL_PAIRS=1 to enable all-pairs)")
 
     # ------------------------------------------------------------------
     # Master Comparison Hub: /compare/mutual-funds/

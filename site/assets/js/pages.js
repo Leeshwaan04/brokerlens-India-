@@ -6,7 +6,7 @@ import {
   cls, count, esc, full, initials, inr, loadAlgo, loadBroker, loadNews, loadOverview,
   loadRegistry, loadSources, markColor, month, pct, provDot, safeUrl,
   SEGMENT_LABEL, TYPE_LABEL,
-} from './store.js?v=f96dfa9225';
+} from './store.js?v=b59cf0df04';
 import { barChart, donut, lineChart, registerRedraw, sparkline } from './chart.js?v=22460af914';
 
 const after = [];

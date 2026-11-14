@@ -39,7 +39,7 @@ BRAND = "BrokerLens"
 # the name, price band and dates first.
 MAX_KEY_CHARS = 100
 # Same value as build_ipo_apply_suite(limit_recent_ipos=...) in pipeline/publish.py.
-APPLY_PAGES_LIMIT = 100
+APPLY_PAGES_LIMIT = 10
 
 STATUS_NO_LISTING = "No listing on file"
 NO_LISTING_NOTE = "No listing is on file for this issue."

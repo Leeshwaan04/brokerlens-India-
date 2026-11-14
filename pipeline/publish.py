@@ -573,7 +573,6 @@ def build():
             _EQUITY_BREAKS[_sym.upper()] = _brk
     if _EQUITY_BREAKS:
         log("equity history: %d stocks had a split/bonus-sized break; earlier prices excluded" % len(_EQUITY_BREAKS), "ok")
-    build_equity_history(equity_history)
     from .news_engine import write_news_suite
     _news_count, news_articles = write_news_suite(ingest, SITE_URL)
     from . import holidays_page
@@ -582,6 +581,8 @@ def build():
         log("stock market holidays page skipped: no usable NSE holiday file", "warn")
     from . import bse_only as _bse_only
     bse_scrips, bse_fresh = _bse_only.load_universe(bse_d.get("bse_only"), equity_companies, _stock_slug)
+    active_stock_syms = {c.get("symbol", "").upper().strip() for c in equity_companies} | {str(s.get("scrip_cd") or "").upper().strip() for s in bse_scrips}
+    build_equity_history(equity_history, active_symbols=active_stock_syms)
     _write_stock_pages(equity_companies, read_json(os.path.join(CONFIG, "broker_stocks.json"), {}).get("stocks"),
                         index_universe, equity_history, bse_d.get("corporate_actions") or [], ipo_records=ipo_records,
                         news_articles=news_articles, extra_keep={s["slug"] for s in bse_scrips})
@@ -634,7 +635,7 @@ def build():
     broker_charges_urls = build_broker_charges_pages(built, registry, site_url=SITE_URL,
                                                       reg_to_registry_slug=reg_to_registry_slug)
     from .ipo_apply_engine import build_ipo_apply_suite
-    ipo_apply_urls = build_ipo_apply_suite(limit_recent_ipos=100, site_url=SITE_URL)
+    ipo_apply_urls = build_ipo_apply_suite(limit_recent_ipos=10, site_url=SITE_URL)
     from .ipo_subscription_engine import build_ipo_subscription_suite
     ipo_sub_urls = build_ipo_subscription_suite(site_url=SITE_URL)
     from .stock_compare_engine import build_stock_compare_suite
@@ -949,7 +950,7 @@ def build_crypto_history():
     log("crypto-history: %d coin files written" % written, "ok")
 
 
-def build_equity_history(equity_history):
+def build_equity_history(equity_history, active_symbols=None):
     """One small JSON file per NSE-listed stock (site/data/equity-history/
     <symbol-slug>.json), real daily OHLCV from NSE's own bhavcopy - see
     pipeline/sources/nse.py's equity_history(). Same lazy-per-page-fetch
@@ -958,9 +959,12 @@ def build_equity_history(equity_history):
     didn't reach it) shows "not enough history yet" rather than a guess."""
     dest_dir = os.path.join(SITE_DATA, "equity-history")
     os.makedirs(dest_dir, exist_ok=True)
+    active_set = {s.upper().strip() for s in active_symbols} if active_symbols else None
     written = 0
     for symbol, points in (equity_history or {}).items():
         if not points:
+            continue
+        if active_set is not None and symbol.upper().strip() not in active_set:
             continue
         slug = _stock_slug(symbol)
         if not slug:

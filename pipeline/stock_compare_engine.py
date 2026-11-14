@@ -565,6 +565,9 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 </html>"""
 
 
+CURATED_SECTOR_TOP_N = 5  # stocks per sector group for curated 1v1 comparisons
+
+
 def curated_peer_index(eq_hist):
     """symbol -> [(other_symbol, url_path, sector_name)] for exactly the
     sector-peer comparison pages build_stock_compare_suite() writes in Phase 1
@@ -582,7 +585,7 @@ def curated_peer_index(eq_hist):
         return metrics[sym]
 
     for sector_name, sym_list in SECTOR_PEER_GROUPS.items():
-        valid = [s for s in sym_list if s in eq_hist and len(eq_hist[s]) > 0]
+        valid = [s for s in sym_list if s in eq_hist and len(eq_hist[s]) > 0][:CURATED_SECTOR_TOP_N]
         for i in range(len(valid)):
             for j in range(i + 1, len(valid)):
                 s1, s2 = valid[i], valid[j]
@@ -638,7 +641,7 @@ def build_stock_compare_suite(site_url="https://www.brokerlens.in", universe_top
     # PHASE 1: Sector-based peer groups (for hub display)
     # ------------------------------------------------------------------
     for sector_name, sym_list in SECTOR_PEER_GROUPS.items():
-        valid_symbols = [s for s in sym_list if s in eq_hist and len(eq_hist[s]) > 0]
+        valid_symbols = [s for s in sym_list if s in eq_hist and len(eq_hist[s]) > 0][:CURATED_SECTOR_TOP_N]
 
         sector_pairs = []
         for i in range(len(valid_symbols)):
@@ -703,42 +706,40 @@ def build_stock_compare_suite(site_url="https://www.brokerlens.in", universe_top
     universe_pairs_count = 0
     cross_sector_label = "Cross-Sector Peers"
 
-    print(f"[stock_compare_engine] Phase 2: generating all-pairs for {len(valid_top)} top stocks ...")
+    generate_all = os.environ.get("GENERATE_ALL_PAIRS") == "1"
+    if generate_all and universe_top_n > 0:
+        print(f"[stock_compare_engine] Phase 2: generating all-pairs for {len(valid_top)} top stocks ...")
 
-    for i in range(len(valid_top)):
-        sym1 = valid_top[i]
-        for j in range(i + 1, len(valid_top)):
-            sym2 = valid_top[j]
+        for i in range(len(valid_top)):
+            sym1 = valid_top[i]
+            for j in range(i + 1, len(valid_top)):
+                sym2 = valid_top[j]
 
-            slug = f"{_stock_slug(sym1)}-vs-{_stock_slug(sym2)}"
-            if slug in emitted_slugs:
-                continue
-            emitted_slugs.add(slug)
+                slug = f"{_stock_slug(sym1)}-vs-{_stock_slug(sym2)}"
+                if slug in emitted_slugs:
+                    continue
+                emitted_slugs.add(slug)
 
-            c1 = companies.get(sym1, {"symbol": sym1, "name": sym1})
-            c2 = companies.get(sym2, {"symbol": sym2, "name": sym2})
-            m1 = metrics_cache[sym1]
-            m2 = metrics_cache[sym2]
+                c1 = companies.get(sym1, {"symbol": sym1, "name": sym1})
+                c2 = companies.get(sym2, {"symbol": sym2, "name": sym2})
+                m1 = metrics_cache[sym1]
+                m2 = metrics_cache[sym2]
 
-            page_dir = os.path.join(out_base_dir, slug)
-            os.makedirs(page_dir, exist_ok=True)
+                page_dir = os.path.join(out_base_dir, slug)
+                os.makedirs(page_dir, exist_ok=True)
 
-            page_html = render_stock_comparison_page(c1, m1, c2, m2, cross_sector_label, site_url=site_url, noindex=True)
-            with open(os.path.join(page_dir, "index.html"), "w", encoding="utf-8") as out:
-                out.write(page_html)
+                page_html = render_stock_comparison_page(c1, m1, c2, m2, cross_sector_label, site_url=site_url, noindex=True)
+                with open(os.path.join(page_dir, "index.html"), "w", encoding="utf-8") as out:
+                    out.write(page_html)
 
-            # Random (non-curated) all-pairs combinations are written to disk and
-            # remain reachable, but are noindex (see render_stock_comparison_page)
-            # and deliberately left out of generated_urls/the sitemap: submitting
-            # ~125K near-duplicate-template pages is the "scaled content abuse"
-            # pattern Google's spam policy targets, regardless of data accuracy.
-            universe_pairs_count += 1
+                universe_pairs_count += 1
 
-        # Progress log every 50 symbols
-        if (i + 1) % 50 == 0:
-            print(f"[stock_compare_engine]   ... processed {i + 1}/{len(valid_top)} symbols ({universe_pairs_count} universe pairs so far)")
+            if (i + 1) % 50 == 0:
+                print(f"[stock_compare_engine]   ... processed {i + 1}/{len(valid_top)} symbols ({universe_pairs_count} universe pairs so far)")
 
-    print(f"[stock_compare_engine] Phase 2: {universe_pairs_count} universe all-pairs generated")
+        print(f"[stock_compare_engine] Phase 2: {universe_pairs_count} universe all-pairs generated")
+    else:
+        print("[stock_compare_engine] Phase 2 skipped (curated sector pairs only; set GENERATE_ALL_PAIRS=1 to enable all-pairs)")
 
     # ------------------------------------------------------------------
     # Master comparison hub (/compare/stocks/) - uses sector pairs for display

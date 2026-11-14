@@ -55,6 +55,8 @@ fi
 # binary .xls.
 "$PY" -m pipeline.run report1c || true
 "$PY" -m pipeline.run holidays || true
+# Clean stale unindexed comparisons and retired trade directories
+rm -rf site/compare/stocks site/compare/mutual-funds site/broker/*/trade 2>/dev/null || true
 "$PY" -m pipeline.run build
 "$PY" scripts/export_gsc_live.py || true
 "$PY" scripts/generate_cloudflare_config.py || true

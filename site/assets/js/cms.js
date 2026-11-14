@@ -5,7 +5,7 @@
  * 100% REAL DATA: Zero simulated, dummy, or demo metrics.
  */
 
-import { esc, inr, count, safeUrl } from './store.js?v=f96dfa9225';
+import { esc, inr, count, safeUrl } from './store.js?v=b59cf0df04';
 
 const MASTER_ADMIN_USER = 'admin@brokerlens.in';
 const MASTER_ADMIN_ALIAS = 'admin';

@@ -61,6 +61,7 @@ venv/
 dist/
 *.zip
 .vercel
+.wrangler/
 .env*
 
 # Raw source audio at the repo root (the web copy lives in site/assets/audio/)
