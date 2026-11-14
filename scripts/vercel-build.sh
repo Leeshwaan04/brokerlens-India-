@@ -57,3 +57,4 @@ fi
 "$PY" -m pipeline.run holidays || true
 "$PY" -m pipeline.run build
 "$PY" scripts/export_gsc_live.py || true
+"$PY" scripts/generate_cloudflare_config.py || true

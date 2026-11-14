@@ -8,7 +8,7 @@
 import { esc, cls, pct } from './store.js?v=f96dfa9225';
 
 async function loadCryptoTicker() {
-  const r = await fetch(`/data/crypto-ticker.json?t=${Date.now()}`, { cache: 'no-store' });
+  const r = await fetch('/data/crypto-ticker.json');
   if (!r.ok) throw new Error(`crypto-ticker.json -> ${r.status}`);
   return r.json();
 }

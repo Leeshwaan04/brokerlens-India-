@@ -30,10 +30,10 @@ async function get(path) {
 
 export const loadOverview = () => get('/data/overview.json');
 
-/* The ticker is polled, so it deliberately bypasses the session cache and
- * cache-busts the URL. Everything else is immutable for the session. */
+/* Keep the ticker URL stable so the browser and CDN can reuse its short-lived
+ * cache between fallback polls. The live stream takes over when available. */
 export async function loadTicker() {
-  const r = await fetch(`/data/ticker.json?t=${Date.now()}`, { cache: 'no-store' });
+  const r = await fetch('/data/ticker.json');
   if (!r.ok) throw new Error(`ticker.json -> ${r.status}`);
   return r.json();
 }
