@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-14",
+ "updated": "2026-11-15",
  "min_impressions_28d": 5,
  "slugs": [
   "20microns",
@@ -569,6 +569,7 @@
   "fivestar",
   "flair",
   "flexiadd",
+  "fmcgadd",
   "fmcgietf",
   "fmgoetze",
   "focus",
@@ -1091,6 +1092,7 @@
   "manba",
   "manbro",
   "maninds",
+  "maninfra",
   "manipalhos",
   "mankind",
   "manomay",
