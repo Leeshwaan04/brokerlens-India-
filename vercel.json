@@ -5,6 +5,26 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/privacy",
+      "destination": "/privacy-policy/",
+      "permanent": true
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms-of-service/",
+      "permanent": true
+    },
+    {
+      "source": "/disclaimer",
+      "destination": "/terms-of-service/",
+      "permanent": true
+    },
+    {
+      "source": "/disclosure",
+      "destination": "/terms-of-service/",
+      "permanent": true
+    },
+    {
       "source": "/news/how-to-check-ather-ipo-allotment-status-online",
       "destination": "/ipo/allotment-status/",
       "permanent": true

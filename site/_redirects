@@ -3,6 +3,10 @@
 # Static redirects must precede dynamic redirects to stay within Cloudflare limits
 
 # Static Redirects
+/privacy /privacy-policy/ 301
+/terms /terms-of-service/ 301
+/disclaimer /terms-of-service/ 301
+/disclosure /terms-of-service/ 301
 /news/how-to-check-ather-ipo-allotment-status-online /ipo/allotment-status/ 301
 /news/how-to-check-ather-ipo-allotment-status-online/ /ipo/allotment-status/ 301
 /news/how-to-check-hdbfs-ipo-allotment-status-online /ipo/allotment-status/ 301
