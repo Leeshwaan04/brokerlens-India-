@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "brokerlens-india",
+  "compatibility_date": "2026-11-14",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "site"
+  }
+}
