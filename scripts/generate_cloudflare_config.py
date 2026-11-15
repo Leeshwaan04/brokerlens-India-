@@ -23,16 +23,13 @@ def main():
         v = json.load(f)
 
     # 1. _redirects
-    # Cloudflare Pages limits: max 2,000 static redirects, max 100 dynamic redirects.
-    # Static redirects require 301 or 302 (308 is counted as dynamic by Cloudflare).
-    # Expanding regex alternations into explicit static rules keeps dynamic count < 30.
-    r_lines = [
-        "# Cloudflare Pages Redirects",
-        "# Auto-generated from vercel.json",
-        "",
-    ]
-    static_count = 0
-    dynamic_count = 0
+    # Cloudflare Pages / Workers rules ordering requirement:
+    # Any rule encountered after a dynamic rule (wildcard or placeholder) is treated as dynamic.
+    # Therefore, all static rules MUST precede all dynamic rules.
+    # Cloudflare limits: max 2,000 static redirects, max 100 dynamic redirects.
+    # Static redirects require 301 or 302 status.
+    static_rules = []
+    dynamic_rules = []
 
     for r in v.get("redirects", []):
         src = r.get("source", "")
@@ -54,27 +51,39 @@ def main():
                 sub_src = re.sub(r":year", "2026", sub_src)
                 sub_src = sub_src.replace("(.*)", "*")
                 sub_dst = sub_dst.replace("(.*)", ":splat")
+                line = f"{sub_src} {sub_dst} {status}"
                 if "*" in sub_src or ":" in sub_src:
-                    dynamic_count += 1
+                    dynamic_rules.append(line)
                 else:
-                    static_count += 1
-                r_lines.append(f"{sub_src} {sub_dst} {status}")
+                    static_rules.append(line)
         else:
             sub_src = src.replace("(.*)", "*")
             sub_dst = dst.replace("(.*)", ":splat")
             sub_src = re.sub(r":year", "2026", sub_src)
+            line = f"{sub_src} {sub_dst} {status}"
             if "*" in sub_src or ":" in sub_src:
-                dynamic_count += 1
+                dynamic_rules.append(line)
             else:
-                static_count += 1
-            r_lines.append(f"{sub_src} {sub_dst} {status}")
+                static_rules.append(line)
+
+    r_lines = [
+        "# Cloudflare Pages Redirects",
+        "# Auto-generated from vercel.json",
+        "# Static redirects must precede dynamic redirects to stay within Cloudflare limits",
+        "",
+        "# Static Redirects",
+    ]
+    r_lines.extend(static_rules)
+    r_lines.append("")
+    r_lines.append("# Dynamic Redirects")
+    r_lines.extend(dynamic_rules)
 
     redirects_path = os.path.join(site_dir, "_redirects")
     with open(redirects_path, "w", encoding="utf-8") as f:
         f.write("\n".join(r_lines) + "\n")
     print(
-        f"[cloudflare] Wrote {len(r_lines) - 3} redirects ({static_count} static, "
-        f"{dynamic_count} dynamic) to {redirects_path}"
+        f"[cloudflare] Wrote {len(static_rules) + len(dynamic_rules)} redirects "
+        f"({len(static_rules)} static, {len(dynamic_rules)} dynamic) to {redirects_path}"
     )
 
     # 2. _headers

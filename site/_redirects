@@ -1,6 +1,8 @@
 # Cloudflare Pages Redirects
 # Auto-generated from vercel.json
+# Static redirects must precede dynamic redirects to stay within Cloudflare limits
 
+# Static Redirects
 /news/how-to-check-ather-ipo-allotment-status-online /ipo/allotment-status/ 301
 /news/how-to-check-ather-ipo-allotment-status-online/ /ipo/allotment-status/ 301
 /news/how-to-check-hdbfs-ipo-allotment-status-online /ipo/allotment-status/ 301
@@ -34,15 +36,9 @@
 /news/ipo-vnl-gmp-today-grey-market-premium-listing-estimates /ipo/gmp/ 301
 /news/ipo-vnl-gmp-today-grey-market-premium-listing-estimates/ /ipo/gmp/ 301
 /ipo/jio /ipo/upcoming/ 301
-/ipo/jio/* /ipo/upcoming/ 301
 /ipo/tatasons /ipo/upcoming/ 301
-/ipo/tatasons/* /ipo/upcoming/ 301
 /ipo/boat /ipo/upcoming/ 301
-/ipo/boat/* /ipo/upcoming/ 301
 /ipo/ather /ipo/atherenerg/ 301
-/ipo/ather/* /ipo/atherenerg/ 301
-/news/pre-market-cues-gift-nifty-* /news/ 301
-/news/nifty-bank-financial-services-pulse-* /news/ 301
 /news/indian-stock-market-wrap-2026-09-25 /news/ 301
 /news/indian-stock-market-wrap-2026-09-25/ /news/ 301
 /news/indian-stock-market-wrap-2026-09-26 /news/ 301
@@ -273,8 +269,6 @@
 /stock/tatagold/share-price-target-2026/ /etf/tatagold/ 301
 /stock/tatsilv/share-price-target-2026/ /etf/tatsilv/ 301
 /stock/valueaxis/share-price-target-2026/ /etf/valueaxis/ 301
-/stock/:symbol/share-price-target-2026 /stock/:symbol/ 301
-/stock/:symbol/share-price-target-2026/ /stock/:symbol/ 301
 /sebi-registry/fourdegreewater-services-private-limited/ /sebi-registry/wint-securities-private-limited/ 301
 /broker/5paisa/trade /broker/5paisa/charges/ 301
 /broker/alice-blue/trade /broker/alice-blue/charges/ 301
@@ -287,6 +281,20 @@
 /broker/tradejini/trade /broker/tradejini/charges/ 301
 /broker/upstox/trade /broker/upstox/charges/ 301
 /broker/zerodha/trade /broker/zerodha/charges/ 301
+/broker/choice-broking/trade /broker/choice/ 301
+/broker/hdfc-sky/trade /broker/hdfc-securities/ 301
+/broker/swastika-investmart/trade /broker/swastika/ 301
+/broker/yes-securities/trade /trade-costs/ 301
+
+# Dynamic Redirects
+/ipo/jio/* /ipo/upcoming/ 301
+/ipo/tatasons/* /ipo/upcoming/ 301
+/ipo/boat/* /ipo/upcoming/ 301
+/ipo/ather/* /ipo/atherenerg/ 301
+/news/pre-market-cues-gift-nifty-* /news/ 301
+/news/nifty-bank-financial-services-pulse-* /news/ 301
+/stock/:symbol/share-price-target-2026 /stock/:symbol/ 301
+/stock/:symbol/share-price-target-2026/ /stock/:symbol/ 301
 /broker/5paisa/trade/* /broker/5paisa/charges/ 301
 /broker/alice-blue/trade/* /broker/alice-blue/charges/ 301
 /broker/angel-one/trade/* /broker/angel-one/charges/ 301
@@ -298,13 +306,9 @@
 /broker/tradejini/trade/* /broker/tradejini/charges/ 301
 /broker/upstox/trade/* /broker/upstox/charges/ 301
 /broker/zerodha/trade/* /broker/zerodha/charges/ 301
-/broker/choice-broking/trade /broker/choice/ 301
 /broker/choice-broking/trade/* /broker/choice/ 301
-/broker/hdfc-sky/trade /broker/hdfc-securities/ 301
 /broker/hdfc-sky/trade/* /broker/hdfc-securities/ 301
-/broker/swastika-investmart/trade /broker/swastika/ 301
 /broker/swastika-investmart/trade/* /broker/swastika/ 301
-/broker/yes-securities/trade /trade-costs/ 301
 /broker/yes-securities/trade/* /trade-costs/ 301
 /broker/:broker/trade /broker/:broker/ 301
 /broker/:broker/trade/* /broker/:broker/ 301
