@@ -461,7 +461,7 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px">
   <div class="card" style="padding:20px;background:var(--bg-raised)">
     <div class="row-between" style="align-items:center;margin-bottom:8px">
-      <h2 style="margin:0;font-size:20px"><a href="/stocks/{sym1.lower()}/" style="color:inherit;text-decoration:none">{sym1}</a></h2>
+      <h2 style="margin:0;font-size:20px"><a href="/stock/{_stock_slug(sym1)}/" style="color:inherit;text-decoration:none">{sym1}</a></h2>
       <span class="badge badge-verified">NSE: {sym1}</span>
     </div>
     <div class="xs muted" style="margin-bottom:14px">{_esc(name1)}</div>
@@ -474,12 +474,15 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
       <div>{range_label} Low: <strong>₹{m1['low_52w']:,.2f}</strong></div>
       <div>Annual Volatility: <strong>{m1['volatility_30d']}%</strong></div>
     </div>
-    <a href="/broker/zerodha/charges/" class="btn btn-outline small" style="margin-top:14px;width:100%;text-align:center">Zerodha brokerage calculator &rarr;</a>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px">
+      <a href="/stock/{_stock_slug(sym1)}/#target" class="btn btn-outline small" style="width:100%;text-align:center">{sym1} Price Target &amp; Calculator &rarr;</a>
+      <a href="/broker/zerodha/charges/" class="btn btn-outline small" style="width:100%;text-align:center">Zerodha brokerage calculator &rarr;</a>
+    </div>
   </div>
 
   <div class="card" style="padding:20px;background:var(--bg-raised)">
     <div class="row-between" style="align-items:center;margin-bottom:8px">
-      <h2 style="margin:0;font-size:20px"><a href="/stocks/{sym2.lower()}/" style="color:inherit;text-decoration:none">{sym2}</a></h2>
+      <h2 style="margin:0;font-size:20px"><a href="/stock/{_stock_slug(sym2)}/" style="color:inherit;text-decoration:none">{sym2}</a></h2>
       <span class="badge badge-verified">NSE: {sym2}</span>
     </div>
     <div class="xs muted" style="margin-bottom:14px">{_esc(name2)}</div>
@@ -492,7 +495,10 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
       <div>{range_label} Low: <strong>₹{m2['low_52w']:,.2f}</strong></div>
       <div>Annual Volatility: <strong>{m2['volatility_30d']}%</strong></div>
     </div>
-    <a href="/broker/zerodha/charges/" class="btn btn-outline small" style="margin-top:14px;width:100%;text-align:center">Zerodha brokerage calculator &rarr;</a>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px">
+      <a href="/stock/{_stock_slug(sym2)}/#target" class="btn btn-outline small" style="width:100%;text-align:center">{sym2} Price Target &amp; Calculator &rarr;</a>
+      <a href="/broker/zerodha/charges/" class="btn btn-outline small" style="width:100%;text-align:center">Zerodha brokerage calculator &rarr;</a>
+    </div>
   </div>
 </div>
 
@@ -548,6 +554,17 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
         </tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<div class="card" style="margin-top:28px;margin-bottom:28px;padding:20px;background:var(--bg-raised)">
+  <h2 style="font-size:18px;margin:0 0 8px 0">Compare What-If Share Price Targets (2026-2030)</h2>
+  <p class="small muted" style="margin:0 0 14px 0">Test hypothetical compounding valuations and view historical exchange trading bands for both equities:</p>
+  <div style="display:flex;flex-wrap:wrap;gap:10px">
+    <a href="/stock/{_stock_slug(sym1)}/#target" class="btn btn-outline small">{sym1} Price Target Calculator &rarr;</a>
+    <a href="/stock/{_stock_slug(sym2)}/#target" class="btn btn-outline small">{sym2} Price Target Calculator &rarr;</a>
+    <a href="/stock/{_stock_slug(sym1)}/" class="btn btn-outline small">{sym1} Candlestick Chart &rarr;</a>
+    <a href="/stock/{_stock_slug(sym2)}/" class="btn btn-outline small">{sym2} Candlestick Chart &rarr;</a>
   </div>
 </div>
 
