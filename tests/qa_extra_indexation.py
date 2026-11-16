@@ -689,3 +689,50 @@ def run(check, ROOT, load):
     wf = _read(os.path.join(ROOT, ".github", "workflows", "daily-refresh.yml"))
     check("indexation: the nightly rebuild deploys only through ci.yml's QA + VAPT gate, never the bare deploy hook",
           "gh workflow run ci.yml" in wf and "DEPLOY_HOOK" not in wf)
+
+    # ---- Cloudflare _redirects stays inside the platform's real limits ------------
+    # scripts/generate_cloudflare_config.py turns every vercel.json redirect into one or
+    # more site/_redirects lines. Cloudflare Workers Assets caps this file at 2,000 static
+    # and 100 dynamic rules (developers.cloudflare.com/workers/static-assets/redirects/),
+    # and ALWAYS follows a matching redirect even when a real file exists at that path
+    # (same page) - so a rule added carelessly can silently take down a page that still
+    # exists, not just one that was retired. On 16 Nov 2026 a comparison-page cut
+    # (commit 1c035c0) deleted ~1,640 real, search-demand comparison pages with zero
+    # redirect for any of them; this backfills what fits in the budget (prioritising
+    # stocks, since mutual-fund pair search volume is smaller) and these checks guard
+    # both failure modes from recurring.
+    redirects_path = os.path.join(site_dir, "_redirects")
+    rlines = [l.strip() for l in _read(redirects_path).splitlines() if l.strip() and not l.startswith("#")]
+    rsources = [l.split()[0] for l in rlines if l.split()]
+    dynamic_sources = [s for s in rsources if "*" in s or ":" in s]
+    static_sources = [s for s in rsources if s not in dynamic_sources]
+    check("indexation: site/_redirects stays under Cloudflare's 2,000 static / 100 dynamic rule caps, with headroom",
+          len(static_sources) <= 1980 and len(dynamic_sources) <= 95,
+          "static=%d dynamic=%d" % (len(static_sources), len(dynamic_sources)))
+    check("indexation: no duplicate source in site/_redirects (the first matching rule wins; a duplicate is a silent no-op)",
+          len(static_sources) == len(set(static_sources)), "n=%d unique=%d" % (len(static_sources), len(set(static_sources))))
+    hijacked = [s for s in static_sources if os.path.isfile(os.path.join(site_dir, s.strip("/"), "index.html"))]
+    check("indexation: no redirect source in site/_redirects is also a currently built page "
+          "(Cloudflare always follows the redirect, so this would silently take the real page down)",
+          not hijacked, str(hijacked[:5]))
+
+    # ---- orphaned comparison-page demand is redirected, not 404 -------------------
+    demand = load("reports/gsc/page_demand.json") or {}
+    cmp_demand = [p for p in (demand.get("paths") or [])
+                  if p.startswith("/compare/stocks/") or p.startswith("/compare/mutual-funds/")]
+    orphaned = [p for p in cmp_demand if not os.path.isfile(os.path.join(site_dir, p.strip("/"), "index.html"))]
+    vj_sources = {r.get("source") for r in vj.get("redirects", [])}
+    still_404 = [p for p in orphaned if p not in vj_sources]
+    # 440 mutual-fund comparison pairs didn't fit the 2,000-rule budget on 16 Nov 2026
+    # (prioritised stocks, since fund-pair search volume is smaller) and are a known,
+    # accepted shortfall, not a bare regression. This fails if that number grows, which
+    # would mean a later change orphaned more real-demand pages without a redirect.
+    check("indexation: unredirected orphaned comparison pages do not exceed the known, accepted "
+          "16 Nov 2026 shortfall (440 mutual-fund pairs the redirect budget did not reach)",
+          len(still_404) <= 440, "still 404: %d (orphaned=%d, redirected=%d)" % (len(still_404), len(orphaned), len(orphaned) - len(still_404)))
+    redirected_sample = [p for p in orphaned if p in vj_sources][:5]
+    for p in redirected_sample:
+        dest = next(r["destination"] for r in vj["redirects"] if r.get("source") == p)
+        check("indexation: %s redirects to a page that actually exists on disk" % p,
+              os.path.isfile(os.path.join(site_dir, dest.strip("/"), "index.html")) or dest in ("/compare/stocks/", "/compare/mutual-funds/"),
+              dest)

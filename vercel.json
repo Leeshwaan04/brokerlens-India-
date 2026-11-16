@@ -788,6 +788,6006 @@
       "source": "/news/ipo-runwalentr-gmp-today-grey-market-premium-listing-estimates/",
       "destination": "/ipo/gmp/",
       "permanent": true
+    },
+    {
+      "source": "/compare/stocks/abcapital-vs-alembicltd/",
+      "destination": "/stock/abcapital/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/abcapital-vs-mittal/",
+      "destination": "/stock/abcapital/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/abcapital-vs-silverietf/",
+      "destination": "/stock/abcapital/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/abfrl-vs-honasa/",
+      "destination": "/stock/abfrl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ablbl-vs-smallcap/",
+      "destination": "/stock/ablbl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ablbl-vs-vikaseco/",
+      "destination": "/stock/ablbl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/acevector-vs-cupid/",
+      "destination": "/stock/acevector/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/acevector-vs-dlf/",
+      "destination": "/stock/acevector/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/acevector-vs-eternal/",
+      "destination": "/stock/acevector/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/acevector-vs-pfc/",
+      "destination": "/stock/acevector/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/acevector-vs-rites/",
+      "destination": "/stock/acevector/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/acevector-vs-sail/",
+      "destination": "/stock/acevector/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/acevector-vs-swancorp/",
+      "destination": "/stock/acevector/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/acevector-vs-zensartech/",
+      "destination": "/stock/acevector/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adaniensol-vs-awl/",
+      "destination": "/stock/adaniensol/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adaniensol-vs-e2e/",
+      "destination": "/stock/adaniensol/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adaniensol-vs-knrcon/",
+      "destination": "/stock/adaniensol/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanigreen-vs-igl/",
+      "destination": "/stock/adanigreen/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanigreen-vs-m-mfin/",
+      "destination": "/stock/adanigreen/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adaniports-vs-cmpdi/",
+      "destination": "/stock/adaniports/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adaniports-vs-dishtv/",
+      "destination": "/stock/adaniports/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-ambujacem/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-belrise/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-blel/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-gppl/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-hindalco/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-ioc/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-kotakbank/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-nbcc/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-nslnisp/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-oil/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-petronet/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-pfc/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-policybzr/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-silverietf/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-tmcv/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-vmm/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/adanipower-vs-wipro/",
+      "destination": "/stock/adanipower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/afcons-vs-til/",
+      "destination": "/stock/afcons/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/agl-vs-delhivery/",
+      "destination": "/stock/agl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/agl-vs-karurvysya/",
+      "destination": "/stock/agl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/agl-vs-sonacoms/",
+      "destination": "/stock/agl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ahcl-vs-coffeeday/",
+      "destination": "/stock/ahcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ahcl-vs-dlf/",
+      "destination": "/stock/ahcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ahcl-vs-graphite/",
+      "destination": "/stock/ahcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ahcl-vs-jtlind/",
+      "destination": "/stock/ahcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ahcl-vs-pplpharma/",
+      "destination": "/stock/ahcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ahcl-vs-stlnetwork/",
+      "destination": "/stock/ahcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ahcl-vs-taril/",
+      "destination": "/stock/ahcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ahcl-vs-tbz/",
+      "destination": "/stock/ahcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/alembicltd-vs-drreddy/",
+      "destination": "/stock/alembicltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/alembicltd-vs-tembo/",
+      "destination": "/stock/alembicltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/alembicltd-vs-welcorp/",
+      "destination": "/stock/alembicltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/allcargo-vs-antelopus/",
+      "destination": "/stock/allcargo/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/allcargo-vs-manappuram/",
+      "destination": "/stock/allcargo/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/alokinds-vs-bel/",
+      "destination": "/stock/alokinds/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/anantraj-vs-gold1/",
+      "destination": "/stock/anantraj/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/anantraj-vs-iifl/",
+      "destination": "/stock/anantraj/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/anantraj-vs-itchotels/",
+      "destination": "/stock/anantraj/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/anantraj-vs-smallcap/",
+      "destination": "/stock/anantraj/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/angelone-vs-dhanbank/",
+      "destination": "/stock/angelone/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/angelone-vs-mtnl/",
+      "destination": "/stock/angelone/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/antelopus-vs-embdl/",
+      "destination": "/stock/antelopus/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/antelopus-vs-lodha/",
+      "destination": "/stock/antelopus/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/antelopus-vs-smallcap/",
+      "destination": "/stock/antelopus/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/aonesteels-vs-growwpower/",
+      "destination": "/stock/aonesteels/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/aonesteels-vs-midhani/",
+      "destination": "/stock/aonesteels/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/aonesteels-vs-til/",
+      "destination": "/stock/aonesteels/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/apollo-vs-bse/",
+      "destination": "/stock/apollo/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/apollohosp-vs-nh/",
+      "destination": "/stock/apollohosp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/arcil-vs-elecon/",
+      "destination": "/stock/arcil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/arcil-vs-upl/",
+      "destination": "/stock/arcil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ardee-vs-hathway/",
+      "destination": "/stock/ardee/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ardee-vs-rba/",
+      "destination": "/stock/ardee/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/arfin-vs-hikal/",
+      "destination": "/stock/arfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/armee-vs-indorama/",
+      "destination": "/stock/armee/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/armee-vs-silverietf/",
+      "destination": "/stock/armee/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ashoka-vs-growwgold/",
+      "destination": "/stock/ashoka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ashoka-vs-itchotels/",
+      "destination": "/stock/ashoka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ashoka-vs-jamnaauto/",
+      "destination": "/stock/ashoka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ashoka-vs-mcloud/",
+      "destination": "/stock/ashoka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ashokley-vs-allcargo/",
+      "destination": "/stock/ashokley/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ashokley-vs-coforge/",
+      "destination": "/stock/ashokley/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ashokley-vs-iex/",
+      "destination": "/stock/ashokley/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ashokley-vs-ltf/",
+      "destination": "/stock/ashokley/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ashokley-vs-ucobank/",
+      "destination": "/stock/ashokley/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ashokley-vs-welcorp/",
+      "destination": "/stock/ashokley/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/asiantiles-vs-redtape/",
+      "destination": "/stock/asiantiles/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/aurigrow-vs-arcil/",
+      "destination": "/stock/arcil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/aurigrow-vs-indorama/",
+      "destination": "/stock/indorama/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/avance-vs-vikaslife/",
+      "destination": "/stock/avance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/avantel-vs-gppl/",
+      "destination": "/stock/avantel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/axisbank-vs-bandhanbnk/",
+      "destination": "/stock/axisbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/aye-vs-ambujacem/",
+      "destination": "/stock/aye/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bajajhfl-vs-kamdhenu/",
+      "destination": "/stock/bajajhfl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bajajhfl-vs-marico/",
+      "destination": "/stock/bajajhfl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bajajhind-vs-greenpower/",
+      "destination": "/stock/bajajhind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bajajhind-vs-jamnaauto/",
+      "destination": "/stock/bajajhind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bajajhind-vs-responind/",
+      "destination": "/stock/bajajhind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bajajhind-vs-rpower/",
+      "destination": "/stock/bajajhind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bajfinance-vs-greavescot/",
+      "destination": "/stock/bajfinance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bajfinance-vs-poonawalla/",
+      "destination": "/stock/bajfinance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/balramchin-vs-aonesteels/",
+      "destination": "/stock/balramchin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/balramchin-vs-sbicard/",
+      "destination": "/stock/balramchin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bandhanbnk-vs-silvercase/",
+      "destination": "/stock/bandhanbnk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bandhanbnk-vs-welspunliv/",
+      "destination": "/stock/bandhanbnk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bankbaroda-vs-centralbk/",
+      "destination": "/stock/bankbaroda/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bankindia-vs-iob/",
+      "destination": "/stock/bankindia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bcg-vs-ratnaveer/",
+      "destination": "/stock/bcg/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bdl-vs-grse/",
+      "destination": "/stock/bdl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bel-vs-elitecon/",
+      "destination": "/stock/bel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bel-vs-grse/",
+      "destination": "/stock/bel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bel-vs-jainrec/",
+      "destination": "/stock/bel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bel-vs-mobikwik/",
+      "destination": "/stock/bel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bel-vs-oil/",
+      "destination": "/stock/bel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bel-vs-pateleng/",
+      "destination": "/stock/bel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/belrise-vs-essentia/",
+      "destination": "/stock/belrise/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/belrise-vs-midhani/",
+      "destination": "/stock/belrise/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/belrise-vs-smallcap/",
+      "destination": "/stock/belrise/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/belrise-vs-transraill/",
+      "destination": "/stock/belrise/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/belrise-vs-vikramsolr/",
+      "destination": "/stock/belrise/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bhartiartl-vs-metal/",
+      "destination": "/stock/bhartiartl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bhel-vs-goldadd/",
+      "destination": "/stock/bhel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/biocon-vs-sonacoms/",
+      "destination": "/stock/biocon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/blissgvs-vs-kissht/",
+      "destination": "/stock/blissgvs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/blueclouds-vs-shriramfin/",
+      "destination": "/stock/blueclouds/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bodalchem-vs-nocil/",
+      "destination": "/stock/bodalchem/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bodalchem-vs-stallion/",
+      "destination": "/stock/bodalchem/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bpcl-vs-bodalchem/",
+      "destination": "/stock/bpcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bpcl-vs-til/",
+      "destination": "/stock/bpcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bse-vs-crompton/",
+      "destination": "/stock/bse/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bse-vs-indorama/",
+      "destination": "/stock/bse/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bse-vs-mcx/",
+      "destination": "/stock/bse/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/bse-vs-transraill/",
+      "destination": "/stock/bse/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cams-vs-mcx/",
+      "destination": "/stock/cams/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/canbk-vs-cesc/",
+      "destination": "/stock/canbk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/canbk-vs-federalbnk/",
+      "destination": "/stock/canbk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/canbk-vs-iifl/",
+      "destination": "/stock/canbk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/canbk-vs-ongc/",
+      "destination": "/stock/canbk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/canbk-vs-redington/",
+      "destination": "/stock/canbk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/castrolind-vs-coforge/",
+      "destination": "/stock/castrolind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/castrolind-vs-webelsolar/",
+      "destination": "/stock/castrolind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ccavenue-vs-ashoka/",
+      "destination": "/stock/ccavenue/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ccavenue-vs-bajajhfl/",
+      "destination": "/stock/ccavenue/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ccavenue-vs-midcapetf/",
+      "destination": "/stock/ccavenue/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cesc-vs-jswcement/",
+      "destination": "/stock/cesc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/chennpetro-vs-aegisvopak/",
+      "destination": "/stock/chennpetro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/chennpetro-vs-igl/",
+      "destination": "/stock/chennpetro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/chennpetro-vs-marksans/",
+      "destination": "/stock/chennpetro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cipla-vs-zyduslife/",
+      "destination": "/stock/cipla/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/coalindia-vs-dlf/",
+      "destination": "/stock/coalindia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/coalindia-vs-epl/",
+      "destination": "/stock/coalindia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/coalindia-vs-redington/",
+      "destination": "/stock/coalindia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/coalindia-vs-smallcap/",
+      "destination": "/stock/coalindia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cochinship-vs-grse/",
+      "destination": "/stock/cochinship/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/coffeeday-vs-hscl/",
+      "destination": "/stock/coffeeday/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/coforge-vs-mtartech/",
+      "destination": "/stock/coforge/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/coforge-vs-oil/",
+      "destination": "/stock/coforge/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/confipet-vs-shah/",
+      "destination": "/stock/confipet/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/crompton-vs-adanigreen/",
+      "destination": "/stock/crompton/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/crompton-vs-adaniports/",
+      "destination": "/stock/crompton/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/crompton-vs-ambujacem/",
+      "destination": "/stock/crompton/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/crompton-vs-anantraj/",
+      "destination": "/stock/crompton/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/crompton-vs-andhrapap/",
+      "destination": "/stock/crompton/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/crompton-vs-excelsoft/",
+      "destination": "/stock/crompton/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/crompton-vs-jswcement/",
+      "destination": "/stock/crompton/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/crompton-vs-kesoramind/",
+      "destination": "/stock/crompton/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/crompton-vs-knrcon/",
+      "destination": "/stock/crompton/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/crsl-vs-ablbl/",
+      "destination": "/stock/crsl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cub-vs-avantel/",
+      "destination": "/stock/cub/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cub-vs-pacedigitk/",
+      "destination": "/stock/cub/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-adanigreen/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-coalindia/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-coforge/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-dcw/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-diacabs/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-e2e/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-gold1/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-icicibank/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-itbees/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-molbio/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-mtartech/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-sbicard/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-til/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/cupid-vs-urbanco/",
+      "destination": "/stock/cupid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dabur-vs-exideind/",
+      "destination": "/stock/dabur/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dalbharat-vs-jkcement/",
+      "destination": "/stock/dalbharat/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/davangere-vs-kelltontec/",
+      "destination": "/stock/davangere/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/davangere-vs-wipro/",
+      "destination": "/stock/davangere/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dcbbank-vs-karurvysya/",
+      "destination": "/stock/dcbbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/deepa-vs-rolexrings/",
+      "destination": "/stock/deepa/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/delhivery-vs-adanient/",
+      "destination": "/stock/delhivery/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/delhivery-vs-adanigreen/",
+      "destination": "/stock/delhivery/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/delhivery-vs-paragmilk/",
+      "destination": "/stock/delhivery/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/deltacorp-vs-adaniports/",
+      "destination": "/stock/deltacorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/deltacorp-vs-growwslvr/",
+      "destination": "/stock/deltacorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/deltacorp-vs-ioc/",
+      "destination": "/stock/deltacorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/deltacorp-vs-lemontree/",
+      "destination": "/stock/deltacorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/deltacorp-vs-lowvolietf/",
+      "destination": "/stock/deltacorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/deltacorp-vs-paradeep/",
+      "destination": "/stock/deltacorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/deltacorp-vs-rsystems/",
+      "destination": "/stock/deltacorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/deltacorp-vs-sbicard/",
+      "destination": "/stock/deltacorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/deltacorp-vs-southbank/",
+      "destination": "/stock/deltacorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/devyani-vs-mcx/",
+      "destination": "/stock/devyani/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dlf-vs-adanigreen/",
+      "destination": "/stock/dlf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dlf-vs-brigade/",
+      "destination": "/stock/dlf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dlf-vs-dabur/",
+      "destination": "/stock/dlf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dlf-vs-hcltech/",
+      "destination": "/stock/dlf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dlf-vs-m-m/",
+      "destination": "/stock/dlf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dlf-vs-oil/",
+      "destination": "/stock/dlf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dlf-vs-sbicard/",
+      "destination": "/stock/dlf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dlf-vs-trident/",
+      "destination": "/stock/dlf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ducon-vs-mtnl/",
+      "destination": "/stock/ducon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ducon-vs-oil/",
+      "destination": "/stock/ducon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ducon-vs-paragmilk/",
+      "destination": "/stock/ducon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/dwarkesh-vs-responind/",
+      "destination": "/stock/dwarkesh/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/e2e-vs-ptc/",
+      "destination": "/stock/e2e/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/e2e-vs-sdbl/",
+      "destination": "/stock/e2e/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/easemytrip-vs-bpcl/",
+      "destination": "/stock/easemytrip/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/easemytrip-vs-growwpower/",
+      "destination": "/stock/easemytrip/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/easemytrip-vs-mcloud/",
+      "destination": "/stock/easemytrip/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/easemytrip-vs-shadowfax/",
+      "destination": "/stock/easemytrip/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/easemytrip-vs-subexltd/",
+      "destination": "/stock/easemytrip/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/electcast-vs-bslnifty/",
+      "destination": "/stock/electcast/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/electcast-vs-sdbl/",
+      "destination": "/stock/electcast/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/elevate-vs-atalreal/",
+      "destination": "/stock/elevate/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/elevate-vs-dlf/",
+      "destination": "/stock/elevate/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/emamiltd-vs-cesc/",
+      "destination": "/stock/emamiltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/emamiltd-vs-dabur/",
+      "destination": "/stock/emamiltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/emamiltd-vs-m-mfin/",
+      "destination": "/stock/emamiltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/embdl-vs-oil/",
+      "destination": "/stock/embdl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/emil-vs-aris/",
+      "destination": "/stock/emil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/emil-vs-mcloud/",
+      "destination": "/stock/emil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/emil-vs-mittal/",
+      "destination": "/stock/emil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/emmvee-vs-gppl/",
+      "destination": "/stock/emmvee/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/empower-vs-coalindia/",
+      "destination": "/stock/empower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/empower-vs-hindpetro/",
+      "destination": "/stock/empower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/empower-vs-v2retail/",
+      "destination": "/stock/empower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/epl-vs-crompton/",
+      "destination": "/stock/epl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/epl-vs-navkarurb/",
+      "destination": "/stock/epl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/epl-vs-raymondrel/",
+      "destination": "/stock/epl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/epl-vs-trident/",
+      "destination": "/stock/epl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/esafsfb-vs-growwpower/",
+      "destination": "/stock/esafsfb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/esafsfb-vs-mpimanipal/",
+      "destination": "/stock/esafsfb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/esds-vs-avantel/",
+      "destination": "/stock/esds/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/esds-vs-gujenergy/",
+      "destination": "/stock/esds/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/esds-vs-smallcap/",
+      "destination": "/stock/esds/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/essentia-vs-growwslvr/",
+      "destination": "/stock/essentia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/essentia-vs-m-m/",
+      "destination": "/stock/essentia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/essentia-vs-oil/",
+      "destination": "/stock/essentia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/essentia-vs-vikramsolr/",
+      "destination": "/stock/essentia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/essentia-vs-zeemedia/",
+      "destination": "/stock/essentia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/eternal-vs-dlf/",
+      "destination": "/stock/eternal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/eternal-vs-hudco/",
+      "destination": "/stock/eternal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/eternal-vs-oil/",
+      "destination": "/stock/eternal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/eternal-vs-rhetan/",
+      "destination": "/stock/eternal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/eternal-vs-suntv/",
+      "destination": "/stock/eternal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/eternal-vs-swiggy/",
+      "destination": "/stock/eternal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/eternal-vs-tmpv/",
+      "destination": "/stock/eternal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/eternal-vs-urbanco/",
+      "destination": "/stock/eternal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-arcil/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-awl/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-axisgold/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-elitecon/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-gradiente/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-idfcfirstb/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-iifl/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-liquidbees/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-lotusdev/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-maninfra/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-marico/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-nhpc/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-recltd/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-rhetan/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-sepc/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-silverietf/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fcl-vs-sswl/",
+      "destination": "/stock/fcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/federalbnk-vs-paytm/",
+      "destination": "/stock/federalbnk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/filatfash-vs-til/",
+      "destination": "/stock/filatfash/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/filatfash-vs-welspunliv/",
+      "destination": "/stock/filatfash/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/firstcry-vs-tatachem/",
+      "destination": "/stock/firstcry/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fortis-vs-metropolis/",
+      "destination": "/stock/fortis/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fsl-vs-avantel/",
+      "destination": "/stock/fsl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fsl-vs-nocil/",
+      "destination": "/stock/fsl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/fsl-vs-oil/",
+      "destination": "/stock/fsl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gail-vs-atgl/",
+      "destination": "/stock/gail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gail-vs-blissgvs/",
+      "destination": "/stock/gail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gail-vs-bse/",
+      "destination": "/stock/gail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gaja-vs-karurvysya/",
+      "destination": "/stock/gaja/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gaja-vs-kopran/",
+      "destination": "/stock/gaja/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gangaforge-vs-antelopus/",
+      "destination": "/stock/gangaforge/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gangaforge-vs-dlf/",
+      "destination": "/stock/gangaforge/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gangaforge-vs-mtartech/",
+      "destination": "/stock/gangaforge/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gangaforge-vs-stallion/",
+      "destination": "/stock/gangaforge/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gangaforge-vs-whirlpool/",
+      "destination": "/stock/gangaforge/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gatech-vs-sigachi/",
+      "destination": "/stock/gatech/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/genuspower-vs-smallcap/",
+      "destination": "/stock/genuspower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gksl-vs-webelsolar/",
+      "destination": "/stock/gksl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/glasswall-vs-bse/",
+      "destination": "/stock/glasswall/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/glasswall-vs-cordelia/",
+      "destination": "/stock/glasswall/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/glasswall-vs-kanohar/",
+      "destination": "/stock/glasswall/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/glasswall-vs-shah/",
+      "destination": "/stock/glasswall/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gmrairport-vs-cordelia/",
+      "destination": "/stock/gmrairport/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gmrairport-vs-irb/",
+      "destination": "/stock/gmrairport/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gmrairport-vs-leapind/",
+      "destination": "/stock/gmrairport/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/godrejprop-vs-brigade/",
+      "destination": "/stock/godrejprop/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gold1-vs-mittal/",
+      "destination": "/stock/mittal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/goldadd-vs-symbiotec/",
+      "destination": "/stock/symbiotec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/goldaxis-vs-kesoramind/",
+      "destination": "/stock/kesoramind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/goldbees-vs-rolexrings/",
+      "destination": "/stock/rolexrings/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/goldbees-vs-webelsolar/",
+      "destination": "/stock/webelsolar/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/goldcase-vs-kalyankjil/",
+      "destination": "/stock/kalyankjil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/goldcase-vs-sbfc/",
+      "destination": "/stock/sbfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gppl-vs-growwslvr/",
+      "destination": "/stock/gppl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/graphite-vs-genuspower/",
+      "destination": "/stock/graphite/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/graphite-vs-hcltech/",
+      "destination": "/stock/graphite/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/greavescot-vs-adanigreen/",
+      "destination": "/stock/greavescot/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/greenpower-vs-hathway/",
+      "destination": "/stock/greenpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/greenpower-vs-indomim/",
+      "destination": "/stock/greenpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-ashokley/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-bodalchem/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-esds/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-feddershol/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-msumi/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-rhetan/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-sail/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-salasar/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-swiggy/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-vedl/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/groww-vs-welspunliv/",
+      "destination": "/stock/groww/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/growwgold-vs-midhani/",
+      "destination": "/stock/midhani/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/growwgold-vs-moschip/",
+      "destination": "/stock/moschip/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/growwpower-vs-augmont/",
+      "destination": "/stock/augmont/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/growwpower-vs-aye/",
+      "destination": "/stock/aye/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/growwpower-vs-devyani/",
+      "destination": "/stock/devyani/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gtlinfra-vs-armee/",
+      "destination": "/stock/gtlinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gtlinfra-vs-bslnifty/",
+      "destination": "/stock/gtlinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gtlinfra-vs-epl/",
+      "destination": "/stock/gtlinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gtlinfra-vs-goldietf/",
+      "destination": "/stock/gtlinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gtlinfra-vs-ircon/",
+      "destination": "/stock/gtlinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gtlinfra-vs-sbfc/",
+      "destination": "/stock/gtlinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gtlinfra-vs-texrail/",
+      "destination": "/stock/gtlinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/gujenergy-vs-rambhajo/",
+      "destination": "/stock/gujenergy/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hal-vs-grse/",
+      "destination": "/stock/hal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hblengine-vs-aegisvopak/",
+      "destination": "/stock/hblengine/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hblengine-vs-augmont/",
+      "destination": "/stock/hblengine/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hblengine-vs-hdfcsml250/",
+      "destination": "/stock/hblengine/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hcc-vs-essentia/",
+      "destination": "/stock/hcc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hcc-vs-kesoramind/",
+      "destination": "/stock/hcc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hcltech-vs-persistent/",
+      "destination": "/stock/hcltech/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfcbank-vs-adanigreen/",
+      "destination": "/stock/hdfcbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfcbank-vs-bhartiartl/",
+      "destination": "/stock/hdfcbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfcbank-vs-hdfcsilver/",
+      "destination": "/stock/hdfcbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfcbank-vs-itc/",
+      "destination": "/stock/hdfcbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfcbank-vs-kissht/",
+      "destination": "/stock/hdfcbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfcbank-vs-maxhealth/",
+      "destination": "/stock/hdfcbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfcbank-vs-shadowfax/",
+      "destination": "/stock/hdfcbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfcbank-vs-techm/",
+      "destination": "/stock/hdfcbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfclife-vs-iex/",
+      "destination": "/stock/hdfclife/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfclife-vs-leapind/",
+      "destination": "/stock/hdfclife/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfclife-vs-maxhealth/",
+      "destination": "/stock/hdfclife/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfcsilver-vs-blel/",
+      "destination": "/stock/blel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hdfcsilver-vs-elecon/",
+      "destination": "/stock/elecon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hexagon-vs-augmont/",
+      "destination": "/stock/hexagon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hexagon-vs-hindalco/",
+      "destination": "/stock/hexagon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hexagon-vs-nazara/",
+      "destination": "/stock/hexagon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hfcl-vs-arcil/",
+      "destination": "/stock/hfcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hfcl-vs-blel/",
+      "destination": "/stock/hfcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hfcl-vs-dcw/",
+      "destination": "/stock/hfcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hfcl-vs-htel/",
+      "destination": "/stock/hfcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hfcl-vs-morepenlab/",
+      "destination": "/stock/hfcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hfcl-vs-ncc/",
+      "destination": "/stock/hfcl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hikal-vs-indorama/",
+      "destination": "/stock/hikal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hikal-vs-vikaslife/",
+      "destination": "/stock/hikal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindalco-vs-adanigreen/",
+      "destination": "/stock/hindalco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindalco-vs-atgl/",
+      "destination": "/stock/hindalco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindalco-vs-fsl/",
+      "destination": "/stock/hindalco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindalco-vs-itchotels/",
+      "destination": "/stock/hindalco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindalco-vs-maxhealth/",
+      "destination": "/stock/hindalco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindalco-vs-nationalum/",
+      "destination": "/stock/hindalco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindalco-vs-rtnindia/",
+      "destination": "/stock/hindalco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindalco-vs-sail/",
+      "destination": "/stock/hindalco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindcopper-vs-hscl/",
+      "destination": "/stock/hindcopper/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindcopper-vs-silveradd/",
+      "destination": "/stock/hindcopper/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindunilvr-vs-colpal/",
+      "destination": "/stock/hindunilvr/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindunilvr-vs-godrejcp/",
+      "destination": "/stock/hindunilvr/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindunilvr-vs-marico/",
+      "destination": "/stock/hindunilvr/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindunilvr-vs-vbl/",
+      "destination": "/stock/hindunilvr/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindzinc-vs-armee/",
+      "destination": "/stock/hindzinc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hindzinc-vs-cgpower/",
+      "destination": "/stock/hindzinc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hmaagro-vs-crompton/",
+      "destination": "/stock/hmaagro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/honasa-vs-osiahyper/",
+      "destination": "/stock/honasa/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/honasa-vs-turtlemint/",
+      "destination": "/stock/honasa/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/horizonind-vs-kissht/",
+      "destination": "/stock/horizonind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/horizonind-vs-marine/",
+      "destination": "/stock/horizonind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/horizonind-vs-midhani/",
+      "destination": "/stock/horizonind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/horizonind-vs-pvtbanietf/",
+      "destination": "/stock/horizonind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/horizonind-vs-rain/",
+      "destination": "/stock/horizonind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/horizonind-vs-til/",
+      "destination": "/stock/horizonind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hscl-vs-genuspower/",
+      "destination": "/stock/hscl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hscl-vs-graphite/",
+      "destination": "/stock/hscl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hscl-vs-hathway/",
+      "destination": "/stock/hscl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hscl-vs-marksans/",
+      "destination": "/stock/hscl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hscl-vs-oil/",
+      "destination": "/stock/hscl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hscl-vs-tatainvest/",
+      "destination": "/stock/hscl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hudco-vs-atgl/",
+      "destination": "/stock/hudco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/hudco-vs-paracables/",
+      "destination": "/stock/hudco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ibullsltd-vs-ltf/",
+      "destination": "/stock/ibullsltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/icicibank-vs-nocil/",
+      "destination": "/stock/icicibank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/icicibank-vs-yesbank/",
+      "destination": "/stock/icicibank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/idbi-vs-pnb/",
+      "destination": "/stock/idbi/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/idea-vs-bank10betf/",
+      "destination": "/stock/idea/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/idfcfirstb-vs-bel/",
+      "destination": "/stock/idfcfirstb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/idfcfirstb-vs-hdfcsilver/",
+      "destination": "/stock/idfcfirstb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/idfcfirstb-vs-msumi/",
+      "destination": "/stock/idfcfirstb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/idfcfirstb-vs-nazara/",
+      "destination": "/stock/idfcfirstb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/idfcfirstb-vs-powergrid/",
+      "destination": "/stock/idfcfirstb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/idfcfirstb-vs-tatainvest/",
+      "destination": "/stock/idfcfirstb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iex-vs-emmvee/",
+      "destination": "/stock/iex/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iex-vs-gppl/",
+      "destination": "/stock/iex/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ifci-vs-midcapetf/",
+      "destination": "/stock/ifci/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/igl-vs-equitasbnk/",
+      "destination": "/stock/igl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iifl-vs-cordelia/",
+      "destination": "/stock/iifl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iifl-vs-pfs/",
+      "destination": "/stock/iifl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/indoco-vs-happstmnds/",
+      "destination": "/stock/indoco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/indomim-vs-genuspower/",
+      "destination": "/stock/indomim/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/indomim-vs-nazara/",
+      "destination": "/stock/indomim/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/indorama-vs-cmpdi/",
+      "destination": "/stock/indorama/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/indothai-vs-indusindbk/",
+      "destination": "/stock/indothai/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/indusindbk-vs-hathway/",
+      "destination": "/stock/indusindbk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/industower-vs-heg/",
+      "destination": "/stock/industower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/industower-vs-swancorp/",
+      "destination": "/stock/industower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/industower-vs-vikaslife/",
+      "destination": "/stock/industower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/inoxwind-vs-vikran/",
+      "destination": "/stock/inoxwind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/inoxwind-vs-webelsolar/",
+      "destination": "/stock/inoxwind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iob-vs-cub/",
+      "destination": "/stock/iob/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iob-vs-dcbbank/",
+      "destination": "/stock/iob/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iob-vs-ktkbank/",
+      "destination": "/stock/iob/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iob-vs-oil/",
+      "destination": "/stock/iob/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iob-vs-smallcap/",
+      "destination": "/stock/iob/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iob-vs-tembo/",
+      "destination": "/stock/iob/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ioc-vs-axisbank/",
+      "destination": "/stock/ioc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ioc-vs-oil/",
+      "destination": "/stock/ioc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/iolcp-vs-horizonind/",
+      "destination": "/stock/iolcp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/irb-vs-stltech/",
+      "destination": "/stock/irb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/irb-vs-vedl/",
+      "destination": "/stock/irb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ircon-vs-bharatcoal/",
+      "destination": "/stock/ircon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ircon-vs-dlf/",
+      "destination": "/stock/ircon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ireda-vs-oil/",
+      "destination": "/stock/ireda/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/irfc-vs-arfin/",
+      "destination": "/stock/irfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/irfc-vs-bhel/",
+      "destination": "/stock/irfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/irfc-vs-hdfcgold/",
+      "destination": "/stock/irfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/irfc-vs-nocil/",
+      "destination": "/stock/irfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/irfc-vs-paracables/",
+      "destination": "/stock/irfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/irfc-vs-sigachi/",
+      "destination": "/stock/irfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/irfc-vs-zeemedia/",
+      "destination": "/stock/irfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-agl/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-angelone/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-ashokley/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-biocon/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-colpal/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-dabur/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-godrejcp/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-hindcopper/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-indhotel/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-jswenergy/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-patanjali/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-tmpv/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/itc-vs-vbl/",
+      "destination": "/stock/itc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jamnaauto-vs-ambujacem/",
+      "destination": "/stock/jamnaauto/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jamnaauto-vs-iifl/",
+      "destination": "/stock/jamnaauto/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jamnaauto-vs-m-m/",
+      "destination": "/stock/jamnaauto/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jamnaauto-vs-maninds/",
+      "destination": "/stock/jamnaauto/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jamnaauto-vs-mittal/",
+      "destination": "/stock/jamnaauto/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jamnaauto-vs-syrma/",
+      "destination": "/stock/jamnaauto/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jamnaauto-vs-tatainvest/",
+      "destination": "/stock/jamnaauto/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jindworld-vs-atherenerg/",
+      "destination": "/stock/jindworld/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jindworld-vs-growwpower/",
+      "destination": "/stock/jindworld/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jindworld-vs-utkarshbnk/",
+      "destination": "/stock/jindworld/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jiofin-vs-hexagon/",
+      "destination": "/stock/jiofin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jiofin-vs-karurvysya/",
+      "destination": "/stock/jiofin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jiofin-vs-lotusdev/",
+      "destination": "/stock/jiofin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jiofin-vs-mircelectr/",
+      "destination": "/stock/jiofin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jiofin-vs-oil/",
+      "destination": "/stock/jiofin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jiofin-vs-raymond/",
+      "destination": "/stock/jiofin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jiofin-vs-stlnetwork/",
+      "destination": "/stock/jiofin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jmfinancil-vs-afcons/",
+      "destination": "/stock/jmfinancil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jmfinancil-vs-cordelia/",
+      "destination": "/stock/jmfinancil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jmfinancil-vs-emmvee/",
+      "destination": "/stock/jmfinancil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jmfinancil-vs-m-mfin/",
+      "destination": "/stock/jmfinancil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jppower-vs-bhel/",
+      "destination": "/stock/jppower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jppower-vs-cupid/",
+      "destination": "/stock/jppower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jppower-vs-esds/",
+      "destination": "/stock/jppower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jppower-vs-eternal/",
+      "destination": "/stock/jppower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jppower-vs-iifl/",
+      "destination": "/stock/jppower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jppower-vs-rvnl/",
+      "destination": "/stock/jppower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jsipl-vs-sindhutrad/",
+      "destination": "/stock/jsipl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jswcement-vs-sunpharma/",
+      "destination": "/stock/jswcement/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jswenergy-vs-techm/",
+      "destination": "/stock/jswenergy/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jswinfra-vs-balramchin/",
+      "destination": "/stock/jswinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jswinfra-vs-hcltech/",
+      "destination": "/stock/jswinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jswinfra-vs-lauruslabs/",
+      "destination": "/stock/jswinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jswsteel-vs-sail/",
+      "destination": "/stock/jswsteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-dlf/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-emil/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-hdfcbse500/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-knrcon/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-mcx/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-oil/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-sci/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-smallcap/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-symbiotec/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-til/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jtlind-vs-welcorp/",
+      "destination": "/stock/jtlind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/jyotistruc-vs-delhivery/",
+      "destination": "/stock/jyotistruc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kalyankjil-vs-cmpdi/",
+      "destination": "/stock/kalyankjil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kalyankjil-vs-dlf/",
+      "destination": "/stock/kalyankjil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kalyankjil-vs-excelsoft/",
+      "destination": "/stock/kalyankjil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kalyankjil-vs-greavescot/",
+      "destination": "/stock/kalyankjil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kalyankjil-vs-hexagon/",
+      "destination": "/stock/kalyankjil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kalyankjil-vs-mittal/",
+      "destination": "/stock/kalyankjil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kalyankjil-vs-oil/",
+      "destination": "/stock/kalyankjil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kalyankjil-vs-trident/",
+      "destination": "/stock/kalyankjil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kamdhenu-vs-pncinfra/",
+      "destination": "/stock/kamdhenu/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kamdhenu-vs-til/",
+      "destination": "/stock/kamdhenu/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kamdhenu-vs-transraill/",
+      "destination": "/stock/kamdhenu/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kei-vs-crompton/",
+      "destination": "/stock/kei/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kei-vs-voltas/",
+      "destination": "/stock/kei/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kesoramind-vs-axisgold/",
+      "destination": "/stock/kesoramind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kesoramind-vs-til/",
+      "destination": "/stock/kesoramind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kesoramind-vs-vikran/",
+      "destination": "/stock/kesoramind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kopran-vs-mgel/",
+      "destination": "/stock/kopran/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kopran-vs-rtnindia/",
+      "destination": "/stock/kopran/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kotakbank-vs-abcapital/",
+      "destination": "/stock/kotakbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kotakbank-vs-bel/",
+      "destination": "/stock/kotakbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kotakbank-vs-federalbnk/",
+      "destination": "/stock/kotakbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kotakbank-vs-imagicaa/",
+      "destination": "/stock/kotakbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kotakbank-vs-karurvysya/",
+      "destination": "/stock/kotakbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kotakbank-vs-kpigreen/",
+      "destination": "/stock/kotakbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kotakbank-vs-m-mfin/",
+      "destination": "/stock/kotakbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kotakbank-vs-senco/",
+      "destination": "/stock/kotakbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kotakbank-vs-vikramsolr/",
+      "destination": "/stock/kotakbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kpigreen-vs-adanient/",
+      "destination": "/stock/kpigreen/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kpigreen-vs-adanigreen/",
+      "destination": "/stock/kpigreen/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kshitijpol-vs-aonesteels/",
+      "destination": "/stock/kshitijpol/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kshitijpol-vs-sunpharma/",
+      "destination": "/stock/kshitijpol/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ktkbank-vs-kopran/",
+      "destination": "/stock/ktkbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/kwil-vs-kissht/",
+      "destination": "/stock/kwil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lalithaa-vs-rtnindia/",
+      "destination": "/stock/lalithaa/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lauruslabs-vs-avantel/",
+      "destination": "/stock/lauruslabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lauruslabs-vs-blissgvs/",
+      "destination": "/stock/lauruslabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lauruslabs-vs-bslnifty/",
+      "destination": "/stock/lauruslabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lauruslabs-vs-fsl/",
+      "destination": "/stock/lauruslabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lauruslabs-vs-genuspower/",
+      "destination": "/stock/lauruslabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lauruslabs-vs-gppl/",
+      "destination": "/stock/lauruslabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lauruslabs-vs-iifl/",
+      "destination": "/stock/lauruslabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lauruslabs-vs-jmfinancil/",
+      "destination": "/stock/lauruslabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lauruslabs-vs-oil/",
+      "destination": "/stock/lauruslabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lccproject-vs-acmesolar/",
+      "destination": "/stock/lccproject/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lccproject-vs-crsl/",
+      "destination": "/stock/lccproject/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lccproject-vs-gujenergy/",
+      "destination": "/stock/lccproject/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lccproject-vs-v2retail/",
+      "destination": "/stock/lccproject/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/leapind-vs-jmfinancil/",
+      "destination": "/stock/leapind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/leapind-vs-mcloud/",
+      "destination": "/stock/leapind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/leapind-vs-rtnindia/",
+      "destination": "/stock/leapind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/leapind-vs-webelsolar/",
+      "destination": "/stock/leapind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lemontree-vs-drreddy/",
+      "destination": "/stock/lemontree/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lemontree-vs-rain/",
+      "destination": "/stock/lemontree/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lenskart-vs-jisljaleqs/",
+      "destination": "/stock/lenskart/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lenskart-vs-rblbank/",
+      "destination": "/stock/lenskart/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lenskart-vs-sunpharma/",
+      "destination": "/stock/lenskart/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lenskart-vs-ttml/",
+      "destination": "/stock/lenskart/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lichsgfin-vs-dlf/",
+      "destination": "/stock/lichsgfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lichsgfin-vs-hcltech/",
+      "destination": "/stock/lichsgfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lichsgfin-vs-hudco/",
+      "destination": "/stock/lichsgfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lichsgfin-vs-marksans/",
+      "destination": "/stock/lichsgfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lichsgfin-vs-pvp/",
+      "destination": "/stock/lichsgfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lichsgfin-vs-smallcap/",
+      "destination": "/stock/lichsgfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lichsgfin-vs-ucobank/",
+      "destination": "/stock/lichsgfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lici-vs-hindzinc/",
+      "destination": "/stock/lici/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/liquidbees-vs-marico/",
+      "destination": "/stock/marico/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/liquidcase-vs-emmvee/",
+      "destination": "/stock/emmvee/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/liquidcase-vs-essentia/",
+      "destination": "/stock/essentia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/liquidcase-vs-kelltontec/",
+      "destination": "/stock/kelltontec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/liquidcase-vs-vaml/",
+      "destination": "/stock/vaml/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lloydsengg-vs-jswinfra/",
+      "destination": "/stock/lloydsengg/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lloydsengg-vs-metal/",
+      "destination": "/stock/lloydsengg/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lloydsengg-vs-vikran/",
+      "destination": "/stock/lloydsengg/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lloydsent-vs-til/",
+      "destination": "/stock/lloydsent/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lotusdev-vs-biocon/",
+      "destination": "/stock/lotusdev/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lotusdev-vs-dlf/",
+      "destination": "/stock/lotusdev/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lotusdev-vs-sarveshwar/",
+      "destination": "/stock/lotusdev/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lotusdev-vs-swancorp/",
+      "destination": "/stock/lotusdev/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lowvolietf-vs-mgel/",
+      "destination": "/stock/mgel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ltf-vs-rblbank/",
+      "destination": "/stock/ltf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lumino-vs-kalyankjil/",
+      "destination": "/stock/lumino/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/lumino-vs-mgel/",
+      "destination": "/stock/lumino/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/m-m-vs-m-mfin/",
+      "destination": "/stock/m-m/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mahabank-vs-ablbl/",
+      "destination": "/stock/mahabank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mahabank-vs-powergrid/",
+      "destination": "/stock/mahabank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mahabank-vs-sbin/",
+      "destination": "/stock/mahabank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/manappuram-vs-dlf/",
+      "destination": "/stock/manappuram/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/manappuram-vs-mgel/",
+      "destination": "/stock/manappuram/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/manika-vs-wel/",
+      "destination": "/stock/manika/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/maninds-vs-sunpharma/",
+      "destination": "/stock/maninds/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/marico-vs-knrcon/",
+      "destination": "/stock/marico/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/marksans-vs-fortis/",
+      "destination": "/stock/marksans/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/marsons-vs-ducon/",
+      "destination": "/stock/marsons/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/marsons-vs-upl/",
+      "destination": "/stock/marsons/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/marsons-vs-vikramsolr/",
+      "destination": "/stock/marsons/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/maxhealth-vs-nh/",
+      "destination": "/stock/maxhealth/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mazdock-vs-grse/",
+      "destination": "/stock/mazdock/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/medanta-vs-nh/",
+      "destination": "/stock/medanta/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-avantel/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-belrise/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-bse/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-hexagon/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-jiofin/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-kotakbank/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-morepenlab/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-pplpharma/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-til/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-trident/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/meesho-vs-vmm/",
+      "destination": "/stock/meesho/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/metal-vs-oil/",
+      "destination": "/stock/oil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/metal-vs-turtlemint/",
+      "destination": "/stock/turtlemint/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/metal-vs-vikramsolr/",
+      "destination": "/stock/vikramsolr/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/metal-vs-zeemedia/",
+      "destination": "/stock/zeemedia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/midcapetf-vs-hudco/",
+      "destination": "/stock/hudco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/midcapetf-vs-sonacoms/",
+      "destination": "/stock/sonacoms/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/midhani-vs-turtlemint/",
+      "destination": "/stock/midhani/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/milkymist-vs-balramchin/",
+      "destination": "/stock/milkymist/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/milkymist-vs-hfcl/",
+      "destination": "/stock/milkymist/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/milkymist-vs-irfc/",
+      "destination": "/stock/milkymist/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/milkymist-vs-molbio/",
+      "destination": "/stock/milkymist/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/milkymist-vs-urbanco/",
+      "destination": "/stock/milkymist/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mobikwik-vs-castrolind/",
+      "destination": "/stock/mobikwik/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mobikwik-vs-sbfc/",
+      "destination": "/stock/mobikwik/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/molbio-vs-cgpower/",
+      "destination": "/stock/molbio/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/moneyview-vs-avantel/",
+      "destination": "/stock/moneyview/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/morepenlab-vs-avantel/",
+      "destination": "/stock/morepenlab/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/morepenlab-vs-coforge/",
+      "destination": "/stock/morepenlab/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/morepenlab-vs-growwgold/",
+      "destination": "/stock/morepenlab/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/morepenlab-vs-indoco/",
+      "destination": "/stock/morepenlab/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/morepenlab-vs-indomim/",
+      "destination": "/stock/morepenlab/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/morepenlab-vs-stallion/",
+      "destination": "/stock/morepenlab/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/morepenlab-vs-stlnetwork/",
+      "destination": "/stock/morepenlab/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/morepenlab-vs-welcorp/",
+      "destination": "/stock/morepenlab/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/morepenlab-vs-wipro/",
+      "destination": "/stock/morepenlab/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-ambujacem/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-ardee/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-balkrisind/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-bcg/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-drreddy/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-exideind/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-hcltech/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-insureietf/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-m-m/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-marico/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-rain/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-raymondrel/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-tatainvest/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-timetechno/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-ttml/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motherson-vs-vbl/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/motisons-vs-ttml/",
+      "destination": "/stock/motisons/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mrpl-vs-atgl/",
+      "destination": "/stock/mrpl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mrpl-vs-dlf/",
+      "destination": "/stock/mrpl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mrpl-vs-growwpower/",
+      "destination": "/stock/mrpl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mrpl-vs-hindzinc/",
+      "destination": "/stock/mrpl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mrpl-vs-infy/",
+      "destination": "/stock/mrpl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mrpl-vs-inoxgreen/",
+      "destination": "/stock/mrpl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mrpl-vs-ptc/",
+      "destination": "/stock/mrpl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mrpl-vs-rir/",
+      "destination": "/stock/mrpl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/msumi-vs-ireda/",
+      "destination": "/stock/msumi/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/msumi-vs-nationalum/",
+      "destination": "/stock/msumi/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mtartech-vs-marksans/",
+      "destination": "/stock/mtartech/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mtartech-vs-til/",
+      "destination": "/stock/mtartech/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/mtnl-vs-sdbl/",
+      "destination": "/stock/mtnl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/muthootfin-vs-manappuram/",
+      "destination": "/stock/muthootfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nationalum-vs-pacedigitk/",
+      "destination": "/stock/nationalum/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nationalum-vs-vikramsolr/",
+      "destination": "/stock/nationalum/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nazara-vs-zeemedia/",
+      "destination": "/stock/nazara/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nbcc-vs-e2e/",
+      "destination": "/stock/nbcc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nbcc-vs-ntpcgreen/",
+      "destination": "/stock/nbcc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nbcc-vs-sci/",
+      "destination": "/stock/nbcc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nbcc-vs-trident/",
+      "destination": "/stock/nbcc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ncc-vs-adaniensol/",
+      "destination": "/stock/ncc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/network18-vs-essentia/",
+      "destination": "/stock/network18/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nhpc-vs-dlf/",
+      "destination": "/stock/nhpc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nhpc-vs-tatachem/",
+      "destination": "/stock/nhpc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/niftybees-vs-mittal/",
+      "destination": "/stock/mittal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/niftybees-vs-vbl/",
+      "destination": "/stock/vbl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-adanigreen/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-bajajhfl/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-biocon/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-castrolind/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-elevate/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-jamnaauto/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-jiofin/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-mrpl/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-ongc/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-pnb/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-reliance/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-tcs/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nmdc-vs-tmpv/",
+      "destination": "/stock/nmdc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nslnisp-vs-elecon/",
+      "destination": "/stock/nslnisp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nslnisp-vs-ncc/",
+      "destination": "/stock/nslnisp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ntpc-vs-avantel/",
+      "destination": "/stock/ntpc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ntpc-vs-firstcry/",
+      "destination": "/stock/ntpc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ntpc-vs-hscl/",
+      "destination": "/stock/ntpc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ntpc-vs-jswenergy/",
+      "destination": "/stock/ntpc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ntpcgreen-vs-blel/",
+      "destination": "/stock/ntpcgreen/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ntpcgreen-vs-oil/",
+      "destination": "/stock/ntpcgreen/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nykaa-vs-castrolind/",
+      "destination": "/stock/nykaa/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nykaa-vs-delhivery/",
+      "destination": "/stock/nykaa/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nykaa-vs-growwslvr/",
+      "destination": "/stock/nykaa/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nykaa-vs-jamnaauto/",
+      "destination": "/stock/nykaa/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nykaa-vs-jmfinancil/",
+      "destination": "/stock/nykaa/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/nykaa-vs-knrcon/",
+      "destination": "/stock/nykaa/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/oberoirlty-vs-brigade/",
+      "destination": "/stock/oberoirlty/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/oil-vs-cesc/",
+      "destination": "/stock/oil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/oil-vs-itchotels/",
+      "destination": "/stock/oil/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-awl/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-bcg/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-dlf/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-filatfash/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-goldcase/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-growwgold/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-insureietf/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-msumi/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-network18/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-ongc/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-rpower/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/olaelec-vs-stlnetwork/",
+      "destination": "/stock/olaelec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/omaxe-vs-dlf/",
+      "destination": "/stock/omaxe/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/onepoint-vs-cesc/",
+      "destination": "/stock/onepoint/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ongc-vs-bel/",
+      "destination": "/stock/ongc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ongc-vs-gold1/",
+      "destination": "/stock/ongc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ongc-vs-gujenergy/",
+      "destination": "/stock/ongc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ongc-vs-igl/",
+      "destination": "/stock/ongc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ongc-vs-infy/",
+      "destination": "/stock/ongc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ongc-vs-niacl/",
+      "destination": "/stock/ongc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ongc-vs-nocil/",
+      "destination": "/stock/ongc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ongc-vs-paradeep/",
+      "destination": "/stock/ongc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/orientcabl-vs-rtnindia/",
+      "destination": "/stock/orientcabl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pacedigitk-vs-vikramsolr/",
+      "destination": "/stock/pacedigitk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/paisalo-vs-cgcl/",
+      "destination": "/stock/paisalo/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/paisalo-vs-coalindia/",
+      "destination": "/stock/paisalo/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/paisalo-vs-epl/",
+      "destination": "/stock/paisalo/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/paisalo-vs-kanohar/",
+      "destination": "/stock/paisalo/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/paisalo-vs-urbanco/",
+      "destination": "/stock/paisalo/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/paisalo-vs-vbl/",
+      "destination": "/stock/paisalo/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/paradeep-vs-bslnifty/",
+      "destination": "/stock/paradeep/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/paradeep-vs-indorama/",
+      "destination": "/stock/paradeep/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/paradeep-vs-oil/",
+      "destination": "/stock/paradeep/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/patanjali-vs-dishtv/",
+      "destination": "/stock/patanjali/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pcjeweller-vs-iob/",
+      "destination": "/stock/pcjeweller/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/petronet-vs-fcssoft/",
+      "destination": "/stock/petronet/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pfc-vs-cub/",
+      "destination": "/stock/pfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pfc-vs-hindzinc/",
+      "destination": "/stock/pfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pfc-vs-iob/",
+      "destination": "/stock/pfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pfocus-vs-trident/",
+      "destination": "/stock/pfocus/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pharmabees-vs-cordelia/",
+      "destination": "/stock/cordelia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pharmabees-vs-embdl/",
+      "destination": "/stock/embdl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/piind-vs-atul/",
+      "destination": "/stock/piind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/piind-vs-coromandel/",
+      "destination": "/stock/piind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/piind-vs-upl/",
+      "destination": "/stock/piind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pinelabs-vs-apollo/",
+      "destination": "/stock/pinelabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pinelabs-vs-biocon/",
+      "destination": "/stock/pinelabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pinelabs-vs-davangere/",
+      "destination": "/stock/pinelabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pinelabs-vs-ongc/",
+      "destination": "/stock/pinelabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pinelabs-vs-rolexrings/",
+      "destination": "/stock/pinelabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pinelabs-vs-sci/",
+      "destination": "/stock/pinelabs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pnb-vs-bel/",
+      "destination": "/stock/pnb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pnb-vs-ircon/",
+      "destination": "/stock/pnb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pnb-vs-lenskart/",
+      "destination": "/stock/pnb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pnb-vs-oil/",
+      "destination": "/stock/pnb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pnb-vs-pvtbanietf/",
+      "destination": "/stock/pnb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pnb-vs-urbanco/",
+      "destination": "/stock/pnb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pnb-vs-utkarshbnk/",
+      "destination": "/stock/pnb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/powergrid-vs-jswcement/",
+      "destination": "/stock/powergrid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/powergrid-vs-nbcc/",
+      "destination": "/stock/powergrid/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pplpharma-vs-sunpharma/",
+      "destination": "/stock/pplpharma/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/prestige-vs-brigade/",
+      "destination": "/stock/prestige/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ptc-vs-itchotels/",
+      "destination": "/stock/ptc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pwl-vs-apollo/",
+      "destination": "/stock/pwl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pwl-vs-epl/",
+      "destination": "/stock/pwl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pwl-vs-hindalco/",
+      "destination": "/stock/pwl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pwl-vs-nykaa/",
+      "destination": "/stock/pwl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/pwl-vs-sswl/",
+      "destination": "/stock/pwl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rain-vs-antelopus/",
+      "destination": "/stock/rain/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rain-vs-graphite/",
+      "destination": "/stock/rain/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rain-vs-heg/",
+      "destination": "/stock/rain/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rain-vs-m-mfin/",
+      "destination": "/stock/rain/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rain-vs-mcx/",
+      "destination": "/stock/rain/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rain-vs-metal/",
+      "destination": "/stock/rain/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rain-vs-pfs/",
+      "destination": "/stock/rain/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rain-vs-tembo/",
+      "destination": "/stock/rain/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ramasteel-vs-exideind/",
+      "destination": "/stock/ramasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ramasteel-vs-hdfcgold/",
+      "destination": "/stock/ramasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ramasteel-vs-metal/",
+      "destination": "/stock/ramasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ramasteel-vs-nykaa/",
+      "destination": "/stock/ramasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ramasteel-vs-trident/",
+      "destination": "/stock/ramasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ratnaveer-vs-crompton/",
+      "destination": "/stock/ratnaveer/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/raymond-vs-sml100case/",
+      "destination": "/stock/raymond/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/raymondrel-vs-pncinfra/",
+      "destination": "/stock/raymondrel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rba-vs-gppl/",
+      "destination": "/stock/rba/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rblbank-vs-equitasbnk/",
+      "destination": "/stock/rblbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-abcapital/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-axisgold/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-blel/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-chennpetro/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-dabur/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-hathway/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-hdfcbank/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-hdfclife/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-hindunilvr/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-icicibank/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-indusindbk/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-itc/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-j-kbank/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-lenskart/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-mcx/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-mittal/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-nhpc/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-oil/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-paragmilk/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-petronet/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-pharmabees/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-rvnl/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-smcglobal/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-sswl/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-tatachem/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-tcs/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-turtlemint/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-unitech/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-upl/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-vincofe/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/reliance-vs-vmm/",
+      "destination": "/stock/reliance/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/renuka-vs-federalbnk/",
+      "destination": "/stock/renuka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/renuka-vs-kalyankjil/",
+      "destination": "/stock/renuka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/renuka-vs-m-m/",
+      "destination": "/stock/renuka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/renuka-vs-ncc/",
+      "destination": "/stock/renuka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/renuka-vs-rhetan/",
+      "destination": "/stock/renuka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/renuka-vs-rolexrings/",
+      "destination": "/stock/renuka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/renuka-vs-sml100case/",
+      "destination": "/stock/renuka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/renuka-vs-wel/",
+      "destination": "/stock/renuka/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rhetan-vs-hexagon/",
+      "destination": "/stock/rhetan/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rhetan-vs-redington/",
+      "destination": "/stock/rhetan/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rites-vs-adanigreen/",
+      "destination": "/stock/rites/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rites-vs-bslnifty/",
+      "destination": "/stock/rites/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rites-vs-concor/",
+      "destination": "/stock/rites/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rites-vs-ptc/",
+      "destination": "/stock/rites/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rpower-vs-bsoft/",
+      "destination": "/stock/rpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rpower-vs-drreddy/",
+      "destination": "/stock/rpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rpower-vs-jsipl/",
+      "destination": "/stock/rpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rpower-vs-lowvolietf/",
+      "destination": "/stock/rpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rpower-vs-silverietf/",
+      "destination": "/stock/rpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rpower-vs-southbank/",
+      "destination": "/stock/rpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rpower-vs-upl/",
+      "destination": "/stock/rpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rpower-vs-vedl/",
+      "destination": "/stock/rpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rpower-vs-vikramsolr/",
+      "destination": "/stock/rpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rtnpower-vs-greenpower/",
+      "destination": "/stock/rtnpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rtnpower-vs-insureietf/",
+      "destination": "/stock/rtnpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rtnpower-vs-mtartech/",
+      "destination": "/stock/rtnpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rtnpower-vs-shriramfin/",
+      "destination": "/stock/rtnpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rtnpower-vs-stltech/",
+      "destination": "/stock/rtnpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rtnpower-vs-tphq/",
+      "destination": "/stock/rtnpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rvnl-vs-iob/",
+      "destination": "/stock/rvnl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/rvnl-vs-smallcap/",
+      "destination": "/stock/rvnl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sadhnaniq-vs-bhel/",
+      "destination": "/stock/sadhnaniq/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sadhnaniq-vs-lemontree/",
+      "destination": "/stock/sadhnaniq/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sadhnaniq-vs-sonacoms/",
+      "destination": "/stock/sadhnaniq/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sadhnaniq-vs-viyash/",
+      "destination": "/stock/sadhnaniq/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sagility-vs-chennpetro/",
+      "destination": "/stock/sagility/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sagility-vs-horizonind/",
+      "destination": "/stock/sagility/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sagility-vs-iex/",
+      "destination": "/stock/sagility/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sagility-vs-infy/",
+      "destination": "/stock/sagility/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sagility-vs-kelltontec/",
+      "destination": "/stock/sagility/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sagility-vs-tcs/",
+      "destination": "/stock/sagility/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sail-vs-elevate/",
+      "destination": "/stock/sail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sail-vs-esafsfb/",
+      "destination": "/stock/sail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sail-vs-exideind/",
+      "destination": "/stock/sail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sail-vs-iex/",
+      "destination": "/stock/sail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sail-vs-northarc/",
+      "destination": "/stock/sail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sail-vs-nslnisp/",
+      "destination": "/stock/sail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sail-vs-pvp/",
+      "destination": "/stock/sail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sail-vs-stlnetwork/",
+      "destination": "/stock/sail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/salasar-vs-lauruslabs/",
+      "destination": "/stock/salasar/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/salasar-vs-tempsens/",
+      "destination": "/stock/salasar/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sarveshwar-vs-avantel/",
+      "destination": "/stock/sarveshwar/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sbc-vs-arcil/",
+      "destination": "/stock/sbc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sbc-vs-hathway/",
+      "destination": "/stock/sbc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sbc-vs-hikal/",
+      "destination": "/stock/sbc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sbc-vs-marine/",
+      "destination": "/stock/sbc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sbc-vs-shukraphar/",
+      "destination": "/stock/sbc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sbicard-vs-jmfinancil/",
+      "destination": "/stock/sbicard/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sbin-vs-maninds/",
+      "destination": "/stock/sbin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sci-vs-gmrp-ui/",
+      "destination": "/stock/sci/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sci-vs-m-mfin/",
+      "destination": "/stock/sci/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sci-vs-suntv/",
+      "destination": "/stock/sci/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sepc-vs-ntpcgreen/",
+      "destination": "/stock/sepc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sepc-vs-nykaa/",
+      "destination": "/stock/sepc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sepc-vs-vbl/",
+      "destination": "/stock/sepc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/setfgold-vs-fortis/",
+      "destination": "/stock/fortis/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/setfgold-vs-manappuram/",
+      "destination": "/stock/manappuram/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/setfgold-vs-v2retail/",
+      "destination": "/stock/v2retail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shadowfax-vs-aegisvopak/",
+      "destination": "/stock/shadowfax/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shah-vs-igl/",
+      "destination": "/stock/shah/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shah-vs-midhani/",
+      "destination": "/stock/shah/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shah-vs-oil/",
+      "destination": "/stock/shah/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shankesh-vs-trident/",
+      "destination": "/stock/shankesh/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shantigold-vs-oil/",
+      "destination": "/stock/shantigold/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shareindia-vs-e2e/",
+      "destination": "/stock/shareindia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shareindia-vs-graphite/",
+      "destination": "/stock/shareindia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shiprocket-vs-silverietf/",
+      "destination": "/stock/shiprocket/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shreecem-vs-jkcement/",
+      "destination": "/stock/shreecem/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shriramfin-vs-emmvee/",
+      "destination": "/stock/shriramfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shriramfin-vs-manappuram/",
+      "destination": "/stock/shriramfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/shriramfin-vs-sonacoms/",
+      "destination": "/stock/shriramfin/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/siemens-vs-cumminsind/",
+      "destination": "/stock/siemens/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sigachi-vs-osiahyper/",
+      "destination": "/stock/sigachi/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silver1-vs-coforge/",
+      "destination": "/stock/coforge/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silver1-vs-hindzinc/",
+      "destination": "/stock/hindzinc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silver1-vs-insuradd/",
+      "destination": "/compare/stocks/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silver1-vs-urbanco/",
+      "destination": "/stock/urbanco/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silveradd-vs-indothai/",
+      "destination": "/stock/indothai/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silverbees-vs-gmrp-ui/",
+      "destination": "/stock/gmrp-ui/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silverbees-vs-knrcon/",
+      "destination": "/stock/knrcon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silverbees-vs-motherson/",
+      "destination": "/stock/motherson/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silverbees-vs-sagility/",
+      "destination": "/stock/sagility/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silverbees-vs-sbicard/",
+      "destination": "/stock/sbicard/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silverbees-vs-shah/",
+      "destination": "/stock/shah/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silverbees-vs-sigachi/",
+      "destination": "/stock/sigachi/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silverbees-vs-tcs/",
+      "destination": "/stock/tcs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/silvercase-vs-essentia/",
+      "destination": "/stock/essentia/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/skyways-vs-angelone/",
+      "destination": "/stock/skyways/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/skyways-vs-elitecon/",
+      "destination": "/stock/skyways/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/skyways-vs-oil/",
+      "destination": "/stock/skyways/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/skyways-vs-v2retail/",
+      "destination": "/stock/skyways/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/smallcap-vs-excelsoft/",
+      "destination": "/stock/excelsoft/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/smallcap-vs-redtape/",
+      "destination": "/stock/redtape/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/smcglobal-vs-crompton/",
+      "destination": "/stock/smcglobal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/smcglobal-vs-tmcv/",
+      "destination": "/stock/smcglobal/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sml100case-vs-gppl/",
+      "destination": "/stock/gppl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sml100case-vs-gujenergy/",
+      "destination": "/stock/gujenergy/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sml100case-vs-mcloud/",
+      "destination": "/stock/mcloud/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/southbank-vs-gaja/",
+      "destination": "/stock/southbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/southbank-vs-insureietf/",
+      "destination": "/stock/southbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/southbank-vs-marksans/",
+      "destination": "/stock/southbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/southbank-vs-wel/",
+      "destination": "/stock/southbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ssretail-vs-motherson/",
+      "destination": "/stock/ssretail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ssretail-vs-sadhnaniq/",
+      "destination": "/stock/ssretail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ssretail-vs-vbl/",
+      "destination": "/stock/ssretail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sswl-vs-igl/",
+      "destination": "/stock/sswl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sswl-vs-tatainvest/",
+      "destination": "/stock/sswl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/sswl-vs-whirlpool/",
+      "destination": "/stock/sswl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/stallion-vs-responind/",
+      "destination": "/stock/stallion/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/steamhouse-vs-avance/",
+      "destination": "/stock/steamhouse/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/steamhouse-vs-drreddy/",
+      "destination": "/stock/steamhouse/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/steamhouse-vs-excelsoft/",
+      "destination": "/stock/steamhouse/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/steelxind-vs-jisljaleqs/",
+      "destination": "/stock/steelxind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/steelxind-vs-silveradd/",
+      "destination": "/stock/steelxind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/steelxind-vs-stlnetwork/",
+      "destination": "/stock/steelxind/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/stlnetwork-vs-ttml/",
+      "destination": "/stock/stlnetwork/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/stltech-vs-hathway/",
+      "destination": "/stock/stltech/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/stltech-vs-oil/",
+      "destination": "/stock/stltech/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/subexltd-vs-adanigreen/",
+      "destination": "/stock/subexltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/subexltd-vs-fcssoft/",
+      "destination": "/stock/subexltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/subexltd-vs-fortis/",
+      "destination": "/stock/subexltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/subexltd-vs-m-m/",
+      "destination": "/stock/subexltd/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-abfrl/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-belrise/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-dhoottrans/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-easemytrip/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-greenpower/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-jswcement/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-maninds/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-paytm/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-recltd/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-shantigold/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-sindhutrad/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-urbanco/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-vogl/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/suzlon-vs-wipro/",
+      "destination": "/stock/suzlon/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/swancorp-vs-essentia/",
+      "destination": "/stock/swancorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/swiggy-vs-cesc/",
+      "destination": "/stock/swiggy/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/swiggy-vs-syrma/",
+      "destination": "/stock/swiggy/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/swiggy-vs-tmcv/",
+      "destination": "/stock/swiggy/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/swiggy-vs-vikramsolr/",
+      "destination": "/stock/swiggy/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/swiggy-vs-zeel/",
+      "destination": "/stock/swiggy/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/symbiotec-vs-lowvolietf/",
+      "destination": "/stock/symbiotec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/symbiotec-vs-paracables/",
+      "destination": "/stock/symbiotec/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/syncomf-vs-dlf/",
+      "destination": "/stock/syncomf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/syncomf-vs-german/",
+      "destination": "/stock/syncomf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/syncomf-vs-hdfcsilver/",
+      "destination": "/stock/syncomf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/syncomf-vs-iob/",
+      "destination": "/stock/syncomf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/syncomf-vs-molbio/",
+      "destination": "/stock/syncomf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/syncomf-vs-senco/",
+      "destination": "/stock/syncomf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/syncomf-vs-tatainvest/",
+      "destination": "/stock/syncomf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/syncomf-vs-vikaseco/",
+      "destination": "/stock/syncomf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/syrma-vs-blel/",
+      "destination": "/stock/syrma/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/taril-vs-swancorp/",
+      "destination": "/stock/taril/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/taril-vs-til/",
+      "destination": "/stock/taril/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatachem-vs-adanigreen/",
+      "destination": "/stock/tatachem/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatagold-vs-bel/",
+      "destination": "/stock/bel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatagold-vs-itbees/",
+      "destination": "/compare/stocks/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatagold-vs-lenskart/",
+      "destination": "/stock/lenskart/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatagold-vs-tcc/",
+      "destination": "/stock/tcc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatagold-vs-til/",
+      "destination": "/stock/til/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatapower-vs-anantraj/",
+      "destination": "/stock/tatapower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatapower-vs-jswenergy/",
+      "destination": "/stock/tatapower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatapower-vs-rtnindia/",
+      "destination": "/stock/tatapower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatapower-vs-tcs/",
+      "destination": "/stock/tatapower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-apollo/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-ashokley/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-bpcl/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-edelweiss/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-gail/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-hblengine/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-hcltech/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-itbees/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-kamdhenu/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-mtartech/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-nationalum/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-ramasteel/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-sail/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatasteel-vs-tmcv/",
+      "destination": "/stock/tatasteel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatsilv-vs-gtlinfra/",
+      "destination": "/stock/gtlinfra/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatsilv-vs-irfc/",
+      "destination": "/stock/irfc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tatsilv-vs-tmpv/",
+      "destination": "/stock/tmpv/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tbz-vs-greavescot/",
+      "destination": "/stock/tbz/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tcc-vs-tcs/",
+      "destination": "/stock/tcc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tcc-vs-trident/",
+      "destination": "/stock/tcc/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tcs-vs-dcbbank/",
+      "destination": "/stock/tcs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tcs-vs-karurvysya/",
+      "destination": "/stock/tcs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tcs-vs-sunshine/",
+      "destination": "/stock/tcs/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tdpowersys-vs-growwpower/",
+      "destination": "/stock/tdpowersys/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/techm-vs-kopran/",
+      "destination": "/stock/techm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/techm-vs-smallcap/",
+      "destination": "/stock/techm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/techm-vs-til/",
+      "destination": "/stock/techm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tejasnet-vs-indorama/",
+      "destination": "/stock/tejasnet/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tejasnet-vs-sjvn/",
+      "destination": "/stock/tejasnet/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/texrail-vs-pfs/",
+      "destination": "/stock/texrail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/texrail-vs-sml100case/",
+      "destination": "/stock/texrail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/texrail-vs-v2retail/",
+      "destination": "/stock/texrail/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/til-vs-transraill/",
+      "destination": "/stock/til/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/timetechno-vs-honasa/",
+      "destination": "/stock/timetechno/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tmcv-vs-tvsmotor/",
+      "destination": "/stock/tmcv/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tmcv-vs-vbl/",
+      "destination": "/stock/tmcv/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tmpv-vs-adanient/",
+      "destination": "/stock/tmpv/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tmpv-vs-eichermot/",
+      "destination": "/stock/tmpv/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tmpv-vs-ltf/",
+      "destination": "/stock/tmpv/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tmpv-vs-pfc/",
+      "destination": "/stock/tmpv/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tmpv-vs-sonacoms/",
+      "destination": "/stock/tmpv/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/tnpetro-vs-oil/",
+      "destination": "/stock/tnpetro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/transraill-vs-cordelia/",
+      "destination": "/stock/transraill/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/trent-vs-delhivery/",
+      "destination": "/stock/trent/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/trent-vs-policybzr/",
+      "destination": "/stock/trent/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/trident-vs-adanient/",
+      "destination": "/stock/trident/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/trident-vs-dhanbank/",
+      "destination": "/stock/trident/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/trident-vs-indoco/",
+      "destination": "/stock/trident/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/trident-vs-oil/",
+      "destination": "/stock/trident/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ucobank-vs-karurvysya/",
+      "destination": "/stock/ucobank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ujjivansfb-vs-abfrl/",
+      "destination": "/stock/ujjivansfb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ujjivansfb-vs-cesc/",
+      "destination": "/stock/ujjivansfb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/ujjivansfb-vs-exideind/",
+      "destination": "/stock/ujjivansfb/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/unionbank-vs-oil/",
+      "destination": "/stock/unionbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/upl-vs-bslnifty/",
+      "destination": "/stock/upl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/upl-vs-fortis/",
+      "destination": "/stock/upl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/upl-vs-marico/",
+      "destination": "/stock/upl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/upl-vs-techm/",
+      "destination": "/stock/upl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/utkarshbnk-vs-m-m/",
+      "destination": "/stock/utkarshbnk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/utkarshbnk-vs-pfs/",
+      "destination": "/stock/utkarshbnk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/utkarshbnk-vs-sbfc/",
+      "destination": "/stock/utkarshbnk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/utkarshbnk-vs-tcs/",
+      "destination": "/stock/utkarshbnk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/utkarshbnk-vs-viyash/",
+      "destination": "/stock/utkarshbnk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/utkarshbnk-vs-whirlpool/",
+      "destination": "/stock/utkarshbnk/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vaml-vs-bharatcoal/",
+      "destination": "/stock/vaml/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vaml-vs-niftybees/",
+      "destination": "/stock/vaml/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vbl-vs-hdfcsilver/",
+      "destination": "/stock/vbl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vbl-vs-midcapetf/",
+      "destination": "/stock/vbl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vbl-vs-oil/",
+      "destination": "/stock/vbl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vbl-vs-rvnl/",
+      "destination": "/stock/vbl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedl-vs-belrise/",
+      "destination": "/stock/vedl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedl-vs-maxhealth/",
+      "destination": "/stock/vedl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedl-vs-stlnetwork/",
+      "destination": "/stock/vedl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedl-vs-stltech/",
+      "destination": "/stock/vedl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedpower-vs-ablbl/",
+      "destination": "/stock/vedpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedpower-vs-genuspower/",
+      "destination": "/stock/vedpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedpower-vs-growwslvr/",
+      "destination": "/stock/vedpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedpower-vs-ltf/",
+      "destination": "/stock/vedpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedpower-vs-oil/",
+      "destination": "/stock/vedpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedpower-vs-pvtbanietf/",
+      "destination": "/stock/vedpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vedpower-vs-stallion/",
+      "destination": "/stock/vedpower/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/visl-vs-atgl/",
+      "destination": "/stock/visl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/visl-vs-salasar/",
+      "destination": "/stock/visl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/visl-vs-til/",
+      "destination": "/stock/visl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/visl-vs-vedpower/",
+      "destination": "/stock/visl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/viyash-vs-delhivery/",
+      "destination": "/stock/viyash/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/viyash-vs-tnpetro/",
+      "destination": "/stock/viyash/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vmm-vs-ambujacem/",
+      "destination": "/stock/vmm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vmm-vs-happstmnds/",
+      "destination": "/stock/vmm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vmm-vs-hexagon/",
+      "destination": "/stock/vmm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vmm-vs-hindpetro/",
+      "destination": "/stock/vmm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vmm-vs-jswcement/",
+      "destination": "/stock/vmm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vmm-vs-mcx/",
+      "destination": "/stock/vmm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vmm-vs-msumi/",
+      "destination": "/stock/vmm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vmm-vs-smallcap/",
+      "destination": "/stock/vmm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vmm-vs-techm/",
+      "destination": "/stock/vmm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vmm-vs-vaml/",
+      "destination": "/stock/vmm/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-hdfcgold/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-kwil/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-nykaa/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-paisalo/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-pateleng/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-rain/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-sagility/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-sci/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-smallcap/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-southbank/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/vogl-vs-welcorp/",
+      "destination": "/stock/vogl/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/welcorp-vs-adanigreen/",
+      "destination": "/stock/welcorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/welcorp-vs-e2e/",
+      "destination": "/stock/welcorp/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/whirlpool-vs-pateleng/",
+      "destination": "/stock/whirlpool/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/wipro-vs-ashokley/",
+      "destination": "/stock/wipro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/wipro-vs-elitecon/",
+      "destination": "/stock/wipro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/wipro-vs-gold1/",
+      "destination": "/stock/wipro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/wipro-vs-inoxwind/",
+      "destination": "/stock/wipro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/wipro-vs-ircon/",
+      "destination": "/stock/wipro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/wipro-vs-jswcement/",
+      "destination": "/stock/wipro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/wipro-vs-metal/",
+      "destination": "/stock/wipro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/wipro-vs-redington/",
+      "destination": "/stock/wipro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/wipro-vs-reliance/",
+      "destination": "/stock/wipro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/wipro-vs-ttml/",
+      "destination": "/stock/wipro/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/yesbank-vs-coffeeday/",
+      "destination": "/stock/yesbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/yesbank-vs-hfcl/",
+      "destination": "/stock/yesbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/yesbank-vs-navkarurb/",
+      "destination": "/stock/yesbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/yesbank-vs-nbcc/",
+      "destination": "/stock/yesbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/yesbank-vs-nhpc/",
+      "destination": "/stock/yesbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/yesbank-vs-reliance/",
+      "destination": "/stock/yesbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/yesbank-vs-renuka/",
+      "destination": "/stock/yesbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/yesbank-vs-silver1/",
+      "destination": "/stock/yesbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/yesbank-vs-ucobank/",
+      "destination": "/stock/yesbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/yesbank-vs-vmm/",
+      "destination": "/stock/yesbank/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/zeel-vs-cgpower/",
+      "destination": "/stock/zeel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/zeel-vs-hindzinc/",
+      "destination": "/stock/zeel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/zeel-vs-ioc/",
+      "destination": "/stock/zeel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/zeel-vs-lowvolietf/",
+      "destination": "/stock/zeel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/zeel-vs-southbank/",
+      "destination": "/stock/zeel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/zeel-vs-stltech/",
+      "destination": "/stock/zeel/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/zensartech-vs-jindalsaw/",
+      "destination": "/stock/zensartech/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/stocks/zensartech-vs-m-m/",
+      "destination": "/stock/zensartech/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/360-one-mutual-fund-360-one-liquid-fund-vs-groww-mutual-fund-groww-dynamic-term-fund/",
+      "destination": "/fund/360-one-mutual-fund-360-one-liquid-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/360-one-mutual-fund-360-one-liquid-fund-vs-icici-prudential-mutual-fund-icici-prudential-multi-asset-allocation-fund/",
+      "destination": "/fund/360-one-mutual-fund-360-one-liquid-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/360-one-mutual-fund-360-one-overnight-fund-vs-bandhan-mutual-fund-bandhan-bse-sensex-etf/",
+      "destination": "/fund/360-one-mutual-fund-360-one-overnight-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/360-one-mutual-fund-360-one-overnight-fund-vs-jio-blackrock-mutual-fund-jioblackrock-short-term-fund/",
+      "destination": "/fund/360-one-mutual-fund-360-one-overnight-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-flexi-cap-fund-vs-bank-of-india-mutual-fund-bank-of-india-flexi-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-flexi-cap-fund-vs-capitalmind-mutual-fund-capitalmind-flexi-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-flexi-cap-fund-vs-iti-mutual-fund-iti-flexi-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-flexi-cap-fund-vs-quant-mutual-fund-quant-flexi-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-large-mid-cap-fund-vs-quant-mutual-fund-quant-large-mid-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-large-mid-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-small-cap-fund-vs-bank-of-india-mutual-fund-bank-of-india-small-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-small-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-small-cap-fund-vs-dsp-mutual-fund-dsp-small-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-small-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-small-cap-fund-vs-franklin-templeton-mutual-fund-franklin-india-small-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-small-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-small-cap-fund-vs-hdfc-mutual-fund-hdfc-small-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-small-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-small-cap-fund-vs-motilal-oswal-mutual-fund-motilal-oswal-small-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-small-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-small-cap-fund-vs-nippon-india-mutual-fund-nippon-india-small-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-small-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-small-cap-fund-vs-quant-mutual-fund-quant-small-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-small-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-small-cap-fund-vs-sbi-mutual-fund-sbi-small-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-small-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/abakkus-mutual-fund-abakkus-small-cap-fund-vs-sundaram-mutual-fund-sundaram-small-cap-fund/",
+      "destination": "/fund/abakkus-mutual-fund-abakkus-small-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-aggressive-hybrid-fund-vs-zerodha-mutual-fund-zerodha-nifty-short-duration-g-sec-index-fund/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-aggressive-hybrid-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-arbitrage-fund-vs-franklin-templeton-mutual-fund-franklin-india-arbitrage-fund/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-arbitrage-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-balanced-advantage-fund-vs-motilal-oswal-mutual-fund-motilal-oswal-balanced-advantage-fund/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-balanced-advantage-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-elss-tax-saver-fund-vs-navi-mutual-fund-navi-elss-tax-saver-nifty50-index-fund/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-elss-tax-saver-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-flexi-cap-fund-vs-aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-large-mid-cap-fund/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-flexi-cap-fund-vs-bank-of-india-mutual-fund-bank-of-india-flexi-cap-fund/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-flexi-cap-fund-vs-icici-prudential-mutual-fund-icici-prudential-bse-liquid-rate-etf-growth/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-flexi-cap-fund-vs-navi-mutual-fund-navi-flexi-cap-fund/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-flexi-cap-fund-vs-zerodha-mutual-fund-zerodha-nifty-short-duration-g-sec-index-fund/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-large-cap-fund-vs-iti-mutual-fund-iti-large-cap-fund/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-large-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-nifty-next-50-etf-vs-uti-mutual-fund-uti-nifty-next-50-exchange-traded-fund/",
+      "destination": "/fund/aditya-birla-sun-life-mutual-fund-aditya-birla-sun-life-nifty-next-50-etf/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/alphagrep-mutual-fund-alphagrep-liquid-omni-fof-vs-ask-mutual-fund-ask-liquid-fund/",
+      "destination": "/fund/alphagrep-mutual-fund-alphagrep-liquid-omni-fof/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-banking-and-psu-debt-fund-vs-kotak-mahindra-mutual-fund-kotak-nifty-1d-rate-liquid-etf/",
+      "destination": "/fund/axis-mutual-fund-axis-banking-and-psu-debt-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-floating-interest-rates-fund-vs-jio-blackrock-mutual-fund-jioblackrock-short-term-fund/",
+      "destination": "/fund/axis-mutual-fund-axis-floating-interest-rates-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-income-plus-arbitrage-passive-fof-vs-bandhan-mutual-fund-bandhan-arbitrage-fund/",
+      "destination": "/fund/axis-mutual-fund-axis-income-plus-arbitrage-passive-fof/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-income-plus-arbitrage-passive-fof-vs-quant-mutual-fund-quant-income-plus-arbitrage-active-fof/",
+      "destination": "/fund/axis-mutual-fund-axis-income-plus-arbitrage-passive-fof/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-income-plus-arbitrage-passive-fof-vs-uti-mutual-fund-uti-income-plus-arbitrage-active-fund-of-fund/",
+      "destination": "/fund/axis-mutual-fund-axis-income-plus-arbitrage-passive-fof/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-liquid-fund-vs-jio-blackrock-mutual-fund-jioblackrock-ultra-short-to-short-term-fund/",
+      "destination": "/fund/axis-mutual-fund-axis-liquid-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-liquid-fund-vs-mirae-asset-mutual-fund-mirae-asset-liquid-fund/",
+      "destination": "/fund/axis-mutual-fund-axis-liquid-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-liquid-fund-vs-ppfas-mutual-fund-parag-parikh-liquid-fund/",
+      "destination": "/fund/axis-mutual-fund-axis-liquid-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-liquid-fund-vs-union-mutual-fund-union-money-market-fund/",
+      "destination": "/fund/axis-mutual-fund-axis-liquid-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-nifty-50-index-fund-vs-axis-mutual-fund-axis-nifty50-equal-weight-index-fund/",
+      "destination": "/fund/axis-mutual-fund-axis-nifty-50-index-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/axis-mutual-fund-axis-ultra-short-to-short-term-fund-vs-lic-mutual-fund-lic-mf-money-market-fund/",
+      "destination": "/fund/axis-mutual-fund-axis-ultra-short-to-short-term-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund-vs-edelweiss-mutual-fund-edelweiss-flexi-cap-fund/",
+      "destination": "/fund/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund-vs-motilal-oswal-mutual-fund-motilal-oswal-flexi-cap-fund/",
+      "destination": "/fund/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund-vs-nippon-india-mutual-fund-nippon-india-flexi-cap-fund/",
+      "destination": "/fund/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund-vs-old-bridge-mutual-fund-old-bridge-flexi-cap-fund/",
+      "destination": "/fund/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-large-cap-fund-vs-hdfc-mutual-fund-hdfc-large-cap-fund/",
+      "destination": "/fund/bajaj-finserv-mutual-fund-bajaj-finserv-large-cap-fund/",
+      "permanent": true
     }
   ],
   "headers": [

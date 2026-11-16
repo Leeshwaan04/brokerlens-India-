@@ -205,3 +205,32 @@ One entry per run, newest last. Each change states its evidence, the effect it s
   or price-target figure has reappeared and that the Cloudflare deploy gate question has been
   resolved one way or the other.
 - Verified: local build, full QA suite 1237/0 (up from 1236/1 before this fix), VAPT 77/0.
+
+## 2026-11-16 (Claude: redirect orphaned comparison pages, part 2 of the in-depth review)
+
+- Found by the in-depth review: commit 1c035c0 ("keep static asset count under 20k for
+  Cloudflare Pages") cut fund_compare_engine's curated pairs per category from 20 to 4 and
+  capped stock_compare_engine's sector peer groups at 5 members, then added an unconditional
+  `rm -rf site/compare/stocks site/compare/mutual-funds` before every rebuild. ~1,640 of these
+  pages had real Search Console impressions (reports/gsc/page_demand.json) and, once deleted
+  with no redirect, 404 live. Confirmed with a direct curl.
+- Change: added 1,200 redirects (vercel.json), each orphaned comparison page to its first
+  symbol's own real page (/stock/<sym>/ or /fund/<slug>/, falling back to the family hub when
+  neither symbol has one). All 1,154 orphaned stock pairs fit; only 46 of 486 orphaned fund
+  pairs fit inside Cloudflare's 2,000-static-redirect cap (confirmed via developers.cloudflare.com:
+  static assets always follow a matching redirect even over a real file at that path, so a
+  careless rule can silently take down a page that still exists, and the limit is a hard 2,000
+  static / 100 dynamic per _redirects file). 440 fund pairs remain 404 for now; every included
+  redirect was checked against the current build to confirm it does not also point away from a
+  page that still exists.
+- Added two permanent QA guards (tests/qa_extra_indexation.py): the total static/dynamic count
+  in site/_redirects must stay under Cloudflare's caps with headroom, and no redirect source may
+  also be a currently-built page (the exact failure mode above). A third check fails if the
+  unredirected orphan count ever grows past today's known 440-pair shortfall, so a future cut
+  of this kind cannot repeat silently.
+- Not done here (flagged, needs a decision): a durable, self-healing fix so future builds never
+  orphan a real-demand comparison page again (right now this is a one-time backfill against
+  today's page_demand.json snapshot); and whether the account is actually on Cloudflare's paid
+  tier (100,000-file limit) rather than the free 20,000, which would remove the original
+  pressure to cut these pages at all.
+- Verified: local build, full QA suite 1201/0, VAPT 77/0.
