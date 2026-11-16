@@ -2991,10 +2991,10 @@ def _write_index_pages(indices, companies):
         label = idx["label"]
         constituents = idx["constituents"]
         canonical = "%s/index/%s/" % (SITE_URL, slug)
-        title = "%s: Constituent Stocks List | BrokerLens" % label
+        title = "%s: Share Price Targets 2026-2030, Stocks List & What-If Calculator | BrokerLens" % label
         description = _esc(
-            "Every constituent of the %s index, sourced directly from NSE's own published index list, "
-            "with each company's ISIN and a link to its NSE listing details." % label
+            "Every constituent of the %s index on NSE: share price targets 2026-2030, "
+            "what-if calculators, 52-week trading ranges, and full constituent stocks list." % label
         )[:300]
 
         rows_sorted = sorted(constituents, key=lambda c: c.get("name") or c.get("symbol") or "")
@@ -3012,12 +3012,14 @@ def _write_index_pages(indices, companies):
 
         list_html = "".join(
             '<div class="mega-seg"><div class="mega-seg-head">%s</div>'
-            '<div class="xs faint" style="margin-top:2px">%s%s</div></div>'
+            '<div class="xs faint" style="margin-top:2px">%s%s</div>'
+            '%s</div>'
             % (
                 ('<a href="/stock/%s/">%s</a>' % (_esc(_stock_slug(c["symbol"])), _esc(c.get("name") or c["symbol"]))
                  if _stock_slug(c.get("symbol") or "") in known else fact(c.get("name"))),
                 _esc(c.get("symbol") or ""),
                 (" &middot; %s" % _esc(c["industry"])) if c.get("industry") else "",
+                ('<div style="margin-top:6px"><a href="/stock/%s/#target" class="badge" style="font-size:11px;padding:2px 6px">Target &amp; Calculator &rarr;</a></div>' % _esc(_stock_slug(c["symbol"]))) if _stock_slug(c.get("symbol") or "") in known else "",
             )
             for c in rows_sorted
         )
@@ -3029,6 +3031,8 @@ def _write_index_pages(indices, companies):
         body += (
             '<h1 style="margin-top:0">%s</h1>' % _esc(label)
             + '<p class="muted">%d constituent%s</p>' % (len(rows_sorted), "" if len(rows_sorted) == 1 else "s")
+            + '<p class="small" style="max-width:78ch;margin-top:8px">Explore all %d constituent stocks of %s on the National Stock Exchange of India (NSE). '
+            'Click any stock to inspect exchange candles, trading range, and run interactive what-if price target calculations across 2026, 2027, 2028, 2030, 2035, 2040 and 2050.</p>' % (len(rows_sorted), _esc(label))
             + '<div class="grid g3" style="margin-top:16px">' + list_html + '</div>'
         )
         body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
@@ -8283,6 +8287,8 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         core_urls.append("/reports/%s/" % slug)
     for slug in (calc_slugs or []):
         core_urls.append("/calculators/%s/" % slug)
+    for slug in sorted((indices or {}).keys()):
+        core_urls.append("/index/%s/" % slug)
     core_entries = [_xml_url(SITE_URL + u, today, "daily") for u in core_urls]
 
     # 2. BROKERS SITEMAP (Profiles, comparisons, hub dimensions)

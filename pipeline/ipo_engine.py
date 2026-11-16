@@ -252,7 +252,8 @@ def render_performance_card(perf, sym_slug):
         </div>
       </div>
 
-      <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
+        <a href="/stock/{sym_slug}/#target" class="badge" style="text-decoration:none;padding:8px 14px;background:var(--accent);color:#fff;border-radius:var(--radius-sm)">Share Price Target 2026-2030 &amp; Calculator &rarr;</a>
         <a href="/stock/{sym_slug}/" class="badge" style="text-decoration:none;padding:8px 14px;background:var(--bg);border:1px solid var(--border)">View Live Candlestick Chart & Stock Fundamentals &rarr;</a>
       </div>
     </div>
@@ -585,6 +586,7 @@ def render_full_ipo_page(r, equity_history, head_template, foot_template,
     related_links = []
     if status == "Listed" and perf.get("has_current_data"):
         related_links.append(f'<a href="/stock/{slug}/"><strong>{_esc(company)}</strong> NSE listing details &rarr;</a>')
+        related_links.append(f'<a href="/stock/{slug}/#target"><strong>{_esc(company)}</strong> Share Price Target 2026-2030 &rarr;</a>')
     related_links.append('<a href="/ipo/upcoming/">Upcoming IPOs &rarr;</a>')
     related_links.append('<a href="/ipo/archive/">More listed IPOs &rarr;</a>')
     related_links.append('<a href="/ipo/gmp/">IPO GMP Tracker &rarr;</a>')
