@@ -1,5 +1,5 @@
 {
-"updated": "2026-11-15",
+"updated": "2026-11-16",
 "paths": [
 "/",
 "/branches/",
@@ -237,6 +237,7 @@
 "/calculators/sip/50000-per-month-for-5-years/",
 "/calculators/sip/70000-per-month-for-11-years/",
 "/calculators/sip/8000-per-month-for-1-years/",
+"/compare/groww-vs-anand-rathi/",
 "/compare/mutual-funds/360-one-mutual-fund-360-one-liquid-fund-vs-groww-mutual-fund-groww-dynamic-term-fund/",
 "/compare/mutual-funds/360-one-mutual-fund-360-one-liquid-fund-vs-icici-prudential-mutual-fund-icici-prudential-multi-asset-allocation-fund/",
 "/compare/mutual-funds/360-one-mutual-fund-360-one-overnight-fund-vs-bandhan-mutual-fund-bandhan-bse-sensex-etf/",
@@ -768,6 +769,7 @@
 "/compare/mutual-funds/unifi-mutual-fund-unifi-liquid-fund-vs-sbi-mutual-fund-sbi-nifty-1d-rate-liquid-etf-growth/",
 "/compare/mutual-funds/union-mutual-fund-union-liquid-fund-vs-icici-prudential-mutual-fund-icici-prudential-overnight-fund/",
 "/compare/mutual-funds/union-mutual-fund-union-liquid-fund-vs-nippon-india-mutual-fund-nippon-india-etf-nifty-1d-rate-liquid-bees/",
+"/compare/mutual-funds/union-mutual-fund-union-overnight-fund-vs-bank-of-india-mutual-fund-bank-of-india-overnight-fund/",
 "/compare/mutual-funds/uti-mutual-fund-uti-income-plus-arbitrage-active-fund-of-fund-vs-baroda-bnp-paribas-mutual-fund-baroda-bnp-paribas-arbitrage-fund/",
 "/compare/mutual-funds/uti-mutual-fund-uti-money-market-fund-vs-groww-mutual-fund-groww-overnight-fund/",
 "/compare/mutual-funds/uti-mutual-fund-uti-money-market-fund-vs-iti-mutual-fund-iti-overnight-fund/",
@@ -992,6 +994,7 @@
 "/compare/stocks/cdsl-vs-angelone/",
 "/compare/stocks/cdsl-vs-cams/",
 "/compare/stocks/cdsl-vs-motilalofs/",
+"/compare/stocks/centralbk-vs-zeemedia/",
 "/compare/stocks/cesc-vs-jswcement/",
 "/compare/stocks/chennpetro-vs-aegisvopak/",
 "/compare/stocks/chennpetro-vs-igl/",
