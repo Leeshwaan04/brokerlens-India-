@@ -1,0 +1,157 @@
+{
+  "date": "2026-11-16",
+  "manual_data_gaps": [
+    {
+      "dataset": "charges",
+      "status": "sample/placeholder",
+      "note": "SAMPLE pricing for a handful of demo brokers. Others stay null by design."
+    }
+  ],
+  "coverage": [],
+  "gsc_opportunities": {
+    "ready": true,
+    "days_tracked": 65,
+    "candidates": [
+      {
+        "query": "pashupati cotspin share price target 2030",
+        "page": "https://www.brokerlens.in/stock/pashupati/",
+        "position": 4.8,
+        "impressions": 919,
+        "clicks": 27
+      },
+      {
+        "query": "irb infra share price target 2030",
+        "page": "https://www.brokerlens.in/stock/irb/share-price-target-2030/",
+        "position": 8.2,
+        "impressions": 679,
+        "clicks": 3
+      },
+      {
+        "query": "morepen lab share price target 2030",
+        "page": "https://www.brokerlens.in/stock/morepenlab/share-price-target-2030/",
+        "position": 7.7,
+        "impressions": 366,
+        "clicks": 3
+      },
+      {
+        "query": "pc jeweller share price target 2027",
+        "page": "https://www.brokerlens.in/stock/pcjeweller/share-price-target-2027/",
+        "position": 5.1,
+        "impressions": 206,
+        "clicks": 6
+      },
+      {
+        "query": "praj industries share price target 2030",
+        "page": "https://www.brokerlens.in/stock/prajind/share-price-target-2030/",
+        "position": 8.7,
+        "impressions": 202,
+        "clicks": 4
+      },
+      {
+        "query": "birlasoft share price target 2030",
+        "page": "https://www.brokerlens.in/stock/bsoft/share-price-target-2030/",
+        "position": 5.8,
+        "impressions": 186,
+        "clicks": 4
+      },
+      {
+        "query": "gujarat natural resources share price target 2030",
+        "page": "https://www.brokerlens.in/stock/gnrl/share-price-target-2040/",
+        "position": 4.2,
+        "impressions": 163,
+        "clicks": 3
+      },
+      {
+        "query": "motisons jewellers share price target 2030",
+        "page": "https://www.brokerlens.in/stock/motisons/share-price-target-2030/",
+        "position": 5.3,
+        "impressions": 153,
+        "clicks": 2
+      },
+      {
+        "query": "bajaj housing finance share price target 2027",
+        "page": "https://www.brokerlens.in/stock/bajajhfl/share-price-target-2027/",
+        "position": 6.7,
+        "impressions": 151,
+        "clicks": 1
+      },
+      {
+        "query": "hcl tech share price target 2030",
+        "page": "https://www.brokerlens.in/stock/hcltech/share-price-target-2030/",
+        "position": 7.4,
+        "impressions": 142,
+        "clicks": 1
+      },
+      {
+        "query": "jagran prakashan share price target 2030",
+        "page": "https://www.brokerlens.in/stock/jagran/share-price-target-2030/",
+        "position": 4.9,
+        "impressions": 139,
+        "clicks": 2
+      },
+      {
+        "query": "apar industries share price target 2030",
+        "page": "https://www.brokerlens.in/stock/aparinds/share-price-target-2030/",
+        "position": 6.3,
+        "impressions": 135,
+        "clicks": 1
+      },
+      {
+        "query": "network 18 share price target 2030",
+        "page": "https://www.brokerlens.in/stock/network18/share-price-target-2030/",
+        "position": 5.4,
+        "impressions": 127,
+        "clicks": 1
+      },
+      {
+        "query": "muthoot finance share price target 2030",
+        "page": "https://www.brokerlens.in/stock/muthootfin/share-price-target-2030/",
+        "position": 6.4,
+        "impressions": 113,
+        "clicks": 2
+      },
+      {
+        "query": "j&k bank share price target 2030",
+        "page": "https://www.brokerlens.in/stock/j-kbank/share-price-target-2050/",
+        "position": 8.7,
+        "impressions": 104,
+        "clicks": 1
+      },
+      {
+        "query": "gravita share price target 2030",
+        "page": "https://www.brokerlens.in/stock/gravita/share-price-target-2030/",
+        "position": 6.9,
+        "impressions": 91,
+        "clicks": 1
+      },
+      {
+        "query": "rr kabel share price target 2030",
+        "page": "https://www.brokerlens.in/stock/rrkabel/share-price-target-2030/",
+        "position": 4.9,
+        "impressions": 85,
+        "clicks": 1
+      },
+      {
+        "query": "pashupati cotspin share price target 2030",
+        "page": "https://www.brokerlens.in/stock/pashupati/share-price-target-2035/",
+        "position": 6.4,
+        "impressions": 81,
+        "clicks": 3
+      },
+      {
+        "query": "shakti pumps share price target 2027",
+        "page": "https://www.brokerlens.in/stock/shaktipump/share-price-target-2027/",
+        "position": 4.5,
+        "impressions": 79,
+        "clicks": 2
+      },
+      {
+        "query": "gtl infra share price target 2027",
+        "page": "https://www.brokerlens.in/stock/gtlinfra/share-price-target-2027/",
+        "position": 4.8,
+        "impressions": 75,
+        "clicks": 1
+      }
+    ]
+  }
+}
