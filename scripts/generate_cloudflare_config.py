@@ -48,23 +48,39 @@ def main():
             for opt in options:
                 sub_src = src.replace(m.group(0), opt)
                 sub_dst = dst.replace(f":{param_name}", opt)
-                sub_src = re.sub(r":year", "2026", sub_src)
                 sub_src = sub_src.replace("(.*)", "*")
                 sub_dst = sub_dst.replace("(.*)", ":splat")
+                if ":year" in sub_src:
+                    for y in ("2026", "2027", "2028", "2030"):
+                        y_src = re.sub(r":year", y, sub_src)
+                        line = f"{y_src} {sub_dst} {status}"
+                        if "*" in y_src or ":" in y_src:
+                            dynamic_rules.append(line)
+                        else:
+                            static_rules.append(line)
+                else:
+                    line = f"{sub_src} {sub_dst} {status}"
+                    if "*" in sub_src or ":" in sub_src:
+                        dynamic_rules.append(line)
+                    else:
+                        static_rules.append(line)
+        else:
+            sub_src = src.replace("(.*)", "*")
+            sub_dst = dst.replace("(.*)", ":splat")
+            if ":year" in sub_src:
+                for y in ("2026", "2027", "2028", "2029", "2030", "2035", "2040", "2050"):
+                    y_src = re.sub(r":year", y, sub_src)
+                    line = f"{y_src} {sub_dst} {status}"
+                    if "*" in y_src or ":" in y_src:
+                        dynamic_rules.append(line)
+                    else:
+                        static_rules.append(line)
+            else:
                 line = f"{sub_src} {sub_dst} {status}"
                 if "*" in sub_src or ":" in sub_src:
                     dynamic_rules.append(line)
                 else:
                     static_rules.append(line)
-        else:
-            sub_src = src.replace("(.*)", "*")
-            sub_dst = dst.replace("(.*)", ":splat")
-            sub_src = re.sub(r":year", "2026", sub_src)
-            line = f"{sub_src} {sub_dst} {status}"
-            if "*" in sub_src or ":" in sub_src:
-                dynamic_rules.append(line)
-            else:
-                static_rules.append(line)
 
     r_lines = [
         "# Cloudflare Pages Redirects",
