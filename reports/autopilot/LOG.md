@@ -171,3 +171,37 @@ One entry per run, newest last. Each change states its evidence, the effect it s
 - Demand sitemap verified: all current high-demand pages remain indexed in Wave 1.
 - Expected effect: increase search visibility and CTR across striking-distance terms without adding thin doorway pages.
 - Check impact by: 2026-11-29
+
+## 2026-11-16 (Claude: revert two reintroduced fabrication violations)
+
+- Found live on production: (1) pipeline/price_target_section.py (commit 0eb340e) added a
+  server-rendered table labelling rows "<year> Target" with computed Rs figures at 10/15/20%
+  CAGR per milestone year, directly contradicting this same page's own copy and the hard rule
+  that a price-target page never asserts a number. (2) data/manual/ipo_gmp.json (commit 087ff2f,
+  "activate live IPO GMP board") was hand-populated in a feature commit, not the automated
+  scraper, with GMP/Kostak figures for 9 real IPOs under a generic "source" string
+  ("Market survey (InvestorGain / Chittorgarh public quotes)") and a synthetic 3-day history.
+  Nothing in the codebase fetches a GMP quote from any network source; this satisfied the letter
+  of the existing "has a source field" check while remaining invented, reintroducing the pattern
+  commit ad6e53c fixed once already (9 Nov).
+- Change: removed the price-target table (kept the safe year-pick buttons and the facts/calculator
+  above it); reverted ipo_gmp.json to {}; deleted the 10 GMP news articles the fabricated board had
+  generated (9 per-IPO + the generic hub bulletin), each already or newly redirected to /ipo/gmp/ in
+  vercel.json; regenerated site/_redirects from vercel.json (scripts/generate_cloudflare_config.py,
+  which is only called from scripts/vercel-build.sh, not from `pipeline.run build` directly, so this
+  needs to be run by hand after any vercel.json edit until that gap is fixed). Added regression
+  checks: no <table> is ever server-rendered in the price-target section and no more than the 3
+  factual data tiles' worth of "Rs n.nn" figures appear in it; the GMP file must be empty unless
+  real fetch code exists, and no stored quote may cite a generic/unverifiable source phrase.
+- Also found and flagged, not fixed here (needs the user's decision): the site migrated from Vercel
+  to Cloudflare Workers this week (DNS already cut over) but CLOUDFLARE_API_TOKEN is not set as a
+  GitHub secret, so ci.yml's deploy step has been silently skipping on every run; production has
+  nonetheless been updated 10+ times via a local `wrangler deploy`, bypassing the QA/VAPT gate
+  entirely, which is how both violations above reached production without the gate catching them.
+- Evidence: direct inspection of the live site (both issues confirmed rendering with real company
+  names and computed figures), git history of the affected files, and a local QA + VAPT run (see
+  below). Expected effect: removes two live compliance violations; no traffic effect intended since
+  these pages are not expected to currently drive meaningful clicks. Check by 2026-11-23 that no GMP
+  or price-target figure has reappeared and that the Cloudflare deploy gate question has been
+  resolved one way or the other.
+- Verified: local build, full QA suite 1237/0 (up from 1236/1 before this fix), VAPT 77/0.

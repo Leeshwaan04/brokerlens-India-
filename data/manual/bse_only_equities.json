@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-13",
+  "updated": "2026-11-16",
   "rule": "A BSE main-board company not listed on NSE joins when it is traded on at least 75% of the sessions on file, with an average daily traded value of at least Rs 10 lakh. Entries are never dropped for low trading; one leaves only when the company lists on NSE.",
   "scrips": {
     "500012": {
@@ -200,6 +200,17 @@
       "slug": "lakselec",
       "added": "2026-11-08"
     },
+    "504392": {
+      "symbol": "KRISHNA",
+      "name": "Krishna Ventures Limited",
+      "isin": "INE537L01010",
+      "group": "XT",
+      "face_value": 10,
+      "bse_url": "https://www.bseindia.com/stock-share-price/krishna-ventures-ltd/krishna/504392/",
+      "code": "504392",
+      "slug": "krishna",
+      "added": "2026-11-16"
+    },
     "504605": {
       "symbol": "UNIABEXAL",
       "name": "Uni-Abex Alloy Products Ltd.",
@@ -345,7 +356,7 @@
     },
     "506579": {
       "symbol": "AGVENTURES",
-      "name": "AG Ventures Ltd",
+      "name": "AG Ventures Ltd-$",
       "isin": "INE321D01016",
       "group": "X",
       "face_value": 10,
@@ -534,7 +545,7 @@
       "symbol": "CAPRICORN",
       "name": "Capricorn Systems Global Solutions Ltd.",
       "isin": "INE968E01012",
-      "group": "XT",
+      "group": "X",
       "face_value": 10,
       "bse_url": "https://www.bseindia.com/stock-share-price/capricorn-systems-global-solutions-ltd/capricorn/512169/",
       "code": "512169",
@@ -972,7 +983,7 @@
       "symbol": "BGDL",
       "name": "Bharat Global Developers Ltd",
       "isin": "INE893C01032",
-      "group": "B",
+      "group": "T",
       "face_value": 10,
       "bse_url": "https://www.bseindia.com/stock-share-price/bharat-global-developers-ltd/bgdl/521238/",
       "code": "521238",
@@ -1159,7 +1170,7 @@
       "symbol": "RESONANCE",
       "name": "Resonance Specialties Limited",
       "isin": "INE486D01017",
-      "group": "X",
+      "group": "XT",
       "face_value": 10,
       "bse_url": "https://www.bseindia.com/stock-share-price/resonance-specialties-ltd/resonance/524218/",
       "code": "524218",
@@ -1498,7 +1509,7 @@
     },
     "526827": {
       "symbol": "SPICEISLIN",
-      "name": "Spice Islands Industries Ltd",
+      "name": "Spice Islands Industries Ltd-$",
       "isin": "INE882D01025",
       "group": "XT",
       "face_value": 2,
@@ -1638,6 +1649,17 @@
       "code": "530249",
       "slug": "bridgese",
       "added": "2026-11-08"
+    },
+    "530315": {
+      "symbol": "HINDTIN",
+      "name": "Hindustan Tin Works Ltd.",
+      "isin": "INE428D01019",
+      "group": "X",
+      "face_value": 10,
+      "bse_url": "https://www.bseindia.com/stock-share-price/hindustan-tin-works-ltd/hindtin/530315/",
+      "code": "530315",
+      "slug": "hindtin",
+      "added": "2026-11-16"
     },
     "530457": {
       "symbol": "GTTDATA",
@@ -2094,7 +2116,7 @@
       "symbol": "CHLOGIST",
       "name": "Chartered Logistics Ltd",
       "isin": "INE558F01026",
-      "group": "XT",
+      "group": "X",
       "face_value": 1,
       "bse_url": "https://www.bseindia.com/stock-share-price/chartered-logistics-ltd/chlogist/531977/",
       "code": "531977",
@@ -2793,6 +2815,17 @@
       "code": "539762",
       "slug": "meapl",
       "added": "2026-11-08"
+    },
+    "539767": {
+      "symbol": "MNIL",
+      "name": "Mega Nirman & Industries Limited",
+      "isin": "INE216Q01010",
+      "group": "XT",
+      "face_value": 10,
+      "bse_url": "https://www.bseindia.com/stock-share-price/mega-nirman-and-industries-ltd/mnil/539767/",
+      "code": "539767",
+      "slug": "mnil",
+      "added": "2026-11-16"
     },
     "539895": {
       "symbol": "SPICELOUNG",

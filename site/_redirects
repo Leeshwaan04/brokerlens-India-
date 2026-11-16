@@ -739,6 +739,20 @@
 /broker/hdfc-sky/trade /broker/hdfc-securities/ 301
 /broker/swastika-investmart/trade /broker/swastika/ 301
 /broker/yes-securities/trade /trade-costs/ 301
+/news/ipo-elevate-gmp-today-grey-market-premium-listing-estimates /ipo/gmp/ 301
+/news/ipo-elevate-gmp-today-grey-market-premium-listing-estimates/ /ipo/gmp/ 301
+/news/ipo-aonesteels-gmp-today-grey-market-premium-listing-estimates /ipo/gmp/ 301
+/news/ipo-aonesteels-gmp-today-grey-market-premium-listing-estimates/ /ipo/gmp/ 301
+/news/ipo-smcg04-gmp-today-grey-market-premium-listing-estimates /ipo/gmp/ 301
+/news/ipo-smcg04-gmp-today-grey-market-premium-listing-estimates/ /ipo/gmp/ 301
+/news/ipo-himalayan-gmp-today-grey-market-premium-listing-estimates /ipo/gmp/ 301
+/news/ipo-himalayan-gmp-today-grey-market-premium-listing-estimates/ /ipo/gmp/ 301
+/news/ipo-moneyview-gmp-today-grey-market-premium-listing-estimates /ipo/gmp/ 301
+/news/ipo-moneyview-gmp-today-grey-market-premium-listing-estimates/ /ipo/gmp/ 301
+/news/ipo-rkfal-gmp-today-grey-market-premium-listing-estimates /ipo/gmp/ 301
+/news/ipo-rkfal-gmp-today-grey-market-premium-listing-estimates/ /ipo/gmp/ 301
+/news/ipo-runwalentr-gmp-today-grey-market-premium-listing-estimates /ipo/gmp/ 301
+/news/ipo-runwalentr-gmp-today-grey-market-premium-listing-estimates/ /ipo/gmp/ 301
 
 # Dynamic Redirects
 /ipo/jio/* /ipo/upcoming/ 301

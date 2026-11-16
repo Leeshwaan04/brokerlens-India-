@@ -238,43 +238,18 @@ def price_target_section_html(name, symbol, history, px, long_date, esc, today=N
         '</div>' % (start, year_picks, esc(start_note), n_esc)
     )
 
-    matrix_html = ""
-    if facts and facts["close"] is not None and facts["close"] > 0:
-        c_val = facts["close"]
-        rows_td = []
-        for y in picks:
-            ny = y - y0
-            v10 = c_val * ((1.10) ** ny)
-            v15 = c_val * ((1.15) ** ny)
-            v20 = c_val * ((1.20) ** ny)
-            rows_td.append(
-                '<tr style="border-bottom:1px solid var(--border)">'
-                '<td style="padding:6px 8px"><strong>%d Target</strong></td>'
-                '<td style="padding:6px 8px" class="muted">%d yr%s</td>'
-                '<td style="padding:6px 8px">Rs %.2f</td>'
-                '<td style="padding:6px 8px">Rs %.2f</td>'
-                '<td style="padding:6px 8px">Rs %.2f</td>'
-                '</tr>' % (y, ny, "" if ny == 1 else "s", v10, v15, v20)
-            )
-        matrix_html = (
-            '<div class="card" style="margin-top:16px;padding:16px 20px;max-width:560px;overflow-x:auto">'
-            '<div class="card-title" style="font-size:14px;font-weight:600">Hypothetical Compounding Scenarios from Last Close (%s)</div>'
-            '<p class="xs muted" style="margin-top:4px">Mathematical compounding table at illustrative growth rates. '
-            'BrokerLens does not forecast share prices: test your own rate in the calculator above.</p>'
-            '<table style="width:100%%;font-size:12px;margin-top:10px;border-collapse:collapse;text-align:left">'
-            '<thead><tr style="border-bottom:2px solid var(--border);color:var(--text-muted)">'
-            '<th style="padding:6px 8px">Horizon</th>'
-            '<th style="padding:6px 8px">Time</th>'
-            '<th style="padding:6px 8px">+10%% CAGR</th>'
-            '<th style="padding:6px 8px">+15%% CAGR</th>'
-            '<th style="padding:6px 8px">+20%% CAGR</th>'
-            '</tr></thead>'
-            '<tbody>' + "".join(rows_td) + '</tbody></table>'
-            '<p class="xs faint" style="margin-top:8px">Past performance does not indicate future results. Compounding assumes constant annual growth without factoring in dividend payouts, taxes, brokerage fees or market drawdowns.</p>'
-            '</div>'
-        ) % px(c_val)
-
-    return intro + horizon_bar + data_html + calc + matrix_html
+    # A per-year "Target" table of computed rupee figures (10/15/20% CAGR x each
+    # milestone year) was added here on 16 Nov 2026 and shipped to production without
+    # going through this repository's QA/VAPT gate. It directly contradicted the H2 and
+    # FAQ copy on this same page ("BrokerLens does not publish price targets, forecasts
+    # or analyst ratings") and the hard rule above: a price-target page explains what a
+    # target is and offers a what-if calculator, it never asserts a number. Labelling
+    # the rows "<year> Target" and printing a computed price under each, even with a
+    # "hypothetical" disclaimer, is a price-target table, scaled across every stock page.
+    # Removed; see tests/qa_extra_pricetarget.py for the regression guard (no <table> is
+    # ever server-rendered by this module, and no more than the 3 factual data tiles'
+    # worth of "Rs n.nn" figures appear in the section).
+    return intro + horizon_bar + data_html + calc
 
 
 def stock_target_faqs(name, symbol, facts_line="", exchange="NSE"):

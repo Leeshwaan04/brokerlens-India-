@@ -545,6 +545,24 @@ def run(check, ROOT, load):
     gmp = load("data/manual/ipo_gmp.json") or {}
     check("contentintegrity: every stored GMP quote names the source it was read from (none are hand-typed)",
           all(isinstance(e, dict) and e.get("source") for e in gmp.values()), str(sorted(gmp)[:5]))
+    # On 16 Nov 2026 ipo_gmp.json was repopulated by hand, in a feature commit (not the
+    # automated refresh), with the generic string "Market survey (InvestorGain /
+    # Chittorgarh public quotes)" as every entry's "source" and a suspiciously tidy 3-day
+    # upward "history" - satisfying the letter of the check above (a non-empty "source"
+    # string) while still being invented: nothing in this repository fetches a GMP quote
+    # from any network source, so nothing can have "read" one. Until a real fetcher
+    # exists, the file must stay empty; a vague, non-specific source string must not be
+    # enough to pass again.
+    gmp_script = _read(ROOT, "scripts", "update_ipo_gmp.py")
+    has_fetcher = any(tok in gmp_script for tok in ("urlopen(", "requests.get(", "requests.post(", "urlretrieve("))
+    check("contentintegrity: with no code anywhere that fetches a GMP quote, the stored GMP file is empty "
+          "(a generic 'source' string on hand-typed data must not pass as sourced)",
+          has_fetcher or gmp == {}, "has_fetcher=%s stored=%s" % (has_fetcher, sorted(gmp)[:5]))
+    GENERIC_GMP_SOURCES = ("market survey", "public quotes", "various sources", "industry sources")
+    check("contentintegrity: no stored GMP quote cites a generic, unverifiable source phrase",
+          not any(isinstance(e, dict) and isinstance(e.get("source"), str)
+                  and any(g in e["source"].lower() for g in GENERIC_GMP_SOURCES) for e in gmp.values()),
+          str([e.get("source") for e in gmp.values() if isinstance(e, dict)][:5]))
     curated = load("data/manual/curated_ipos.json") or []
     check("contentintegrity: no curated IPO carries a price band or issue size without a cited source",
           all(r.get("source") for r in curated if r.get("price_band") or r.get("issue_size_shares")),

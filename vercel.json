@@ -718,6 +718,76 @@
       "source": "/broker/:broker/trade/(.*)",
       "destination": "/broker/:broker/",
       "permanent": true
+    },
+    {
+      "source": "/news/ipo-elevate-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-elevate-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-aonesteels-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-aonesteels-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-smcg04-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-smcg04-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-himalayan-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-himalayan-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-moneyview-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-moneyview-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-rkfal-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-rkfal-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-runwalentr-gmp-today-grey-market-premium-listing-estimates",
+      "destination": "/ipo/gmp/",
+      "permanent": true
+    },
+    {
+      "source": "/news/ipo-runwalentr-gmp-today-grey-market-premium-listing-estimates/",
+      "destination": "/ipo/gmp/",
+      "permanent": true
     }
   ],
   "headers": [

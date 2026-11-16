@@ -96,6 +96,21 @@ def run(check, ROOT, load):
     check("pricetarget: no advice wording in the section (buy, sell, best, upside, will reach)",
           not re.search(r"\b(buy|sell|best|upside|will reach|will hit|multibagger)\b", low), low[:120])
     check("pricetarget: no em or en dashes in generated section", not any(d in short for d in DASHES))
+    # Regression guard: on 16 Nov 2026 a "<year> Target" table of computed Rs figures
+    # (10/15/20% CAGR per milestone year) was added below the calculator, server-rendered
+    # as a <table>, and shipped straight to production without the local QA/VAPT gate
+    # catching it (no existing check here looked for a server-rendered price table). It
+    # contradicted this same page's own H2 and FAQ text and the hard rule: a price-target
+    # page never asserts a number. The only legitimate "Rs n.nn" figures in this section
+    # are the up to 3 factual data tiles (last close, high, low); a calculator result is
+    # rendered client side into #calc-result, never server-rendered here.
+    rs_figures = re.findall(r"Rs\s*[\d,]+\.\d{2}", short)
+    check("pricetarget: never server-renders a <table> (a price-target table, by any name, is still one)",
+          "<table" not in short.lower())
+    check("pricetarget: no more 'Rs n.nn' figures appear than the 3 factual data tiles (no hidden target table)",
+          len(rs_figures) <= 3, str(rs_figures))
+    check("pricetarget: no year label is paired with a computed price ('<year> Target' followed by a Rs figure)",
+          not re.search(r"\b20\d{2}\s*Target\b.{0,80}?Rs\s*[\d,]+\.\d{2}", short, re.S))
 
     # The retired per-year URLs 308 here, so this page inherits their "share price target 2030"
     # rankings once Google recrawls them; it has to name the year, and still assert no number.
