@@ -96,14 +96,15 @@ jobs:
       - name: Run VAPT suite (offline + live server probes)
         run: python3 tests/vapt.py --url http://127.0.0.1:8091
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    permissions: {}
-    steps:
-      - name: Trigger Vercel production deploy
+      - name: Deploy to Cloudflare Workers Assets
+        if: success()
         run: |
-          curl -fsS -X POST "$DEPLOY_HOOK_URL" -o /dev/null
-          echo "Deploy triggered - tests passed on this commit."
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "Deploying built site to Cloudflare Workers..."
+            npx wrangler deploy
+          else
+            echo "CLOUDFLARE_API_TOKEN not configured in GitHub secrets; deploy step skipped in CI."
+          fi
         env:
-          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 60b50388dc161e3a172c8a5fc35ba3a9

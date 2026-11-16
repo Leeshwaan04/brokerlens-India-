@@ -2784,12 +2784,12 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
                 ret_html = ('<span class="up font-semibold">+%.1f%%</span>' % o_ret1m) if (o_ret1m is not None and o_ret1m >= 0) else (('<span class="down font-semibold">%.1f%%</span>' % o_ret1m) if o_ret1m is not None else '<span class="faint">-</span>')
                 peer_table_rows.append(
                     '<tr>'
-                    '<td><strong><a href="/stock/%s/">%s</a></strong></td>'
+                    '<td><strong><a href="/stock/%s/">%s</a></strong> <a class="xs muted font-semibold" href="/stock/%s/#target" title="%s share price target scenarios">(Targets &rarr;)</a></td>'
                     '<td class="right num font-semibold">%s</td>'
                     '<td class="right num">%s</td>'
                     '<td class="center"><a class="btn btn-outline btn-sm" href="%s">%s vs %s &rarr;</a></td>'
                     '</tr>' % (
-                        _esc(o_slug), _esc(other),
+                        _esc(o_slug), _esc(other), _esc(o_slug), _esc(other),
                         ("Rs {:,.2f}".format(o_last)) if o_last else "N/A",
                         ret_html,
                         _esc(url), _esc(symbol.upper()), _esc(other)
@@ -2809,9 +2809,12 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             cmp_badges = "".join(
                 '<a class="badge" href="%s" style="text-decoration:none;padding:5px 9px">%s vs %s &rarr;</a>'
                 % (_esc(url), _esc(symbol.upper()), _esc(other)) for other, url, _sec in cmp_links[:8])
+            peer_target_badges = "".join(
+                '<a class="badge" href="/stock/%s/#target" style="text-decoration:none;padding:5px 9px;background:var(--bg-raised)">%s Targets &rarr;</a>'
+                % (_esc(_stock_slug(other)), _esc(other)) for other, _url, _sec in cmp_links[:6])
             compare_html = (
                 ('<div class="section-title"><h2>Compare %s with sector peers</h2></div>'
-                 '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">%s</div>') % (_esc(symbol), cmp_badges)
+                 '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">%s%s</div>') % (_esc(symbol), cmp_badges, peer_target_badges)
                 + peer_matrix_html
                 + '<p class="xs faint" style="margin-top:8px">Side-by-side price range, return and volume from NSE daily data.</p>'
             )
@@ -4553,6 +4556,52 @@ def _write_stock_directory(companies, indices=None, bse_only_count=0):
         % (_esc(slugify(l)), _esc(l), len(groups[l]))
         for l in letters
     )
+
+    trending_stocks = [
+        ("pashupati", "Pashupati Cotspin", "PASHUPATI", "Textiles"),
+        ("jaykay", "Jaykay Enterprises", "JAYKAY", "Engineering"),
+        ("cupid", "Cupid", "CUPID", "Healthcare"),
+        ("pcjeweller", "PC Jeweller", "PCJEWELLER", "Jewellery Retail"),
+        ("bsoft", "Birlasoft", "BSOFT", "IT Software"),
+        ("irb", "IRB Infrastructure", "IRB", "Infrastructure"),
+        ("morepenlab", "Morepen Labs", "MOREPENLAB", "Pharma"),
+        ("prajind", "Praj Industries", "PRAJIND", "Bioenergy"),
+        ("motisons", "Motisons Jewellers", "MOTISONS", "Jewellery"),
+        ("bajajhfl", "Bajaj Housing Finance", "BAJAJHFL", "Housing Finance"),
+        ("welcorp", "Welspun Corp", "WELCORP", "Pipes"),
+        ("hcltech", "HCL Tech", "HCLTECH", "IT Services"),
+        ("aparinds", "Apar Industries", "APARINDS", "Electricals"),
+        ("jagran", "Jagran Prakashan", "JAGRAN", "Media"),
+        ("tbz", "TBZ", "TBZ", "Jewellery"),
+        ("network18", "Network18", "NETWORK18", "Entertainment"),
+        ("muthootfin", "Muthoot Finance", "MUTHOOTFIN", "Finance"),
+        ("j-kbank", "J&K Bank", "J&KBANK", "Banking"),
+        ("gravita", "Gravita India", "GRAVITA", "Recycling"),
+        ("stltech", "Sterlite Technologies", "STLTECH", "Telecom"),
+        ("rrkabel", "RR Kabel", "RRKABEL", "Electricals"),
+        ("mapmyindia", "MapmyIndia", "CEINFO", "Digital Mapping"),
+    ]
+    target_cards = "".join(
+        '<a class="card card-interactive" href="/stock/%s/#target" style="display:flex;flex-direction:column;padding:16px">'
+        '<div class="row-wrap" style="gap:6px;margin-bottom:6px"><span class="badge" style="font-size:11px;padding:2px 7px">%s</span>'
+        '<span class="xs muted">&middot; %s</span></div>'
+        '<div style="font-size:14px;font-weight:650;color:var(--text);margin-bottom:4px">%s</div>'
+        '<p class="xs muted" style="line-height:1.4;margin:0 0 10px 0;flex:1 0 auto">'
+        'Explore 2026-2050 target horizons, historical 52-week ranges, and What-If arithmetic.</p>'
+        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600">Calculate Targets &rarr;</div></a>'
+        % (slug, sym, sec, name)
+        for slug, name, sym, sec in trending_stocks
+    )
+    trending_html = (
+        '<div class="section-title" style="margin-top:36px;margin-bottom:16px"><div>'
+        '<div class="section-eyebrow">EQUITY FORECASTS &amp; COMPOUNDING</div>'
+        '<h2>Trending Share Price Targets (2026-2030)</h2></div>'
+        '<span class="small muted">High-intent search clusters</span></div>'
+        '<p class="muted small" style="margin-top:-10px;margin-bottom:16px;max-width:76ch">'
+        'Interactive What-If compounding calculators and historical exchange metrics for high-demand Indian equities. Work out future valuation scenarios based on your own growth assumptions.</p>'
+        '<div class="grid g4" style="margin-top:0">%s</div>' % target_cards
+    )
+
     crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Browse stocks", None)])
     body = _REGISTRY_PAGE_HEAD % {
         "title": _esc(title), "description": _esc(description),
@@ -4566,6 +4615,7 @@ def _write_stock_directory(companies, indices=None, bse_only_count=0):
         '<p class="muted" style="max-width:70ch">%d companies across %d letters, sourced from NSE\'s own '
         'listed-securities master file.</p>' % (total, len(letters))
         + '<div class="grid g4" style="margin-top:16px">' + counts_html + '</div>'
+        + trending_html
         + ('<div class="card" style="margin-top:16px"><div class="card-title"><a href="/stocks/bse/">Stocks listed only on BSE</a></div>'
            '<p class="small muted" style="margin-top:4px">%d actively traded companies that are listed on BSE but not on NSE, '
            'each with its own price history page.</p></div>' % bse_only_count if bse_only_count else "")
@@ -7755,6 +7805,51 @@ def _prerender_home(overview):
         '<a class="small link-arrow" href="/leaderboards" data-link>All movers &rarr;</a></div>'
         '<div class="grid g3">%s</div>'
     ) % "".join(_leader_card_html(bd) for bd in boards)
+
+    trending_target_stocks = [
+        ("pashupati", "Pashupati Cotspin", "PASHUPATI", "Textiles"),
+        ("jaykay", "Jaykay Enterprises", "JAYKAY", "Engineering"),
+        ("cupid", "Cupid", "CUPID", "Healthcare"),
+        ("pcjeweller", "PC Jeweller", "PCJEWELLER", "Jewellery Retail"),
+        ("bsoft", "Birlasoft", "BSOFT", "IT Software"),
+        ("irb", "IRB Infrastructure", "IRB", "Infrastructure"),
+        ("morepenlab", "Morepen Labs", "MOREPENLAB", "Pharma"),
+        ("prajind", "Praj Industries", "PRAJIND", "Bioenergy"),
+        ("motisons", "Motisons Jewellers", "MOTISONS", "Jewellery"),
+        ("bajajhfl", "Bajaj Housing Finance", "BAJAJHFL", "Housing Finance"),
+        ("welcorp", "Welspun Corp", "WELCORP", "Pipes"),
+        ("hcltech", "HCL Tech", "HCLTECH", "IT Services"),
+        ("aparinds", "Apar Industries", "APARINDS", "Electricals"),
+        ("jagran", "Jagran Prakashan", "JAGRAN", "Media"),
+        ("tbz", "TBZ", "TBZ", "Jewellery"),
+        ("network18", "Network18", "NETWORK18", "Entertainment"),
+        ("muthootfin", "Muthoot Finance", "MUTHOOTFIN", "Finance"),
+        ("j-kbank", "J&K Bank", "J&KBANK", "Banking"),
+        ("gravita", "Gravita India", "GRAVITA", "Recycling"),
+        ("stltech", "Sterlite Technologies", "STLTECH", "Telecom"),
+        ("rrkabel", "RR Kabel", "RRKABEL", "Electricals"),
+        ("mapmyindia", "MapmyIndia", "CEINFO", "Digital Mapping"),
+    ]
+    target_cards = "".join(
+        '<a class="card card-interactive" href="/stock/%s/#target" data-link style="display:flex;flex-direction:column;padding:16px">'
+        '<div class="row-wrap" style="gap:6px;margin-bottom:6px"><span class="badge" style="font-size:11px;padding:2px 7px">%s</span>'
+        '<span class="xs muted">&middot; %s</span></div>'
+        '<div style="font-size:14px;font-weight:650;color:var(--text);margin-bottom:4px">%s</div>'
+        '<p class="xs muted" style="line-height:1.4;margin:0 0 10px 0;flex:1 0 auto">'
+        'Explore 2026-2050 target horizons, historical 52-week ranges, and What-If arithmetic.</p>'
+        '<div class="link-arrow" style="color:var(--accent-text);font-size:12px;font-weight:600">Calculate Targets &rarr;</div></a>'
+        % (slug, sym, sec, name)
+        for slug, name, sym, sec in trending_target_stocks
+    )
+    html += (
+        '<div class="section-title" style="margin-top:56px;margin-bottom:20px"><div>'
+        '<div class="section-eyebrow">EQUITY FORECASTS &amp; COMPOUNDING</div>'
+        '<h2>Trending Share Price Targets (2026-2030)</h2></div>'
+        '<a class="small link-arrow" href="/stocks/" data-link>All 2,891 stocks &rarr;</a></div>'
+        '<p class="muted small" style="margin-top:-10px;margin-bottom:16px;max-width:76ch">'
+        'Interactive What-If compounding calculators and historical exchange metrics for high-demand Indian equities. Work out future valuation scenarios based on your own growth assumptions.</p>'
+        '<div class="grid g4" style="margin-top:0">%s</div>'
+    ) % target_cards
 
     html += (
         '<div class="section-title" style="margin-top:56px;margin-bottom:20px"><div>'

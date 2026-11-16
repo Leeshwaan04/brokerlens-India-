@@ -143,7 +143,7 @@ def price_target_section_html(name, symbol, history, px, long_date, esc, today=N
     n_esc = esc(name)
     y0, picks = target_years(today)
     intro = (
-        '<div class="section-title"><h2>What is a share price target for %s?</h2></div>'
+        '<div class="section-title" id="target"><h2>What is a share price target for %s?</h2></div>'
         '<div style="max-width:78ch">'
         '<p class="small">A share price target is a view on where a share could trade at a future date. It is usually '
         'issued by an analyst or a brokerage, and it rests on assumptions about earnings, growth and market conditions. '
@@ -151,6 +151,18 @@ def price_target_section_html(name, symbol, history, px, long_date, esc, today=N
         '<p class="small" style="margin-top:8px">BrokerLens does not publish price targets, forecasts or analyst ratings '
         'for %s or any other company. Any target you read elsewhere, including one you work out yourself below, is an '
         'assumption. Nothing on this page is investment advice.</p></div>' % (n_esc, n_esc)
+    )
+
+    milestone_pills = "".join(
+        '<button type="button" class="btn btn-outline xs font-semibold" data-preset-years="%d" data-year="%d" '
+        'style="padding:3px 8px;font-size:11px;margin-right:6px;margin-bottom:6px">%d Target &rarr;</button>'
+        % (y - y0, y, y) for y in picks
+    )
+    horizon_bar = (
+        '<div style="margin-top:14px;padding:12px 16px;background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius-md);max-width:560px">'
+        '<div class="xs muted font-semibold" style="text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Quick Target Horizons:</div>'
+        '<div style="display:flex;flex-wrap:wrap">' + milestone_pills + '</div>'
+        '</div>'
     )
 
     data_html = ""
@@ -225,7 +237,7 @@ def price_target_section_html(name, symbol, history, px, long_date, esc, today=N
         '<a href="/trade-costs/">Trade Cost Calculator</a></div>'
         '</div>' % (start, year_picks, esc(start_note), n_esc)
     )
-    return intro + data_html + calc
+    return intro + horizon_bar + data_html + calc
 
 
 def stock_target_faqs(name, symbol, facts_line="", exchange="NSE"):

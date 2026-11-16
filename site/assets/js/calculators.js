@@ -385,12 +385,13 @@ function initCalculator() {
     });
     // Year picks set the number of years only; the growth assumption stays the visitor's own.
     const yearsInput = document.getElementById('pw-years');
-    container.querySelectorAll('[data-preset-years]').forEach((el) => {
+    document.querySelectorAll('[data-preset-years]').forEach((el) => {
       el.addEventListener('click', (e) => {
         e.preventDefault();
         if (!yearsInput) return;
         yearsInput.value = el.dataset.presetYears;
-        container.dataset.pickedYear = el.dataset.year || '';
+        const calcBox = document.querySelector('[data-calc="price-whatif"]');
+        if (calcBox) calcBox.dataset.pickedYear = el.dataset.year || '';
         fn();
         const growthInput = document.getElementById('pw-growth');
         if (growthInput && growthInput.value === '') growthInput.focus();
