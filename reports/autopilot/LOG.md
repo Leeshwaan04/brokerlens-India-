@@ -508,3 +508,66 @@ One entry per run, newest last. Each change states its evidence, the effect it s
 - Check by 2026-11-24: `/broker/choice/charges/` should show real impressions; URL-inspect it if
   not. Also check that the corrected Kotak delivery/intraday figures on `/trade-costs/` match
   kotakneo.com's then-current page (broker fee schedules change without notice).
+
+## 2026-11-17 (Claude: hub-page canonicals, broker-comparison duplicate content and dead peer links)
+
+- Found: a sibling investigation into why all 196 broker-vs-broker /compare/ pages are
+  unindexed traced it to 14 hub pages - /brokers, /compare, /leaderboards, /registry, /algo,
+  /methodology, /about, /editorial-policy, /contact, /privacy-policy, /terms-of-service,
+  /sources, /calculator, /cms - each writing to a directory's index.html (served with a
+  trailing slash) while declaring their own canonical, og:url and JSON-LD url, and the core
+  sitemap listing them, as the bare path. Cloudflare Workers Assets always 307s a bare
+  directory path to its slash form (confirmed via curl -I, unconfigurable platform behavior),
+  so every one of these canonicals pointed at a URL that is now only a redirect, never
+  content. URL Inspection API, checked directly on 5 of them, came back "URL is unknown to
+  Google" for all 5. The existing QA check that compares a core-sitemap entry's canonical
+  against the page's own never caught this because it silently skips any entry that doesn't
+  already end in "/" rather than flagging it as wrong.
+- Change: fixed all 15 affected canonical/og:url/JSON-LD-url assignments in pipeline/publish.py
+  (14 pages plus the per-market /coming-soon/<market> page) to include the trailing slash, fixed
+  the 3 /editorial-policy references inside other pages' Organization JSON-LD the same way, and
+  fixed the core sitemap's own url list (core_urls) to match. This is believed to be the single
+  highest-leverage indexation fix found this session.
+- Also found and fixed, while tracing the broker-comparison family's only entry point:
+  (a) _write_compare_pages() deduped pairs by the ordered (id1, id2) tuple, but ranked_ids is
+  sorted by CURRENT client count, so a rank crossover between builds (Groww overtaking Zerodha)
+  regenerated an already-shipped pair in the opposite order as a second, live, duplicate-content
+  URL - confirmed live in production via curl: both /compare/zerodha-vs-groww/ and
+  /compare/groww-vs-zerodha/ were 200, and both of the zerodha/angel-one pair too. Fixed with a
+  new shared helper, _comparison_pairs_for(), that dedups on the unordered broker set instead;
+  COMPARISON_PAIRS keeps the slug order it names, the grid only picks the order for pairs it
+  never names. _write_compare_pages() now also prunes any pair directory no longer in the
+  current set, so a future drop stops being served instead of lingering forever. The two
+  already-live duplicates got a 308 in vercel.json to their survivor, per the
+  never-retire-without-a-redirect rule.
+  (b) Broker profile pages' "Compare with competitors" chips linked to
+  /compare/<this>-vs-<nearest-by-client-count>/ with no check that pair was ever actually
+  built; 27 of 48 brokers now show 0 such links (down from up to 5, mostly broken) because
+  _write_compare_pages()'s grid only pairs the top 20 brokers by client count. Fixed by
+  threading _comparison_pairs_for() into _peers(), which now only returns peers with a real
+  built pair and carries that pair's actual slug.
+- Added 5 new regression checks to tests/qa_extra_indexation.py: every literal core-sitemap
+  path ends in "/"; no hub-page canonical is still built from a bare SITE_URL + path; no two
+  live /compare/ pages serve the same broker pair in opposite order; every "Compare with
+  competitors" link resolves to a pair that was actually built; and a synthetic unit test that
+  forces a rank-crossover by hand and proves _comparison_pairs_for() suppresses the resulting
+  duplicate independent of today's live broker ranking.
+- Not done here (deliberately, flagged for its own pass): the ~173 internal <a href> call sites
+  across 14 files that still link to the bare form of these hub paths - a 307 to the now-correct
+  canonical is not itself a ranking problem, so this is lower value and higher review cost than
+  bundling it into this fix. Also not done: widening "Compare with competitors" coverage past
+  the top-20-by-client-count grid for the 27 brokers that now show none - a separate, larger
+  decision about how much of the full broker roster the comparison engine should cover.
+- Expected effect: the 14 hub pages (several with real historical impressions already, e.g.
+  /compare and /brokers at their old no-slash URLs) become indexable at their real URL for the
+  first time since the Cloudflare migration; no more live duplicate-content pairs; no more dead
+  internal links from broker pages. Check by 2026-11-24 that the URL Inspection API shows these
+  pages as indexed (a recrawl takes time) and that GSC starts attributing impressions to the
+  slash-form URLs instead of the dead bare ones.
+- Verified: local build, full QA suite 1279/0 including --url live-probe checks against a local
+  devserver (up from 1234/0 offline before the 5 new checks), VAPT 77/0 including --url probes.
+  Rebased cleanly onto a concurrently-shipped fix (cb59eda, the Zerodha broker-charges-data fix)
+  with no conflict in pipeline/publish.py; only the build-output site/brokers/index.html
+  conflicted (both commits touch its single minified line), resolved by rebuilding fresh after
+  the rebase rather than hand-merging HTML, then re-verified QA/VAPT green before pushing.
+  CI run 44142658014: completed success.
