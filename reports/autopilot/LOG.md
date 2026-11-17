@@ -571,3 +571,55 @@ One entry per run, newest last. Each change states its evidence, the effect it s
   conflicted (both commits touch its single minified line), resolved by rebuilding fresh after
   the rebase rather than hand-merging HTML, then re-verified QA/VAPT green before pushing.
   CI run 44142658014: completed success.
+
+## 2026-11-17 (Claude: audit of the suspicious shared dp_charge flagged above - no code change)
+
+- Followed up on the entry above's flag ("four of them share the identical dp_charge of 17.70").
+  Enumerated every BROKER_RATES entry directly (python3, not grep, to avoid misaligning fields):
+  the real count is seven, not four - sbi-securities, anand-rathi, geojit, smc and ventura
+  (withheld) plus, critically, alice-blue and tradejini, which are both ELIGIBLE right now and
+  have a real, live, indexed /broker/alice-blue/charges/ and /broker/tradejini/charges/ page
+  today. Every other broker in BROKER_RATES has a distinct dp_charge that matches the pattern
+  "a broker-specific flat rupee figure times 1.18 GST" (e.g. Zerodha 15.34 = Rs13, Dhan 14.75 =
+  Rs12.5, Upstox 21.83 = Rs18.5) with a comment naming the base figure for most of them; these
+  seven have no such comment and all resolve to the same Rs15 base, spanning brokers with
+  otherwise clearly distinct, specific brokerage plans (alice-blue's real "Freedom 15 Plan," Rs0
+  delivery; tradejini's "CubePlus platform," Rs20 flat) and demat_amc values that are NOT
+  uniform (0, 0, 354, 400, 400, 450, 500) - so the brokerage and AMC fields for these seven look
+  independently researched, while dp_charge specifically does not. git blame traces all seven to
+  one line each inside the same single bulk commit, 7d0ac217 (2026-10-03, "feat: add Google
+  E-E-A-T compliance, IPO suites, comparison engines, and QA/VAPT hardening"), with no source
+  cited in the commit message or in any code comment.
+- Checked the critical question directly: whether either live page (alice-blue, tradejini)
+  presents this figure as verified. It does not. render_charges_page() and _faqs() in
+  pipeline/broker_charges_engine.py state, repeatedly and unconditionally for every broker
+  (STATUS_SHORT, the FAQ "Are these charges verified against the broker's own tariff?", the
+  worked-example disclaimer, the schedule-table disclaimer): "indicative schedule held in the
+  BrokerLens model... not verified against the broker's own rate card, and the date it was
+  checked is not on file." So this is a real accuracy gap (the number itself may be wrong for
+  one or more of these seven brokers), but it is not a fabrication-while-claiming-true violation
+  like the GMP and price-target cases reverted this session (51aa585) and flagged separately
+  (the uncommitted local pipeline/publish.py and pipeline/bse_only.py reinsertion) - the page
+  already discloses, honestly and specifically, that this exact field has not been verified.
+  That distinction is why nothing ships here: there is no live false claim to correct, and
+  replacing 17.70 with a "corrected" number without actually sourcing one per broker would just
+  be a different unverified guess.
+- Also checked demat_amc for a similar pattern and did not find one worth flagging the same way:
+  0 repeats across prostocks, 5paisa, dhan, fyers, groww, alice-blue, ventura, espresso, upstox
+  and hdfc-sky, but "zero AMC" is a real, specifically-advertised feature for several of these in
+  their own stored tagline text (Dhan "zero AMC," Fyers implied free, Ventura "lifetime zero AMC
+  demat account"), not an arbitrary coincidence the way dp_charge's shared non-zero figure is.
+  400 repeats across geojit, smc, samco, sharekhan and motilal-oswal, which is a plausible, common
+  real full-service-broker AMC figure in India; weaker signal than the dp_charge cluster and not
+  independently corroborated enough here to flag as more than a lower-priority thing to check
+  during the same future re-verification pass.
+- Recommendation, not an action: before `eligible_keys()` is widened any further (the 15
+  brokers withheld by the cap-rule threshold, per the entry above), and ideally sooner given
+  alice-blue and tradejini are live today, every BROKER_RATES entry's dp_charge and demat_amc -
+  not just brokerage, which has had the most attention this session - should be individually
+  re-verified against that broker's own current published tariff, with a comment citing the
+  source the way most other entries already do. Treat the seven brokers named here as the
+  priority list for that pass, alice-blue and tradejini first since they are the two actually
+  live.
+- No code changed. Built in an isolated worktree off origin/main, full QA and VAPT suites
+  re-run to confirm the baseline is unaffected by this documentation-only entry before pushing.
