@@ -335,3 +335,24 @@ One entry per run, newest last. Each change states its evidence, the effect it s
   broker's current rate card by hand, not a template edit; left open.
 - Verified: local build, full QA suite 1230/0 (plus 1275/0 with the live-probe checks earlier
   in this session), VAPT 77/0.
+
+## 2026-11-17 (Automated SEO Autopilot)
+
+- Weekly 28-day snapshot comparison (2026-11-17 vs 2026-11-10):
+  - Clicks: 1031 (-145 vs prior week)
+  - Impressions: 98064 (-4388 vs prior week)
+  - Submitted indexable URLs: 6228
+
+- Striking distance search queries identified (positions 4 to 20, high impressions):
+  - "pashupati cotspin share price target 2030": pos 4.8, 925 impressions, 27 clicks, 2.92% CTR
+  - "irb infra share price target 2030": pos 8.3, 682 impressions, 3 clicks, 0.44% CTR
+  - "morepen lab share price target 2030": pos 7.7, 353 impressions, 2 clicks, 0.57% CTR
+  - "cupid share price target 2026": pos 6.7, 234 impressions, 0 clicks, 0% CTR
+  - "pc jeweller share price target 2027": pos 5.1, 204 impressions, 6 clicks, 2.94% CTR
+  - "praj industries share price target 2030": pos 8.6, 197 impressions, 4 clicks, 2.03% CTR
+  - "comfort intech share price target 2030": pos 5.9, 191 impressions, 0 clicks, 0% CTR
+  - "birlasoft share price target 2030": pos 5.8, 186 impressions, 4 clicks, 2.15% CTR
+
+- Demand sitemap verified: all current high-demand pages remain indexed in Wave 1.
+- Expected effect: increase search visibility and CTR across striking-distance terms without adding thin doorway pages.
+- Check impact by: 2026-12-01
