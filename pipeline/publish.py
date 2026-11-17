@@ -387,6 +387,25 @@ def build():
             (complaints_raw.get("brokers") or {}).get(bid) or [], cm.get("active_clients")
         )
         ch = (charges_raw.get("brokers") or {}).get(bid)
+        if ch is None:
+            # data/manual/charges.json is sample-only and dropped in production
+            # (see PRODUCTION MODE above), so this basket figure would otherwise
+            # read "not verified yet" even for a broker whose real, cited rate
+            # card already powers its own /broker/<id>/charges/ page. Reuse that
+            # same real data here instead of leaving an honest page with a
+            # misleadingly-pending stat tile.
+            from .broker_charges_engine import has_page as _has_real_charges
+            from .trade_cost_engine import BROKER_RATES as _broker_rates
+            if _has_real_charges(bid):
+                r = _broker_rates[bid]
+                d_pct, i_pct = r.get("delivery_pct"), r.get("intraday_pct")
+                ch = {
+                    "delivery": {"flat_per_order": r.get("delivery_flat"),
+                                 "pct_of_turnover": d_pct * 100 if d_pct is not None else None},
+                    "intraday": {"flat_per_order": r.get("intraday_flat"),
+                                 "pct_of_turnover": i_pct * 100 if i_pct is not None else None},
+                    "demat_amc_annual": r.get("demat_amc"),
+                }
         cost = metrics.cost_of_basket(ch)
         listing = dict(master.get("listing_defaults") or {})
         listing.update((listings_raw.get("brokers") or {}).get(bid) or {})
