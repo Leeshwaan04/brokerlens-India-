@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-16",
+  "updated": "2026-11-17",
   "rule": "A BSE main-board company not listed on NSE joins when it is traded on at least 75% of the sessions on file, with an average daily traded value of at least Rs 10 lakh. Entries are never dropped for low trading; one leaves only when the company lists on NSE.",
   "scrips": {
     "500012": {
@@ -1841,7 +1841,7 @@
       "symbol": "VELLORA",
       "name": "Vellora Impact Ltd",
       "isin": "INE530D01012",
-      "group": "X",
+      "group": "XT",
       "face_value": 10,
       "bse_url": "https://www.bseindia.com/stock-share-price/vellora-impact-ltd/vellora/531257/",
       "code": "531257",
@@ -2622,7 +2622,7 @@
       "symbol": "PANTH",
       "name": "Panth Infinity Ltd",
       "isin": "INE945O01019",
-      "group": "X",
+      "group": "XT",
       "face_value": 10,
       "bse_url": "https://www.bseindia.com/stock-share-price/panth-infinity-ltd/panth/539143/",
       "code": "539143",
@@ -3002,6 +3002,17 @@
       "code": "540654",
       "slug": "gstl",
       "added": "2026-11-08"
+    },
+    "540686": {
+      "symbol": "SMRUTHIORG",
+      "name": "Smruthi Organics Limited",
+      "isin": "INE172E01011",
+      "group": "X",
+      "face_value": 10,
+      "bse_url": "https://www.bseindia.com/stock-share-price/smruthi-organics-ltd/smruthiorg/540686/",
+      "code": "540686",
+      "slug": "smruthiorg",
+      "added": "2026-11-17"
     },
     "540693": {
       "symbol": "SHISHIND",
