@@ -356,3 +356,82 @@ One entry per run, newest last. Each change states its evidence, the effect it s
 - Demand sitemap verified: all current high-demand pages remain indexed in Wave 1.
 - Expected effect: increase search visibility and CTR across striking-distance terms without adding thin doorway pages.
 - Check impact by: 2026-12-01
+
+## 2026-11-17 (Claude: research 4 missing broker charges pages, Kotak Securities, HDFC Securities, Religare, Axis Direct)
+
+- Task: build a real /broker/<id>/charges/ page for these 4 brokers, currently excluded by
+  broker_charges_engine.py's eligible_keys(), only if their current official rate card actually
+  fits the calculator model (compute_charges(): a single flat fee, a single percentage of order
+  value, or the lower of the two). Every figure had to trace to a source fetched from the
+  broker's own official site, dated today, never an aggregator, never a guess. Result: none of
+  the 4 shipped. All 4 stay excluded, each for a real, confirmed reason below, no code changed.
+- Kotak Securities: the BROKER_RATES entry on file (delivery and intraday both Rs 0, tagline
+  "zero brokerage for young investors") is the Trade Free Youth plan, which the engine already
+  excludes on purpose (a restricted-plan signal). But that entry still renders live today on
+  /trade-costs/, a real indexed hub page, as if it were Kotak's general schedule, which it is
+  not. Kotak's actual current general plan ("Trade Free", account opening Rs 0, subscription Rs
+  0) is confirmed via Kotak's own mandatory account-opening Tariff Sheet PDF
+  (kotakneo.com/uploads/trad_free_charges_b8c1383fa9.pdf, fetched today): equity delivery 0.20%
+  of order value with no rupee cap, equity intraday the lower of Rs 10 or 0.05% per executed
+  order. The 0.20% no-cap delivery rule cannot be expressed in the model's current (flat, pct)
+  encoding without a small general extension (a pure ad-valorem rule with no flat alternative,
+  the same shape as 13 other already-withheld brokers, for example ICICI Direct 0.55% and HDFC
+  Securities 0.50%). Did not add that extension or touch this entry this run: Kotak's DP charge
+  has no single rupee figure in any official Kotak document reachable today (its own DP-charge
+  FAQ PDF confirms the fee is flat per scrip but never states the amount), and its demat AMC is
+  genuinely tiered (Rs 0 for BSDA holdings up to Rs 4 lakh, Rs 100 for BSDA Rs 4 to 10 lakh, Rs
+  50 a month, about Rs 600 a year, for a non-BSDA account above Rs 1,000 month-end value, per
+  kotakneo.com's own demat-AMC support page), so completing the entry would mean picking a
+  number I cannot source. Fixing the brokerage fields alone would have also silently flipped
+  Kotak into eligible_keys() (its two current withheld reasons both disappear once the real
+  numbers replace the Youth-plan ones), which is a bigger, more consequential change than this
+  task's verified sourcing could responsibly support in one pass. Flagging as a ready-to-resume
+  follow-up with the exact sourced numbers above, not shipped here.
+- HDFC Securities: no single current schedule exists to encode. hdfcsec.com/brokerage-plans
+  lists six named plans (Optima, Maxima, Premia, Platina, Supreme, Elite) tied to HDFC Bank
+  account segments, with no stated default for a new customer. The only rate figures found (via
+  hdfc.bank.in's own Value Plan pages) quote delivery brokerage as paise per share, not a
+  percentage of order value, a billing unit the model has no parameter for since it only takes
+  rupee order values, never share quantity, plus a separate percentage-based minimum brokerage
+  floor per plan (the opposite of the cap the model supports). Two of HDFC Bank's own pages for
+  the same Premia plan disagree with each other on its intraday rate (0.02% on one page, 0.015%
+  on another). No single, unambiguous, officially confirmed schedule exists to ship.
+- Axis Direct: could not reach a general-public official tariff sheet. simplehai.axisdirect.in's
+  own policies document (Policies And Procedures.pdf) confirms brokerage follows "the Tariff
+  sheet" but does not embed it, and its pricing pages returned session-expired errors to an
+  automated fetch (likely JavaScript-rendered). The one official rate document found
+  (Axis Bank's "Freedom Plan for priority customers" PDF) is restricted to Axis Bank
+  priority-banking customers, not a general schedule, and its link is now dead (301 to the
+  site's sitemap). Third-party sources disagree with each other by more than 2x on both delivery
+  (0.50% down to 0.20%) and intraday (0.05% down to 0.02%), consistent with Axis Direct also
+  running multiple named plans like HDFC Securities, not one schedule. Nothing fetched today from
+  axisdirect.in's own site confirms a current figure.
+- Religare Broking: confirmed, from Religare's own plan document (religareonline.com, Elite -
+  Equity, Currency & Commodity addendum) and its own Schedule of Charges for Depository Services
+  (w.e.f. 20-09-2023), that brokerage is billed on a monthly turnover slab (7 slabs, A through G,
+  0.50% delivery / 0.05% intraday in slab A for under Rs 5 lakh of that segment's turnover in the
+  calendar month, down to 0.10% / 0.01% in slab G for over Rs 20 crore), resolved only after a
+  full month of the customer's own trading, which the model has no way to represent since it
+  prices one trade at a time with no concept of monthly cumulative volume; a new customer is
+  billed at slab A for their first month. The same document shows AMC split across three demat
+  schemes (Normal Rs 400 a year, Bandhan nil AMC against a refundable Rs 3,000 deposit, BIMA nil
+  AMC against a one-time Rs 1,999 fee) plus a separate BSDA tier, and debit charges split by
+  whether the client has given a POA or DDPI (Rs 12 versus Rs 25 per debit on the Normal scheme).
+  No single number represents any of brokerage, AMC or the debit charge. The existing
+  BROKER_RATES entry on file (delivery Rs 20 or 0.25%, intraday Rs 20 or 0.025%) does not match
+  slab A, the new-customer default, or any other single slab in this official document cleanly,
+  which suggests it was never sourced from Religare directly; left unchanged since there is no
+  single correct number to replace it with, flagged for a future fix.
+- Separately found, not fixed here (same root cause as the withheld-reasons the engine already
+  tracks for icici-direct, motilal-oswal, sharekhan, sbi-securities, anand-rathi, geojit, smc,
+  ventura, nirmal-bang, choice-broking, swastika-investmart, samco, yes-securities): all 13 of
+  these are withheld for the identical reason as Kotak's delivery rule above, a pure percentage
+  plan the model's (flat, pct) encoding cannot state without a wrong implied cap. A single,
+  general rule-shape extension (ad valorem with no flat alternative) would be the fix for all of
+  them, the same one Kotak needs; out of scope for this task, which was limited to the 4 named
+  brokers, so not implemented. Flagging as the natural next step once a decision is made.
+- No code changed, no page built, no commit made: every path that could have shipped a page
+  required either inventing a number (Kotak's DP charge and AMC) or picking one figure out of a
+  genuinely multi-valued official schedule (HDFC Securities' 6 plans, Axis Direct's conflicting
+  sources, Religare's monthly slabs), both of which this task's sourcing bar rules out. QA and
+  VAPT were not re-run since nothing in the repository changed.
