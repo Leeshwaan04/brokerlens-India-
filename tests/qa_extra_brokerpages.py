@@ -231,6 +231,20 @@ def run(check, ROOT, load):
               and "dp charge carries its own gst" in low)
         check("%s: segments not on file are said to be not on file" % k,
               "Futures, options, currency, commodity" in page and "Not on file" in page)
+        # Regression guard for the 17 Nov 2026 FAQ additions matching real Search Console
+        # query phrasing (e.g. "intraday charges for <broker>", "stt charges in <broker>",
+        # "<broker> f&o charges"): every new question must be present, and every one must
+        # reuse the existing "indicative... not verified..." disclosure or point at the
+        # shared statutory-rate table, never assert a new, unverified figure of its own.
+        check("%s: FAQ directly answers 'brokerage charges', 'intraday charges' and 'delivery charges' phrasing" % k,
+              "what are the brokerage charges at" in low and "what are the intraday charges at" in low
+              and "what are the delivery charges at" in low)
+        check("%s: FAQ states STT, stamp duty and other statutory charges are the same at every broker" % k,
+              "set its own stt" in low and "does not set or vary them" in low)
+        check("%s: FAQ answers 'f&o charges' phrasing without asserting a figure for it" % k,
+              "f&o (futures and options) charges" in low and "not calculated on this page" in low)
+        check("%s: the new FAQ answers carry the same not-verified disclosure as the rest of the page" % k,
+              faq_text.count("verified against") >= 8)
 
     # ---- identifiers only when on file -----------------------------------------
     def ident_block(page):  # the IBSL banner carries its own SEBI numbers, so look only at our block

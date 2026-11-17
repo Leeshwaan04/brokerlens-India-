@@ -602,9 +602,29 @@ def _faqs(brand, rates, ex_del, ex_int, ident, peers=()):
          "verified against the broker's own rate card." % (inr(ex_int["total"]), brand, inr(ex_int["brokerage"]))),
         ("What is the DP charge at %s?" % brand,
          "The indicative schedule lists a DP charge (includes GST) of %s, applied once when delivery shares are sold from the "
-         "demat account. The figure already includes 18%% GST, so no further GST is added to it. Confirm the current DP charge "
-         "on the broker's own tariff page." % rs(rates["dp_charge"])),
+         "demat account. Some brokers' own pages call this the CDSL or NSDL charge instead of the DP charge; it is the same fee. "
+         "The figure already includes 18%% GST, so no further GST is added to it. Confirm the current DP charge on the broker's "
+         "own tariff page." % rs(rates["dp_charge"])),
         ("Is there an annual maintenance charge on a %s demat account?" % brand, amc),
+        # The questions below answer the exact short phrasings real searches use for this
+        # page (confirmed from Search Console query data: "<broker> charges", "intraday
+        # charges for <broker>", "stt charges in <broker>", "<broker> f&o charges"), none
+        # with any new figure: each reuses d_rule/i_rule/the statutory table already built
+        # from data on file. 17 Nov 2026.
+        ("What are the brokerage charges at %s?" % brand,
+         "For equity delivery: %s. For equity intraday: %s. %s" % (d_rule, i_rule, confirm)),
+        ("What are the intraday charges at %s?" % brand,
+         "The intraday brokerage is %s. An intraday trade also carries STT on the sell value, exchange transaction charges, "
+         "the SEBI turnover fee, stamp duty on the buy value and GST, at the same statutory rates listed on this page for every "
+         "broker; %s does not set those. %s" % (i_rule, brand, confirm)),
+        ("What are the delivery charges at %s?" % brand,
+         "The delivery brokerage is %s. A delivery trade also carries STT on the buy and sell value, exchange transaction "
+         "charges, the SEBI turnover fee, stamp duty on the buy value, GST, and the DP charge when shares are sold, at the same "
+         "statutory rates listed on this page for every broker; %s does not set those. %s" % (d_rule, brand, confirm)),
+        ("Does %s set its own STT, stamp duty or other statutory charges?" % brand,
+         "No. STT, exchange transaction charges, the SEBI turnover fee, stamp duty and GST are set by the government, the "
+         "stock exchange and SEBI, the same for every broker trading the same segment on NSE. %s does not set or vary them; "
+         "see the statutory rates table on this page for the exact figures." % brand),
     ]
     if peers:
         faqs.append(("Why do the %s figures match another broker's page?" % brand,
@@ -620,9 +640,9 @@ def _faqs(brand, rates, ex_del, ex_int, ident, peers=()):
                      "The SEBI register lists: %s. These are SEBI registration numbers, not the DP ID printed on your own demat "
                      "account statement, which BrokerLens does not hold." % "; ".join(
                          "%s registration %s" % (dep, no) for dep, no, _e in ident["dps"])))
-    faqs.append(("Does this calculator cover futures, options, currency and commodity at %s?" % brand,
-                 "Not yet. The indicative schedule for %s covers equity delivery and equity intraday only, so futures, options, "
-                 "currency and commodity charges are not calculated here." % brand))
+    faqs.append(("What are the F&O (futures and options) charges at %s?" % brand,
+                 "Not calculated on this page. The indicative schedule for %s covers equity delivery and equity intraday only; "
+                 "futures, options, currency and commodity charges are not on file, so this page does not show them." % brand))
     return faqs
 
 

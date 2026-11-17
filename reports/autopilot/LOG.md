@@ -307,3 +307,31 @@ One entry per run, newest last. Each change states its evidence, the effect it s
   one real new gap: /compare/stocks/centralbk-vs-zeemedia/. Added a redirect to
   /stock/centralbk/. Fund-side gaps unchanged at 441 (still budget-limited; see 16 Nov entry).
 - Verified: local build, full QA suite 1202/0, VAPT 77/0.
+
+## 2026-11-17 (Claude: broker charges pages answer the exact phrases people search)
+
+- Pulled full 28-day query data for every eligible broker's charges page (not a sample):
+  Angel One, Groww, Upstox, Dhan and Fyers carry real volume (71 to 216 impressions/28d
+  each) at position 37 to 91 with zero clicks across every one of them. The queries are
+  mostly already answerable from data already on the page (brokerage, DP charge, AMC, STT
+  and the other statutory rates); the page's existing FAQ wording just never used the short
+  phrases people actually type ("<broker> charges", "intraday charges for <broker>", "stt
+  charges in <broker>"), or the question people were really asking ("<broker> f&o charges"
+  was answered as "does this calculator cover futures/options", never using "f&o charges").
+- Added 5 new FAQ entries (pipeline/broker_charges_engine.py's _faqs()) matching that real
+  phrasing exactly, and reworded the existing F&O entry's question. Every new answer reuses
+  numbers already computed for the page (the brokerage rule, the statutory rate table) or
+  states plainly that F&O/currency/commodity are not on file; no new figure of any kind. The
+  DP-charge FAQ now also names the "CDSL or NSDL charge" phrasing some brokers' own pages
+  use for the same fee. Applies to all 11 eligible brokers via the one shared template, not
+  just the 5 with real query volume.
+- Added regression checks (tests/qa_extra_brokerpages.py) that the new questions are present
+  for every broker, that the STT/statutory answer states these charges are broker-independent,
+  that the F&O answer never asserts a figure, and that the not-verified disclosure count
+  didn't drop.
+- Not done: brokerage charges pages don't exist at all for Kotak, HDFC Securities, Religare or
+  Axis Direct (all show up in the same query data at position 60 to 90) because their fee
+  schedule doesn't fit the calculator model unambiguously. That needs someone tracing each
+  broker's current rate card by hand, not a template edit; left open.
+- Verified: local build, full QA suite 1230/0 (plus 1275/0 with the live-probe checks earlier
+  in this session), VAPT 77/0.
