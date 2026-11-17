@@ -266,3 +266,28 @@ One entry per run, newest last. Each change states its evidence, the effect it s
   corporate relationship without one is the same class of mistake as the fabricated GMP
   data fixed on 16 Nov. Left undone rather than guessed.
 - Verified: local build, full QA suite 1201/0, VAPT 77/0.
+
+## 2026-11-17 (Claude: redirect status codes, draft Worker cleanup, wrangler pin)
+
+- scripts/generate_cloudflare_config.py emitted 301/302 for every redirect, the older HTTP
+  semantics, when Cloudflare's _redirects supports 308/307 just as well
+  (developers.cloudflare.com/workers/static-assets/redirects/) - the exact codes this
+  project's own hard rule calls for ("add a 308") and the ones Vercel used for the same
+  `permanent` flag before the migration. Fixed; all 1,989 lines in site/_redirects now use
+  308 or 307. Added a permanent check so this can't silently regress.
+- Checked the other open redirect-status item (a bare /registry or /compare 307s to its own
+  trailing-slash form): confirmed via Cloudflare's docs this is a fixed platform behavior of
+  `assets.html_handling` (every mode, including the default, uses 307 for this specific
+  redirect) - nothing to fix, not a bug.
+- cloudflare-worker/ (the undeployed draft edge router found in the earlier review) now
+  carries a top-of-file warning and a README stating it has never been deployed, what to
+  verify before it ever is, and fixed its wildcard CORS header to the same allowlist pattern
+  api/ad-event.js already uses.
+- Pinned `npx wrangler deploy` to wrangler@4.114.0 in ci.yml (was unpinned: a production
+  deploy token handed to whatever npm resolves at run time, with no lockfile in the repo).
+- Checked api/ad-event.js (a Vercel serverless function with no execution path on Cloudflare
+  Workers Assets, found in the earlier review): confirmed no user-visible effect, since it's
+  called via navigator.sendBeacon (fire-and-forget, browser never surfaces the failure) and
+  only ever logged to short-lived function logs, never a durable store. Fixing it for real
+  means adding an actual Worker script, a bigger step than this pass; left open.
+- Verified: local build, full QA suite 1202/0, VAPT 77/0.

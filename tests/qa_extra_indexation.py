@@ -744,3 +744,14 @@ def run(check, ROOT, load):
         check("indexation: %s redirects to a page that actually exists on disk" % p,
               os.path.isfile(os.path.join(site_dir, dest.strip("/"), "index.html")) or dest in ("/compare/stocks/", "/compare/mutual-funds/"),
               dest)
+
+    # ---- site/_redirects uses 308/307, never 301/302 (Cloudflare supports both pairs) ---
+    # scripts/generate_cloudflare_config.py used to emit 301/302, the old HTTP semantics,
+    # when Cloudflare's _redirects supports 308/307 just as well - the ones this project's
+    # own hard rule calls for ("add a 308") and the ones Vercel itself used for the same
+    # `permanent` flag. Fixed 17 Nov 2026; this guards against it reverting silently.
+    if rlines:
+        old_codes = [l for l in rlines if l.rsplit(None, 1)[-1] in ("301", "302")]
+        check("indexation: site/_redirects never uses 301 or 302 (308/307 match this project's "
+              "own hard rule and what Vercel used for the same redirects)",
+              not old_codes, str(old_codes[:3]))

@@ -27,7 +27,11 @@ def main():
     # Any rule encountered after a dynamic rule (wildcard or placeholder) is treated as dynamic.
     # Therefore, all static rules MUST precede all dynamic rules.
     # Cloudflare limits: max 2,000 static redirects, max 100 dynamic redirects.
-    # Static redirects require 301 or 302 status.
+    # Cloudflare's _redirects supports 301, 302, 303, 307 and 308
+    # (developers.cloudflare.com/workers/static-assets/redirects/), so this uses the same
+    # codes Vercel's own redirect() does for the same `permanent` flag (308, not 301: this
+    # project's hard rule is "add a 308" when retiring a page, and a 301 lets a client
+    # silently turn a POST into a GET, which 308 does not).
     static_rules = []
     dynamic_rules = []
 
@@ -35,7 +39,7 @@ def main():
         src = r.get("source", "")
         dst = r.get("destination", "")
         perm = r.get("permanent", True)
-        status = 301 if perm else 302
+        status = 308 if perm else 307
 
         if not src or not dst:
             continue

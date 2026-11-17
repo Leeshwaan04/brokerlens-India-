@@ -12,7 +12,7 @@ name: QA + VAPT, then deploy
 #
 # The site moved from Vercel to Cloudflare Workers Assets in mid-November
 # 2026 (commit cc7f523 onward). The "Deploy to Cloudflare Workers Assets"
-# step at the end of the `test` job below (`npx wrangler deploy`) is meant to
+# step at the end of the `test` job below (`npx wrangler@4.114.0 deploy`) is meant to
 # be this pipeline's only deploy path, the same way the old `deploy` job
 # (needs: test, curl to VERCEL_DEPLOY_HOOK) was before the migration - but as
 # of 16 Nov 2026 CLOUDFLARE_API_TOKEN is NOT set as a repository secret, so
@@ -105,7 +105,7 @@ jobs:
         run: |
           if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
             echo "Deploying built site to Cloudflare Workers..."
-            npx wrangler deploy
+            npx wrangler@4.114.0 deploy
           else
             echo "CLOUDFLARE_API_TOKEN not configured in GitHub secrets; deploy step skipped in CI."
           fi
