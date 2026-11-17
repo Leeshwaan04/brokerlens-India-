@@ -4583,7 +4583,7 @@ def _write_stock_directory(companies, indices=None, bse_only_count=0):
         ("gravita", "Gravita India", "GRAVITA", "Recycling"),
         ("stltech", "Sterlite Technologies", "STLTECH", "Telecom"),
         ("rrkabel", "RR Kabel", "RRKABEL", "Electricals"),
-        ("mapmyindia", "MapmyIndia", "CEINFO", "Digital Mapping"),
+        ("mapmyindia", "MapmyIndia", "MAPMYINDIA", "Digital Mapping"),
     ]
     target_cards = "".join(
         '<a class="card card-interactive" href="/stock/%s/#target" style="display:flex;flex-direction:column;padding:16px">'
@@ -7586,19 +7586,23 @@ def _ad_slot_html(overview, placement):
 
 
 def _leader_card_html(bd):
-    """Python port of pages.js's leaderCard()."""
-    return (
-        '<div class="card"><div class="card-title">%s</div>'
-        '<table class="data" style="margin-top:8px"><tbody>%s</tbody></table></div>'
-    ) % (
-        _esc(bd.get("title") or ""),
-        "".join(
+    """Python port of pages.js's leaderCard().
+
+    A board with no qualifying broker (e.g. fastest_growing/net_adds need 13
+    months of active-client history, which not every broker has on file yet)
+    renders an honest line instead of a header over an empty table, the same
+    convention ipo_engine.py uses when no IPO is open."""
+    rows = (bd.get("rows") or [])[:6]
+    body = (
+        '<table class="data" style="margin-top:8px"><tbody>%s</tbody></table>' % "".join(
             '<tr><td class="rank-cell">%s</td><td><a href="/broker/%s/" data-link>%s</a></td>'
             '<td class="right num">%s</td></tr>'
             % (r.get("rank"), _esc(r["id"]), _esc(r["brand"]), _fmt_board_html(bd, r.get("value")))
-            for r in (bd.get("rows") or [])[:6]
-        ),
+            for r in rows
+        ) if rows else
+        '<p class="xs faint" style="margin-top:8px">Not enough brokers have the data this board needs on file yet.</p>'
     )
+    return '<div class="card"><div class="card-title">%s</div>%s</div>' % (_esc(bd.get("title") or ""), body)
 
 
 def _popular_comparisons_widget_html():
@@ -7801,7 +7805,7 @@ def _prerender_home(overview):
         _popular_comparisons_widget_html(),
     )
 
-    boards = (overview.get("leaderboards") or [])[:3]
+    boards = [bd for bd in (overview.get("leaderboards") or []) if bd.get("rows")][:3]
     html += (
         '<div class="section-title" style="margin-top:56px;margin-bottom:20px"><div>'
         '<div class="section-eyebrow">MARKET MOMENTUM &amp; SHIFTS</div>'
@@ -7832,7 +7836,7 @@ def _prerender_home(overview):
         ("gravita", "Gravita India", "GRAVITA", "Recycling"),
         ("stltech", "Sterlite Technologies", "STLTECH", "Telecom"),
         ("rrkabel", "RR Kabel", "RRKABEL", "Electricals"),
-        ("mapmyindia", "MapmyIndia", "CEINFO", "Digital Mapping"),
+        ("mapmyindia", "MapmyIndia", "MAPMYINDIA", "Digital Mapping"),
     ]
     target_cards = "".join(
         '<a class="card card-interactive" href="/stock/%s/#target" data-link style="display:flex;flex-direction:column;padding:16px">'

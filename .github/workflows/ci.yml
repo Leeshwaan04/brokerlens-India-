@@ -10,16 +10,20 @@ name: QA + VAPT, then deploy
 # search, every mega-menu) on every page, and node --check on a plain .js
 # file doesn't validate module syntax, so nothing caught it before this.
 #
-# The `deploy` job below fires the same VERCEL_DEPLOY_HOOK daily-refresh.yml
-# uses, only after `test` passes - this is the ONLY deploy path for a push to
-# main. Vercel's own git integration (project setting
-# gitProviderOptions.createDeployments) is set to "disabled" as of 2026-09-18
-# specifically so it can't also deploy ungated the instant a commit lands,
-# racing ahead of `test` - a broken commit that fails the `test` job above
-# now simply never reaches production, rather than shipping immediately and
-# getting caught a few minutes later. To roll this back (re-enable Vercel's
-# own auto-deploy), see `vercel api /v9/projects/<id> -X PATCH --input -`
-# with `{"gitProviderOptions":{"createDeployments":"enabled"}}` piped in.
+# The site moved from Vercel to Cloudflare Workers Assets in mid-November
+# 2026 (commit cc7f523 onward). The "Deploy to Cloudflare Workers Assets"
+# step at the end of the `test` job below (`npx wrangler deploy`) is meant to
+# be this pipeline's only deploy path, the same way the old `deploy` job
+# (needs: test, curl to VERCEL_DEPLOY_HOOK) was before the migration - but as
+# of 16 Nov 2026 CLOUDFLARE_API_TOKEN is NOT set as a repository secret, so
+# that step is a silent no-op on every run (its own echo line says so in the
+# log). Production has nonetheless been updated repeatedly via a developer or
+# agent running `wrangler deploy` by hand, from whatever `site/` happens to
+# be on their machine, which never runs tests/qa_e2e.py or tests/vapt.py.
+# A red `test` job on GitHub does NOT currently stop a bad change from
+# reaching production. To close this gap, add CLOUDFLARE_API_TOKEN as a
+# repository secret (Settings > Secrets and variables > Actions) so this
+# step starts actually deploying, restoring a single, tested, gated path.
 
 on:
   push:

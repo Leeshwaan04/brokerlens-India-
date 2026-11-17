@@ -443,7 +443,7 @@ export async function home() {
     <a class="small link-arrow" href="/leaderboards" data-link>All movers &rarr;</a>
   </div>
   <div class="grid g3">
-    ${(o.leaderboards || []).slice(0, 3).map((bd) => leaderCard(bd)).join('')}
+    ${(o.leaderboards || []).filter((bd) => (bd.rows || []).length).slice(0, 3).map((bd) => leaderCard(bd)).join('')}
   </div>
 
   <div class="section-title" style="margin-top:56px;margin-bottom:20px">
@@ -529,15 +529,19 @@ export async function home() {
 }
 
 function leaderCard(bd) {
-  return `<div class="card">
-    <div class="card-title">${esc(bd.title)}</div>
-    <table class="data" style="margin-top:8px">
-      <tbody>${(bd.rows || []).slice(0, 6).map((r) => `<tr>
+  const rows = (bd.rows || []).slice(0, 6);
+  const body = rows.length
+    ? `<table class="data" style="margin-top:8px">
+      <tbody>${rows.map((r) => `<tr>
         <td class="rank-cell">${r.rank}</td>
         <td><a href="/broker/${esc(r.id)}" data-link>${esc(r.brand)}</a></td>
         <td class="right num">${fmtBoard(bd, r.value)}</td>
       </tr>`).join('')}</tbody>
-    </table>
+    </table>`
+    : `<p class="xs faint" style="margin-top:8px">Not enough brokers have the data this board needs on file yet.</p>`;
+  return `<div class="card">
+    <div class="card-title">${esc(bd.title)}</div>
+    ${body}
   </div>`;
 }
 

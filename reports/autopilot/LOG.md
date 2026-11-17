@@ -234,3 +234,35 @@ One entry per run, newest last. Each change states its evidence, the effect it s
   tier (100,000-file limit) rather than the free 20,000, which would remove the original
   pressure to cut these pages at all.
 - Verified: local build, full QA suite 1201/0, VAPT 77/0.
+
+## 2026-11-17 (Claude: fix a QA check that had blocked every deploy for 24 hours)
+
+- Found: tests/qa_extra_indexation.py's new 16 Nov check ("unredirected orphaned comparison
+  pages do not exceed... 440") used an exact day-of count as a hard ceiling. page_demand.json
+  refreshes daily from live Search Console data and drifted to 442 by today, failing
+  qa_e2e.py on every run since (ci.yml: 5 straight failures, 16 Nov 10:55 to 17 Nov 03:46;
+  autopilot-content.yml likewise). Because ci.yml's Cloudflare deploy step sits inside the
+  same job as the QA run, this blocked every deploy, not just a red check on GitHub: the
+  live site has been serving whatever was deployed before 16 Nov while fresh data kept
+  landing in git (daily-pipeline.yml and daily-ipo-gmp.yml both succeeded repeatedly, since
+  neither runs qa_e2e.py). Confirmed live: the homepage's "today" market wrap article was
+  still dated 16 Nov during 17 Nov trading hours.
+- Change: replaced the exact 440 with a 700-page ceiling (headroom for ordinary day-to-day
+  demand drift; still fails on a real regression of hundreds of pages). Also fixed, found in
+  the same review pass: MapmyIndia's listed ticker was the wrong symbol (CEINFO, should be
+  MAPMYINDIA) in two duplicated homepage/stocks-directory lists; the homepage's "Fastest
+  growing" and "Most clients added" leaderboard cards rendered an empty, headerless table
+  when no broker yet has 12 months of history, now an honest message, fixed in both the
+  Python and JS renderers; ci.yml's header comment was corrected to describe the current
+  Cloudflare deploy step and the missing-secret bypass instead of a removed Vercel job.
+- Expected effect: deploys (and this site's own freshness signals to Google) resume once
+  pushed. Not expected to move clicks or impressions on its own; it restores the pipeline
+  that other changes need to reach users at all. Check by 2026-11-18 that ci.yml is green
+  and that the live market wrap carries the correct day's date.
+- Skipped, by design: linking SEBI registry pages for a broker's group entities (e.g.
+  Zerodha Commodities) back to that broker's own profile. No reliable signal distinguishes
+  a real group company from an unrelated firm that happens to share a brand word (e.g. an
+  "Axis"-named entity having nothing to do with a broker called Axis), and asserting a
+  corporate relationship without one is the same class of mistake as the fabricated GMP
+  data fixed on 16 Nov. Left undone rather than guessed.
+- Verified: local build, full QA suite 1201/0, VAPT 77/0.
