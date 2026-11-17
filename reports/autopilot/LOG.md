@@ -291,3 +291,19 @@ One entry per run, newest last. Each change states its evidence, the effect it s
   only ever logged to short-lived function logs, never a durable store. Fixing it for real
   means adding an actual Worker script, a bigger step than this pass; left open.
 - Verified: local build, full QA suite 1202/0, VAPT 77/0.
+
+## 2026-11-17 (Claude: patch one newly-orphaned comparison page)
+
+- Investigating a user question about striking-distance queries found
+  /compare/stocks/tmcv-vs-tmpv/ (and several TMCV/TMPV sector-peer pairs) 404ing live despite
+  ranking position 4 to 9 for "tmcv vs tmpv" style queries with 231 impressions/28d across
+  the 4 phrasing variants and zero clicks - almost certainly the page intermittently 404ing
+  is itself suppressing clicks. Root cause: TMCV and TMPV sit at positions 1 and 2 in their
+  fixed SECTOR_PEER_GROUPS list (well inside CURATED_SECTOR_TOP_N=5), so they drop out only
+  when their OWN equity-history data is briefly incomplete - a fresh build just now has them
+  valid again, so production's current 404 is a day-to-day data snapshot issue, not a
+  redirect gap; nothing to patch there, and it should self-correct once today's data deploys.
+- Re-ran the full orphan computation against today's fresh page_demand.json and found exactly
+  one real new gap: /compare/stocks/centralbk-vs-zeemedia/. Added a redirect to
+  /stock/centralbk/. Fund-side gaps unchanged at 441 (still budget-limited; see 16 Nov entry).
+- Verified: local build, full QA suite 1202/0, VAPT 77/0.

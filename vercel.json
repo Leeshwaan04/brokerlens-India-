@@ -6788,6 +6788,11 @@
       "source": "/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-large-cap-fund-vs-hdfc-mutual-fund-hdfc-large-cap-fund/",
       "destination": "/fund/bajaj-finserv-mutual-fund-bajaj-finserv-large-cap-fund/",
       "permanent": true
+    },
+    {
+      "source": "/compare/stocks/centralbk-vs-zeemedia/",
+      "destination": "/stock/centralbk/",
+      "permanent": true
     }
   ],
   "headers": [
