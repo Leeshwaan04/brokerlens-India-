@@ -735,7 +735,7 @@
 /broker/tradejini/trade /broker/tradejini/charges/ 308
 /broker/upstox/trade /broker/upstox/charges/ 308
 /broker/zerodha/trade /broker/zerodha/charges/ 308
-/broker/choice-broking/trade /broker/choice/ 308
+/broker/choice-broking/trade /broker/choice/charges/ 308
 /broker/hdfc-sky/trade /broker/hdfc-securities/ 308
 /broker/swastika-investmart/trade /broker/swastika/ 308
 /broker/yes-securities/trade /trade-costs/ 308
@@ -1991,7 +1991,7 @@
 /broker/tradejini/trade/* /broker/tradejini/charges/ 308
 /broker/upstox/trade/* /broker/upstox/charges/ 308
 /broker/zerodha/trade/* /broker/zerodha/charges/ 308
-/broker/choice-broking/trade/* /broker/choice/ 308
+/broker/choice-broking/trade/* /broker/choice/charges/ 308
 /broker/hdfc-sky/trade/* /broker/hdfc-securities/ 308
 /broker/swastika-investmart/trade/* /broker/swastika/ 308
 /broker/yes-securities/trade/* /trade-costs/ 308

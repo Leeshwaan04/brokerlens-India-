@@ -73,10 +73,17 @@ BROKING_CATS = ("stock_broker", "commodity_broker")
 # pct=0 is a flat per-order fee; both set means "lower of flat and pct of order
 # value". That last form is the discount-broker cap ("Rs 20 or 0.1%, whichever is
 # lower") and is only safe to render when the percentage is a discount-broker
-# level. A percentage above CAP_RULE_MAX_PCT is a full-service or regional
-# percentage plan whose Rs 20 cap is not supported by the model (ICICI Direct
-# 0.55%, HDFC Securities 0.50%, Sharekhan 0.30%, Motilal Oswal 0.20% and so on),
-# and rendering "lower of Rs 20 and X%" for it would publish a wrong rupee total.
+# level. A percentage above CAP_RULE_MAX_PCT defaults to withheld, because for
+# most brokers at that level the real plan is an uncapped ad-valorem commission
+# with no flat alternative at all (ICICI Direct 0.55%, HDFC Securities 0.50%,
+# Sharekhan 0.30%, Motilal Oswal 0.20% and so on), and rendering "lower of Rs 20
+# and X%" for those would publish a wrong rupee total. 2026-11-17 verification
+# (see reports/autopilot/LOG.md) found this threshold is not a perfect test,
+# though: Choice Broking's own current pricing page states a genuine "Rs 20 or
+# 0.20%, whichever is lower" cap, above the threshold but real. A broker whose
+# cap above the threshold has been read off its own current pricing page gets a
+# "cap_verified_asof" date on its BROKER_RATES entry, which lets it through this
+# check without loosening the default for every other broker at that level.
 CAP_RULE_MAX_PCT = tce.CAP_RULE_MAX_PCT  # single source of truth: trade_cost_engine.py
 
 # Wording in the model's own tagline that marks a restricted or conditional plan
@@ -108,15 +115,22 @@ def withheld_reasons(rate_key):
 def _withheld_reasons_for(rates):
     reasons = []
     kinds = {}
+    cap_verified = bool(rates.get("cap_verified_asof"))
     for seg in ("delivery", "intraday"):
         flat, pct = rates.get(seg + "_flat"), rates.get(seg + "_pct")
         if not (_is_num(flat) and _is_num(pct)):
             continue  # incomplete schedules are skipped_brokers()'s business
         kinds[seg] = rule_kind(flat, pct)
-        if kinds[seg] == "lower_of" and pct > CAP_RULE_MAX_PCT:
-            reasons.append(
-                "%s rule is a %s%% percentage plan with a Rs %s cap that the model does not support" % (
-                    seg, _pct(pct), ("%g" % flat)))
+        if kinds[seg] == "lower_of" and pct > CAP_RULE_MAX_PCT and not cap_verified:
+            if flat == 0:
+                reasons.append(
+                    "%s rule is a %s%% uncapped percentage plan that the model does not support" % (
+                        seg, _pct(pct)))
+            else:
+                reasons.append(
+                    "%s rule is a %s%% percentage plan with a Rs %s cap that the model does not support "
+                    "without checking the broker's own current pricing page" % (
+                        seg, _pct(pct), ("%g" % flat)))
     if kinds and all(k == "zero" for k in kinds.values()) and len(kinds) == 2:
         reasons.append("zero brokerage on every segment is a restricted-plan signal, not a standard schedule")
     tag = (rates.get("tagline") or "").lower()

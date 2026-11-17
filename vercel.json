@@ -671,12 +671,12 @@
     },
     {
       "source": "/broker/choice-broking/trade",
-      "destination": "/broker/choice/",
+      "destination": "/broker/choice/charges/",
       "permanent": true
     },
     {
       "source": "/broker/choice-broking/trade/(.*)",
-      "destination": "/broker/choice/",
+      "destination": "/broker/choice/charges/",
       "permanent": true
     },
     {

@@ -167,14 +167,31 @@ BROKER_RATES = {
     },
     "kotak-securities": {
         "brand": "Kotak Securities",
+        # Corrected 2026-11-17: this entry held the restricted Trade Free
+        # Youth plan (Rs 0 / Rs 0) as if it were Kotak's general schedule.
+        # Real general Trade Free Plan, verified against kotakneo.com's own
+        # pricing and support pages (kotaksecurities.com now redirects there):
+        # delivery 0.20% of trade value, no flat alternative or cap; intraday
+        # the lower of Rs 10 per order or 0.05% of the order, whichever is
+        # lower. Both pages describe a Rs 0 promo for the first 30 days from
+        # account opening; this uses the standing post-promo rate, the same
+        # convention every other broker's entry here uses.
         "delivery_flat": 0.0,
-        "delivery_pct": 0.0,
-        "intraday_flat": 0.0,
-        "intraday_pct": 0.0, # Trade Free Youth
+        "delivery_pct": 0.002,  # 0.20%, uncapped (CAP_RULE_MAX_PCT)
+        "intraday_flat": 10.0,
+        "intraday_pct": 0.0005,  # lower of Rs 10 or 0.05%
+        # dp_charge and demat_amc below are NOT re-verified by this correction
+        # and should not be trusted: Kotak's real DP debit fee is 0.04% of
+        # value plus NSDL pass-through (minimum ~Rs 20, not a flat figure),
+        # and its AMC is tiered by holding value and monthly debit count, not
+        # one number. Both are unrepresentable as a single real figure, which
+        # is the separate, genuine reason broker_charges_engine.py must keep
+        # withholding a dedicated /broker/kotak-securities/charges/ page even
+        # after this correction (see withheld_brokers() and LOG.md 2026-11-17).
         "dp_charge": 15.34,
         "demat_amc": 300,
         "account_open": 0,
-        "tagline": "Trade Free Plan, zero brokerage for young investors",
+        "tagline": "0.20% equity delivery, Rs 10 or 0.05% intraday, whichever is lower",
         "cta_url": "https://www.kotaksecurities.com",
         "partner_badge": None
     },
@@ -389,11 +406,25 @@ BROKER_RATES = {
     "choice-broking": {
         "brand": "Choice Broking",
         "delivery_flat": 20.0,
-        "delivery_pct": 0.002,
+        "delivery_pct": 0.002,  # lower of Rs 20 or 0.20%, confirmed below
         "intraday_flat": 20.0,
-        "intraday_pct": 0.0002,
-        "dp_charge": 21.24,
+        "intraday_pct": 0.0002,  # lower of Rs 20 or 0.02%, confirmed below
+        # dp_charge corrected 2026-11-17 from 21.24 (stale/wrong) to Rs 10 +
+        # 18% GST = 11.80, per choiceindia.com/brokerage-charges' "Debit to
+        # market (sell): Rs 10 per instruction + GST". demat_amc (236 = Rs
+        # 200 + 18% GST, the standing rate from year 2; year 1 is free) was
+        # already correct and verified against the same page on the same date.
+        "dp_charge": 11.80,
         "demat_amc": 236,
+        # Verified against choiceindia.com/brokerage-charges on 2026-11-17: the
+        # page states delivery is "0.20% of trade value or Rs 20 per executed
+        # order, whichever is lower" and intraday is "0.02% ... or Rs 20 ...,
+        # whichever is lower" - a genuine discount-broker cap, not an uncapped
+        # ad-valorem commission, even though 0.20% exceeds CAP_RULE_MAX_PCT.
+        # This date lets broker_charges_engine.py's withholding rule treat this
+        # one broker's already-correct (flat, pct) rule as the real cap it is,
+        # without loosening the rule for any other broker above the threshold.
+        "cap_verified_asof": "2026-11-17",
         "account_open": 0,
         "tagline": "Choice Jiffy platform, advisory research calls & margin funding",
         "cta_url": "https://choiceindia.com",
@@ -489,32 +520,37 @@ def _esc(s):
     return html.escape(str(s or ""), quote=True)
 
 
-def _rule_short(flat, pct):
+def _rule_short(flat, pct, cap_verified=False):
     """Compact 'X flat' / 'lower of X or Y%' / 'Z% of trade value' label for a
     stat tile - same convention as broker_charges_engine.py's _rule_short(),
     extended for the uncapped percentage plans that module never has to
-    render (its own pages are withheld for exactly those brokers)."""
+    render (its own pages are withheld for exactly those brokers). pct above
+    CAP_RULE_MAX_PCT defaults to "uncapped" unless cap_verified is set (the
+    broker's own current pricing page confirms a real whichever-is-lower cap
+    even at that level - see CAP_RULE_MAX_PCT above and withheld_reasons())."""
     flat, pct = flat or 0.0, pct or 0.0
     if not flat and not pct:
         return "Rs 0 (Zero)"
-    if pct > CAP_RULE_MAX_PCT:
+    if pct > CAP_RULE_MAX_PCT and not cap_verified:
         return "%g%% of trade value" % (pct * 100)
     if not pct:
         return "Rs %g flat" % flat
     return "Rs %g or %g%%" % (flat, pct * 100)
 
 
-def _rule_text(flat, pct):
+def _rule_text(flat, pct, cap_verified=False):
     """Honest one-line description of a (flat, pct) brokerage rule - used in
     the page's FAQ prose and JSON-LD. Two separate hardcoded sentences here
     used to describe every broker's delivery brokerage as its flat fee alone
     (and every intraday rule as "flat X or Y%, whichever is lower"), which is
     wrong for the 16 brokers whose real plan is an uncapped percentage of
-    turnover - see CAP_RULE_MAX_PCT above and calculate_trade_fees()."""
+    turnover - see CAP_RULE_MAX_PCT above and calculate_trade_fees(). A
+    broker whose cap above that threshold is confirmed real on its own
+    current pricing page passes cap_verified=True instead."""
     flat, pct = flat or 0.0, pct or 0.0
     if not flat and not pct:
         return "Rs 0 (Zero Brokerage)"
-    if pct > CAP_RULE_MAX_PCT:
+    if pct > CAP_RULE_MAX_PCT and not cap_verified:
         return "%g%% of trade value" % (pct * 100)
     if not pct:
         return "Rs %g flat per order" % flat
@@ -539,6 +575,8 @@ def calculate_trade_fees(price: float, qty: int, broker_key: str, trade_type: st
     sell_turnover = buy_turnover # assume roundtrip at parity for baseline cost audit
     total_turnover = buy_turnover + sell_turnover
 
+    cap_verified = bool(b.get("cap_verified_asof"))
+
     # 1. Brokerage
     def _brokerage(pct, flat):
         pct = pct or 0.0
@@ -547,7 +585,10 @@ def calculate_trade_fees(price: float, qty: int, broker_key: str, trade_type: st
             return 0.0
         # A real percentage-of-turnover plan (not a discount-broker cap) has
         # no flat-fee floor to fall back to - see CAP_RULE_MAX_PCT above.
-        if pct > CAP_RULE_MAX_PCT:
+        # A broker whose own current pricing page confirms a real
+        # whichever-is-lower cap even above that threshold (cap_verified_asof
+        # on its BROKER_RATES entry) keeps the real cap instead.
+        if pct > CAP_RULE_MAX_PCT and not cap_verified:
             return pct_cost
         if not flat:
             return pct_cost
@@ -668,7 +709,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
                     "url": f"{site_url}/broker/{broker_id}/"
                 },
                 "description": meta_desc,
-                "feesAndCommissionsSpecification": f"Delivery: {_rule_text(b['delivery_flat'], b['delivery_pct'])}. Intraday: {_rule_text(b['intraday_flat'], b['intraday_pct'])}."
+                "feesAndCommissionsSpecification": f"Delivery: {_rule_text(b['delivery_flat'], b['delivery_pct'], b.get('cap_verified_asof'))}. Intraday: {_rule_text(b['intraday_flat'], b['intraday_pct'], b.get('cap_verified_asof'))}."
             },
             {
                 "@type": "FAQPage",
@@ -678,7 +719,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
                         "name": f"What is the brokerage for buying {stock_name} shares on {brand}?",
                         "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": f"On {brand}, equity delivery brokerage for {stock_name} is {_rule_text(b['delivery_flat'], b['delivery_pct'])}. Intraday brokerage is {_rule_text(b['intraday_flat'], b['intraday_pct'])}."
+                            "text": f"On {brand}, equity delivery brokerage for {stock_name} is {_rule_text(b['delivery_flat'], b['delivery_pct'], b.get('cap_verified_asof'))}. Intraday brokerage is {_rule_text(b['intraday_flat'], b['intraday_pct'], b.get('cap_verified_asof'))}."
                         }
                     },
                     {
@@ -815,12 +856,12 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 <div class="grid g4" style="margin-top:24px">
   <div class="card stat">
     <div class="stat-label">Delivery Brokerage</div>
-    <div class="stat-value">{_esc(_rule_short(b['delivery_flat'], b['delivery_pct']))}</div>
+    <div class="stat-value">{_esc(_rule_short(b['delivery_flat'], b['delivery_pct'], b.get('cap_verified_asof')))}</div>
     <div class="stat-sub">{b['tagline']}</div>
   </div>
   <div class="card stat">
     <div class="stat-label">Intraday Brokerage</div>
-    <div class="stat-value">{_esc(_rule_short(b['intraday_flat'], b['intraday_pct']))}</div>
+    <div class="stat-value">{_esc(_rule_short(b['intraday_flat'], b['intraday_pct'], b.get('cap_verified_asof')))}</div>
     <div class="stat-sub">per executed order</div>
   </div>
   <div class="card stat">
@@ -941,7 +982,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 <div style="max-width:72ch">
   <details class="faq-item" open>
     <summary>What is the brokerage for buying {stock_name} shares on {brand}?</summary>
-    <p>On {brand}, equity delivery brokerage for {stock_name} is {_rule_text(b['delivery_flat'], b['delivery_pct'])}. Intraday trades incur {_rule_text(b['intraday_flat'], b['intraday_pct'])}.</p>
+    <p>On {brand}, equity delivery brokerage for {stock_name} is {_rule_text(b['delivery_flat'], b['delivery_pct'], b.get('cap_verified_asof'))}. Intraday trades incur {_rule_text(b['intraday_flat'], b['intraday_pct'], b.get('cap_verified_asof'))}.</p>
   </details>
   <details class="faq-item">
     <summary>How much STT and government tax is charged when buying {stock_name}?</summary>
@@ -978,8 +1019,8 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
     broker_cards = []
     for b_id, b in brokers.items():
         cost_href = cost_page_path(b_id)
-        deliv = _rule_short(b["delivery_flat"], b["delivery_pct"])
-        intra = _rule_short(b["intraday_flat"], b["intraday_pct"])
+        deliv = _rule_short(b["delivery_flat"], b["delivery_pct"], b.get('cap_verified_asof'))
+        intra = _rule_short(b["intraday_flat"], b["intraday_pct"], b.get('cap_verified_asof'))
         broker_cards.append(f"""
         <div class="card" style="padding:20px;display:flex;flex-direction:column;justify-content:space-between">
           <div>
