@@ -6793,6 +6793,16 @@
       "source": "/compare/stocks/centralbk-vs-zeemedia/",
       "destination": "/stock/centralbk/",
       "permanent": true
+    },
+    {
+      "source": "/compare/angel-one-vs-zerodha/",
+      "destination": "/compare/zerodha-vs-angel-one/",
+      "permanent": true
+    },
+    {
+      "source": "/compare/groww-vs-zerodha/",
+      "destination": "/compare/zerodha-vs-groww/",
+      "permanent": true
     }
   ],
   "headers": [

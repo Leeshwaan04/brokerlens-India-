@@ -755,3 +755,85 @@ def run(check, ROOT, load):
         check("indexation: site/_redirects never uses 301 or 302 (308/307 match this project's "
               "own hard rule and what Vercel used for the same redirects)",
               not old_codes, str(old_codes[:3]))
+
+    # ---- hub-page canonical/sitemap trailing slash (found 2026-11-17) -----------
+    # brokers, compare, leaderboards, registry, algo, methodology, about,
+    # editorial-policy, contact, privacy-policy, terms-of-service, sources and
+    # calculator each write to a directory's index.html, served with a trailing
+    # slash, but declared their canonical/og:url/JSON-LD url, and the core sitemap
+    # listed them, as the bare path - Cloudflare Workers Assets always 307s a bare
+    # directory path to its slash form (unconfigurable platform behavior), so the
+    # canonical pointed at a redirect-only URL. URL Inspection API confirmed the
+    # real pages were "unknown to Google" as a result. The existing canonical check
+    # above this one only compares a core-sitemap entry against its page's own
+    # canonical when the entry already ends in "/" (`u.endswith("/")`), which is
+    # exactly why it never caught this - a bare entry silently skipped itself.
+    no_slash_core = [u for u in core if not u.endswith("/")]
+    check("indexation: every literal core-sitemap path ends in a trailing slash (a bare one is a "
+          "dead 307-redirect-only URL on Cloudflare Workers Assets, not the real page, and the "
+          "canonical check above this silently skips anything that doesn't end in \"/\" rather "
+          "than catching it)",
+          not no_slash_core, str(no_slash_core))
+    bad_canon_refs = re.findall(
+        r'"%s/(?:methodology|about|editorial-policy|contact|privacy-policy|terms-of-service|'
+        r'sources|algo|leaderboards|registry|compare|brokers|calculator|cms)"\s*%\s*SITE_URL', pub_src)
+    check("indexation: no hub-page canonical/url/og:url/JSON-LD field is still built from a bare, "
+          "no-trailing-slash SITE_URL + path (the exact source pattern of the 2026-11-17 bug)",
+          not bad_canon_refs, str(bad_canon_refs[:5]))
+
+    # ---- broker-vs-broker comparison pairs: no duplicate content, no dead links -
+    # (found 2026-11-17, alongside the canonical bug above: the two combined left
+    # this whole page family essentially undiscoverable, then let it ship
+    # duplicate content and dead internal links once it was looked at.)
+    compare_dir = os.path.join(site_dir, "compare")
+    pair_dirs = [d for d in os.listdir(compare_dir)
+                 if "-vs-" in d and os.path.isdir(os.path.join(compare_dir, d))] if os.path.isdir(compare_dir) else []
+    seen_sets, dup_pairs = {}, []
+    for d in pair_dirs:
+        a, _, b = d.partition("-vs-")
+        key = frozenset((a, b))
+        if key in seen_sets:
+            dup_pairs.append((seen_sets[key], d))
+        else:
+            seen_sets[key] = d
+    check("indexation: no two live /compare/ pages serve the same broker pair in opposite URL order "
+          "(26+ pairs did this before the fix: ranked_ids is sorted by current client count, so a "
+          "rank crossover between builds used to regenerate an already-shipped pair as a second, "
+          "duplicate URL - e.g. both zerodha-vs-groww and groww-vs-zerodha were live)",
+          not dup_pairs, str(dup_pairs[:5]))
+
+    broker_dir = os.path.join(site_dir, "broker")
+    chip_re = re.compile(r'class="chip" href="/compare/([^"/]+)/"')
+    broken_peer_links, total_peer_links = [], 0
+    if os.path.isdir(broker_dir) and pair_dirs:
+        pair_set = set(pair_dirs)
+        for bid in os.listdir(broker_dir):
+            f = os.path.join(broker_dir, bid, "index.html")
+            if not os.path.isfile(f):
+                continue
+            for slug in chip_re.findall(_read(f)):
+                total_peer_links += 1
+                if slug not in pair_set:
+                    broken_peer_links.append((bid, slug))
+    check("indexation: every broker profile page's \"Compare with competitors\" link points to a "
+          "/compare/ pair that was actually built (176 of 235 such links 404ed before the fix: "
+          "_peers() picked the nearest broker by client count with no regard for whether "
+          "_write_compare_pages() ever built that exact pair; %d links checked)" % total_peer_links,
+          not broken_peer_links, str(broken_peer_links[:5]))
+
+    # Direct unit proof of the dedup logic itself, independent of today's live broker
+    # ranking (which may not happen to contain a rank-crossover case on any given day):
+    # force one by hand and confirm the grid's reverse-order duplicate is suppressed.
+    _synthetic_overview = {"brokers": [{"id": "a", "clients": 100}, {"id": "b", "clients": 90},
+                                        {"id": "c", "clients": 80}]}
+    _synthetic_built = [{"id": "a"}, {"id": "b"}, {"id": "c"}]
+    _old_pairs = pub.COMPARISON_PAIRS
+    try:
+        pub.COMPARISON_PAIRS = [("b", "a")]  # hardcoded in the opposite order from client-count rank
+        _pairs = pub._comparison_pairs_for(_synthetic_overview, _synthetic_built)
+        _slugs = {"%s-vs-%s" % p for p in _pairs}
+    finally:
+        pub.COMPARISON_PAIRS = _old_pairs
+    check("indexation: _comparison_pairs_for() keeps COMPARISON_PAIRS's hardcoded slug order and "
+          "suppresses the grid's reverse-order duplicate for the same broker pair",
+          len(_pairs) == 3 and "b-vs-a" in _slugs and "a-vs-b" not in _slugs, str(_pairs))

@@ -576,7 +576,7 @@ def build():
     _write_timings()
     _write_registry_pages(reg_rows, untracked, registry_entity.register_asof(ingest), sebi_d.get("defaulters"))
     reg_to_registry_slug = registry_entity.reg_to_slug_map(reg_rows, untracked)
-    _write_broker_pages(built, reg_to_registry_slug)
+    _write_broker_pages(built, reg_to_registry_slug, overview)
     hub_groups = _write_broker_hub_pages(built)
     equity_companies = ((nse_d.get("universe") or {}).get("companies")) or []
     index_universe = nse_d.get("indices") or {}
@@ -823,15 +823,32 @@ def _restamp_js_imports():
         hashes[name] = hashlib.sha256(new_content.encode("utf-8")).hexdigest()[:10]
 
 
-def _peers(b, built):
-    """Nearest comparable brokers - same type, closest client count."""
+def _peers(b, built, valid_pairs=None):
+    """Nearest comparable brokers - same type, closest client count.
+
+    valid_pairs, when given, is {frozenset({id1, id2}): (id1, id2)} for exactly the
+    pairs _write_compare_pages() will build (see _comparison_pairs_for). Peers are
+    then restricted to that set and each returned dict carries pair_slug in the
+    exact order the static page was built, so a caller never links to a
+    /compare/<a>-vs-<b>/ page that was never generated (404, found 2026-11-17).
+    Callers that only need the nearest-broker data itself (e.g. the dynamic compare
+    tool, which takes ids via a query string and has no fixed page per pair) omit
+    valid_pairs and get the unfiltered nearest-5 as before."""
     n = b["clients"].get("active_clients") or 0
     same = [x for x in built if x["id"] != b["id"] and x["profile"]["type"] == b["profile"]["type"]]
     same.sort(key=lambda x: abs((x["clients"].get("active_clients") or 0) - n))
-    return [{"id": x["id"], "brand": x["profile"]["brand"],
+    if valid_pairs is not None:
+        same = [x for x in same if frozenset((b["id"], x["id"])) in valid_pairs]
+    out = []
+    for x in same[:5]:
+        d = {"id": x["id"], "brand": x["profile"]["brand"],
              "clients": x["clients"].get("active_clients"),
              "reliability": (x.get("reliability") or {}).get("score"),
-             "cost": (x.get("cost") or {}).get("monthly_total")} for x in same[:5]]
+             "cost": (x.get("cost") or {}).get("monthly_total")}
+        if valid_pairs is not None:
+            d["pair_slug"] = "%s-vs-%s" % valid_pairs[frozenset((b["id"], x["id"]))]
+        out.append(d)
+    return out
 
 
 def _derive_tags(built, boards):
@@ -1764,7 +1781,7 @@ BROKER_HUB_DIM_INTRO = {
 }
 
 
-def _broker_facts_html(b, built=None, reg_to_registry_slug=None):
+def _broker_facts_html(b, built=None, reg_to_registry_slug=None, valid_pairs=None):
     """The server-rendered <main> content for one broker's static page.
 
     Deliberately mirrors pages.js's broker() renderer in substance (same
@@ -1774,6 +1791,9 @@ def _broker_facts_html(b, built=None, reg_to_registry_slug=None):
     broker() render replaces this with the full interactive version; this is
     what a crawler, an answer engine, or a visitor with JS disabled actually
     sees, and it is also what paints first (better LCP) for everyone else.
+
+    valid_pairs restricts the "Compare with competitors" links to pairs
+    _write_compare_pages() actually built - see _peers().
     """
     p, c, k = b["profile"], b.get("clients") or {}, b.get("complaints") or {}
     rel, cost, flags = b.get("reliability") or {}, b.get("cost") or {}, b.get("regulatory_flags") or {}
@@ -1858,15 +1878,15 @@ def _broker_facts_html(b, built=None, reg_to_registry_slug=None):
 
     comp_links = ""
     if built:
-        peers = _peers(b, built)
-        if peers:
+        comp_peers = _peers(b, built, valid_pairs)
+        if comp_peers:
             comp_links = (
                 '<div class="section-title" style="margin-top:20px"><h2>Compare with competitors</h2></div>'
                 '<div class="row-wrap" style="gap:8px;margin-top:10px">%s</div>'
                 % "".join(
-                    '<a class="chip" href="/compare/%s-vs-%s/">%s vs %s &rarr;</a>'
-                    % (_esc(b["id"]), _esc(p["id"]), _esc(b["profile"].get("brand") or b["id"]), _esc(p["brand"]))
-                    for p in peers
+                    '<a class="chip" href="/compare/%s/">%s vs %s &rarr;</a>'
+                    % (_esc(p["pair_slug"]), _esc(b["profile"].get("brand") or b["id"]), _esc(p["brand"]))
+                    for p in comp_peers
                 )
             )
 
@@ -2016,7 +2036,7 @@ def _broker_depth(b, built):
     return body, faqs
 
 
-def _write_broker_pages(built, reg_to_registry_slug=None):
+def _write_broker_pages(built, reg_to_registry_slug=None, overview=None):
     """Static, server-rendered pages at the SAME /broker/:id URL the SPA already
     uses - not a sibling path like the registry pages needed.
 
@@ -2043,6 +2063,8 @@ def _write_broker_pages(built, reg_to_registry_slug=None):
     another writer can mutate first.
     """
     written = 0
+    valid_pairs = ({frozenset(p): p for p in _comparison_pairs_for(overview, built)}
+                   if overview is not None else {})
     for b in built:
         bid, brand = b["id"], b["profile"].get("brand") or b["id"]
         canonical = "%s/broker/%s/" % (SITE_URL, bid)
@@ -2073,7 +2095,7 @@ def _write_broker_pages(built, reg_to_registry_slug=None):
             "canonical": _esc(canonical), "jsonld": json.dumps(jsonld, ensure_ascii=False),
         }
         page += crumb_html
-        page += _broker_facts_html(b, built, reg_to_registry_slug)
+        page += _broker_facts_html(b, built, reg_to_registry_slug, valid_pairs)
         # The depth block goes right after </main>, outside the element the SPA
         # re-renders, so hydration cannot wipe it (see data-static-only in app.js).
         page += _APP_SHELL_FOOT.replace("</main>", "</main>" + depth_html, 1)
@@ -5625,7 +5647,7 @@ def _write_methodology_page():
     calculator below - it needs no SPA shell or hydration: a plain static
     page, exactly like a stock or fund page, is a strictly complete port of
     what pages.js already renders."""
-    canonical = "%s/methodology" % SITE_URL
+    canonical = "%s/methodology/" % SITE_URL
     title = "Methodology | BrokerLens"
     description = ("How BrokerLens sources and calculates every broker metric: market share, complaints per "
                     "10k clients, the reliability score and cost of a standard month, plus what we deliberately "
@@ -5751,7 +5773,7 @@ def _write_coming_soon_pages():
     methodology/sources) is a strictly complete port of what pages.js
     already renders - no SPA shell or hydration needed."""
     for market, m in _COMING_SOON.items():
-        canonical = "%s/coming-soon/%s" % (SITE_URL, market)
+        canonical = "%s/coming-soon/%s/" % (SITE_URL, market)
         crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), (m["h1"], None)])
         jsonld = {"@context": "https://schema.org", "@graph": [
             {"@type": "WebPage", "name": m["title"], "url": canonical, "description": m["description"]},
@@ -5781,7 +5803,7 @@ def _write_about_page():
     """/about: Comprehensive E-E-A-T declaration outlining who publishes
     BrokerLens, research team methodology, primary source verification,
     and clear non-advisory institutional boundaries."""
-    canonical = "%s/about" % SITE_URL
+    canonical = "%s/about/" % SITE_URL
     title = "About BrokerLens | Financial Research & Broker Intelligence"
     description = (
         "About BrokerLens: An independent financial intelligence platform analyzing Indian stock brokers, "
@@ -5799,9 +5821,9 @@ def _write_about_page():
                 "name": "BrokerLens",
                 "url": SITE_URL,
                 "logo": "%s/apple-touch-icon.png" % SITE_URL,
-                "publishingPrinciples": "%s/editorial-policy" % SITE_URL,
-                "correctionsPolicy": "%s/editorial-policy#corrections" % SITE_URL,
-                "ethicsPolicy": "%s/editorial-policy#independence" % SITE_URL,
+                "publishingPrinciples": "%s/editorial-policy/" % SITE_URL,
+                "correctionsPolicy": "%s/editorial-policy/#corrections" % SITE_URL,
+                "ethicsPolicy": "%s/editorial-policy/#independence" % SITE_URL,
                 "sameAs": [
                     "https://twitter.com/brokerlens",
                     "https://www.linkedin.com/company/brokerlens"
@@ -5907,7 +5929,7 @@ def _write_editorial_policy_page():
     """/editorial-policy: Institutional E-E-A-T declaration detailing BrokerLens's
     golden-source data standard, editorial independence, zero-payola guarantee,
     fact-checking methodology, and formal corrections protocol."""
-    canonical = "%s/editorial-policy" % SITE_URL
+    canonical = "%s/editorial-policy/" % SITE_URL
     title = "Editorial Policy, Fact-Checking and Quality Standards | BrokerLens"
     description = (
         "BrokerLens editorial standards: commitment to primary data from NSE, BSE and SEBI, "
@@ -6058,7 +6080,7 @@ def _write_editorial_policy_page():
 def _write_contact_page():
     """/contact: Dedicated support, grievance redressal, and regulatory
     compliance contact desk with defined 24-48h resolution SLA."""
-    canonical = "%s/contact" % SITE_URL
+    canonical = "%s/contact/" % SITE_URL
     title = "Contact & Grievance Redressal Desk | BrokerLens"
     description = (
         "Contact BrokerLens: Reach our data compliance team, report factual corrections, "
@@ -6071,7 +6093,7 @@ def _write_contact_page():
             "@type": "Organization",
             "name": "BrokerLens",
             "url": SITE_URL,
-            "publishingPrinciples": "%s/editorial-policy" % SITE_URL,
+            "publishingPrinciples": "%s/editorial-policy/" % SITE_URL,
             "contactPoint": [
                 {
                     "@type": "ContactPoint",
@@ -6147,7 +6169,7 @@ def _write_privacy_page():
     G-XJK97Q2CD7, added 2026-10-23) plus a same-origin theme/exchange
     preference in localStorage and the cookie-free ad-event beacon. Static,
     like methodology/sources."""
-    canonical = "%s/privacy-policy" % SITE_URL
+    canonical = "%s/privacy-policy/" % SITE_URL
     title = "Privacy Policy | BrokerLens"
     description = "What BrokerLens does and does not collect, how affiliate links work, and how to reach us about your data."[:300]
     crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Privacy Policy", None)])
@@ -6225,7 +6247,7 @@ def _write_terms_page():
     sitewide disclaimer verbatim in substance (same "not investment advice"
     facts), because a terms page that contradicted the footer disclaimer
     would itself be a compliance problem. Static, like methodology/sources."""
-    canonical = "%s/terms-of-service" % SITE_URL
+    canonical = "%s/terms-of-service/" % SITE_URL
     title = "Terms of Service | BrokerLens"
     description = "The terms for using BrokerLens: what the site is, the limits on the information it publishes, and your responsibilities."[:300]
     crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Terms of Service", None)])
@@ -6317,7 +6339,7 @@ def _write_sources_page(sources_data):
     for r in rows:
         groups.setdefault(r.get("publisher"), []).append(r)
 
-    canonical = "%s/sources" % SITE_URL
+    canonical = "%s/sources/" % SITE_URL
     title = "Sources & Data Lineage | BrokerLens"
     description = ("Every data source the BrokerLens pipeline touches, when it last ran and what came back - "
                     "published so any figure can be audited back to its origin.")[:300]
@@ -6416,7 +6438,7 @@ def _write_algo_page(algo_data):
     platforms = algo_data.get("platforms") or []
     count = algo_data.get("count", len(platforms))
 
-    canonical = "%s/algo" % SITE_URL
+    canonical = "%s/algo/" % SITE_URL
     title = "Algo Trading Platforms in India | BrokerLens"
     description = ("Official broker APIs, no-code strategy builders, backtesting tools and institutional "
                     "vendors behind broker dealing desks in India, with SEBI's retail algo framework context.")[:300]
@@ -6561,7 +6583,7 @@ def _write_leaderboards_page(overview, nse_live, crypto_coins):
         rows = [dict(symbol=c["symbol"], last=c["price_usd"], change_pct=c["change_pct_24h"]) for c in losers_c]
         market_boards.append(("Top crypto 24h losers", "crypto", rows, _usd_html, "/crypto/%s/"))
 
-    canonical = "%s/leaderboards" % SITE_URL
+    canonical = "%s/leaderboards/" % SITE_URL
     title = "Market Movers: NSE Gainers, Losers and Broker Stats | BrokerLens"
     description = ("Today's real NSE top gainers, losers and most-active stocks, plus crypto market-cap and "
                     "24h movers. Broker rankings by active clients, complaints and cost publish once that "
@@ -6784,7 +6806,7 @@ def _write_registry_landing_page(reg_rows, overview, registry_letters=None):
     per = 60
     page_rows = reg_rows[:per]
     total = len(reg_rows)
-    canonical = "%s/registry" % SITE_URL
+    canonical = "%s/registry/" % SITE_URL
     title = "SEBI-Registered Brokers and Intermediaries | BrokerLens"
     description = ("Search every SEBI-registered broking and depository-participant entity: legal name, "
                     "registration number, city, exchange memberships and validity.")[:300]
@@ -6876,6 +6898,32 @@ COMPARISON_PAIRS = [
 ]
 
 
+def _comparison_pairs_for(overview, built):
+    """The exact set and slug order of broker-vs-broker pairs _write_compare_pages()
+    will build, as a pure function of overview/built so a caller writing BEFORE the
+    compare pages (e.g. _write_broker_pages(), for its "Compare with competitors"
+    links) sees the same set a caller writing after them does - no drift, no link to
+    a pair that was never actually generated. Dedup is by the unordered broker SET,
+    not the ordered tuple: ranked order (by client count) shifts build to build, so
+    keying only on (id1, id2) let a rank crossover regenerate an already-shipped pair
+    in the opposite order as a second, duplicate URL (found 2026-11-17). COMPARISON_PAIRS
+    always wins the slug order for a pair it names; the grid only picks the order for
+    pairs COMPARISON_PAIRS never names."""
+    built_map = {b["id"]: b for b in (built or [])}
+    brokers = sorted(overview.get("brokers") or [], key=lambda b: -(b.get("clients") or 0))
+    all_pairs = list(COMPARISON_PAIRS)
+    seen_pairs = {frozenset(p) for p in all_pairs}
+    ranked_ids = [b["id"] for b in brokers if b.get("id") in built_map]
+    for i in range(min(len(ranked_ids), 20)):
+        for j in range(i + 1, min(len(ranked_ids), 20)):
+            p = (ranked_ids[i], ranked_ids[j])
+            key = frozenset(p)
+            if key not in seen_pairs:
+                seen_pairs.add(key)
+                all_pairs.append(p)
+    return [p for p in all_pairs if p[0] in built_map and p[1] in built_map]
+
+
 def _fmt_broker_plan(plan):
     if not plan:
         return "-"
@@ -6896,7 +6944,7 @@ def _write_compare_pages(overview, built=None, reg_to_registry_slug=None):
     b_brand = {b["id"]: b.get("brand") or b["id"] for b in brokers}
 
     # 1. Main /compare hub page
-    canonical = "%s/compare" % SITE_URL
+    canonical = "%s/compare/" % SITE_URL
     title = "Compare Indian Stock Brokers Side by Side | BrokerLens"
     description = ("Put Indian stock brokers head to head on clients, complaints, regulatory standing and "
                     "real cost, using regulator-sourced figures.")[:300]
@@ -6960,15 +7008,7 @@ def _write_compare_pages(overview, built=None, reg_to_registry_slug=None):
     log("compare hub page: written", "ok")
 
     # 2. Programmatic 1v1 comparison pages across top brokers
-    all_pairs = list(COMPARISON_PAIRS)
-    seen_pairs = set(all_pairs)
-    ranked_ids = [b["id"] for b in brokers if b.get("id") in built_map]
-    for i in range(min(len(ranked_ids), 20)):
-        for j in range(i + 1, min(len(ranked_ids), 20)):
-            p = (ranked_ids[i], ranked_ids[j])
-            if p not in seen_pairs:
-                seen_pairs.add(p)
-                all_pairs.append(p)
+    all_pairs = _comparison_pairs_for(overview, built)
 
     written_pairs = []
     for id1, id2 in all_pairs:
@@ -7268,7 +7308,16 @@ def _write_compare_pages(overview, built=None, reg_to_registry_slug=None):
         _write_text(os.path.join(p_dest, "index.html"), p_page)
         written_pairs.append((id1, id2))
 
-    log("comparison pages: %d written" % len(written_pairs), "ok")
+    # A pair dropped from all_pairs (deduped away, or a broker no longer built)
+    # must stop being served, not linger as an orphaned duplicate forever - the
+    # exact bug this dedup fix exists to close. /compare/stocks/ and
+    # /compare/mutual-funds/ are separate engines' subtrees, not pairs; never prune
+    # those. Any already-live URL this drops needs a redirect added by hand (see
+    # vercel.json) - this only stops a NEW duplicate from being created again.
+    keep_slugs = {"%s-vs-%s" % (id1, id2) for id1, id2 in written_pairs} | {"stocks", "mutual-funds"}
+    pruned = _prune_stale_dirs(os.path.join(ROOT, "site", "compare"), keep_slugs)
+    log("comparison pages: %d written%s" % (
+        len(written_pairs), (", %d stale pair directories removed" % pruned) if pruned else ""), "ok")
     return written_pairs
 
 
@@ -7337,7 +7386,7 @@ def _write_brokers_page(overview):
     rows_sorted = sorted(brokers, key=lambda b: -(b.get("clients") or 0)) if has_clients else \
         sorted(brokers, key=lambda b: b.get("brand") or "")
 
-    canonical = "%s/brokers" % SITE_URL
+    canonical = "%s/brokers/" % SITE_URL
     title = "All Indian Stock Brokers, Compared | BrokerLens"
     description = ("Every Indian stock broker we track, side by side: active clients, growth, complaint rate, "
                     "reliability and monthly cost, from primary regulator and exchange sources.")[:300]
@@ -7470,7 +7519,7 @@ def _write_calculator_tool_page(built):
     zero brokers with verified charges today, so this renders the pending
     notice, not a table of computed zeros."""
     priced = [b for b in built if (b.get("cost") or {}).get("monthly_total") is not None]
-    canonical = "%s/calculator" % SITE_URL
+    canonical = "%s/calculator/" % SITE_URL
     title = "Brokerage Cost Calculator | BrokerLens"
     description = ("Work out what a month of your actual trading costs at each Indian broker, using their "
                     "published charges.")[:300]
@@ -8178,7 +8227,7 @@ def _write_find_broker_page(overview, built=None):
 def _write_cms_page(overview, built=None):
     """Executive CMS and Analytics Portal at /cms with authentication gate,
     real-time metrics, funnel visualizations, and zero inline script."""
-    canonical = "%s/cms" % SITE_URL
+    canonical = "%s/cms/" % SITE_URL
     title = "BrokerLens CMS & Executive Analytics Portal"
     description = "BrokerLens Executive Analytics, Content Management, and Partner Conversion Portal."
     crumb_html, crumb_jsonld = _breadcrumb([
@@ -8290,18 +8339,23 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
         return f"<url><loc>{clean_loc}</loc><lastmod>{lastmod}</lastmod><changefreq>{freq}</changefreq></url>"
 
     # 1. CORE SITEMAP (Main navigation, static hubs, calculators, legal, methodology)
-    # Each entry is the page's own canonical URL (static hub pages end in a slash, the
-    # SPA-routed pages do not). A sitemap entry that differs from the canonical by a
-    # trailing slash is a duplicate URL Google has to reconcile, and /ipo/ and /news/
-    # were reported as unknown while only /ipo and /news were listed.
+    # Every one of these is a directory-backed index.html, so Cloudflare Workers Assets
+    # always 307s the bare path to its trailing-slash form (unconfigurable platform
+    # behavior, confirmed 2026-11-17). A sitemap entry that differs from the page's own
+    # canonical by a trailing slash is a dead redirect-only URL Google has to reconcile
+    # with a different canonical target, not a second valid route to the same content -
+    # this is exactly what made /ipo and /news (fixed earlier) and brokers, leaderboards,
+    # compare, calculator, registry, algo, methodology, about, editorial-policy, contact,
+    # privacy-policy and terms-of-service (fixed 2026-11-17) show as "URL unknown to
+    # Google" instead of indexed: every entry below must match its page's own canonical.
     core_urls = [
-        "/", "/brokers", "/leaderboards", "/compare", "/find-broker/", "/calculator", "/calculators/",
-        "/registry", "/algo", "/methodology", "/sources", "/stocks/", "/funds-by/", "/etfs/", "/crypto/",
+        "/", "/brokers/", "/leaderboards/", "/compare/", "/find-broker/", "/calculator/", "/calculators/",
+        "/registry/", "/algo/", "/methodology/", "/sources/", "/stocks/", "/funds-by/", "/etfs/", "/crypto/",
         "/ipo/", "/ipo/upcoming/", "/ipo/archive/", "/ipo/allotment-status/", "/ipo/how-to-apply/", "/ipo/registrars/",
         "/ipo/subscription/", "/ipo/allotment/", "/ipo/sme/", "/ipo/gmp/",
         "/trade-costs/", "/compare/stocks/", "/compare/mutual-funds/", "/calculators/sip/",
-        "/branches/", "/news/", "/about", "/editorial-policy", "/contact",
-        "/privacy-policy", "/terms-of-service"
+        "/branches/", "/news/", "/about/", "/editorial-policy/", "/contact/",
+        "/privacy-policy/", "/terms-of-service/"
     ]
     # Listed only when it was actually built (it needs data/manual/nse_holidays.json).
     if os.path.isfile(os.path.join(ROOT, "site", "stock-market-holidays", "index.html")):
