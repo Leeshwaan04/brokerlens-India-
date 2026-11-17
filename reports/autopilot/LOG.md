@@ -435,3 +435,76 @@ One entry per run, newest last. Each change states its evidence, the effect it s
   genuinely multi-valued official schedule (HDFC Securities' 6 plans, Axis Direct's conflicting
   sources, Religare's monthly slabs), both of which this task's sourcing bar rules out. QA and
   VAPT were not re-run since nothing in the repository changed.
+
+## 2026-11-17 (follow-up on the Kotak and 13-broker findings above, commit 748d3e8)
+
+- Part 1, shipped: Kotak Securities' entry in `BROKER_RATES` (pipeline/trade_cost_engine.py) held
+  the restricted Trade Free Youth plan (Rs 0 delivery, Rs 0 intraday) as if it were Kotak's
+  general schedule, live and indexed today on `/trade-costs/`. Verified Kotak's real general
+  Trade Free Plan directly against kotakneo.com's own pricing and support pages today
+  (kotaksecurities.com now redirects there): 0.20% of trade value, uncapped, for delivery; the
+  lower of Rs 10 per order or 0.05% of the order for intraday (both pages also describe a Rs 0
+  promo for the first 30 days from account opening; used the standing post-promo rate, the
+  convention every other broker's entry here uses). Corrected both fields and the tagline (no
+  longer says "for young investors"). dp_charge and demat_amc were deliberately left untouched
+  and unverified: Kotak's real DP debit fee is 0.04% of value plus NSDL pass-through (around Rs
+  20 minimum, not a flat figure) and its AMC is tiered by holding value and monthly debit count,
+  neither representable as the single number the charges-page model requires. That is the real,
+  separate reason `broker_charges_engine.py` must keep withholding a dedicated
+  `/broker/kotak-securities/charges/` page even after this correction; it now shows exactly one
+  accurate reason (delivery is a 0.2% uncapped percentage plan) instead of the two inaccurate
+  ones it showed before (zero-on-both-segments, and the young-investors tagline marker).
+
+- Part 2, a narrower and different finding than the "13 brokers share one fixable gap" framing
+  above: that framing conflated two different problems. Re-verified Choice Broking (one of the
+  13) against its own current pricing page, choiceindia.com/brokerage-charges, today: delivery is
+  "Rs 20 or 0.20% of trade value, whichever is lower" and intraday is "Rs 20 or 0.02%, whichever
+  is lower" - a genuine discount-broker cap, not an uncapped ad-valorem commission, even though
+  0.20% sits above `CAP_RULE_MAX_PCT` (0.1%), the threshold the model uses to guess which shape a
+  broker's percentage figure is. Choice's stored (flat, pct) was already correct; it was being
+  wrongly withheld by a threshold that is a good heuristic, not a perfect one. Its dp_charge
+  (21.24) did not match the real figure on that same page (Rs 10 + 18% GST = 11.80) and has been
+  corrected; its demat_amc (236 = Rs 200 + 18% GST from year 2, year 1 free) was already right.
+  Added an explicit `cap_verified_asof` field a BROKER_RATES entry can carry once its cap above
+  the threshold has been read off the broker's own current page; `_withheld_reasons_for` (and the
+  matching logic in trade_cost_engine.py's own fee calculator, `_rule_short` and `_rule_text`,
+  which had the identical unconditional threshold check and would otherwise have disagreed with
+  broker_charges_engine.py the moment Choice became eligible, caught immediately by the project's
+  own compute_charges()-equals-calculate_trade_fees() regression test) now skip the cap-mismatch
+  withholding only when that date is present. Choice Broking is now eligible: 12 brokers have a
+  real charges page, up from 11. The other 12 brokers withheld for the same threshold reason
+  (icici-direct, hdfc-securities, motilal-oswal, sharekhan, sbi-securities, axis-direct,
+  anand-rathi, geojit, smc, ventura, nirmal-bang, swastika-investmart, samco, religare,
+  yes-securities - 15, not 13; the 13 figure above undercounted) are untouched: none were checked
+  against a real current source today, and their stored dp_charge/demat_amc show suspicious
+  uniformity across unrelated brokers (four of them share the identical dp_charge of 17.70)
+  consistent with templated placeholder data, not independently sourced figures - a reason to
+  verify each one fully (brokerage AND dp_charge AND demat_amc) before trusting any of them, not
+  just to re-run the cap check. Flagging this data-integrity pattern for whoever does that work
+  next; three of these fifteen (hdfc-securities, axis-direct, religare) are already known from
+  the entry above to be genuinely too complex for this model regardless of the cap question.
+
+- Also fixed: the retired `/broker/choice-broking/trade/*` redirect in vercel.json, written once
+  during the 10 Nov trade-page retirement and never regenerated, pointed at Choice's profile page
+  (`/broker/choice/`) because that was its `cost_page_path()` result at the time. Now points at
+  `/broker/choice/charges/`, matching the function's live output. This class of staleness (a
+  one-time-written redirect going wrong the moment a broker's eligibility changes later) is not
+  otherwise guarded against; the regression test here only checks the current-eligible-set-vs-
+  redirects invariant, not that the redirects stay in sync if eligibility changes again.
+
+- Did not implement a general-purpose "uncapped percentage" extension for broker_charges_engine.py
+  beyond the cap_verified_asof mechanism: trade_cost_engine.py's own fee math already treats any
+  pct > CAP_RULE_MAX_PCT as uncapped (fixed there on 2 Nov for the comparison-tool display), so
+  the capability already exists for whichever of the 15 remaining brokers turns out to genuinely
+  need it once verified; no broker shipped this pass needed it, so it was not ported into
+  broker_charges_engine.py's withholding logic as a separate code path, to keep this change's
+  surface area to what was actually verified today.
+
+- Verification: QA 1230/1230 offline, 1275/1275 with live-probe checks (`--url`); VAPT 21/21
+  offline, 77/77 with live-probe checks. Commit 748d3e8, rebased once onto a concurrent sitewide
+  canonical fix (5fc7f51) with no conflicts after a full rebuild. Pushed to origin/main; CI run
+  44143579912 triggered, watch in progress at the time of this entry.
+
+- Check by 2026-11-24: `/broker/choice/charges/` should show real impressions; URL-inspect it if
+  not. Also check that the corrected Kotak delivery/intraday figures on `/trade-costs/` match
+  kotakneo.com's then-current page (broker fee schedules change without notice).
