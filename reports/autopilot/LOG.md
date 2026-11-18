@@ -683,3 +683,60 @@ live today.
   discarding incidental daily-fetch churn (crypto prices, news, IPO index, sitemaps,
   bse_only_equities.json) so the shipped diff is exactly the three sourcing comments and two
   corrected figures in pipeline/trade_cost_engine.py, nothing else.
+
+## 2026-11-18 (Claude: checked for the broker-charges CTR-wording pattern on stock, news, IPO
+and fund-comparison pages; shipped nothing)
+
+- Directive: the broker-charges FAQ fix (commit 73b8302) found real pages with real impressions,
+  a reasonable position, and zero clicks, fixable by rewording the title/meta/FAQ to match the
+  exact phrase people searched, with no new data. Checked whether the same pattern holds on four
+  other page families, to act on it if real and ship nothing where it is not. Pulled real
+  page+query level data from the GSC API (dimensions page, query, filtered by URL pattern, 28-day
+  window) for each family rather than assuming.
+- **Stock pages (`pipeline/publish.py`'s `_write_stock_pages`, `pipeline/bse_only.py`'s parallel
+  writer): no fix shipped.** An initial filter (impressions >= 15, position 5-25, 0 clicks) found
+  220 candidates, but 207 of them are not a wording problem at all: they are GSC performance
+  still attached to the identity of `/stock/<sym>/share-price-target-<year>/` URLs that are now
+  pure 308 redirects to `/stock/<sym>/` with no content of their own to reword (confirmed live:
+  curl on a sample of 4 - cupid, mrf, sarveshwar, kalyankjil - all returned 308). This is the
+  already-known "retired price-target URLs carry most clicks" GSC measurement artifact, not a
+  live page issue. Of the 13 remaining non-"target" candidates, most are the same retired-URL
+  artifact under a different query; the only genuinely live, well-positioned page in the entire
+  set is `/stock/justdial/` (position ~10.7-11.2, 972 impressions/28d combined across "justdial
+  stock" and "justdial stock price", 0 clicks) - a real, verifiable title/intent mismatch (the
+  page's title leads with "Share Price Target 2026-2050, What-If Calculator", not plain stock/
+  price framing). Checked whether this generalizes: pulled all ~3,341 generic "<name> stock" /
+  "<name> share price" query rows across every stock page. 3,340 of 3,341 get 0 clicks, but
+  because they sit at position 69-92 (not 5-25) - page 7-10, where 0 clicks is normal, not a
+  wording problem, and not something a title rewrite fixes (BrokerLens is a broker-comparison
+  site competing against Moneycontrol/NSE/Google Finance for generic "X share price," a
+  structural ranking ceiling, not a wording gap). Justdial is a genuine, verified outlier, not
+  evidence of a systemic pattern. Did not ship a universal title-template change on an n=1
+  sample, and did not hardcode a per-symbol exception, since this project's own convention
+  (the comparison-pair dedup fix, 2026-11-17) is to prefer a general rule over a named special
+  case - there is no general rule to extract from one data point. Separately confirmed the
+  current title (`pipeline/price_target_section.py`'s `stock_title()`) was already deliberately
+  tuned against real GSC query-share data for the dominant "share price target <year>" intent
+  (see its own docstring), so this is not an untouched or neglected page.
+- **News pages: no fix shipped.** Only 10 distinct query rows total across the entire family in
+  28 days, 1-5 impressions each, mostly position 50-98. Too small a sample to show any real
+  pattern; nothing to act on.
+- **IPO pages: no fix shipped.** 4 candidates, 12-47 impressions each. Checked the clearest one,
+  "tango ipo listing date" on `/ipo/systango/`: the title already reads "Systango Technologies
+  IPO Date, Price Band and Listing Date" - it already names "Listing Date" explicitly, so there
+  is no wording gap to fix; the query's "tango" vs "Systango" mismatch is a user abbreviation,
+  not something page wording can address. The other three (UTI AMC "grey market premium",
+  "theikio", "edelats ipo") are each a single fuzzy/abbreviated query at 12-47 impressions,
+  within normal zero-click variance at position 8-10 for that volume - and the UTI AMC case
+  specifically names grey market premium, which this project's hard rule forbids asserting
+  without a real cited source, so it was correctly left alone either way.
+- **Fund-comparison pages: no fix shipped.** 5 candidates, 10-34 impressions each, position
+  9-19. Too thin (2-3 real page instances, modest volume) to distinguish a real wording gap from
+  normal variance, and one query ("jio blackrock vs sbi mutual fund which is better") carries
+  the same YMYL "which is better" framing risk flagged in yesterday's broker-comparison-page
+  investigation - not something to touch without stronger evidence either way.
+- Net conclusion: the broker-charges pattern (systemic, verifiable, low-risk wording fix) does
+  not currently exist on any of these four families at the scale or confidence that justified
+  shipping it on broker charges. No code changed, no page content changed. Built in an isolated
+  worktree off origin/main, full QA and VAPT suites re-run to confirm the baseline is unaffected
+  before pushing.
