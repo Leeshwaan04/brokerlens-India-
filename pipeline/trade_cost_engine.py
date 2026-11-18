@@ -331,8 +331,10 @@ BROKER_RATES = {
         "delivery_pct": 0.002,
         "intraday_flat": 20.0,
         "intraday_pct": 0.0003,
-        "dp_charge": 17.70,
-        "demat_amc": 0,
+        # dp_charge corrected 2026-11-18 from 17.70 (uncited) to Rs 20 + 18%
+        # GST per scrip on sell, verified against venturasecurities.com/pricing/
+        "dp_charge": 23.60,
+        "demat_amc": 0, # Rs 0, verified against venturasecurities.com/pricing/
         "account_open": 0,
         "tagline": "POINTER desktop software, lifetime zero AMC demat account",
         "cta_url": "https://www.ventura1.com",
@@ -370,8 +372,8 @@ BROKER_RATES = {
         "delivery_pct": 0.0,
         "intraday_flat": 15.0,
         "intraday_pct": 0.0003,
-        "dp_charge": 17.70,
-        "demat_amc": 0,
+        "dp_charge": 17.70, # Rs 15 + 18% GST, verified against aliceblueonline.com/pricing 2026-11-18
+        "demat_amc": 0, # Rs 0 lifetime, verified against aliceblueonline.com/pricing 2026-11-18
         "account_open": 0,
         "tagline": "Freedom 15 Plan: Rs 0 delivery, Rs 15 intraday & F&O",
         "cta_url": "https://aliceblueonline.com",
@@ -396,8 +398,10 @@ BROKER_RATES = {
         "delivery_pct": 0.0,
         "intraday_flat": 20.0,
         "intraday_pct": 0.0003,
-        "dp_charge": 17.70,
-        "demat_amc": 354,
+        # dp_charge corrected 2026-11-18 from 17.70 (uncited) to Rs 12.50 +
+        # 18% GST per ISIN on-market debit, verified against tradejini.com/charges
+        "dp_charge": 14.75,
+        "demat_amc": 354, # Rs 300 + 18% GST, verified against tradejini.com/charges 2026-11-18
         "account_open": 0,
         "tagline": "CubePlus platform: Flat Rs 20 trading, free equity delivery",
         "cta_url": "https://www.tradejini.com",

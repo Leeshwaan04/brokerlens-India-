@@ -623,3 +623,63 @@ One entry per run, newest last. Each change states its evidence, the effect it s
   live.
 - No code changed. Built in an isolated worktree off origin/main, full QA and VAPT suites
   re-run to confirm the baseline is unaffected by this documentation-only entry before pushing.
+
+## 2026-11-18 (Claude: re-verify the seven dp_charge=17.70 brokers flagged above, starting with the two live ones)
+
+Followed up on the priority list from the audit above: re-verify dp_charge and demat_amc for
+alice-blue, tradejini, sbi-securities, anand-rathi, geojit, smc and ventura against each
+broker's own current official source, alice-blue and tradejini first since they are the two
+live today.
+
+- **alice-blue (live, /broker/alice-blue/charges/): confirmed correct, no number change.**
+  Fetched aliceblueonline.com/pricing directly (2026-11-18): "Rs 15 + GST per scrip applies to
+  all stock sale transactions" and "No yearly maintenance charges on your demat account... Rs 0
+  as long as your account stays under this plan." Rs 15 x 1.18 GST = Rs 17.70, exactly the
+  stored figure. demat_amc=0 also confirmed. Added sourcing comments to both fields in
+  pipeline/trade_cost_engine.py; no figure changed.
+- **tradejini (live, /broker/tradejini/charges/): dp_charge was wrong, corrected.** Fetched
+  tradejini.com/charges directly (2026-11-18): "DP transaction charge of Rs 12.50 + GST per
+  ISIN... will be charged for all on-market debit transactions" and "AMC (Annual maintenance
+  charges) Rs 300 + GST per year." Rs 12.50 x 1.18 = Rs 14.75 (not Rs 17.70, the uncited
+  bulk-commit figure); corrected in pipeline/trade_cost_engine.py, confirmed rendering on the
+  rebuilt page (9 occurrences of 14.75, zero of 17.70). demat_amc=354 (Rs 300 x 1.18) was
+  already correct against the same source; added a sourcing comment, no change.
+- **ventura (withheld, no live page yet): dp_charge was wrong, corrected anyway** since it is
+  dormant BROKER_RATES data that will matter the moment the cap-rule unlock work from the
+  entries above reaches it, and getting it right now is cheaper than re-checking it later.
+  Fetched venturasecurities.com/pricing/ directly (2026-11-18): "For stocks sold, Ventura
+  applies DP charges of Rs 20 plus GST per scrip," with the site's own GST section confirming
+  18%: Rs 20 x 1.18 = Rs 23.60 (not Rs 17.70). demat_amc=0 confirmed correct against the same
+  page ("AMC charges at zero"). Ventura stays withheld for the unrelated, separate cap-rule
+  reason already on file; this only fixes the one field so it is not wrong whenever that
+  changes.
+- **sbi-securities, anand-rathi, geojit, smc: left unverified, not fixed, not guessed.** All
+  four are withheld already (no live page), so there is no urgency to force a number, and none
+  of the four had a source clean enough to trust over the existing unverified figure:
+  - sbi-securities: no current official tariff page found stating a standard DP charge; AMC
+    sources ranged from Rs 300 to Rs 750 depending on plan and year, including the broker's own
+    plan PDF, which gives per-plan AMC schedules (e.g. OIOP 3K: free year 1, Rs 500 year 2)
+    rather than one flat figure the model's single demat_amc field can represent.
+  - anand-rathi: official site confirms free account opening and a free first-year AMC, but no
+    official per-debit DP figure was found, and third-party AMC figures disagreed (Rs 450+GST
+    per year vs. a Rs 999 one-time lifetime-free option vs. a separate Rs 500 figure on one FAQ
+    page).
+  - geojit: has an official support site with current AMC/transaction-charge pages, but the
+    figures differ by account type (Basic Services Demat Account vs. Regular Services Demat
+    Account) and by holding-value band, so there is no one "the DP charge" to drop into a flat
+    field without checking which plan is the default being modeled here - a bigger, separate
+    piece of work, not a quick fix.
+  - smc: the only clean official source found, CDSL's own DP registry listing (dp_id 19100,
+    Rs 300/year individual AMC, Rs 15/ISIN on-market debit, GST extra), is dated 20 May 2020 on
+    its own page - nearly 6 years stale, not trustworthy as a 2026-11-18 "current" figure, so it
+    was not used to change anything.
+  These four stay on the priority list for the broader re-verification pass the audit above
+  recommended.
+- demat_amc repeats beyond tradejini (already confirmed above): not independently re-verified
+  this pass beyond what the audit above already assessed; still logged there as lower priority.
+- Verification: `python3 tests/qa_e2e.py` 1235/1235 offline, 1280/1280 with `--url` live-probe
+  checks against a local devserver; `python3 tests/vapt.py --url ...` 77/77, 0 findings. Built
+  in an isolated worktree off origin/main (data/cache, data/raw symlinked), rebuilt after
+  discarding incidental daily-fetch churn (crypto prices, news, IPO index, sitemaps,
+  bse_only_equities.json) so the shipped diff is exactly the three sourcing comments and two
+  corrected figures in pipeline/trade_cost_engine.py, nothing else.
