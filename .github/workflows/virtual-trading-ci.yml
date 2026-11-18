@@ -44,12 +44,15 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Typecheck
-        run: npx tsc --noEmit
-
       - name: Test
         run: npm run test
 
+      # Build before typecheck: Next.js 16's typed-routes feature (the
+      # LayoutProps/PageProps helper types used in app/layout.tsx etc.) is
+      # only generated into .next/types by `next build`/`next dev`, so a
+      # fresh checkout's `tsc --noEmit` fails with "Cannot find name
+      # 'LayoutProps'" if it runs first. Confirmed: this passed locally only
+      # because a prior local build had already left .next/types/ on disk.
       - name: Build
         run: npm run build
         env:
@@ -60,6 +63,9 @@ jobs:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_placeholder"
           CLERK_SECRET_KEY: "sk_test_placeholder"
           CRON_SECRET: "placeholder"
+
+      - name: Typecheck
+        run: npx tsc --noEmit
 
   deploy:
     needs: test
