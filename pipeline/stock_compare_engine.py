@@ -202,13 +202,25 @@ def calculate_stock_metrics(history, default_name=""):
 
 def _range_window_label(window_days):
     """52-Week is only accurate with >= 1 year of daily closes; below that,
-    label the actual window so the figure isn't claimed to cover a year of
-    trading it doesn't have."""
-    return "52-Week" if window_days >= 252 else f"{window_days}-Day"
+    label the actual window so the figure is not claimed to cover a year of
+    trading it does not have."""
+    if window_days >= 252:
+        return "52-Week"
+    if window_days >= 115:
+        return f"6-Month ({window_days} Sessions)"
+    if window_days < 30:
+        return f"Since Listing ({window_days} Sessions)"
+    return f"{window_days}-Day"
 
 
 def _return_window_label(window_days):
-    return "1-Year" if window_days >= 252 else f"{window_days}-Day"
+    if window_days >= 252:
+        return "1-Year"
+    if window_days >= 115:
+        return f"6-Month ({window_days} Sessions)"
+    if window_days < 30:
+        return f"Since Listing ({window_days} Sessions)"
+    return f"{window_days}-Day"
 
 
 def render_comparison_hub(all_pairs, site_url="https://www.brokerlens.in"):

@@ -11,9 +11,11 @@
  */
 
 const RANGES = [
-  { label: '1M', days: 30 },
-  { label: '3M', days: 90 },
-  { label: 'All', days: null },
+  { label: '1W', bars: 5 },
+  { label: '1M', bars: 22 },
+  { label: '3M', bars: 65 },
+  { label: '6M', bars: 120 },
+  { label: 'All', bars: null },
 ];
 
 function themeColors() {
@@ -134,11 +136,11 @@ function calcSmartZones(points) {
   if (points.length < 5) return null;
   const lastClose = points[points.length - 1].close;
 
-  // Multi-pass pivot identification: primary lookback 8, secondary lookback 4
+  // Multi-pass pivot identification: primary lookback 8, secondary lookback 4, short-history lookback 2
   let pivotHighs = [];
   let pivotLows = [];
 
-  for (const lb of [8, 4]) {
+  for (const lb of [8, 4, 2]) {
     pivotHighs = [];
     pivotLows = [];
     for (let i = lb; i < points.length - lb; i++) {
@@ -214,6 +216,15 @@ function buildToolbar(points, onRangeSelect, onIndicatorToggle) {
   bar.style.gap = '8px';
   bar.style.margin = '4px 0 10px 0';
 
+  const totalPoints = points ? points.length : 0;
+  let defaultActiveIndex = RANGES.length - 1;
+  if (totalPoints >= 22) {
+    defaultActiveIndex = RANGES.findIndex((r) => r.label === '1M');
+  } else if (totalPoints >= 5) {
+    defaultActiveIndex = RANGES.findIndex((r) => r.label === '1W');
+  }
+  if (defaultActiveIndex < 0) defaultActiveIndex = RANGES.length - 1;
+
   // Range group
   const rangeGroup = document.createElement('div');
   rangeGroup.className = 'chips';
@@ -223,12 +234,19 @@ function buildToolbar(points, onRangeSelect, onIndicatorToggle) {
     const btn = document.createElement('button');
     btn.className = 'chip';
     btn.type = 'button';
-    btn.setAttribute('aria-pressed', i === RANGES.length - 1 ? 'true' : 'false');
+    if (r.bars != null && totalPoints < r.bars) {
+      btn.disabled = true;
+      btn.title = `Requires at least ${r.bars} trading sessions (${totalPoints} on record)`;
+      btn.style.opacity = '0.4';
+      btn.style.cursor = 'not-allowed';
+    }
+    btn.setAttribute('aria-pressed', i === defaultActiveIndex ? 'true' : 'false');
     btn.textContent = r.label;
     btn.addEventListener('click', () => {
+      if (btn.disabled) return;
       rangeGroup.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
       btn.setAttribute('aria-pressed', 'true');
-      onRangeSelect(r.days);
+      onRangeSelect(r.bars);
     });
     rangeGroup.appendChild(btn);
   });
@@ -427,8 +445,6 @@ async function initChart(host) {
     }
   };
 
-  chart.timeScale().fitContent();
-
   // HUD Update Handler
   const lastPoint = points[points.length - 1];
   const updateHud = (p) => {
@@ -464,12 +480,20 @@ async function initChart(host) {
     }
   });
 
-  const setRange = (days) => {
-    if (days == null) {
+  const totalPoints = points ? points.length : 0;
+  let defaultActiveIndex = RANGES.length - 1;
+  if (totalPoints >= 22) {
+    defaultActiveIndex = RANGES.findIndex((r) => r.label === '1M');
+  } else if (totalPoints >= 5) {
+    defaultActiveIndex = RANGES.findIndex((r) => r.label === '1W');
+  }
+  if (defaultActiveIndex < 0) defaultActiveIndex = RANGES.length - 1;
+
+  const setRange = (bars) => {
+    if (bars == null || bars >= points.length) {
       chart.timeScale().fitContent();
       return;
     }
-    const bars = days === 30 ? 22 : (days === 90 ? 65 : points.length);
     const fromIndex = Math.max(0, points.length - bars);
     try {
       chart.timeScale().setVisibleLogicalRange({
@@ -480,6 +504,9 @@ async function initChart(host) {
       chart.timeScale().fitContent();
     }
   };
+
+  const initialBars = RANGES[defaultActiveIndex]?.bars ?? null;
+  setRange(initialBars);
 
   const handleIndicatorToggle = (id, active) => {
     if (id === 'sma') smaSeries.applyOptions({ visible: active });
@@ -496,6 +523,14 @@ async function initChart(host) {
   const toolbar = buildToolbar(points, setRange, handleIndicatorToggle);
   host.appendChild(toolbar);
   host.appendChild(canvasWrap);
+
+  if (points.length < 22) {
+    const notice = document.createElement('div');
+    notice.className = 'xs muted';
+    notice.style.margin = '6px 0 2px 0';
+    notice.textContent = `Showing all ${points.length} trading sessions on record (since ${points[0].time}). Longer timeframes unlock as additional exchange sessions accumulate.`;
+    host.appendChild(notice);
+  }
 
   const ro = new ResizeObserver(() => chart.applyOptions({ width: canvasWrap.clientWidth }));
   ro.observe(canvasWrap);

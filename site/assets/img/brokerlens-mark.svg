@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="BrokerLens">
+  <defs>
+    <clipPath id="bl-lens-mark">
+      <circle cx="256" cy="256" r="143"/>
+    </clipPath>
+  </defs>
+  <!-- Soft out-of-focus background market trend -->
+  <g fill="none" stroke="#2f4a8f" stroke-width="30" stroke-linecap="round">
+    <path d="M50 369 L84 359" opacity=".38"/>
+    <path d="M18 379 L30 375" opacity=".18"/>
+    <path d="M438 161 L470 149" opacity=".38"/>
+    <path d="M486 143 L496 140" opacity=".18"/>
+  </g>
+  <!-- The Lens Ring (Structure) -->
+  <circle cx="256" cy="256" r="166" fill="none" stroke="#2f4a8f" stroke-width="46"/>
+  <!-- The In-Focus Market Trend (Sharp Uptick inside the Lens) -->
+  <path d="M-24 392 L146 340 L212 288 L272 336 L360 190 L528 128" fill="none" stroke="#0f7a4d"
+        stroke-width="46" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#bl-lens-mark)"/>
+</svg>

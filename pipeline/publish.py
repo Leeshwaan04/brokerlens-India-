@@ -2349,7 +2349,14 @@ def _stock_ohlc_html(history):
     highs = [row["high"] for row in history if isinstance(row.get("high"), (int, float))]
     lows = [row["low"] for row in history if isinstance(row.get("low"), (int, float))]
     window_days = len(history)
-    range_label = "52-Week Range" if window_days >= 252 else "%d-Day Range" % window_days
+    if window_days >= 252:
+        range_label = "52-Week Range"
+    elif window_days >= 115:
+        range_label = "6-Month Range (%d Sessions)" % window_days
+    elif window_days < 30:
+        range_label = "Since Listing (%d Sessions)" % window_days
+    else:
+        range_label = "%d-Day Range" % window_days
     tiles = [
         ("Open", _px_html(last.get("open"))),
         ("Day High", _px_html(last.get("high"))),

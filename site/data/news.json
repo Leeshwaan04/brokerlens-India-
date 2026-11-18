@@ -1,23 +1,33 @@
 {
-  "generated_at": "2026-11-18T12:26:02.023691+00:00",
-  "total_articles": 24,
+  "generated_at": "2026-11-18T17:28:55.408481+00:00",
+  "total_articles": 25,
   "articles": [
     {
-      "slug": "indian-stock-market-wrap-2026-11-18",
-      "title": "Indian Stock Market Today: Nifty 50 at 25,227.95, Key Gainers and Sectoral Action (18 November 2026)",
-      "description": "NSE market summary for 18 November 2026: Nifty 50 declined by -159.45 points. Review top gainers, losers, turnover, and exchange breadth disclosures.",
-      "date": "2026-11-18",
-      "date_str": "18 November 2026",
-      "category": "Market News",
-      "category_badge": "badge-verified",
+      "slug": "ipo-vnl-live-subscription-bidding-review",
+      "title": "Vishal Nirmiti Limited IPO Live Status: Subscribed 0.44x, Price Band Rs.208 to Rs.220",
+      "description": "Vishal Nirmiti Limited IPO is currently open for bidding. Price band is Rs.208 to Rs.220 with issue closing on 05 October 2026. Track live subscription numbers and broker application procedures.",
+      "date": "2026-10-08",
+      "date_str": "08 October 2026",
+      "category": "IPO Bulletin",
+      "category_badge": "badge-up",
       "read_time": "1 min read"
     },
     {
-      "slug": "ipo-crystalcp-live-subscription-bidding-review",
-      "title": "Crystal Crop Protection Limited IPO Live Status: Subscribed 0.73x, Price Band Rs.259 to Rs.272",
-      "description": "Crystal Crop Protection Limited IPO is currently open for bidding. Price band is Rs.259 to Rs.272 with issue closing on 20 November 2026. Track live subscription numbers and broker application procedures.",
-      "date": "2026-11-17",
-      "date_str": "17 November 2026",
+      "slug": "ipo-nityas-live-subscription-bidding-review",
+      "title": "Nityas Gems and Jewellery Limited IPO Live Status: Subscribed 0.43x, Price Band Rs.70 to Rs.75",
+      "description": "Nityas Gems and Jewellery Limited IPO is currently open for bidding. Price band is Rs.70 to Rs.75 with issue closing on 05 October 2026. Track live subscription numbers and broker application procedures.",
+      "date": "2026-10-08",
+      "date_str": "08 October 2026",
+      "category": "IPO Bulletin",
+      "category_badge": "badge-up",
+      "read_time": "1 min read"
+    },
+    {
+      "slug": "ipo-eventions-live-subscription-bidding-review",
+      "title": "Eventions Limited IPO Live Status: Subscribed 1.75x, Price Band Disclosed on bid",
+      "description": "Eventions Limited IPO is currently open for bidding. Price band is Disclosed on bid with issue closing on 05 October 2026. Track live subscription numbers and broker application procedures.",
+      "date": "2026-10-08",
+      "date_str": "08 October 2026",
       "category": "IPO Bulletin",
       "category_badge": "badge-up",
       "read_time": "1 min read"

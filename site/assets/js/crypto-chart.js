@@ -13,6 +13,7 @@
 import { esc } from './store.js?v=b59cf0df04';
 
 const RANGES = [
+  { label: '1W', days: 7 },
   { label: '1M', days: 30 },
   { label: '3M', days: 90 },
   { label: '6M', days: 180 },
@@ -156,7 +157,7 @@ async function loadHistory(symbol) {
   return r.json();
 }
 
-function buildToolbar(container, onRangeSelect, onIndicatorToggle) {
+function buildToolbar(candles, seriesData, onRangeSelect, onIndicatorToggle) {
   const bar = document.createElement('div');
   bar.className = 'chart-toolbar';
   bar.style.display = 'flex';
@@ -164,7 +165,19 @@ function buildToolbar(container, onRangeSelect, onIndicatorToggle) {
   bar.style.alignItems = 'center';
   bar.style.flexWrap = 'wrap';
   bar.style.gap = '8px';
-  bar.style.marginBottom = '8px';
+  bar.style.margin = '4px 0 10px 0';
+
+  const totalDays = candles && candles.length
+    ? Math.round((new Date(candles[candles.length - 1][0]) - new Date(candles[0][0])) / 86400000) + 1
+    : 0;
+
+  let defaultActiveIndex = RANGES.length - 1;
+  if (totalDays >= 30) {
+    defaultActiveIndex = RANGES.findIndex((r) => r.label === '1M');
+  } else if (totalDays >= 7) {
+    defaultActiveIndex = RANGES.findIndex((r) => r.label === '1W');
+  }
+  if (defaultActiveIndex < 0) defaultActiveIndex = RANGES.length - 1;
 
   // Range chips
   const rangeGroup = document.createElement('div');
@@ -175,9 +188,16 @@ function buildToolbar(container, onRangeSelect, onIndicatorToggle) {
     const btn = document.createElement('button');
     btn.className = 'chip';
     btn.type = 'button';
-    btn.setAttribute('aria-pressed', i === RANGES.length - 1 ? 'true' : 'false');
+    if (r.days != null && totalDays < r.days) {
+      btn.disabled = true;
+      btn.title = `Requires at least ${r.days} days of history (${totalDays} on record)`;
+      btn.style.opacity = '0.4';
+      btn.style.cursor = 'not-allowed';
+    }
+    btn.setAttribute('aria-pressed', i === defaultActiveIndex ? 'true' : 'false');
     btn.textContent = r.label;
     btn.addEventListener('click', () => {
+      if (btn.disabled) return;
       rangeGroup.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
       btn.setAttribute('aria-pressed', 'true');
       onRangeSelect(r.days);
@@ -192,19 +212,26 @@ function buildToolbar(container, onRangeSelect, onIndicatorToggle) {
   indicatorGroup.setAttribute('aria-label', 'Technical indicators');
 
   const indicators = [
-    { id: 'sma', label: 'SMA 20' },
-    { id: 'ema', label: 'EMA 50' },
-    { id: 'bb', label: 'Bollinger' },
-    { id: 'zones', label: 'Smart Zones' },
+    { id: 'sma', label: 'SMA 20', minPoints: 20 },
+    { id: 'ema', label: 'EMA 50', minPoints: 50 },
+    { id: 'bb', label: 'Bollinger', minPoints: 20 },
+    { id: 'zones', label: 'Smart Zones', minPoints: 10 },
   ];
 
   indicators.forEach((ind) => {
     const btn = document.createElement('button');
     btn.className = 'chip';
     btn.type = 'button';
+    if (seriesData && seriesData.length < ind.minPoints) {
+      btn.disabled = true;
+      btn.title = `Requires at least ${ind.minPoints} daily data points (${seriesData.length} on record)`;
+      btn.style.opacity = '0.4';
+      btn.style.cursor = 'not-allowed';
+    }
     btn.setAttribute('aria-pressed', 'false');
     btn.textContent = ind.label;
     btn.addEventListener('click', () => {
+      if (btn.disabled) return;
       const active = btn.getAttribute('aria-pressed') === 'true';
       btn.setAttribute('aria-pressed', active ? 'false' : 'true');
       onIndicatorToggle(ind.id, !active);
@@ -214,7 +241,6 @@ function buildToolbar(container, onRangeSelect, onIndicatorToggle) {
 
   bar.appendChild(rangeGroup);
   bar.appendChild(indicatorGroup);
-  container.appendChild(bar);
   return bar;
 }
 
@@ -232,7 +258,6 @@ async function initChart(host) {
   hud.style.fontFamily = 'monospace';
 
   host.appendChild(hud);
-  host.appendChild(canvasWrap);
 
   let candles;
   try {
@@ -241,10 +266,12 @@ async function initChart(host) {
   } catch {
     canvasWrap.innerHTML = `<div class="small faint" style="padding:24px 0;text-align:center">
       Price history isn't available for ${esc(symbol)} yet - it refreshes on the next site update.</div>`;
+    host.appendChild(canvasWrap);
     return;
   }
   if (candles.length < 2) {
     canvasWrap.innerHTML = '<div class="small faint" style="padding:24px 0;text-align:center">Not enough price history yet.</div>';
+    host.appendChild(canvasWrap);
     return;
   }
 
@@ -393,7 +420,11 @@ async function initChart(host) {
     from.setUTCDate(from.getUTCDate() - days);
     const fromStr = from.toISOString().slice(0, 10);
     const clampedFrom = candles.find((c) => c[0] >= fromStr)?.[0] || candles[0][0];
-    chart.timeScale().setVisibleRange({ from: clampedFrom, to: candles[candles.length - 1][0] });
+    try {
+      chart.timeScale().setVisibleRange({ from: clampedFrom, to: candles[candles.length - 1][0] });
+    } catch {
+      chart.timeScale().fitContent();
+    }
   };
 
   const handleIndicatorToggle = (id, active) => {
@@ -406,7 +437,21 @@ async function initChart(host) {
     if (id === 'zones') updateSmartZones(active);
   };
 
-  buildToolbar(host, setRange, handleIndicatorToggle);
+  const toolbar = buildToolbar(candles, seriesData, setRange, handleIndicatorToggle);
+  host.appendChild(toolbar);
+  host.appendChild(canvasWrap);
+
+  const totalDays = Math.round((new Date(candles[candles.length - 1][0]) - new Date(candles[0][0])) / 86400000) + 1;
+  const initialDays = totalDays >= 30 ? 30 : (totalDays >= 7 ? 7 : null);
+  setRange(initialDays);
+
+  if (candles.length < 30) {
+    const notice = document.createElement('div');
+    notice.className = 'xs muted';
+    notice.style.margin = '6px 0 2px 0';
+    notice.textContent = `Showing all ${candles.length} days of price history on record. Longer timeframes unlock as additional daily data points accumulate.`;
+    host.appendChild(notice);
+  }
 
   window.addEventListener('brokerlens:crypto-quote', (e) => {
     if (!e.detail || e.detail.symbol !== symbol) return;

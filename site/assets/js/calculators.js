@@ -367,11 +367,11 @@ function initCalculator() {
   const btn = document.getElementById('calc-btn');
   if (!fn || !btn) return;
   btn.addEventListener('click', fn);
+  // Enter in any input runs the calculation, matching user expectation.
+  container.querySelectorAll('input').forEach((el) => {
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); fn(); } });
+  });
   if (kind === 'price-whatif') {
-    // Enter in any field runs the calculation, like pressing the button.
-    container.querySelectorAll('input').forEach((el) => {
-      el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); fn(); } });
-    });
     // Preset growth buttons
     container.querySelectorAll('[data-preset-growth]').forEach((el) => {
       el.addEventListener('click', (e) => {
