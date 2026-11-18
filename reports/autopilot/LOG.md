@@ -786,3 +786,24 @@ and fund-comparison pages; shipped nothing)
   `/algo-platforms` are pure client-side aliases with no backing directory asset, so they were
   correctly left at the bare form in `ALIAS_OF`'s keys (Cloudflare has nothing to redirect there);
   only their target values (`/leaderboards/`, `/algo/`) needed fixing, and did.
+
+## 2026-11-18 (Automated SEO Autopilot)
+
+- Weekly 28-day snapshot comparison (2026-11-18 vs 2026-11-11):
+  - Clicks: 1019 (-169 vs prior week)
+  - Impressions: 98716 (-5716 vs prior week)
+  - Submitted indexable URLs: 6228
+
+- Striking distance search queries identified (positions 4 to 20, high impressions):
+  - "pashupati cotspin share price target 2030": pos 4.8, 925 impressions, 27 clicks, 2.92% CTR
+  - "irb infra share price target 2030": pos 8.3, 684 impressions, 3 clicks, 0.44% CTR
+  - "morepen lab share price target 2030": pos 7.7, 348 impressions, 2 clicks, 0.57% CTR
+  - "cupid share price target 2026": pos 6.8, 219 impressions, 0 clicks, 0% CTR
+  - "pc jeweller share price target 2027": pos 5.2, 208 impressions, 6 clicks, 2.88% CTR
+  - "praj industries share price target 2030": pos 8.7, 192 impressions, 4 clicks, 2.08% CTR
+  - "birlasoft share price target 2030": pos 5.8, 186 impressions, 4 clicks, 2.15% CTR
+  - "gujarat natural resources share price target 2030": pos 4.2, 183 impressions, 4 clicks, 2.19% CTR
+
+- Demand sitemap verified: all current high-demand pages remain indexed in Wave 1.
+- Expected effect: increase search visibility and CTR across striking-distance terms without adding thin doorway pages.
+- Check impact by: 2026-12-02
