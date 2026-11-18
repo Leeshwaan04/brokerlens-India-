@@ -825,9 +825,9 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
   </a>
   <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks" aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
   <nav class="nav-links" id="navlinks">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
-    <a href="/leaderboards">Movers</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
+    <a href="/leaderboards/">Movers</a>
     <a href="/calculators/">Calculators</a>
     <a href="/ipo/">IPO</a>
     <a href="/news/">News &amp; Blogs</a>
@@ -839,7 +839,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 <main class="wrap" style="padding-top:24px;padding-bottom:36px">
 <nav class="breadcrumb" aria-label="Breadcrumb">
   <a href="/">BrokerLens</a><span class="sep"> &rsaquo; </span>
-  <a href="/brokers">Brokers</a><span class="sep"> &rsaquo; </span>
+  <a href="/brokers/">Brokers</a><span class="sep"> &rsaquo; </span>
   <a href="/broker/{broker_id}/">{brand}</a><span class="sep"> &rsaquo; </span>
   <span aria-current="page">Trade {stock_sym}</span>
 </nav>
@@ -1001,8 +1001,8 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 </main>
 
 <footer class="site"><div class="wrap">
-  <p class="small muted" style="max-width:70ch">BrokerLens is an independent financial research service, not a SEBI-registered investment adviser. Calculations reflect official NSE, BSE, SEBI, and broker published rate schedules as of BrokerLens's latest data refresh. Nothing here constitutes a recommendation to buy, sell, or trade any security. <a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources &amp; lineage</a> &middot; <a href="/editorial-policy">Editorial Policy</a></p>
-  <p class="small"><a href="/brokers">All Brokers</a> &middot; <a href="/compare">Compare Brokers</a> &middot; <a href="/calculator">Fee Calculator</a> &middot; <a href="/stocks/">Stocks Directory</a> &middot; <a href="/">BrokerLens Home</a></p>
+  <p class="small muted" style="max-width:70ch">BrokerLens is an independent financial research service, not a SEBI-registered investment adviser. Calculations reflect official NSE, BSE, SEBI, and broker published rate schedules as of BrokerLens's latest data refresh. Nothing here constitutes a recommendation to buy, sell, or trade any security. <a href="/methodology/">Methodology</a> &middot; <a href="/sources/">Sources &amp; lineage</a> &middot; <a href="/editorial-policy/">Editorial Policy</a></p>
+  <p class="small"><a href="/brokers/">All Brokers</a> &middot; <a href="/compare/">Compare Brokers</a> &middot; <a href="/calculator/">Fee Calculator</a> &middot; <a href="/stocks/">Stocks Directory</a> &middot; <a href="/">BrokerLens Home</a></p>
 </div></footer>
 </body>
 </html>
@@ -1096,8 +1096,8 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/" style="color:var(--accent);font-weight:600">Trade Costs</a>
     <a href="/ipo/">IPO</a>
@@ -1224,8 +1224,8 @@ def render_trade_costs_hub(brokers, popular_stocks, site_url="https://www.broker
 </main>
 
 <footer class="site"><div class="wrap">
-  <p class="small muted" style="max-width:70ch">BrokerLens is an independent financial research service, not a SEBI-registered investment adviser. Calculations reflect official NSE, BSE, SEBI, and broker published rate schedules as of BrokerLens's latest data refresh. Nothing here constitutes a recommendation to buy, sell, or trade any security. <a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources &amp; lineage</a> &middot; <a href="/editorial-policy">Editorial Policy</a></p>
-  <p class="small"><a href="/brokers">All Brokers</a> &middot; <a href="/compare">Compare Brokers</a> &middot; <a href="/calculator">Fee Calculator</a> &middot; <a href="/stocks/">Stocks Directory</a> &middot; <a href="/">BrokerLens Home</a></p>
+  <p class="small muted" style="max-width:70ch">BrokerLens is an independent financial research service, not a SEBI-registered investment adviser. Calculations reflect official NSE, BSE, SEBI, and broker published rate schedules as of BrokerLens's latest data refresh. Nothing here constitutes a recommendation to buy, sell, or trade any security. <a href="/methodology/">Methodology</a> &middot; <a href="/sources/">Sources &amp; lineage</a> &middot; <a href="/editorial-policy/">Editorial Policy</a></p>
+  <p class="small"><a href="/brokers/">All Brokers</a> &middot; <a href="/compare/">Compare Brokers</a> &middot; <a href="/calculator/">Fee Calculator</a> &middot; <a href="/stocks/">Stocks Directory</a> &middot; <a href="/">BrokerLens Home</a></p>
 </div></footer>
 </body>
 </html>"""
@@ -1254,7 +1254,7 @@ def render_broker_trade_index(broker_id, broker_info, stocks, site_url="https://
         </div>
         """)
 
-    crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/brokers">Brokers</a></li><li class="muted">/</li><li><a href="/broker/{broker_id}/">{brand}</a></li><li class="muted">/</li><li class="muted">Trade Costs</li></ol></nav>'
+    crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/brokers/">Brokers</a></li><li class="muted">/</li><li><a href="/broker/{broker_id}/">{brand}</a></li><li class="muted">/</li><li class="muted">Trade Costs</li></ol></nav>'
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -1271,8 +1271,8 @@ def render_broker_trade_index(broker_id, broker_info, stocks, site_url="https://
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/">IPO</a>

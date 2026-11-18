@@ -876,7 +876,7 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
             </ul>
 
             <div class="card" style="margin-top:16px;padding:16px;border-left:4px solid var(--accent)">
-              <p style="margin:0"><strong>Interactive Comparison:</strong> Use our <a href="/compare" data-link>Broker Comparison Tool</a>
+              <p style="margin:0"><strong>Interactive Comparison:</strong> Use our <a href="/compare/" data-link>Broker Comparison Tool</a>
               to review real regulatory client data and cost structures side by side.</p>
             </div>
             """
@@ -1199,7 +1199,7 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
 
             <div class="card" style="margin-top:16px;padding:16px;border-left:4px solid var(--accent)">
               <p style="margin:0"><strong>Explore Platforms:</strong> Compare verified APIs, strategy builders, and institutional vendors on our
-              <a href="/algo" data-link>Algo Trading Platforms Directory</a>.</p>
+              <a href="/algo/" data-link>Algo Trading Platforms Directory</a>.</p>
             </div>
             """
         },
@@ -1305,9 +1305,9 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
               You can search any firm name or registration code directly:
             </p>
             <ul>
-              <li>Explore the central <a href="/registry">SEBI Registry Search</a> to verify registration status, registered corporate addresses, and validity timelines.</li>
-              <li>Browse <a href="/brokers">All Tracked Stock Brokers</a> to evaluate active client rankings, complaint frequency per 10,000 clients, and brokerage pricing.</li>
-              <li>Compare brokers side by side on the <a href="/compare">Broker Comparison Tool</a>.</li>
+              <li>Explore the central <a href="/registry/">SEBI Registry Search</a> to verify registration status, registered corporate addresses, and validity timelines.</li>
+              <li>Browse <a href="/brokers/">All Tracked Stock Brokers</a> to evaluate active client rankings, complaint frequency per 10,000 clients, and brokerage pricing.</li>
+              <li>Compare brokers side by side on the <a href="/compare/">Broker Comparison Tool</a>.</li>
             </ul>
 
             <div class="section-title"><h2>3. Evaluating Broker Safety and Financial Health</h2></div>
@@ -1322,9 +1322,9 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
 
             <div class="card" style="margin-top:20px;padding:16px;border-left:4px solid var(--accent)">
               <p style="margin:0"><strong>Research Intermediaries:</strong> Audit regulatory lineages on the
-              <a href="/registry" data-link>SEBI Registry</a>, discover tailored platforms with the
+              <a href="/registry/" data-link>SEBI Registry</a>, discover tailored platforms with the
               <a href="/find-broker/" data-link>Broker Matchmaker</a>, or review our independent
-              <a href="/editorial-policy" data-link>Editorial Policy</a>.</p>
+              <a href="/editorial-policy/" data-link>Editorial Policy</a>.</p>
             </div>
             """
         }
@@ -1540,7 +1540,7 @@ def generate_news_corpus(ingest_data, site_url="https://www.brokerlens.in"):
 
             <div class="card" style="margin-top:16px;padding:16px;border-left:4px solid var(--accent)">
               <p style="margin:0"><strong>Audit Your Costs:</strong> Run your exact trading portfolio through our
-              <a href="/calculator" data-link>Custom Brokerage Calculator</a> to calculate your exact annual fees.</p>
+              <a href="/calculator/" data-link>Custom Brokerage Calculator</a> to calculate your exact annual fees.</p>
             </div>
             """
         },
@@ -1948,11 +1948,11 @@ def write_news_suite(ingest_data, site_url="https://www.brokerlens.in"):
             + '<div class="xs muted">Generated from NSE, BSE and SEBI public data. Not investment advice.</div>'
             + '</div>'
             + '</div>'
-            + '<div class="xs"><a href="/editorial-policy" style="color:var(--accent);text-decoration:none;font-weight:600">Editorial Guidelines &rarr;</a></div>'
+            + '<div class="xs"><a href="/editorial-policy/" style="color:var(--accent);text-decoration:none;font-weight:600">Editorial Guidelines &rarr;</a></div>'
             + '</div>'
             + '<div class="card" style="margin-top:20px;padding:28px;line-height:1.7">%s</div>' % _inject_mid_article_breaks(art["body_html"])
             + _ibsl_news_banner()
-            + '<p class="xs faint" style="margin-top:12px">Editorial Integrity: BrokerLens does not accept payment to alter factual analyses. Sponsored placements are labelled and do not affect any data, ranking or analysis. Read our <a href="/editorial-policy">Editorial Policy</a> and <a href="/methodology">Methodology</a>.</p>'
+            + '<p class="xs faint" style="margin-top:12px">Editorial Integrity: BrokerLens does not accept payment to alter factual analyses. Sponsored placements are labelled and do not affect any data, ranking or analysis. Read our <a href="/editorial-policy/">Editorial Policy</a> and <a href="/methodology/">Methodology</a>.</p>'
             + affiliate_html
             + '<div style="margin-top:24px"><a class="btn btn-sm" href="/news/" data-link>&larr; Back to all News, Blogs &amp; Market Insights</a></div>'
             + '<aside class="mobile-sticky-lead" aria-label="Sponsored account opening">'

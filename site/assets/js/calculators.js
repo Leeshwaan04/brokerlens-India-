@@ -27,7 +27,7 @@ function brokerCta() {
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <a href="https://indiabullssecurities.onelink.me/Kaqz/brokerlens" target="_blank" rel="sponsored noopener" class="btn btn-primary btn-sm" style="font-weight:600">Open Free Demat Account &rarr;</a>
-        <a href="/compare" class="btn btn-outline btn-sm">Compare Brokers &rarr;</a>
+        <a href="/compare/" class="btn btn-outline btn-sm">Compare Brokers &rarr;</a>
       </div>
     </div>`;
 }

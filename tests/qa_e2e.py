@@ -573,8 +573,8 @@ def test_published():
             check("stock page loads the price chart (vendor lib + stock-chart.js)",
                   "lightweight-charts" in itc_html and "stock-chart.js" in itc_html
                   and "data-stock-chart" in itc_html)
-            check("stock page has a trade-this-stock CTA linking to /compare",
-                  "Trade ITC" in itc_html and 'href="/compare"' in itc_html)
+            check("stock page has a trade-this-stock CTA linking to /compare/",
+                  "Trade ITC" in itc_html and 'href="/compare/"' in itc_html)
             # Regression guard: the chart card used to be a short, fixed-height
             # canvas sitting next to a much taller sidebar stack (last-close +
             # listing details + 3 affiliate banners), with align-items:start
@@ -797,7 +797,7 @@ def test_published():
             _a = _t.find("Calculators &amp; Fair-Cost Estimators")
             _blk = _t[_a:_a + 6000]
             _hrefs = [h for h in _re.findall(r'href="(/calculators?/[^"]*)"', _blk)]
-            _ok = all(h in ("/calculator", "/calculators/") or
+            _ok = all(h in ("/calculator/", "/calculators/") or
                       (h.startswith("/calculators/") and h.strip("/").split("/")[-1] in calc_slugs + ["sip"])
                       for h in _hrefs)
             check("home calculator cards in %s only link pages that exist" % _src, bool(_hrefs) and _ok, str(_hrefs))
@@ -834,7 +834,7 @@ def test_published():
             '/calculators/%s/' % c["slug"] in hub_html for c in [
                 {"slug": s} for s in calc_slugs
             ]))
-        check("calculators hub links the brokerage cost calculator too", 'href="/calculator"' in hub_html)
+        check("calculators hub links the brokerage cost calculator too", 'href="/calculator/"' in hub_html)
 
     # Directory/browse pages: before these existed, ~2,568 stock pages and
     # all 3,364 fund pages had no inbound link anywhere on the site except a

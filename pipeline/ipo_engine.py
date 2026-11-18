@@ -1049,7 +1049,7 @@ def render_enhanced_ipo_hub(records, equity_history, head_template, foot_templat
     body += (
         crumb_html
         + '<h1 style="margin-top:0">IPO Tracker & Performance Hub</h1>'
-        + '<p class="muted" style="max-width:75ch">Mainboard and SME IPOs tracked from official NSE disclosures: price bands, dates, dated subscription snapshots, and post-listing results where the exchange price history on file covers them. No grey market premium, no speculative recommendations &bull; <a href="/methodology" data-link>see methodology</a>.</p>'
+        + '<p class="muted" style="max-width:75ch">Mainboard and SME IPOs tracked from official NSE disclosures: price bands, dates, dated subscription snapshots, and post-listing results where the exchange price history on file covers them. No grey market premium, no speculative recommendations &bull; <a href="/methodology/" data-link>see methodology</a>.</p>'
         + f'<p class="small muted" style="max-width:75ch;margin-top:-6px">{_esc(fresh)}</p>'
         + f'<div class="grid g4" style="margin:20px 0 24px 0;gap:12px">'
         + f'<div class="card" style="padding:14px;background:var(--bg-raised);border-left:3px solid var(--accent)">'

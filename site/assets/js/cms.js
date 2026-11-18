@@ -293,11 +293,11 @@ async function renderDashboard(container) {
   const coreHubs = [
     { path: '/find-broker/', name: 'Broker Matchmaker Decision Hub', type: 'Interactive Decision Tool' },
     { path: '/compare/', name: 'Broker Comparison Matrix Hub', type: '1v1 Broker Audit Tool' },
-    { path: '/brokers', name: 'Broker Directory & Master Rankings', type: 'Comprehensive Directory' },
+    { path: '/brokers/', name: 'Broker Directory & Master Rankings', type: 'Comprehensive Directory' },
     { path: '/ipo/upcoming/', name: 'Upcoming IPO Tracker & Allotment Audit', type: 'Primary Market Tracker' },
-    { path: '/calculator', name: 'Brokerage & Cost Calculator', type: 'Financial Calculator Suite' },
+    { path: '/calculator/', name: 'Brokerage & Cost Calculator', type: 'Financial Calculator Suite' },
     { path: '/trade-costs/', name: 'Transaction Cost Comparison by Stock', type: 'Stock x Broker Cost Engine' },
-    { path: '/registry', name: 'SEBI Master Register Search', type: 'Official Regulatory Database' }
+    { path: '/registry/', name: 'SEBI Master Register Search', type: 'Official Regulatory Database' }
   ];
 
   const systemHealthItems = [

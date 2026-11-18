@@ -164,8 +164,8 @@ def render_sip_scenario_page(amount: int, years: int, site_url="https://www.brok
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/">IPO</a>
@@ -295,7 +295,7 @@ def render_sip_scenario_page(amount: int, years: int, site_url="https://www.brok
 
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">All calculations use standard compound interest algorithms. Mutual fund investments are subject to market risks.</p>
-  <p class="small"><a href="/calculators/sip/">SIP Calculator Hub</a> &middot; <a href="/compare">Compare Brokers</a> &middot; <a href="/trade-costs/">Trade Costs</a> &middot; <a href="/">BrokerLens Home</a></p>
+  <p class="small"><a href="/calculators/sip/">SIP Calculator Hub</a> &middot; <a href="/compare/">Compare Brokers</a> &middot; <a href="/trade-costs/">Trade Costs</a> &middot; <a href="/">BrokerLens Home</a></p>
 </div></footer>
 </body>
 </html>"""
@@ -369,8 +369,8 @@ def render_sip_hub(all_scenarios, site_url="https://www.brokerlens.in"):
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/">IPO</a>
@@ -391,7 +391,7 @@ def render_sip_hub(all_scenarios, site_url="https://www.brokerlens.in"):
 
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">All calculations are based on standard financial compounding formulas. Past mutual fund performance is not an indicator of future returns.</p>
-  <p class="small"><a href="/calculators/">All Calculators</a> &middot; <a href="/compare">Compare Brokers</a> &middot; <a href="/trade-costs/">Trade Costs</a> &middot; <a href="/">BrokerLens Home</a></p>
+  <p class="small"><a href="/calculators/">All Calculators</a> &middot; <a href="/compare/">Compare Brokers</a> &middot; <a href="/trade-costs/">Trade Costs</a> &middot; <a href="/">BrokerLens Home</a></p>
 </div></footer>
 </body>
 </html>"""

@@ -74,8 +74,8 @@ function build(host) {
               <p class="film-end-line">Trade the market.<br><span>Not your emotions.</span></p>
               <div class="film-end-actions">
                 <button type="button" class="film-replay">${ICON.replay} Replay</button>
-                <a class="film-link" href="/compare">Compare brokers &rarr;</a>
-                <a class="film-link" href="/calculator">Cost calculator &rarr;</a>
+                <a class="film-link" href="/compare/">Compare brokers &rarr;</a>
+                <a class="film-link" href="/calculator/">Cost calculator &rarr;</a>
               </div>
               <p class="film-end-risk">Investments in securities market are subject to market risks. Read all the related documents carefully before investing. Visuals are AI-generated.</p>
             </div>

@@ -6,10 +6,10 @@
  */
 
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=b59cf0df04';
-import * as pages from './pages.js?v=2488616b0c';
+import * as pages from './pages.js?v=9bfd23da0a';
 import { clearRedraws } from './chart.js?v=22460af914';
 import './nav-widgets.js?v=a28438a7fe';
-import './search.js?v=e5f2a4bf09';
+import './search.js?v=2dd6d23034';
 import './hero-video.js?v=9e658a1fa5';
 
 const app = document.getElementById('app');
@@ -48,54 +48,54 @@ const ROUTES = [
 
 const TITLES = {
   '/': 'BrokerLens: Indian Stock Broker and Crypto Exchange Data',
-  '/news': 'Market News, Blogs, IPO Bulletins & Research | BrokerLens',
-  '/brokers': 'All Indian stock brokers, compared: BrokerLens',
-  '/compare': 'Compare Indian stock brokers side by side: BrokerLens',
-  '/find-broker': 'Broker Matchmaker: Find the Best Stock Broker in India (2026) | BrokerLens',
-  '/match': 'Broker Matchmaker: Find the Best Stock Broker in India (2026) | BrokerLens',
-  '/cms': 'BrokerLens CMS & Executive Analytics Portal',
-  '/leaderboards': 'Market Movers: NSE Gainers, Losers and Broker Stats | BrokerLens',
-  '/calculator': 'Brokerage cost calculator: BrokerLens',
-  '/registry': 'SEBI-registered brokers and intermediaries: BrokerLens',
-  '/algo': 'Algo trading platforms in India (APIs, no-code builders and vendors) | BrokerLens',
-  '/methodology': 'Methodology: BrokerLens',
-  '/sources': 'Data sources and lineage: BrokerLens',
+  '/news/': 'Market News, Blogs, IPO Bulletins & Research | BrokerLens',
+  '/brokers/': 'All Indian stock brokers, compared: BrokerLens',
+  '/compare/': 'Compare Indian stock brokers side by side: BrokerLens',
+  '/find-broker/': 'Broker Matchmaker: Find the Best Stock Broker in India (2026) | BrokerLens',
+  '/match/': 'Broker Matchmaker: Find the Best Stock Broker in India (2026) | BrokerLens',
+  '/cms/': 'BrokerLens CMS & Executive Analytics Portal',
+  '/leaderboards/': 'Market Movers: NSE Gainers, Losers and Broker Stats | BrokerLens',
+  '/calculator/': 'Brokerage cost calculator: BrokerLens',
+  '/registry/': 'SEBI-registered brokers and intermediaries: BrokerLens',
+  '/algo/': 'Algo trading platforms in India (APIs, no-code builders and vendors) | BrokerLens',
+  '/methodology/': 'Methodology: BrokerLens',
+  '/sources/': 'Data sources and lineage: BrokerLens',
   '/coming-soon/us': 'US stock broker comparison, coming soon: BrokerLens',
   '/coming-soon/gcc': 'GCC stock broker comparison, coming soon: BrokerLens',
-  '/about': 'About BrokerLens: BrokerLens',
-  '/contact': 'Contact BrokerLens: BrokerLens',
-  '/privacy-policy': 'Privacy Policy: BrokerLens',
-  '/terms-of-service': 'Terms of Service: BrokerLens',
+  '/about/': 'About BrokerLens: BrokerLens',
+  '/contact/': 'Contact BrokerLens: BrokerLens',
+  '/privacy-policy/': 'Privacy Policy: BrokerLens',
+  '/terms-of-service/': 'Terms of Service: BrokerLens',
 };
 
 /* Per-route descriptions. Without these every page inherited the homepage copy,
  * and a broker description leaked onto whatever page was visited next. */
 const DESCRIPTIONS = {
   '/': 'Compare Indian stock brokers and crypto exchanges on active clients, market share, complaint records and cost. Built from primary NSE, BSE, SEBI and exchange disclosures.',
-  '/brokers': 'Every Indian stock broker we track, side by side: active clients, growth, complaint rate, reliability and monthly cost, from primary regulator and exchange sources.',
-  '/compare': 'Put Indian stock brokers head to head on clients, complaints, regulatory standing and real cost, using regulator-sourced figures.',
-  '/find-broker': 'Find the ideal stock broker for your investment style, trading capital, and platform needs in 30 seconds. Objective recommendations based on verified SEBI registrations and fee cards.',
-  '/match': 'Find the ideal stock broker for your investment style, trading capital, and platform needs in 30 seconds. Objective recommendations based on verified SEBI registrations and fee cards.',
-  '/cms': 'BrokerLens Executive Analytics, Content Management, and Partner Conversion Portal.',
-  '/leaderboards': "Today's real NSE top gainers, losers and most-active stocks, plus crypto market-cap and 24h movers. Broker rankings by active clients, complaints and cost publish once that data is live.",
-  '/calculator': 'Work out what a month of your actual trading costs at each Indian broker, using their published charges.',
-  '/registry': 'Search every SEBI-registered broking and depository-participant entity: legal name, registration number, city, exchange memberships and validity.',
-  '/algo': 'Algo trading platforms in India: official broker APIs, no-code strategy builders, backtesting tools and institutional vendors, with SEBI framework context.',
-  '/methodology': 'How every figure on BrokerLens is calculated: the cost basket, the reliability weights, and what each provenance marker means.',
-  '/sources': 'Every data source behind BrokerLens, when it last ran, and exactly which fields it feeds.',
+  '/brokers/': 'Every Indian stock broker we track, side by side: active clients, growth, complaint rate, reliability and monthly cost, from primary regulator and exchange sources.',
+  '/compare/': 'Put Indian stock brokers head to head on clients, complaints, regulatory standing and real cost, using regulator-sourced figures.',
+  '/find-broker/': 'Find the ideal stock broker for your investment style, trading capital, and platform needs in 30 seconds. Objective recommendations based on verified SEBI registrations and fee cards.',
+  '/match/': 'Find the ideal stock broker for your investment style, trading capital, and platform needs in 30 seconds. Objective recommendations based on verified SEBI registrations and fee cards.',
+  '/cms/': 'BrokerLens Executive Analytics, Content Management, and Partner Conversion Portal.',
+  '/leaderboards/': "Today's real NSE top gainers, losers and most-active stocks, plus crypto market-cap and 24h movers. Broker rankings by active clients, complaints and cost publish once that data is live.",
+  '/calculator/': 'Work out what a month of your actual trading costs at each Indian broker, using their published charges.',
+  '/registry/': 'Search every SEBI-registered broking and depository-participant entity: legal name, registration number, city, exchange memberships and validity.',
+  '/algo/': 'Algo trading platforms in India: official broker APIs, no-code strategy builders, backtesting tools and institutional vendors, with SEBI framework context.',
+  '/methodology/': 'How every figure on BrokerLens is calculated: the cost basket, the reliability weights, and what each provenance marker means.',
+  '/sources/': 'Every data source behind BrokerLens, when it last ran, and exactly which fields it feeds.',
   '/coming-soon/us': 'BrokerLens is researching US stock broker data for a future comparison. Not live yet.',
   '/coming-soon/gcc': 'BrokerLens is researching GCC (UAE, Saudi and Gulf) stock broker data for a future comparison. Not live yet.',
-  '/news': 'Automated real-time stock market news, investor educational blogs, live IPO bidding dispatches, and broker empirical research.',
-  '/about': 'What BrokerLens is, how it sources broker, stock, fund and crypto data, and what it deliberately does not do.',
-  '/contact': 'How to reach BrokerLens for data corrections, advertising enquiries, or privacy and legal questions.',
-  '/privacy-policy': 'What BrokerLens does and does not collect, how affiliate links work, and how to reach us about your data.',
-  '/terms-of-service': 'The terms for using BrokerLens: what the site is, the limits on the information it publishes, and your responsibilities.',
+  '/news/': 'Automated real-time stock market news, investor educational blogs, live IPO bidding dispatches, and broker empirical research.',
+  '/about/': 'What BrokerLens is, how it sources broker, stock, fund and crypto data, and what it deliberately does not do.',
+  '/contact/': 'How to reach BrokerLens for data corrections, advertising enquiries, or privacy and legal questions.',
+  '/privacy-policy/': 'What BrokerLens does and does not collect, how affiliate links work, and how to reach us about your data.',
+  '/terms-of-service/': 'The terms for using BrokerLens: what the site is, the limits on the information it publishes, and your responsibilities.',
 };
 
 /* Alias routes must not compete with their primary in search. */
 const ALIAS_OF = {
-  '/rankings': '/leaderboards',
-  '/algo-platforms': '/algo',
+  '/rankings': '/leaderboards/',
+  '/algo-platforms': '/algo/',
 };
 
 let firstRender = true;

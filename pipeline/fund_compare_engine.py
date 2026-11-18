@@ -278,9 +278,9 @@ def _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url, same_categ
   <div class="nav-inner">
     <a href="/" class="brand">Broker<span>Lens</span></a>
     <div class="nav-links">
-      <a href="/brokers">Brokers</a>
+      <a href="/brokers/">Brokers</a>
       <a href="/trade-costs/">Trade Costs</a>
-      <a href="/compare" class="active">Compare</a>
+      <a href="/compare/" class="active">Compare</a>
       <a href="/ipo/">IPOs</a>
       <a href="/calculators/">Calculators</a>
       <a href="/news/">News</a>
@@ -291,7 +291,7 @@ def _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url, same_categ
 <main class="container" style="max-width:980px;margin:24px auto;padding:0 16px;">
   <div class="breadcrumb" style="font-size:13px;margin-bottom:16px;color:var(--text-muted);">
     <a href="/">BrokerLens</a> &rsaquo;
-    <a href="/compare">Compare</a> &rsaquo;
+    <a href="/compare/">Compare</a> &rsaquo;
     <a href="/compare/mutual-funds/">Mutual Funds</a> &rsaquo;
     <span>{n1} vs {n2}</span>
   </div>
@@ -431,8 +431,8 @@ def _render_fund_comparison_page(f1, f2, cat_key, cat_meta, site_url, same_categ
       <a href="/compare/mutual-funds/">All Mutual Fund Comparisons</a> &bull;
       <a href="/funds-by/">Mutual Funds by AMC</a> &bull;
       <a href="/calculators/sip/">SIP Calculator</a> &bull;
-      <a href="/methodology">Methodology</a> &bull;
-      <a href="/privacy-policy">Privacy Policy</a>
+      <a href="/methodology/">Methodology</a> &bull;
+      <a href="/privacy-policy/">Privacy Policy</a>
     </p>
   </div>
 </footer>
@@ -501,9 +501,9 @@ def _render_category_hub(cat_key, cat_meta, funds, site_url):
   <div class="nav-inner">
     <a href="/" class="brand">Broker<span>Lens</span></a>
     <div class="nav-links">
-      <a href="/brokers">Brokers</a>
+      <a href="/brokers/">Brokers</a>
       <a href="/trade-costs/">Trade Costs</a>
-      <a href="/compare">Compare</a>
+      <a href="/compare/">Compare</a>
       <a href="/ipo/">IPOs</a>
       <a href="/calculators/">Calculators</a>
       <a href="/news/">News</a>
@@ -620,9 +620,9 @@ def _render_master_compare_hub(comparisons_by_cat, site_url):
   <div class="nav-inner">
     <a href="/" class="brand">Broker<span>Lens</span></a>
     <div class="nav-links">
-      <a href="/brokers">Brokers</a>
+      <a href="/brokers/">Brokers</a>
       <a href="/trade-costs/">Trade Costs</a>
-      <a href="/compare" class="active">Compare</a>
+      <a href="/compare/" class="active">Compare</a>
       <a href="/ipo/">IPOs</a>
       <a href="/calculators/">Calculators</a>
       <a href="/news/">News</a>
@@ -633,7 +633,7 @@ def _render_master_compare_hub(comparisons_by_cat, site_url):
 <main class="container" style="max-width:980px;margin:24px auto;padding:0 16px;">
   <div class="breadcrumb" style="font-size:13px;margin-bottom:16px;color:var(--text-muted);">
     <a href="/">BrokerLens</a> &rsaquo;
-    <a href="/compare">Compare</a> &rsaquo;
+    <a href="/compare/">Compare</a> &rsaquo;
     <span>Mutual Funds</span>
   </div>
 

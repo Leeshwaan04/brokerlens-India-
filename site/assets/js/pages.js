@@ -27,7 +27,7 @@ function pending(what, detail) {
     <strong>${esc(what)} not published yet</strong>
     ${esc(detail)} We publish a figure only once it comes from the primary source,
     so this section is empty rather than estimated.
-    <a href="/sources" data-link>What is live today</a>.
+    <a href="/sources/" data-link>What is live today</a>.
   </div>`;
 }
 
@@ -217,7 +217,7 @@ function popularComparisonsWidget() {
   return `<div class="card" style="padding:18px">
     <div class="row-between" style="align-items:center;margin-bottom:12px">
       <div class="card-title" style="margin:0">Popular Comparisons</div>
-      <a class="xs link-arrow" href="/compare" data-link>All 191 pairs &rarr;</a>
+      <a class="xs link-arrow" href="/compare/" data-link>All 191 pairs &rarr;</a>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
       ${pairs.map(([b1, b2, label, sub]) => `
@@ -289,11 +289,11 @@ export async function home() {
         : 'Legal entities, SEBI registration numbers, exchange memberships and regulatory standing, taken straight from the regulator\'s own register rather than from marketing pages.'}
     </p>
     <div class="row-wrap" style="margin-top:18px">
-      <a class="btn btn-primary" href="/brokers" data-link>Browse brokers</a>
-      <a class="btn" href="/find-broker" data-link>Find my broker</a>
-      <a class="btn" href="/compare" data-link>Compare side by side</a>
-      ${hasClients ? '<a class="btn" href="/calculator" data-link>What will it cost me?</a>'
-                   : '<a class="btn" href="/registry" data-link>Search the SEBI register</a>'}
+      <a class="btn btn-primary" href="/brokers/" data-link>Browse brokers</a>
+      <a class="btn" href="/find-broker/" data-link>Find my broker</a>
+      <a class="btn" href="/compare/" data-link>Compare side by side</a>
+      ${hasClients ? '<a class="btn" href="/calculator/" data-link>What will it cost me?</a>'
+                   : '<a class="btn" href="/registry/" data-link>Search the SEBI register</a>'}
     </div>
   </section>
 
@@ -377,7 +377,7 @@ export async function home() {
       <div class="section-eyebrow">RETAIL BROKERAGE LANDSCAPE</div>
       <h2>${hasClients ? 'Largest brokers by active clients' : 'Brokers on the SEBI register'}</h2>
     </div>
-    <a class="small link-arrow" href="/brokers" data-link>All ${meta.broker_count} &rarr;</a>
+    <a class="small link-arrow" href="/brokers/" data-link>All ${meta.broker_count} &rarr;</a>
   </div>
 
   <div class="grid g-main" style="margin-top:0">
@@ -415,14 +415,14 @@ export async function home() {
           <div style="font-size:14px;font-weight:650;color:var(--text)">Explore all ${meta.broker_count} tracked brokers</div>
           <div class="xs muted">Compare active clients, market share, complaints and trading fees</div>
         </div>
-        <a class="btn btn-sm btn-primary link-arrow" href="/brokers" data-link>View all ${meta.broker_count} &rarr;</a>
+        <a class="btn btn-sm btn-primary link-arrow" href="/brokers/" data-link>View all ${meta.broker_count} &rarr;</a>
       </div>
       <div class="card row-between" style="margin-top:14px;padding:16px 20px;align-items:center;background:linear-gradient(135deg, rgba(37,99,235,0.06), rgba(16,185,129,0.06));border:1px solid rgba(37,99,235,0.2)">
         <div>
           <div style="font-size:14px;font-weight:650;color:var(--text)">Not sure which broker fits your strategy?</div>
           <div class="xs muted">Take our 30-second Broker Matchmaker quiz to find your ideal match based on fees, capital, and tools.</div>
         </div>
-        <a class="btn btn-sm btn-primary link-arrow" href="/find-broker" data-link>Find My Broker &rarr;</a>
+        <a class="btn btn-sm btn-primary link-arrow" href="/find-broker/" data-link>Find My Broker &rarr;</a>
       </div>
     </div>
 
@@ -440,7 +440,7 @@ export async function home() {
       <div class="section-eyebrow">MARKET MOMENTUM &amp; SHIFTS</div>
       <h2>Movers &amp; Market Share Gainers</h2>
     </div>
-    <a class="small link-arrow" href="/leaderboards" data-link>All movers &rarr;</a>
+    <a class="small link-arrow" href="/leaderboards/" data-link>All movers &rarr;</a>
   </div>
   <div class="grid g3">
     ${(o.leaderboards || []).filter((bd) => (bd.rows || []).length).slice(0, 3).map((bd) => leaderCard(bd)).join('')}
@@ -482,7 +482,7 @@ export async function home() {
     <a class="small link-arrow" href="/calculators/">All calculators &rarr;</a>
   </div>
   <div class="grid g4" style="margin-top:0">
-    <a class="card card-interactive" href="/calculator" data-link style="display:flex;flex-direction:column;padding:20px">
+    <a class="card card-interactive" href="/calculator/" data-link style="display:flex;flex-direction:column;padding:20px">
       <div class="pill-tag accent" style="align-self:flex-start;margin-bottom:12px">Brokerage</div>
       <h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Brokerage &amp; Regulatory Fees</h3>
       <p class="xs muted" style="line-height:1.45;flex:1 0 auto">Calculate exact STT, GST, stamp duty and SEBI charges across delivery, intraday and F&amp;O.</p>
@@ -521,8 +521,8 @@ export async function home() {
         </div>
       </div>
       <div class="row-wrap" style="gap:10px">
-        <a class="btn btn-primary link-arrow" href="/registry" data-link>Search SEBI Register &rarr;</a>
-        <a class="btn" href="/sources" data-link>Audit Sources</a>
+        <a class="btn btn-primary link-arrow" href="/registry/" data-link>Search SEBI Register &rarr;</a>
+        <a class="btn" href="/sources/" data-link>Audit Sources</a>
       </div>
     </div>
   </div>`;
@@ -607,9 +607,9 @@ export async function brokers(params) {
   <div class="spread" style="margin-top:16px">
     <div><h1>Brokers</h1>
       <p class="muted small">${o.metadata.broker_count} brokers tracked in depth.
-      Looking for a smaller firm? <a href="/registry" data-link>Search all ${count(o.registry_count)} SEBI-registered entities</a>.</p>
+      Looking for a smaller firm? <a href="/registry/" data-link>Search all ${count(o.registry_count)} SEBI-registered entities</a>.</p>
     </div>
-    <a class="btn" href="/compare" data-link>Compare selected →</a>
+    <a class="btn" href="/compare/" data-link>Compare selected →</a>
   </div>
 
   <div class="grid g-main" style="margin-top:16px">
@@ -663,11 +663,11 @@ export async function brokers(params) {
         ${hasClients
           ? `${provDot('nse')} exchange/regulator sourced · ${provDot('curated')} curated or broker-supplied ·
              ${provDot('sample')} sample pending ingest. Cost is a fixed basket of trades (see
-             <a href="/methodology" data-link>methodology</a>).`
+             <a href="/methodology/" data-link>methodology</a>).`
           : `${provDot('sebi_registry')} Legal name, registration and segments come straight from SEBI's own register.
              Active-client counts, complaint records and cost are not yet available for these brokers. They will be
              shown only once traced to NSE and SEBI's own disclosures, never estimated. See
-             <a href="/methodology" data-link>methodology</a>.`}
+             <a href="/methodology/" data-link>methodology</a>.`}
       </p>
       <p class="xs faint" style="margin-top:6px">Dedicated category pages:
         ${Object.entries(TYPE_LABEL).map(([k, v]) =>
@@ -831,7 +831,7 @@ export async function broker(id) {
       <div class="stat-value" style="color:${relColor}">${rel.score?.toFixed(1) ?? '-'}<span class="muted" style="font-size:var(--fs-base)">/100</span></div>
       <div class="meter" style="margin-top:8px"><i style="width:${rel.score ?? 0}%;background:${relColor}"></i></div>
       <div class="xs faint" style="margin-top:6px">confidence: ${esc(rel.confidence || 'none')} ·
-        <a href="/methodology" data-link>how it is built</a></div>
+        <a href="/methodology/" data-link>how it is built</a></div>
     </div>
   </div>
 
@@ -940,7 +940,7 @@ export async function broker(id) {
             <dt>AMC (monthly)</dt><dd class="num">${inr(cost.amc_monthly, { decimals: 0 })}</dd>
           </dl>
           <div class="xs faint" style="margin-top:8px">${provDot(b.provenance?.charges)} Statutory charges excluded:
-            identical at every broker. <a href="/methodology" data-link>Basket definition</a></div>`
+            identical at every broker. <a href="/methodology/" data-link>Basket definition</a></div>`
           : `<p class="small muted" style="margin-top:8px">This broker has not published verified pricing here yet, so we
              show nothing rather than guess. Check the broker's own website for current charges.</p>`}
       </div>
@@ -1018,12 +1018,12 @@ export async function compare(params) {
     const sel = document.getElementById('cmp-add');
     if (sel) sel.addEventListener('change', () => {
       const next = [...ids, sel.value].filter(Boolean).slice(0, 4);
-      history.pushState({}, '', `/compare?b=${next.join(',')}`);
+      history.pushState({}, '', `/compare/?b=${next.join(',')}`);
       window.dispatchEvent(new PopStateEvent('popstate'));
     });
     document.querySelectorAll('[data-remove]').forEach((btn) => btn.addEventListener('click', () => {
       const next = ids.filter((x) => x !== btn.dataset.remove);
-      history.pushState({}, '', next.length ? `/compare?b=${next.join(',')}` : '/compare');
+      history.pushState({}, '', next.length ? `/compare/?b=${next.join(',')}` : '/compare/');
       window.dispatchEvent(new PopStateEvent('popstate'));
     }));
     const c = document.getElementById('cmp-chart');
@@ -1089,7 +1089,7 @@ export async function compare(params) {
           <div style="font-size:14px;font-weight:650;color:var(--text)">Not sure which brokers to compare?</div>
           <div class="xs muted">Take our 30-second Broker Matchmaker quiz to find the best match for your trading style and capital.</div>
         </div>
-        <a class="btn btn-sm btn-primary link-arrow" href="/find-broker" data-link>Find My Broker &rarr;</a>
+        <a class="btn btn-sm btn-primary link-arrow" href="/find-broker/" data-link>Find My Broker &rarr;</a>
       </div>
       <div class="section-title" style="margin-top:28px"><h2>Popular broker comparisons</h2></div>
       <p class="muted small">Direct head-to-head comparisons of India's leading stock brokers.</p>
@@ -1290,8 +1290,8 @@ export async function calculator(params) {
       <div style="margin-top:16px">${pending('Broker charges',
         'Charges are published only where they can be traced to the broker\'s own disclosed rate card. Until those are verified, we show nothing rather than an estimate you might act on.')}</div>
       <p class="small muted" style="margin-top:16px">In the meantime, the
-      <a href="/brokers" data-link>broker directory</a> and the
-      <a href="/registry" data-link>SEBI register</a> carry regulator-sourced facts on every firm.</p>`;
+      <a href="/brokers/" data-link>broker directory</a> and the
+      <a href="/registry/" data-link>SEBI register</a> carry regulator-sourced facts on every firm.</p>`;
   }
 
   onMount(() => {
@@ -1440,7 +1440,7 @@ export async function registry() {
     </table>
   </div>
   <p class="xs faint" style="margin-top:10px">${provDot('sebi_registry')} Source: SEBI recognised-intermediary register,
-  pulled ${esc((r.generated_at || '').slice(0, 10))}. <a href="/sources" data-link>Lineage →</a></p>`;
+  pulled ${esc((r.generated_at || '').slice(0, 10))}. <a href="/sources/" data-link>Lineage →</a></p>`;
 }
 
 /* =========================================================== ALGO PLATFORMS */
@@ -1596,7 +1596,7 @@ export async function methodology() {
       twelve. Statutory charges (STT, stamp duty, exchange transaction charges, SEBI turnover fees, GST) are excluded
       because they are identical at every broker for an identical trade; including them would compress the differences
       that actually depend on your choice of broker. Use the
-      <a href="/calculator" data-link>calculator</a> to price your own pattern instead.</p>
+      <a href="/calculator/" data-link>calculator</a> to price your own pattern instead.</p>
     </div>
   </div>
 
@@ -1694,7 +1694,7 @@ export async function comingSoon(market) {
     <span class="badge badge-warn">Coming soon</span>
     <h1 style="margin-top:12px">${esc(m.h1)}</h1>
     <p class="muted">${esc(m.body)}</p>
-    <p class="small"><a href="/brokers" data-link>See the live India broker comparison instead →</a></p>
+    <p class="small"><a href="/brokers/" data-link>See the live India broker comparison instead →</a></p>
   </div>`;
 }
 
@@ -1722,8 +1722,8 @@ export async function about() {
   <div class="section-title"><h2>How we work</h2></div>
   <p class="small muted" style="max-width:70ch">Every figure traces to a named primary source, refreshed on its
   own schedule and marked with when it last ran. The full method, including how derived scores like the
-  reliability rating are calculated, is on the <a href="/methodology" data-link>methodology page</a>; the
-  complete source list, with cadence and status, is on the <a href="/sources" data-link>sources page</a>.</p>
+  reliability rating are calculated, is on the <a href="/methodology/" data-link>methodology page</a>; the
+  complete source list, with cadence and status, is on the <a href="/sources/" data-link>sources page</a>.</p>
 
   <div class="section-title"><h2>What BrokerLens is not</h2></div>
   <div class="card">
@@ -1736,7 +1736,7 @@ export async function about() {
 
   <div class="section-title"><h2>Get in touch</h2></div>
   <p class="small">Questions, corrections or partnership enquiries: see the
-  <a href="/contact" data-link>contact page</a>, or write to
+  <a href="/contact/" data-link>contact page</a>, or write to
   <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>.</p>`;
 }
 
@@ -1806,13 +1806,13 @@ export async function contact() {
     </div>
     <div class="card">
       <div class="card-title">Privacy and data requests</div>
-      <p class="small muted">Questions about the <a href="/privacy-policy" data-link>privacy policy</a>, or a
+      <p class="small muted">Questions about the <a href="/privacy-policy/" data-link>privacy policy</a>, or a
       request to access or delete data we hold about you.</p>
     </div>
     <div class="card">
       <div class="card-title">Everything else</div>
       <p class="small muted">General feedback, bug reports, or anything not covered above, including the
-      <a href="/terms-of-service" data-link>terms of service</a>.</p>
+      <a href="/terms-of-service/" data-link>terms of service</a>.</p>
     </div>
   </div>
 
@@ -1844,7 +1844,7 @@ export async function privacyPolicy() {
     <p class="small muted">Some pages carry a clearly marked sponsored banner linking to a broker's own
     account-opening page. Once you follow that link, you are on the broker's own site and subject to their
     privacy policy, not ours; BrokerLens may earn a commission if you open an account, disclosed on the
-    <a href="/methodology" data-link>methodology page</a>. We do not receive or store any personal or financial
+    <a href="/methodology/" data-link>methodology page</a>. We do not receive or store any personal or financial
     information from that process.</p>
   </div>
 
@@ -1894,7 +1894,7 @@ export async function termsOfService() {
     <p class="small muted">Figures are reproduced from exchange and regulator disclosures and may lag their
     source; each page states when its data last refreshed. BrokerLens does not guarantee that any figure is
     current or error-free, and is not liable for decisions made in reliance on it. See the
-    <a href="/methodology" data-link>methodology page</a> for exactly how each figure is calculated.</p>
+    <a href="/methodology/" data-link>methodology page</a> for exactly how each figure is calculated.</p>
   </div>
 
   <div class="section-title"><h2>Sponsored links</h2></div>

@@ -1235,10 +1235,10 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
   <div class="nav-inner">
     <a href="/" class="brand">Broker<span>Lens</span></a>
     <div class="nav-links">
-      <a href="/brokers">Brokers</a>
+      <a href="/brokers/">Brokers</a>
       <a href="/branches/" class="active">Branches</a>
       <a href="/trade-costs/">Trade Costs</a>
-      <a href="/compare">Compare</a>
+      <a href="/compare/">Compare</a>
       <a href="/ipo/">IPOs</a>
       <a href="/calculators/">Calculators</a>
       <a href="/news/">News</a>
@@ -1249,7 +1249,7 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
 <main class="container" style="max-width:980px;margin:24px auto;padding:0 16px;">
   <div class="breadcrumb" style="font-size:13px;margin-bottom:16px;color:var(--text-muted);">
     <a href="/">BrokerLens</a> &rsaquo;
-    <a href="/brokers">Brokers</a> &rsaquo;
+    <a href="/brokers/">Brokers</a> &rsaquo;
     <a href="/broker/{b_id}/">{brand}</a> &rsaquo;
     <a href="/broker/{b_id}/branches/">Branches</a> &rsaquo;
     <span>{c_name}</span>
@@ -1364,9 +1364,9 @@ def _render_city_branch_page(b_id, meta, city_key, city_data, local_entities, si
       <a href="/branches/">All Broker Branches</a> &bull;
       <a href="/broker/{b_id}/">Full {brand} Review</a> &bull;
       <a href="{cost_href}">{brand} Charges</a> &bull;
-      <a href="/registry">SEBI Registry</a> &bull;
-      <a href="/methodology">Methodology</a> &bull;
-      <a href="/privacy-policy">Privacy Policy</a>
+      <a href="/registry/">SEBI Registry</a> &bull;
+      <a href="/methodology/">Methodology</a> &bull;
+      <a href="/privacy-policy/">Privacy Policy</a>
     </p>
   </div>
 </footer>
@@ -1439,10 +1439,10 @@ def _render_broker_branches_hub(b_id, meta, site_url):
   <div class="nav-inner">
     <a href="/" class="brand">Broker<span>Lens</span></a>
     <div class="nav-links">
-      <a href="/brokers">Brokers</a>
+      <a href="/brokers/">Brokers</a>
       <a href="/branches/" class="active">Branches</a>
       <a href="/trade-costs/">Trade Costs</a>
-      <a href="/compare">Compare</a>
+      <a href="/compare/">Compare</a>
       <a href="/ipo/">IPOs</a>
       <a href="/calculators/">Calculators</a>
       <a href="/news/">News</a>
@@ -1453,7 +1453,7 @@ def _render_broker_branches_hub(b_id, meta, site_url):
 <main class="container" style="max-width:980px;margin:24px auto;padding:0 16px;">
   <div class="breadcrumb" style="font-size:13px;margin-bottom:16px;color:var(--text-muted);">
     <a href="/">BrokerLens</a> &rsaquo;
-    <a href="/brokers">Brokers</a> &rsaquo;
+    <a href="/brokers/">Brokers</a> &rsaquo;
     <a href="/broker/{b_id}/">{brand}</a> &rsaquo;
     <span>Branches</span>
   </div>
@@ -1561,11 +1561,11 @@ def _render_city_registry_hub(city_key, city_data, local_entities, site_url):
   <div class="nav-inner">
     <a href="/" class="brand">Broker<span>Lens</span></a>
     <div class="nav-links">
-      <a href="/brokers">Brokers</a>
+      <a href="/brokers/">Brokers</a>
       <a href="/branches/">Branches</a>
-      <a href="/registry" class="active">Registry</a>
+      <a href="/registry/" class="active">Registry</a>
       <a href="/trade-costs/">Trade Costs</a>
-      <a href="/compare">Compare</a>
+      <a href="/compare/">Compare</a>
       <a href="/ipo/">IPOs</a>
       <a href="/news/">News</a>
     </div>
@@ -1575,7 +1575,7 @@ def _render_city_registry_hub(city_key, city_data, local_entities, site_url):
 <main class="container" style="max-width:980px;margin:24px auto;padding:0 16px;">
   <div class="breadcrumb" style="font-size:13px;margin-bottom:16px;color:var(--text-muted);">
     <a href="/">BrokerLens</a> &rsaquo;
-    <a href="/registry">SEBI Registry</a> &rsaquo;
+    <a href="/registry/">SEBI Registry</a> &rsaquo;
     <span>{c_name}</span>
   </div>
 
@@ -1744,10 +1744,10 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
   <div class="nav-inner">
     <a href="/" class="brand">Broker<span>Lens</span></a>
     <div class="nav-links">
-      <a href="/brokers">Brokers</a>
+      <a href="/brokers/">Brokers</a>
       <a href="/branches/" class="active">Branches</a>
       <a href="/trade-costs/">Trade Costs</a>
-      <a href="/compare">Compare</a>
+      <a href="/compare/">Compare</a>
       <a href="/ipo/">IPOs</a>
       <a href="/calculators/">Calculators</a>
       <a href="/news/">News</a>
@@ -1865,8 +1865,8 @@ def _render_city_branches_comparison_hub(city_key, city_data, local_ents, site_u
     <p>BrokerLens India. Sourced from SEBI intermediary records and exchange disclosures.</p>
     <p style="margin-top:8px;">
       <a href="/branches/">All Branches</a> &bull;
-      <a href="/brokers">All Brokers</a> &bull;
-      <a href="/registry">SEBI Registry</a> &bull;
+      <a href="/brokers/">All Brokers</a> &bull;
+      <a href="/registry/">SEBI Registry</a> &bull;
       <a href="/">Home</a>
     </p>
   </div>
@@ -1942,10 +1942,10 @@ def _render_master_branches_hub(site_url):
   <div class="nav-inner">
     <a href="/" class="brand">Broker<span>Lens</span></a>
     <div class="nav-links">
-      <a href="/brokers">Brokers</a>
+      <a href="/brokers/">Brokers</a>
       <a href="/branches/" class="active">Branches</a>
       <a href="/trade-costs/">Trade Costs</a>
-      <a href="/compare">Compare</a>
+      <a href="/compare/">Compare</a>
       <a href="/ipo/">IPOs</a>
       <a href="/calculators/">Calculators</a>
       <a href="/news/">News</a>

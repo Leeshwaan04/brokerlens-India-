@@ -165,8 +165,8 @@ def render_subscription_hub(all_ipos, site_url="https://www.brokerlens.in"):
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/ipo/">IPOs</a>
     <a href="/ipo/subscription/">Subscription</a>
@@ -295,8 +295,8 @@ def render_allotment_hub(all_ipos, site_url="https://www.brokerlens.in"):
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/ipo/">IPOs</a>
     <a href="/ipo/subscription/">Subscription</a>
@@ -450,8 +450,8 @@ def render_subscription_page(ipo_row, site_url="https://www.brokerlens.in"):
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/ipo/">IPOs</a>
     <a href="/ipo/{slug}/">IPO Details</a>
@@ -610,8 +610,8 @@ def render_basis_of_allotment_page(ipo_row, site_url="https://www.brokerlens.in"
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/ipo/">IPOs</a>
     <a href="/ipo/{slug}/">IPO Details</a>

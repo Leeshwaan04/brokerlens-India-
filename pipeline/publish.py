@@ -1194,11 +1194,11 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
           aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
   <nav class="nav-links" id="navlinks">
     <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
-    <a href="/compare">Compare</a>
-    <a href="/leaderboards">Movers</a>
+    <a href="/compare/">Compare</a>
+    <a href="/leaderboards/">Movers</a>
     <a href="/calculators/">Calculators</a>
-    <a href="/registry">SEBI registry</a>
-    <a href="/algo">Algo platforms</a>
+    <a href="/registry/">SEBI registry</a>
+    <a href="/algo/">Algo platforms</a>
     <a href="/ipo/">IPO</a>
     <a href="/news/">News &amp; Blogs</a>
     <a href="/reports/state-of-indian-broking-2026/">Reports</a>
@@ -1215,7 +1215,7 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
 <div class="mega" id="mega-markets" hidden>
   <div class="wrap">
     <div class="markets-list">
-      <a href="/brokers"><span>India</span><span class="badge badge-up">Live</span></a>
+      <a href="/brokers/"><span>India</span><span class="badge badge-up">Live</span></a>
       <a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>
       <a href="/coming-soon/us"><span>US</span><span class="badge badge-warn">Coming soon</span></a>
       <a href="/coming-soon/gcc"><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
@@ -1251,8 +1251,8 @@ _REGISTRY_PAGE_FOOT = f"""</main>
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">%(source_note)s</p>
   <p class="small"><a href="/news/">Market News, Blogs &amp; Research →</a> ·
-  <a href="/registry">Search the full SEBI registry →</a> ·
-  <a href="/brokers">Brokers tracked in depth →</a> ·
+  <a href="/registry/">Search the full SEBI registry →</a> ·
+  <a href="/brokers/">Brokers tracked in depth →</a> ·
   <a href="/brokers-by/type/">Brokers by type →</a> ·
   <a href="/brokers-by/segment/">Brokers by segment →</a> ·
   <a href="/brokers-by/city/">Brokers by city →</a> ·
@@ -1267,9 +1267,9 @@ _REGISTRY_PAGE_FOOT = f"""</main>
   <a href="/trade-costs/">Trade cost calculator →</a> ·
   <a href="/index/nifty-50/">Nifty 50 constituents →</a> ·
   <a href="/etf/niftybees/">Nifty 50 ETF: NIFTYBEES →</a></p>
-  <p class="small"><a href="/about">About</a> · <a href="/editorial-policy">Editorial policy</a> · <a href="/contact">Contact</a> ·
-  <a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a> · <a href="/privacy-policy">Privacy policy</a> ·
-  <a href="/terms-of-service">Terms of service</a></p>
+  <p class="small"><a href="/about/">About</a> · <a href="/editorial-policy/">Editorial policy</a> · <a href="/contact/">Contact</a> ·
+  <a href="mailto:{CONTACT_EMAIL}">{CONTACT_EMAIL}</a> · <a href="/privacy-policy/">Privacy policy</a> ·
+  <a href="/terms-of-service/">Terms of service</a></p>
 </div></footer>
 <script type="module" src="/assets/js/nav-widgets.js"></script>
 <script type="module" src="/assets/js/search.js"></script>
@@ -1352,11 +1352,11 @@ _APP_SHELL_HEAD = """<!doctype html>
             aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
     <nav class="nav-links" id="navlinks">
       <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
-      <a href="/compare" data-link>Compare</a>
-      <a href="/leaderboards" data-link>Movers</a>
+      <a href="/compare/" data-link>Compare</a>
+      <a href="/leaderboards/" data-link>Movers</a>
       <a href="/calculators/">Calculators</a>
-      <a href="/registry" data-link>SEBI registry</a>
-      <a href="/algo" data-link>Algo platforms</a>
+      <a href="/registry/" data-link>SEBI registry</a>
+      <a href="/algo/" data-link>Algo platforms</a>
       <a href="/ipo/">IPO</a>
       <a href="/news/" data-link>News &amp; Blogs</a>
       <a href="/reports/state-of-indian-broking-2026/">Reports</a>
@@ -1373,7 +1373,7 @@ _APP_SHELL_HEAD = """<!doctype html>
   <div class="mega" id="mega-markets" hidden>
     <div class="wrap">
       <div class="markets-list">
-        <a href="/brokers" data-link><span>India</span><span class="badge badge-up">Live</span></a>
+        <a href="/brokers/" data-link><span>India</span><span class="badge badge-up">Live</span></a>
         <a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>
         <a href="/coming-soon/us" data-link><span>US</span><span class="badge badge-warn">Coming soon</span></a>
         <a href="/coming-soon/gcc" data-link><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
@@ -1431,7 +1431,7 @@ _APP_SHELL_FOOT = """</main>
         <h5>Compare</h5>
         <ul>
           <li><a href="/find-broker/" data-link>Broker Matchmaker</a></li>
-          <li><a href="/brokers" data-link>All brokers</a></li>
+          <li><a href="/brokers/" data-link>All brokers</a></li>
           <li><a href="/trade-costs/">Trade cost calculator</a></li>
           <li><a href="/compare/stocks/">Compare stocks</a></li>
           <li><a href="/ipo/">IPO tracker</a></li>
@@ -1442,17 +1442,17 @@ _APP_SHELL_FOOT = """</main>
           <li><a href="/ipo/subscription/">IPO subscription status</a></li>
           <li><a href="/ipo/allotment-status/">IPO allotment status</a></li>
           <li><a href="/ipo/how-to-apply/">How to apply for IPO</a></li>
-          <li><a href="/calculator" data-link>Brokerage calculator</a></li>
-          <li><a href="/registry" data-link>SEBI registry</a></li>
-          <li><a href="/algo" data-link>Algo platforms</a></li>
+          <li><a href="/calculator/" data-link>Brokerage calculator</a></li>
+          <li><a href="/registry/" data-link>SEBI registry</a></li>
+          <li><a href="/algo/" data-link>Algo platforms</a></li>
         </ul>
       </div>
       <div>
         <h5>Data &amp; News</h5>
         <ul>
           <li><a href="/news/" data-link>News &amp; Blogs</a></li>
-          <li><a href="/methodology" data-link>Methodology</a></li>
-          <li><a href="/sources" data-link>Sources &amp; lineage</a></li>
+          <li><a href="/methodology/" data-link>Methodology</a></li>
+          <li><a href="/sources/" data-link>Sources &amp; lineage</a></li>
           <li><a href="/reports/state-of-indian-broking-2026/">State of Indian Broking, 2026</a></li>
           <li><a href="/feed.xml">RSS feed</a></li>
           <li><a href="/sitemap.xml">Sitemap Index</a></li>
@@ -1473,11 +1473,11 @@ _APP_SHELL_FOOT = """</main>
       <div>
         <h5>Company</h5>
         <ul>
-          <li><a href="/about" data-link>About</a></li>
-          <li><a href="/editorial-policy" data-link>Editorial policy</a></li>
-          <li><a href="/contact" data-link>Contact</a></li>
-          <li><a href="/privacy-policy" data-link>Privacy policy</a></li>
-          <li><a href="/terms-of-service" data-link>Terms of service</a></li>
+          <li><a href="/about/" data-link>About</a></li>
+          <li><a href="/editorial-policy/" data-link>Editorial policy</a></li>
+          <li><a href="/contact/" data-link>Contact</a></li>
+          <li><a href="/privacy-policy/" data-link>Privacy policy</a></li>
+          <li><a href="/terms-of-service/" data-link>Terms of service</a></li>
         </ul>
       </div>
     </div>
@@ -1741,7 +1741,7 @@ def _write_registry_pages(reg_rows, details=None, asof=None, defaulters=None):
             return _esc(v).replace('"', "&quot;")
 
         crumb_html, crumb_jsonld = _breadcrumb([
-            ("BrokerLens", "/"), ("SEBI registry", "/registry"), (name, None),
+            ("BrokerLens", "/"), ("SEBI registry", "/registry/"), (name, None),
         ])
         jsonld = {"@context": "https://schema.org",
                   "@graph": [model["org_jsonld"], model["faq_jsonld"], crumb_jsonld]}
@@ -1902,8 +1902,8 @@ def _broker_facts_html(b, built=None, reg_to_registry_slug=None, valid_pairs=Non
         + '<div class="grid g3">' + identity_html + '</div>'
         + comp_links
         + '<p class="xs faint" style="margin-top:16px">Source: SEBI recognised-intermediary register and, where '
-          'noted above, NSE/BSE/SEBI primary disclosures. <a href="/methodology">Methodology</a> &middot; '
-          '<a href="/sources">Sources &amp; lineage</a> &middot; <a href="/brokers">All brokers</a></p>'
+          'noted above, NSE/BSE/SEBI primary disclosures. <a href="/methodology/">Methodology</a> &middot; '
+          '<a href="/sources/">Sources &amp; lineage</a> &middot; <a href="/brokers/">All brokers</a></p>'
     )
 
 
@@ -2030,7 +2030,7 @@ def _broker_depth(b, built):
         + reg_html + verify_html + complain_html + "".join(extra) + faq_html
         + '<p class="xs faint" style="margin-top:20px">BrokerLens is an information service, not a SEBI-registered investment '
           'adviser. Nothing here is a recommendation to open an account with, or avoid, any broker. '
-          '<a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources</a></p>'
+          '<a href="/methodology/">Methodology</a> &middot; <a href="/sources/">Sources</a></p>'
         + '</div>'
     )
     return body, faqs
@@ -2073,7 +2073,7 @@ def _write_broker_pages(built, reg_to_registry_slug=None, overview=None):
             "%s: active client count, market share, SEBI complaint record, regulatory registrations "
             "and cost, from primary NSE, BSE and SEBI disclosures." % brand
         )[:300]
-        crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Brokers", "/brokers"), (brand, None)])
+        crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("Brokers", "/brokers/"), (brand, None)])
         entity_jsonld = {"@type": "FinancialService", "name": brand, "url": canonical}
         if b["profile"].get("legal_name"):
             entity_jsonld["legalName"] = b["profile"]["legal_name"]
@@ -2203,7 +2203,7 @@ def _write_broker_hub_pages(built):
               % (len(rows_sorted), "" if len(rows_sorted) == 1 else "s")
             + '<div class="grid g3" style="margin-top:16px">' + list_html + '</div>'
             + '<p class="xs faint" style="margin-top:16px">'
-              '<a href="/brokers">Full broker directory (search and filter) &rarr;</a></p>'
+              '<a href="/brokers/">Full broker directory (search and filter) &rarr;</a></p>'
         )
         body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
             "This page groups the brokers BrokerLens tracks in depth by type, segment or head-office city.")}
@@ -2268,7 +2268,7 @@ def _write_broker_hub_pages(built):
             + '<p class="muted" style="max-width:70ch">%s</p>' % _esc(BROKER_HUB_DIM_INTRO[dim])
             + '<div class="grid g3" style="margin-top:16px">' + list_html + '</div>'
             + '<p class="xs faint" style="margin-top:16px">'
-              '<a href="/brokers">Full broker directory (search and filter) &rarr;</a></p>'
+              '<a href="/brokers/">Full broker directory (search and filter) &rarr;</a></p>'
         )
         body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
             "This page groups the brokers BrokerLens tracks in depth by type, segment or head-office city.")}
@@ -3780,8 +3780,8 @@ def _write_reports(built, reg_rows, companies, indices, etfs, funds, defaulter_c
 
         + '<p class="xs faint" style="margin-top:24px">Methodology: every count on this page is derived from the '
           'same SEBI, NSE and AMFI source files BrokerLens ingests for its registry, stock, ETF and mutual fund '
-          'pages, snapshotted at publish time. See <a href="/methodology">methodology</a> and '
-          '<a href="/sources">sources</a> for exactly how each figure is computed and how often it refreshes.</p>'
+          'pages, snapshotted at publish time. See <a href="/methodology/">methodology</a> and '
+          '<a href="/sources/">sources</a> for exactly how each figure is computed and how often it refreshes.</p>'
     )
     body += _REGISTRY_PAGE_FOOT % {"source_note": _source_note(
         "This page aggregates counts already computed from SEBI's recognised-intermediary register, "
@@ -5708,7 +5708,7 @@ def _write_methodology_page():
         'across 10 orders) plus demat AMC divided by twelve. Statutory charges (STT, stamp duty, exchange '
         'transaction charges, SEBI turnover fees, GST) are excluded because they are identical at every broker '
         'for an identical trade; including them would compress the differences that actually depend on your '
-        'choice of broker. Use the <a href="/calculator" data-link>calculator</a> to price your own pattern '
+        'choice of broker. Use the <a href="/calculator/" data-link>calculator</a> to price your own pattern '
         'instead.</p></div>'
         '</div>'
 
@@ -5788,7 +5788,7 @@ def _write_coming_soon_pages():
             '<span class="badge badge-warn">Coming soon</span>'
             '<h1 style="margin-top:12px">%s</h1>'
             '<p class="muted">%s</p>'
-            '<p class="small"><a href="/brokers">See the live India broker comparison instead &rarr;</a></p>'
+            '<p class="small"><a href="/brokers/">See the live India broker comparison instead &rarr;</a></p>'
             '</div>'
         ) % (_esc(m["h1"]), _esc(m["body"]))
         body += _REGISTRY_PAGE_FOOT % {"source_note": "Nothing on this page is fabricated to fill the gap: "
@@ -5883,7 +5883,7 @@ def _write_about_page():
         'and every published report is checked against official circulars before release.'
         '</p>'
         '<p class="small" style="margin-bottom:0">'
-        '<a href="/editorial-policy" style="font-weight:600">Read our complete Editorial Policy, Fact-Checking and Quality Standards &rarr;</a>'
+        '<a href="/editorial-policy/" style="font-weight:600">Read our complete Editorial Policy, Fact-Checking and Quality Standards &rarr;</a>'
         '</p>'
         '</div>'
 
@@ -5894,8 +5894,8 @@ def _write_about_page():
         'Our data ingestion pipelines run automated sanity sweeps, verifying active client counts, exchange complaints ratios, and margin rules.'
         '</p>'
         '<p class="small" style="margin-bottom:0">'
-        'Review the mathematical mechanics in our <a href="/methodology" data-link>Methodology Page</a> '
-        'and inspect the full cadence and status of every feed on our <a href="/sources" data-link>Primary Sources Directory</a>.'
+        'Review the mathematical mechanics in our <a href="/methodology/" data-link>Methodology Page</a> '
+        'and inspect the full cadence and status of every feed on our <a href="/sources/" data-link>Primary Sources Directory</a>.'
         '</p>'
         '</div>'
 
@@ -5913,7 +5913,7 @@ def _write_about_page():
 
         '<div class="section-title"><h2>Contact &amp; Grievance Redressal</h2></div>'
         '<p class="small muted">'
-        'For data corrections, editorial inquiries, or compliance queries, please visit our <a href="/contact" data-link>Contact Page</a> '
+        'For data corrections, editorial inquiries, or compliance queries, please visit our <a href="/contact/" data-link>Contact Page</a> '
         'or write to our compliance desk at <a href="mailto:%s">%s</a>.'
         '</p>'
     ) % (CONTACT_EMAIL, CONTACT_EMAIL)
@@ -6065,7 +6065,7 @@ def _write_editorial_policy_page():
 
         '<div class="section-title"><h2>Get in Touch with our Editorial Desk</h2></div>'
         '<p class="small muted">'
-        'For editorial inquiries, feedback, or regulatory clarifications, visit our <a href="/contact" data-link>Contact Page</a> '
+        'For editorial inquiries, feedback, or regulatory clarifications, visit our <a href="/contact/" data-link>Contact Page</a> '
         'or write directly to <a href="mailto:%s">%s</a>.'
         '</p>'
     ) % (CONTACT_EMAIL, CONTACT_EMAIL, CONTACT_EMAIL, CONTACT_EMAIL)
@@ -6126,7 +6126,7 @@ def _write_contact_page():
 
         '<div class="card"><div class="card-title">Editorial &amp; Research Feedback</div>'
         '<p class="small muted">Feedback regarding our market research articles, calculation tools, or educational guides. '
-        'Learn more about our standards on our <a href="/editorial-policy" data-link>Editorial Policy Page</a>.</p></div>'
+        'Learn more about our standards on our <a href="/editorial-policy/" data-link>Editorial Policy Page</a>.</p></div>'
 
         '<div class="card"><div class="card-title">Commercial &amp; Partnership Enquiries</div>'
         '<p class="small muted">Inquiries regarding demarcated broker affiliate banners or institutional data partnerships. '
@@ -6203,7 +6203,7 @@ def _write_privacy_page():
         '<div class="card"><p class="small muted">Some pages carry a clearly marked sponsored banner linking to '
         'a broker\'s own account-opening page. Once you follow that link, you are on the broker\'s own site and '
         'subject to their privacy policy, not ours; BrokerLens may earn a commission if you open an account, '
-        'disclosed on the <a href="/methodology" data-link>methodology page</a>. We do not receive or store any '
+        'disclosed on the <a href="/methodology/" data-link>methodology page</a>. We do not receive or store any '
         'personal or financial information from that process.</p></div>'
 
         '<div class="section-title"><h2>Google AdSense and advertising cookies</h2></div>'
@@ -6275,7 +6275,7 @@ def _write_terms_page():
         '<div class="card"><p class="small muted">Figures are reproduced from exchange and regulator '
         'disclosures and may lag their source; each page states when its data last refreshed. BrokerLens does '
         'not guarantee that any figure is current or error-free, and is not liable for decisions made in '
-        'reliance on it. See the <a href="/methodology" data-link>methodology page</a> for exactly how each '
+        'reliance on it. See the <a href="/methodology/" data-link>methodology page</a> for exactly how each '
         'figure is calculated.</p></div>'
 
         '<div class="section-title"><h2>Sponsored links</h2></div>'
@@ -6518,7 +6518,7 @@ def _pending_html(what, detail):
     return (
         '<div class="pending"><strong>%s not published yet</strong> %s We publish a figure only once it comes '
         'from the primary source, so this section is empty rather than estimated. '
-        '<a href="/sources" data-link>What is live today</a>.</div>'
+        '<a href="/sources/" data-link>What is live today</a>.</div>'
     ) % (_esc(what), _esc(detail))
 
 
@@ -6719,7 +6719,7 @@ def _write_registry_directory(reg_rows):
             for name, slug in rows
         )
         crumb_html, crumb_jsonld = _breadcrumb([
-            ("BrokerLens", "/"), ("SEBI registry", "/registry"), ("Browse A-Z", "/registry/az/"), (letter, None),
+            ("BrokerLens", "/"), ("SEBI registry", "/registry/"), ("Browse A-Z", "/registry/az/"), (letter, None),
         ])
         jsonld = {
             "@context": "https://schema.org",
@@ -6742,7 +6742,7 @@ def _write_registry_directory(reg_rows):
             crumb_html
             + '<h1 style="margin-top:0">SEBI-registered entities starting with %s</h1>' % _esc(letter)
             + '<p class="muted" style="max-width:70ch">%d registered entit%s. Each link goes to that '
-              'entity\'s own registration page. <a href="/registry" data-link>Search the full register &rarr;</a></p>'
+              'entity\'s own registration page. <a href="/registry/" data-link>Search the full register &rarr;</a></p>'
               % (len(rows), "y" if len(rows) == 1 else "ies")
             + '<div class="row-wrap" style="margin:16px 0">' + nav_html + '</div>'
             + '<div class="link-columns">' + list_html + '</div>'
@@ -6765,7 +6765,7 @@ def _write_registry_directory(reg_rows):
         % (_esc(slugify(l)), _esc(l), len(groups[l]))
         for l in letters
     )
-    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("SEBI registry", "/registry"), ("Browse A-Z", None)])
+    crumb_html, crumb_jsonld = _breadcrumb([("BrokerLens", "/"), ("SEBI registry", "/registry/"), ("Browse A-Z", None)])
     body = _REGISTRY_PAGE_HEAD % {
         "title": _esc(title), "description": _esc(description),
         "canonical": _esc(canonical),
@@ -6776,7 +6776,7 @@ def _write_registry_directory(reg_rows):
         crumb_html
         + '<h1 style="margin-top:0">Browse SEBI-registered entities</h1>'
         '<p class="muted" style="max-width:70ch">%d entities across %d letters, sourced from SEBI\'s own '
-        'recognised-intermediary register. <a href="/registry" data-link>Search the full register instead &rarr;</a></p>'
+        'recognised-intermediary register. <a href="/registry/" data-link>Search the full register instead &rarr;</a></p>'
         % (total, len(letters))
         + '<div class="grid g4" style="margin-top:16px">' + counts_html + '</div>'
     )
@@ -6841,7 +6841,7 @@ def _write_registry_landing_page(reg_rows, overview, registry_letters=None):
         '<thead><tr><th>Legal entity</th><th>Registration</th><th>City</th><th>Exchanges / registers</th>'
         '<th>Validity</th></tr></thead><tbody id="reg-body">%s</tbody></table></div>'
         '<p class="xs faint" style="margin-top:10px">%s Source: SEBI recognised-intermediary register. '
-        '<a href="/sources" data-link>Lineage &rarr;</a></p>'
+        '<a href="/sources/" data-link>Lineage &rarr;</a></p>'
     ) % (
         overview.get("metadata", {}).get("broker_count", 0), _full_html(total),
         (
@@ -7024,7 +7024,7 @@ def _write_compare_pages(overview, built=None, reg_to_registry_slug=None):
         p_desc = ("Compare %s vs %s side by side on brokerage charges, active clients, complaint resolution rate, "
                   "Demat AMC, and SEBI compliance." % (brand1, brand2))[:300]
         p_crumb_html, p_crumb_jsonld = _breadcrumb([
-            ("BrokerLens", "/"), ("Compare", "/compare"), ("%s vs %s" % (brand1, brand2), None),
+            ("BrokerLens", "/"), ("Compare", "/compare/"), ("%s vs %s" % (brand1, brand2), None),
         ])
 
         c1 = b1.get("clients") or {}
@@ -7298,8 +7298,8 @@ def _write_compare_pages(overview, built=None, reg_to_registry_slug=None):
             'Data verified against the SEBI recognised-intermediary register and official broker tariff schedules as of '
             'BrokerLens\'s latest data refresh; fields without an independently verified source are shown as not published '
             'rather than estimated. '
-            '<a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources &amp; lineage</a> &middot; '
-            '<a href="/editorial-policy">Editorial Policy</a> &middot; <a href="/compare">All comparisons</a></p>'
+            '<a href="/methodology/">Methodology</a> &middot; <a href="/sources/">Sources &amp; lineage</a> &middot; '
+            '<a href="/editorial-policy/">Editorial Policy</a> &middot; <a href="/compare/">All comparisons</a></p>'
         )
         p_page += _APP_SHELL_FOOT
 
@@ -7412,8 +7412,8 @@ def _write_brokers_page(overview):
     body += (
         '<div class="spread" style="margin-top:16px"><div><h1>Brokers</h1>'
         '<p class="muted small">%d brokers tracked in depth. Looking for a smaller firm? '
-        '<a href="/registry" data-link>Search all %s SEBI-registered entities</a>.</p></div>'
-        '<a class="btn" href="/compare" data-link>Compare selected &rarr;</a></div>'
+        '<a href="/registry/" data-link>Search all %s SEBI-registered entities</a>.</p></div>'
+        '<a class="btn" href="/compare/" data-link>Compare selected &rarr;</a></div>'
 
         '<div class="grid g-main" style="margin-top:16px"><div>'
         '<div class="card"><div class="row-wrap">'
@@ -7452,13 +7452,13 @@ def _write_brokers_page(overview):
         "".join((_dir_row_html if has_clients else _dir_row_simple_html)(b) for b in rows_sorted),
         (
             '%s exchange/regulator sourced &middot; %s curated or broker-supplied &middot; %s sample pending '
-            'ingest. Cost is a fixed basket of trades (see <a href="/methodology" data-link>methodology</a>).'
+            'ingest. Cost is a fixed basket of trades (see <a href="/methodology/" data-link>methodology</a>).'
             % (_prov_dot_html("nse"), _prov_dot_html("curated"), _prov_dot_html("sample"))
             if has_clients else
             '%s Legal name, registration and segments come straight from SEBI\'s own register. Active-client '
             'counts, complaint records and cost are not yet available for these brokers. They will be shown only '
             'once traced to NSE and SEBI\'s own disclosures, never estimated. See '
-            '<a href="/methodology" data-link>methodology</a>.' % _prov_dot_html("sebi_registry")
+            '<a href="/methodology/" data-link>methodology</a>.' % _prov_dot_html("sebi_registry")
         ),
         " &middot; ".join('<a href="/brokers-by/type/%s/">%s</a>' % (k.replace("_", "-"), _esc(v)) for k, v in TYPE_LABEL.items()),
         " &middot; ".join('<a href="/brokers-by/segment/%s/">%s</a>' % (k.replace("_", "-"), _esc(v)) for k, v in SEGMENT_LABEL.items()),
@@ -7541,8 +7541,8 @@ def _write_calculator_tool_page(built):
             'each broker.</p>'
             '<div style="margin-top:16px">%s</div>'
             '<p class="small muted" style="margin-top:16px">In the meantime, the '
-            '<a href="/brokers" data-link>broker directory</a> and the '
-            '<a href="/registry" data-link>SEBI register</a> carry regulator-sourced facts on every firm.</p>'
+            '<a href="/brokers/" data-link>broker directory</a> and the '
+            '<a href="/registry/" data-link>SEBI register</a> carry regulator-sourced facts on every firm.</p>'
         ) % _pending_html(
             "Broker charges",
             "Charges are published only where they can be traced to the broker's own disclosed rate card. "
@@ -7694,7 +7694,7 @@ def _popular_comparisons_widget_html():
         '<div class="card" style="padding:18px">'
         '<div class="row-between" style="align-items:center;margin-bottom:12px">'
         '<div class="card-title" style="margin:0">Popular Comparisons</div>'
-        '<a class="xs link-arrow" href="/compare" data-link>All 191 pairs &rarr;</a></div>'
+        '<a class="xs link-arrow" href="/compare/" data-link>All 191 pairs &rarr;</a></div>'
         '<div style="display:flex;flex-direction:column;gap:8px">%s</div>'
         '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">'
         '<a href="/find-broker/" class="xs" style="font-weight:600;color:var(--accent-text);display:flex;align-items:center;justify-content:space-between" data-link>'
@@ -7729,9 +7729,9 @@ def _prerender_home(overview):
         '<p class="muted" style="max-width:64ch;margin-top:12px">%d brokers tracked in depth and %s '
         'SEBI-registered entities on file. %s</p>'
         '<div class="row-wrap" style="margin-top:18px">'
-        '<a class="btn btn-primary" href="/brokers" data-link>Browse brokers</a>'
+        '<a class="btn btn-primary" href="/brokers/" data-link>Browse brokers</a>'
         '<a class="btn" href="/find-broker/" data-link>Find my broker</a>'
-        '<a class="btn" href="/compare" data-link>Compare side by side</a>%s</div></section>'
+        '<a class="btn" href="/compare/" data-link>Compare side by side</a>%s</div></section>'
     ) % (
         '<div class="pitch-media" aria-hidden="true"><video class="pitch-video" muted loop playsinline preload="none" disablepictureinpicture tabindex="-1" poster="/assets/video/hero-bull-bear-poster.jpg" data-src="/assets/video/hero-bull-bear.mp4"></video></div>',
         meta.get("broker_count", 0), _full_html(overview.get("registry_count")),
@@ -7739,8 +7739,8 @@ def _prerender_home(overview):
          "assembled from NSE, BSE and SEBI primary disclosures, not from marketing pages." if has_clients else
          "Legal entities, SEBI registration numbers, exchange memberships and regulatory standing, taken "
          "straight from the regulator's own register rather than from marketing pages."),
-        ('<a class="btn" href="/calculator" data-link>What will it cost me?</a>' if has_clients else
-         '<a class="btn" href="/registry" data-link>Search the SEBI register</a>'),
+        ('<a class="btn" href="/calculator/" data-link>What will it cost me?</a>' if has_clients else
+         '<a class="btn" href="/registry/" data-link>Search the SEBI register</a>'),
     )
 
     if has_clients:
@@ -7852,14 +7852,14 @@ def _prerender_home(overview):
     html += (
         '<div class="section-title" style="margin-top:56px;margin-bottom:20px"><div>'
         '<div class="section-eyebrow">RETAIL BROKERAGE LANDSCAPE</div>'
-        '<h2>%s</h2></div><a class="small link-arrow" href="/brokers" data-link>All %d &rarr;</a></div>'
+        '<h2>%s</h2></div><a class="small link-arrow" href="/brokers/" data-link>All %d &rarr;</a></div>'
         '<div class="grid g-main" style="margin-top:0"><div>'
         '<div class="table-scroll"><table class="data"><thead><tr>%s</tr></thead>'
         '<tbody>%s</tbody></table></div>'
         '<div class="card row-between" style="margin-top:14px;padding:16px 20px;align-items:center;background:var(--bg-raised)">'
         '<div><div style="font-size:14px;font-weight:650;color:var(--text)">Explore all %d tracked brokers</div>'
         '<div class="xs muted">Compare active clients, market share, complaints and trading fees</div></div>'
-        '<a class="btn btn-sm btn-primary link-arrow" href="/brokers" data-link>View all %d &rarr;</a></div>'
+        '<a class="btn btn-sm btn-primary link-arrow" href="/brokers/" data-link>View all %d &rarr;</a></div>'
         '<div class="card row-between" style="margin-top:14px;padding:16px 20px;align-items:center;background:linear-gradient(135deg, rgba(37,99,235,0.06), rgba(16,185,129,0.06));border:1px solid rgba(37,99,235,0.2)">'
         '<div><div style="font-size:14px;font-weight:650;color:var(--text)">Not sure which broker fits your strategy?</div>'
         '<div class="xs muted">Take our 30-second Broker Matchmaker quiz to find your ideal match based on fees, capital, and tools.</div></div>'
@@ -7878,7 +7878,7 @@ def _prerender_home(overview):
         '<div class="section-title" style="margin-top:56px;margin-bottom:20px"><div>'
         '<div class="section-eyebrow">MARKET MOMENTUM &amp; SHIFTS</div>'
         '<h2>Movers &amp; Market Share Gainers</h2></div>'
-        '<a class="small link-arrow" href="/leaderboards" data-link>All movers &rarr;</a></div>'
+        '<a class="small link-arrow" href="/leaderboards/" data-link>All movers &rarr;</a></div>'
         '<div class="grid g3">%s</div>'
     ) % "".join(_leader_card_html(bd) for bd in boards)
 
@@ -7954,7 +7954,7 @@ def _prerender_home(overview):
         '<h2>Calculators &amp; Fair-Cost Estimators</h2></div>'
         '<a class="small link-arrow" href="/calculators/">All calculators &rarr;</a></div>'
         '<div class="grid g4" style="margin-top:0">'
-        '<a class="card card-interactive" href="/calculator" data-link style="display:flex;flex-direction:column;padding:20px">'
+        '<a class="card card-interactive" href="/calculator/" data-link style="display:flex;flex-direction:column;padding:20px">'
         '<div class="pill-tag accent" style="align-self:flex-start;margin-bottom:12px">Brokerage</div>'
         '<h3 style="font-size:15px;font-weight:650;margin-bottom:6px">Brokerage &amp; Regulatory Fees</h3>'
         '<p class="xs muted" style="line-height:1.45;flex:1 0 auto">Calculate exact STT, GST, stamp duty and SEBI charges across delivery, intraday and F&amp;O.</p>'
@@ -7986,8 +7986,8 @@ def _prerender_home(overview):
         'BrokerLens cross-references 1,785 registered stock brokers against official SEBI registration records, exchange membership master feeds (NSE, BSE, MCX), and 445 defaulter circulars. Never trade with unverified or flagged entities.'
         '</div></div>'
         '<div class="row-wrap" style="gap:10px">'
-        '<a class="btn btn-primary link-arrow" href="/registry" data-link>Search SEBI Register &rarr;</a>'
-        '<a class="btn" href="/sources" data-link>Audit Sources</a></div></div></div>'
+        '<a class="btn btn-primary link-arrow" href="/registry/" data-link>Search SEBI Register &rarr;</a>'
+        '<a class="btn" href="/sources/" data-link>Audit Sources</a></div></div></div>'
     )
 
     index_path = os.path.join(ROOT, "site", "index.html")
@@ -8020,7 +8020,7 @@ def _write_calculator_hub():
     Path is /calculators/ (bare index, sibling to the per-calculator
     directories already written by _write_calculator_pages) - checked against
     the live SPA route list before use (nothing named "calculators" exists
-    there; only the singular "/calculator" does).
+    there; only the singular "/calculator/" does).
     """
     canonical = "%s/calculators/" % SITE_URL
     title = "Financial Calculators: SIP, PPF, GST, EMI, Retirement | BrokerLens"
@@ -8074,7 +8074,7 @@ def _write_calculator_hub():
         + ibslBanner_html("wide", "calculator") +
 
         '<h2 style="margin-top:28px;font-size:18px">Compare broker charges instead</h2>'
-        '<a class="card" href="/calculator" style="display:block;max-width:520px">'
+        '<a class="card" href="/calculator/" style="display:block;max-width:520px">'
         '<h3 style="font-size:15px">Brokerage cost calculator</h3>'
         '<p class="small muted" style="margin-top:6px">Work out what a month of your actual trading '
         'costs at each Indian broker, using their published charges.</p></a>'
@@ -8206,7 +8206,7 @@ def _write_find_broker_page(overview, built=None):
         '  <div style="max-width:72ch">' + faq_html + '</div>'
         '</div>'
         '<p class="xs faint" style="margin-top:24px">BrokerLens is an independent financial research publisher, not a SEBI-registered investment adviser. '
-        'Recommendations are computed algorithmically from primary regulatory disclosures. <a href="/methodology">Methodology</a> &middot; <a href="/sources">Sources &amp; Lineage</a> &middot; <a href="/editorial-policy">Editorial Policy</a></p>'
+        'Recommendations are computed algorithmically from primary regulatory disclosures. <a href="/methodology/">Methodology</a> &middot; <a href="/sources/">Sources &amp; Lineage</a> &middot; <a href="/editorial-policy/">Editorial Policy</a></p>'
         '</div>'
     )
     matchmaker_script = _stamp_asset_versions('<script type="module" src="/assets/js/matchmaker.js"></script>')
@@ -8696,15 +8696,15 @@ _REPORT_TITLES = {
 
 _CORE_PAGES = [
     ("BrokerLens home", "/", ""),
-    ("Brokers", "/brokers", ""),
-    ("Compare brokers", "/compare", ""),
-    ("Movers", "/leaderboards", ""),
-    ("Brokerage cost calculator", "/calculator", ""),
+    ("Brokers", "/brokers/", ""),
+    ("Compare brokers", "/compare/", ""),
+    ("Movers", "/leaderboards/", ""),
+    ("Brokerage cost calculator", "/calculator/", ""),
     ("Financial calculators", "/calculators/", ""),
-    ("SEBI registry", "/registry", ""),
-    ("Algo trading platforms", "/algo", ""),
-    ("Methodology", "/methodology", ""),
-    ("Sources", "/sources", ""),
+    ("SEBI registry", "/registry/", ""),
+    ("Algo trading platforms", "/algo/", ""),
+    ("Methodology", "/methodology/", ""),
+    ("Sources", "/sources/", ""),
     ("Browse stocks A-Z", "/stocks/", ""),
     ("Browse mutual funds by AMC", "/funds-by/", ""),
     ("Browse ETFs", "/etfs/", ""),

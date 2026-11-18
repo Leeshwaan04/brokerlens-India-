@@ -240,7 +240,7 @@ def render_comparison_hub(all_pairs, site_url="https://www.brokerlens.in"):
         </div>
         """)
 
-    crumb_html = '<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/compare">Compare</a></li><li class="muted">/</li><li class="muted">Stocks</li></ol></nav>'
+    crumb_html = '<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/compare/">Compare</a></li><li class="muted">/</li><li class="muted">Stocks</li></ol></nav>'
 
     jsonld = {
         "@context": "https://schema.org",
@@ -277,8 +277,8 @@ def render_comparison_hub(all_pairs, site_url="https://www.brokerlens.in"):
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare" style="color:var(--accent);font-weight:600">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/" style="color:var(--accent);font-weight:600">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/">IPO</a>
@@ -299,7 +299,7 @@ def render_comparison_hub(all_pairs, site_url="https://www.brokerlens.in"):
 
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">All stock data is sourced from NSE exchange feeds and official company filings. Not investment advice.</p>
-  <p class="small"><a href="/stocks/">Stocks Directory</a> &middot; <a href="/compare">Compare Brokers</a> &middot; <a href="/trade-costs/">Trade Costs</a> &middot; <a href="/">BrokerLens Home</a></p>
+  <p class="small"><a href="/stocks/">Stocks Directory</a> &middot; <a href="/compare/">Compare Brokers</a> &middot; <a href="/trade-costs/">Trade Costs</a> &middot; <a href="/">BrokerLens Home</a></p>
 </div></footer>
 </body>
 </html>"""
@@ -368,7 +368,7 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
     else:
         vol_verdict = f"{sym2} demonstrated lower price volatility ({m2['volatility_30d']}% annualized) compared to {sym1} ({m1['volatility_30d']}%)."
 
-    crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/compare">Compare</a></li><li class="muted">/</li><li><a href="/compare/stocks/">Stocks</a></li><li class="muted">/</li><li class="muted">{sym1} vs {sym2}</li></ol></nav>'
+    crumb_html = f'<nav class="breadcrumbs" aria-label="Breadcrumb"><ol style="display:flex;gap:6px;list-style:none;padding:0;margin:0;font-size:13px"><li><a href="/">Home</a></li><li class="muted">/</li><li><a href="/compare/">Compare</a></li><li class="muted">/</li><li><a href="/compare/stocks/">Stocks</a></li><li class="muted">/</li><li class="muted">{sym1} vs {sym2}</li></ol></nav>'
 
     is_market_cap_bucket = sector_name == "Mega-Cap Cross Leaders"
     is_real_sector_pair = sector_name != "Cross-Sector Peers" and not is_market_cap_bucket
@@ -440,8 +440,8 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare" style="color:var(--accent);font-weight:600">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/" style="color:var(--accent);font-weight:600">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/">IPO</a>
@@ -576,7 +576,7 @@ def render_stock_comparison_page(s1, m1, s2, m2, sector_name, site_url="https://
 
 <footer class="site"><div class="wrap">
   <p class="small muted" style="max-width:70ch">All stock data is based on official exchange disclosures. BrokerLens does not provide buy or sell recommendations.</p>
-  <p class="small"><a href="/compare/stocks/">All Stock Comparisons</a> &middot; <a href="/compare">Compare Brokers</a> &middot; <a href="/stocks/">Stocks Directory</a> &middot; <a href="/">BrokerLens Home</a></p>
+  <p class="small"><a href="/compare/stocks/">All Stock Comparisons</a> &middot; <a href="/compare/">Compare Brokers</a> &middot; <a href="/stocks/">Stocks Directory</a> &middot; <a href="/">BrokerLens Home</a></p>
 </div></footer>
 </body>
 </html>"""

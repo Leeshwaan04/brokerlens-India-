@@ -389,8 +389,8 @@ def render_allotment_status_hub(site_url="https://www.brokerlens.in"):
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/" style="color:var(--accent);font-weight:600">IPO</a>
@@ -496,8 +496,8 @@ def render_how_to_apply_master(site_url="https://www.brokerlens.in"):
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/" style="color:var(--accent);font-weight:600">IPO</a>
@@ -701,8 +701,8 @@ def render_ipo_broker_apply_page(ipo_record, broker_id, broker_info, site_url="h
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/" style="color:var(--accent);font-weight:600">IPO</a>
@@ -832,8 +832,8 @@ def render_registrars_master_hub(site_url: str = "https://www.brokerlens.in") ->
 <header class="site"><div class="wrap row-between">
   <a href="/" class="brand" style="font-weight:700;font-size:20px;text-decoration:none;color:var(--text)">Broker<span style="color:var(--accent)">Lens</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/" style="color:var(--accent);font-weight:600">IPO</a>
@@ -953,8 +953,8 @@ def render_registrar_hub(reg_slug: str, info: dict, site_url: str = "https://www
 <header class="site"><div class="wrap row-between">
   <a href="/" class="brand" style="font-weight:700;font-size:20px;text-decoration:none;color:var(--text)">Broker<span style="color:var(--accent)">Lens</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/" style="color:var(--accent);font-weight:600">IPO</a>
@@ -1155,8 +1155,8 @@ def render_individual_ipo_allotment_page(ipo_record: dict, site_url: str = "http
 <header class="site"><div class="wrap row-between">
   <a href="/" class="brand" style="font-weight:700;font-size:20px;text-decoration:none;color:var(--text)">Broker<span style="color:var(--accent)">Lens</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
-    <a href="/compare">Compare</a>
+    <a href="/brokers/">Brokers</a>
+    <a href="/compare/">Compare</a>
     <a href="/stocks/">Stocks</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/" style="color:var(--accent);font-weight:600">IPO</a>

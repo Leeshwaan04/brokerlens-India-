@@ -227,9 +227,9 @@ def render_target_page(sym, name, current_price, high_52w, low_52w,
 <header class="site-header"><div class="wrap row-between" style="align-items:center;padding:14px 20px">
   <a href="/" class="brand" style="font-size:18px;font-weight:700;color:inherit;text-decoration:none">BrokerLens<span style="color:var(--accent)">.in</span></a>
   <nav class="nav" style="display:flex;gap:16px;font-size:14px">
-    <a href="/brokers">Brokers</a>
+    <a href="/brokers/">Brokers</a>
     <a href="/stocks/" style="color:var(--accent);font-weight:600">Stocks</a>
-    <a href="/compare">Compare</a>
+    <a href="/compare/">Compare</a>
     <a href="/trade-costs/">Trade Costs</a>
     <a href="/ipo/">IPO</a>
     <a href="/news/">News</a>

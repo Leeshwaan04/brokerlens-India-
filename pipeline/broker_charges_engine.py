@@ -687,7 +687,7 @@ def render_charges_page(rate_key, built_by_id=None, registry=None, site_url="htt
             brand, _rule_short(rates["delivery_flat"], rates["delivery_pct"]),
             _rule_short(rates["intraday_flat"], rates["intraday_pct"]), rs(rates["dp_charge"])))[:300]
 
-    trail = [("BrokerLens", "/"), ("Brokers", "/brokers")]
+    trail = [("BrokerLens", "/"), ("Brokers", "/brokers/")]
     if ident["profile_id"]:
         trail.append((profile.get("brand") or brand, "/broker/%s/" % ident["profile_id"]))
     trail.append((h1, None))
@@ -781,7 +781,7 @@ def render_charges_page(rate_key, built_by_id=None, registry=None, site_url="htt
     if ident["profile_id"]:
         more.append('<a class="chip" href="/broker/%s/">%s profile, registration and complaints &rarr;</a>' % (
             _esc(ident["profile_id"]), _esc(profile.get("brand") or brand)))
-    more += ['<a class="chip" href="/calculator">Compare monthly brokerage across brokers &rarr;</a>',
+    more += ['<a class="chip" href="/calculator/">Compare monthly brokerage across brokers &rarr;</a>',
              '<a class="chip" href="/trade-costs/">Trading cost hub &rarr;</a>']
     others = "".join('<a class="chip" href="%s">%s</a>' % (charges_path(k), _esc(tce.BROKER_RATES[k]["brand"]))
                      for k in eligible_keys() if k != rate_key)
