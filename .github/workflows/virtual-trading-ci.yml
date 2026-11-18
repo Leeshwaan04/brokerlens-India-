@@ -6,10 +6,8 @@ name: Virtual Trading CI
 # fully separate deploy paths, per
 # /Users/sumitbagewadi/.claude/plans/graceful-painting-neumann.md.
 #
-# No real Vercel project exists for this app yet, so the deploy job below is
-# a no-op until VT_VERCEL_TOKEN/VT_VERCEL_ORG_ID/VT_VERCEL_PROJECT_ID are
-# added as repository secrets, mirroring how ci.yml guards its own
-# CLOUDFLARE_API_TOKEN-gated deploy step rather than hard-failing.
+# Deployment is configured for Cloudflare Pages (brokerlens-virtual-trading),
+# guarded by CLOUDFLARE_API_TOKEN in repository secrets.
 
 on:
   push:
@@ -78,17 +76,14 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Deploy to Vercel
+      - name: Deploy to Cloudflare Pages
         run: |
-          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
-            echo "Deploying virtual-trading to Vercel..."
-            npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-            npx vercel build --prod --token="$VERCEL_TOKEN"
-            npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "Deploying virtual-trading to Cloudflare Pages..."
+            npx wrangler pages deploy .next --project-name=brokerlens-virtual-trading
           else
-            echo "VT_VERCEL_TOKEN/VT_VERCEL_ORG_ID/VT_VERCEL_PROJECT_ID not configured in GitHub secrets; deploy step skipped."
+            echo "CLOUDFLARE_API_TOKEN not configured in GitHub secrets; deploy step skipped in CI."
           fi
         env:
-          VERCEL_TOKEN: ${{ secrets.VT_VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VT_VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VT_VERCEL_PROJECT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 60b50388dc161e3a172c8a5fc35ba3a9

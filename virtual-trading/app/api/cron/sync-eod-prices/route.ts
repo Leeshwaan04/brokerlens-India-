@@ -1,7 +1,7 @@
 // Daily EOD price sync: fetches NSE's real public bhavcopy (walking back a
 // day at a time if the target date's close isn't published yet), upserts
 // daily_prices, then settles every order waiting on that date. Triggered by
-// Vercel Cron (see vercel.json) at ~19:00 IST on trading weekdays; also
+// scheduled workflow or Cloudflare Cron Trigger at ~19:00 IST on trading weekdays; also
 // callable by hand with ?date=YYYY-MM-DD for backfill, same as the plan's
 // "Verification" section describes.
 import { NextRequest, NextResponse } from "next/server";

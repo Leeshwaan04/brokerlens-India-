@@ -1,0 +1,26 @@
+name: Virtual Trading EOD Price Sync
+
+on:
+  schedule:
+    # 13:30 UTC = 19:00 IST (NSE bhavcopy available by ~18:30-19:00 IST Monday to Friday)
+    - cron: "30 13 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  sync-and-settle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger EOD price sync and order settlement
+        run: |
+          APP_URL="${{ secrets.VT_APP_URL || 'https://paper.brokerlens.in' }}"
+          CRON_SECRET="${{ secrets.CRON_SECRET }}"
+          if [ -n "$CRON_SECRET" ]; then
+            echo "Triggering EOD sync on $APP_URL..."
+            curl -f -X GET "$APP_URL/api/cron/sync-eod-prices" \
+              -H "Authorization: Bearer $CRON_SECRET" \
+              --retry 3 \
+              --retry-delay 10
+            echo "EOD sync trigger complete."
+          else
+            echo "CRON_SECRET not configured in secrets; skipping trigger."
+          fi

@@ -42,10 +42,8 @@ clean:       ; rm -rf data/cache data/_ingest.json
 # A deployable copy of site/, with junk that must never reach a public host
 # stripped. .DS_Store is a binary directory index that leaks every filename,
 # and static hosts serve it before applying SPA rewrites.
-# .vercel/ holds the project link; preserving it keeps repeat deploys pointed at
-# the same project instead of creating a new one named after the folder.
 dist: check
-	@mkdir -p dist && find dist -mindepth 1 -maxdepth 1 ! -name '.vercel' ! -name '.env.local' -exec rm -rf {} +
+	@mkdir -p dist && find dist -mindepth 1 -maxdepth 1 ! -name '.env.local' -exec rm -rf {} +
 	@cd site && tar --exclude='.DS_Store' --exclude='._*' --exclude='.git*' -cf - . | (cd ../dist && tar -xf -)
 	@find dist -name '.DS_Store' -delete
 	@echo "dist/ ready to upload ($$(find dist -type f | wc -l | tr -d ' ') files)"
@@ -63,11 +61,9 @@ verify: check qa vapt
 	@echo "verification complete"
 
 # One command to publish. Refreshes data from the primary sources, drops
-# anything still flagged sample, rebuilds the deployable copy, and pushes it.
-# Requires a logged-in Vercel CLI (`vercel login`) and a linked dist/.
+# anything still flagged sample, rebuilds the site, and deploys to Cloudflare.
 deploy:
 	@SITE_URL=$(or $(SITE_URL),https://brokerlens.in) PUBLISH_MODE=production python3 -m pipeline.run all
-	@$(MAKE) dist
-	@cp site/vercel.json dist/vercel.json
-	@cd dist && vercel deploy --prod --yes
+	@python3 scripts/generate_cloudflare_config.py
+	@npx wrangler deploy
 	@echo "deployed. verify: curl -sI https://brokerlens.in | head -1"
