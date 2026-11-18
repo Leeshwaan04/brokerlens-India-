@@ -1,0 +1,44 @@
+[
+  {
+    "id": "zerodha",
+    "brand": "Zerodha",
+    "tagline": "Brokerage-free equity delivery, flat Rs 20 intraday",
+    "delivery_flat": 0.0,
+    "delivery_pct": 0.0,
+    "intraday_flat": 20.0,
+    "intraday_pct": 0.0003,
+    "dp_charge": 15.34,
+    "demat_amc": 300,
+    "account_open": 200,
+    "cta_url": "https://zerodha.com/open-account?c=ZE5729",
+    "partner_badge": "BrokerLens Partner"
+  },
+  {
+    "id": "5paisa",
+    "brand": "5paisa",
+    "tagline": "Flat Rs 20 across all segments, NSE/BSE listed",
+    "delivery_flat": 20.0,
+    "delivery_pct": 0.0,
+    "intraday_flat": 20.0,
+    "intraday_pct": 0.0,
+    "dp_charge": 14.75,
+    "demat_amc": 0,
+    "account_open": 0,
+    "cta_url": "https://www.5paisa.com/demat-account?ReferralCode=53293333&ReturnUrl=invest-open-account",
+    "partner_badge": "BrokerLens Partner"
+  },
+  {
+    "id": "upstox",
+    "brand": "Upstox",
+    "tagline": "Flat Rs 20 equity trading, modern charting",
+    "delivery_flat": 20.0,
+    "delivery_pct": 0.001,
+    "intraday_flat": 20.0,
+    "intraday_pct": 0.0005,
+    "dp_charge": 21.83,
+    "demat_amc": 0,
+    "account_open": 0,
+    "cta_url": "https://upstox.com/open-account/?f=BROKERLENS",
+    "partner_badge": "BrokerLens Partner"
+  }
+]

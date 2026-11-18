@@ -1,0 +1,65 @@
+name: Virtual Trading broker-rates sync
+
+# Monthly, explicit, reviewable sync of virtual-trading/seed/broker-rates.json
+# from pipeline.trade_cost_engine.BROKER_RATES (see
+# /Users/sumitbagewadi/.claude/plans/graceful-painting-neumann.md section 6).
+# Runs from the repo root so `import pipeline.trade_cost_engine` resolves,
+# then upserts broker_catalog in the virtual-trading app's own database.
+# Fee data changes infrequently, so monthly is enough; workflow_dispatch
+# covers an out-of-band refresh. This workflow never deploys the app and
+# never touches the static site's own CI/deploy path (ci.yml).
+
+on:
+  schedule:
+    - cron: "0 3 1 * *" # 1st of the month, 03:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: virtual-trading/package-lock.json
+
+      - name: Export BROKER_RATES to virtual-trading/seed/broker-rates.json
+        run: python3 scripts/export_broker_rates.py
+
+      - name: Install virtual-trading dependencies
+        working-directory: virtual-trading
+        run: npm ci
+
+      - name: Sync broker_catalog
+        working-directory: virtual-trading
+        run: |
+          if [ -n "$DATABASE_URL" ]; then
+            echo "Syncing broker_catalog..."
+            npx tsx scripts/sync-broker-rates.ts
+          else
+            echo "VT_DATABASE_URL not configured in GitHub secrets; database sync skipped. The regenerated seed/broker-rates.json is still committed below."
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.VT_DATABASE_URL }}
+
+      - name: Commit the regenerated seed file if it changed
+        run: |
+          if ! git diff --quiet -- virtual-trading/seed/broker-rates.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add virtual-trading/seed/broker-rates.json
+            git commit -m "chore(virtual-trading): monthly broker-rates sync"
+            git push
+          else
+            echo "No change in broker-rates.json; nothing to commit."
+          fi

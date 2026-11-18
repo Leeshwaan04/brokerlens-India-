@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-eod-prices",
+      "schedule": "30 13 * * 1-5"
+    }
+  ]
+}

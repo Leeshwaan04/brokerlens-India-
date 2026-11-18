@@ -1,0 +1,42 @@
+{
+  "name": "virtual-trading",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "seed:slice1": "tsx scripts/seed-slice1.ts",
+    "sync:stock-universe": "tsx scripts/sync-stock-universe.ts",
+    "seed:market-holidays": "tsx scripts/seed-market-holidays.ts",
+    "sync:broker-rates": "tsx scripts/sync-broker-rates.ts"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^7.10.2",
+    "@neondatabase/serverless": "^1.2.1",
+    "drizzle-orm": "^0.45.4",
+    "fflate": "^0.8.3",
+    "next": "16.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "4.3.3",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.6",
+    "tailwindcss": "4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.1.1"
+  }
+}

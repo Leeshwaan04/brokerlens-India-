@@ -1,0 +1,88 @@
+name: Virtual Trading CI
+
+# Path-filtered to virtual-trading/ only, so a pipeline-only commit never
+# triggers this and a virtual-trading-only commit never triggers ci.yml (the
+# static-site QA+VAPT+deploy workflow). The two apps share a repo but have
+# fully separate deploy paths, per
+# /Users/sumitbagewadi/.claude/plans/graceful-painting-neumann.md.
+#
+# No real Vercel project exists for this app yet, so the deploy job below is
+# a no-op until VT_VERCEL_TOKEN/VT_VERCEL_ORG_ID/VT_VERCEL_PROJECT_ID are
+# added as repository secrets, mirroring how ci.yml guards its own
+# CLOUDFLARE_API_TOKEN-gated deploy step rather than hard-failing.
+
+on:
+  push:
+    branches: [main]
+    paths: ["virtual-trading/**"]
+  pull_request:
+    paths: ["virtual-trading/**"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: virtual-trading
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: virtual-trading/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Placeholder values so a build that only needs env vars to exist
+          # (not to be valid/live) does not fail before real secrets are
+          # configured. Nothing here is a real credential.
+          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_placeholder"
+          CLERK_SECRET_KEY: "sk_test_placeholder"
+          CRON_SECRET: "placeholder"
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Deploy to Vercel
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "Deploying virtual-trading to Vercel..."
+            npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+            npx vercel build --prod --token="$VERCEL_TOKEN"
+            npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+          else
+            echo "VT_VERCEL_TOKEN/VT_VERCEL_ORG_ID/VT_VERCEL_PROJECT_ID not configured in GitHub secrets; deploy step skipped."
+          fi
+        env:
+          VERCEL_TOKEN: ${{ secrets.VT_VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VT_VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VT_VERCEL_PROJECT_ID }}

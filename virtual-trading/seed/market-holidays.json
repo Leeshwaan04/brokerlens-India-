@@ -1,0 +1,26 @@
+{
+  "source": "data/manual/nse_holidays.json (segments.CM), fetched_at 2026-11-16T07:18:38+00:00, itself pulled live from NSE's own holiday master by pipeline/sources/nse_holidays.py",
+  "note": "Equity (CM) segment trading holidays only. A few dates below already fall on a Saturday or Sunday (e.g. 2026-02-15, 2026-03-21, 2026-08-15, 2026-11-08); isTradingDay() in lib/market-calendar.ts already treats every Saturday/Sunday as a non-trading day regardless of this list, so those entries are redundant with the weekend check, not a correction to it. Kept here verbatim rather than filtered, since this file is meant to mirror the real NSE calendar exactly.",
+  "holidays": [
+    { "date": "2026-01-15", "description": "Municipal Corporation Election - Maharashtra" },
+    { "date": "2026-01-26", "description": "Republic Day" },
+    { "date": "2026-02-15", "description": "Mahashivratri" },
+    { "date": "2026-03-03", "description": "Holi" },
+    { "date": "2026-03-21", "description": "Id-Ul-Fitr (Ramadan Eid)" },
+    { "date": "2026-03-26", "description": "Shri Ram Navami" },
+    { "date": "2026-03-31", "description": "Shri Mahavir Jayanti" },
+    { "date": "2026-04-03", "description": "Good Friday" },
+    { "date": "2026-04-14", "description": "Dr. Baba Saheb Ambedkar Jayanti" },
+    { "date": "2026-05-01", "description": "Maharashtra Day" },
+    { "date": "2026-05-28", "description": "Bakri Id" },
+    { "date": "2026-06-26", "description": "Muharram" },
+    { "date": "2026-08-15", "description": "Independence Day" },
+    { "date": "2026-09-14", "description": "Ganesh Chaturthi" },
+    { "date": "2026-10-02", "description": "Mahatma Gandhi Jayanti" },
+    { "date": "2026-10-20", "description": "Dussehra" },
+    { "date": "2026-11-08", "description": "Diwali Laxmi Pujan" },
+    { "date": "2026-11-10", "description": "Diwali-Balipratipada" },
+    { "date": "2026-11-24", "description": "Prakash Gurpurb Sri Guru Nanak Dev" },
+    { "date": "2026-12-25", "description": "Christmas" }
+  ]
+}
