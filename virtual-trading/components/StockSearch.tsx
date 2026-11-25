@@ -11,7 +11,7 @@ interface StockResult {
 
 const DEBOUNCE_MS = 180;
 
-export function StockSearch({ autoFocus = false }: { autoFocus?: boolean }) {
+export function StockSearch({ autoFocus = false, placeholder }: { autoFocus?: boolean; placeholder?: string }) {
   const router = useRouter();
   const listId = useId();
   const [query, setQuery] = useState("");
@@ -95,10 +95,11 @@ export function StockSearch({ autoFocus = false }: { autoFocus?: boolean }) {
         aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
         autoFocus={autoFocus}
         autoComplete="off"
+        data-hotkey-search
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         onKeyDown={onKeyDown}
-        placeholder="Search by symbol or company, e.g. RELIANCE or Infosys"
+        placeholder={placeholder ?? "Search by symbol or company, e.g. RELIANCE or Infosys"}
         className="w-full rounded-xl border border-line-strong bg-raised px-4 py-3 text-base text-ink placeholder:text-faint focus:border-accent focus:outline-none"
       />
       {loading && <div className="absolute right-4 top-3.5 text-xs text-faint">Searching</div>}

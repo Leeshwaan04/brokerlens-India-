@@ -44,7 +44,7 @@ export default async function DashboardPage() {
           <h2 className="text-lg font-semibold text-ink">Start with one order</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted">
             You have {inr(s.cash)} of virtual cash and {s.broker.brand}&apos;s real fee schedule. Pick a stock, see exactly
-            what the order will cost before you place it, and it fills against the next session's official NSE prices.
+            what the order will cost before you place it, and it fills against the next session&apos;s official NSE prices.
           </p>
           <Link href="/trade" className={cx(buttonClass("primary"), "mt-4")}>
             Choose a stock

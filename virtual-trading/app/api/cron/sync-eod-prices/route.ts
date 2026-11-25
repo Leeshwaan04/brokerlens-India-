@@ -27,10 +27,11 @@ const MAX_WALK_BACK_ATTEMPTS = 10;
 // Most earlier days a single run will backfill for orders still waiting on
 // a close that was never ingested (missed runs, a CI outage).
 const MAX_BACKFILL_DATES = 15;
-// History the delayed market needs: closes from a little before the practice
-// market's date (for day changes and charts) up to the real latest. Missing
-// days are fetched a few per run, or more with ?history=N on a first deploy.
-const HISTORY_LEAD_DAYS = 10;
+// History the delayed market needs: about three months of closes before the
+// practice market's date (for day changes and price charts) up to the real
+// latest. Missing days are fetched a few per run, or more with ?history=N on
+// a first deploy.
+const HISTORY_LEAD_DAYS = 90;
 const DEFAULT_HISTORY_FETCHES = 5;
 const MAX_HISTORY_FETCHES = 60;
 const NSE_PAUSE_MS = 400;
