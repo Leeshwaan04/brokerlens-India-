@@ -1267,7 +1267,6 @@ _REGISTRY_PAGE_FOOT = f"""</main>
   <a href="/ipo/sme/">SME IPOs →</a> ·
   <a href="/ipo/subscription/">IPO subscription status →</a> ·
   <a href="/stock-market-holidays/">NSE holidays &amp; Muhurat trading →</a> ·
-  <a href="/paper-trading-apps-india/">Paper trading apps in India →</a> ·
   <a href="/trade-costs/">Trade cost calculator →</a> ·
   <a href="/index/nifty-50/">Nifty 50 constituents →</a> ·
   <a href="/etf/niftybees/">Nifty 50 ETF: NIFTYBEES →</a></p>
