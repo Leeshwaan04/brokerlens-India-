@@ -2048,6 +2048,26 @@ def test_instrument_pages():
           pub._tidy_scheme_name("ADITYA BIRLA SUN LIFE NIFTY BANK ETF") == "Aditya Birla Sun Life Nifty Bank ETF"
           and pub._tidy_scheme_name("HDFC NIFTY 50 ETF") == "HDFC Nifty 50 ETF"
           and pub._tidy_scheme_name("Nippon India ETF Nifty 50 BeES") == "Nippon India ETF Nifty 50 BeES")
+    _etfs = [
+        {"symbol": "MOPVTBANK", "name": "MOTILALAMC - MOPVTBANK", "isin": "INF247L01IB6",
+         "underlying_key": "NIFTY PRIVATE BANK", "underlying_asset": "NIFTY PRIVATE BANK"},
+        {"symbol": "MO10YGSEC", "name": "MOTILALAMC - MO10YGSEC", "isin": "INF247L01HY0",
+         "underlying_key": "GSECS/GILT", "underlying_asset": "Nifty 10 yr Benchmark G-Sec"},
+        {"symbol": "KSHARED", "name": "KOTAKAMC - KSHARED", "isin": "INF174X01AA1",
+         "underlying_key": "Nifty 50", "underlying_asset": "Nifty 50"},
+    ]
+    pub._enrich_etfs(_etfs, [
+        {"name": "Motilal Oswal Nifty 50 ETF", "amc": "Motilal Oswal Mutual Fund", "isin_growth": "INF247L01AA1"},
+        {"name": "Kotak Nifty ETF", "amc": "Kotak Mahindra Mutual Fund", "isin_growth": "INF174K01AA1"},
+        {"name": "Mahindra Manulife Fund", "amc": "Mahindra Manulife Mutual Fund", "isin_growth": "INF174V01AA1"},
+    ], {})
+    check("an ETF not yet in AMFI's file is described from NSE's register, not shown by its raw label",
+          _etfs[0]["name"] == "Nifty Private Bank ETF from Motilal Oswal Mutual Fund"
+          and _etfs[0]["nse_name"] == "MOTILALAMC - MOPVTBANK" and "nav" not in _etfs[0] and "amc" not in _etfs[0])
+    check("a category-like underlying key falls back to the index name",
+          _etfs[1]["name"] == "Nifty 10 yr Benchmark G-Sec ETF from Motilal Oswal Mutual Fund")
+    check("an ISIN issuer code shared by two fund houses names neither",
+          _etfs[2]["name"] == "Nifty 50 ETF")
 
     src = open(os.path.join(ROOT, "pipeline", "publish.py"), encoding="utf-8").read()
     check("no unsourced '1-1.5 percent' distributor-commission claim anywhere in the page generator",

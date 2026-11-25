@@ -3123,17 +3123,44 @@ def _enrich_etfs(etfs, schemes, fund_slug_by_key):
     identifier on both registers, so a match is exact, never fuzzy). A match
     replaces NSE's raw register label (e.g. 'NIPINDETFNIFTYBEES') with the
     scheme's real name and adds its AMC and AMFI-published NAV. Unmatched ETFs
-    keep NSE's own label and get no NAV; nothing is guessed."""
+    (usually just listed, before AMFI publishes a NAV) are described from NSE's
+    register instead of showing its raw label, and get no NAV; nothing is
+    guessed."""
     by_isin = {}
     for s in schemes or []:
         for k in ("isin_growth", "isin_div_reinvest"):
             v = s.get(k)
             if v and v.startswith("INF"):
                 by_isin.setdefault(v, s)
+    # The first six characters of a fund ISIN (INF + issuer code) identify the
+    # fund house. Only codes that map to exactly one AMC in AMFI's own file are
+    # used: a few (INF174, INF0R8) are shared by two AMCs.
+    issuer_amcs = {}
+    for s in schemes or []:
+        for k in ("isin_growth", "isin_div_reinvest"):
+            v = s.get(k)
+            if v and v.startswith("INF") and s.get("amc"):
+                issuer_amcs.setdefault(v[:6], set()).add(s["amc"])
     matched = 0
+    described = 0
     for e in etfs or []:
         s = by_isin.get(e.get("isin") or "")
         if not s:
+            # Newly listed ETFs reach NSE's register before AMFI publishes
+            # their NAV, so there is no scheme to match yet. Rather than show
+            # NSE's raw register label ('MOTILALAMC - MOPVTBANK'), describe
+            # the ETF from facts on file: the index it tracks (NSE's register)
+            # and, when its ISIN's issuer code names a single fund house in
+            # AMFI's file, that fund house. A description, not a scheme name;
+            # no AMC field and no NAV are set, so nothing else changes.
+            tracks = (e.get("underlying_key") or "").strip()
+            if not tracks or "/" in tracks:
+                tracks = (e.get("underlying_asset") or "").strip()
+            if tracks:
+                amcs = issuer_amcs.get((e.get("isin") or "")[:6]) or set()
+                e.setdefault("nse_name", e.get("name"))
+                e["name"] = "%s ETF%s" % (_tidy_scheme_name(tracks), (" from %s" % next(iter(amcs))) if len(amcs) == 1 else "")
+                described += 1
             continue
         e.setdefault("nse_name", e.get("name"))
         e["name"] = _tidy_scheme_name(s["name"])
@@ -3143,7 +3170,8 @@ def _enrich_etfs(etfs, schemes, fund_slug_by_key):
             e["nav"], e["nav_date"] = s["nav"], s.get("nav_date")
         e["fund_slug"] = fund_slug_by_key.get((s.get("amc"), s.get("name")))
         matched += 1
-    log("etf enrichment: %d of %d NSE ETFs matched to an AMFI scheme by ISIN" % (matched, len(etfs or [])), "ok")
+    log("etf enrichment: %d of %d NSE ETFs matched to an AMFI scheme by ISIN; %d not yet in AMFI's file described "
+        "from NSE's register" % (matched, len(etfs or []), described), "ok")
 
 
 def _write_etf_pages(etfs, indices):
