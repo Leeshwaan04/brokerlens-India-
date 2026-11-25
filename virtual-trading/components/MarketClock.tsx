@@ -18,9 +18,13 @@ export async function MarketClock({ className }: { className?: string }) {
         aria-hidden
         className={cx("h-1.5 w-1.5 rounded-full", m.phase === "open" ? "bg-up" : m.phase === "pre_open" ? "bg-warn" : "bg-faint")}
       />
-      <span>
-        {m.lagDays > 0 ? "Practice market" : "Market"}: <span className="font-medium text-ink">{longDate(m.date)}</span>,{" "}
-        {PHASE_LABEL[m.phase]}
+      <span className="whitespace-nowrap">
+        <span className="hidden sm:inline">{m.lagDays > 0 ? "Practice market" : "Market"}: </span>
+        <span className="font-medium text-ink">
+          <span className="hidden sm:inline">{longDate(m.date).slice(0, 4)}</span>
+          {longDate(m.date).slice(4)}
+        </span>
+        , {PHASE_LABEL[m.phase]}
       </span>
     </span>
   );
