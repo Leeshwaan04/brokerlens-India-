@@ -17,13 +17,16 @@ export async function POST(request: Request) {
   const validity = typeof body?.validity === "string" ? (body.validity as Validity) : undefined;
   const limitPrice = typeof body?.limitPrice === "number" ? body.limitPrice : null;
   const triggerPrice = typeof body?.triggerPrice === "number" ? body.triggerPrice : null;
+  const product = body?.product === "MIS" ? "MIS" : "CNC";
+  const stopLossPrice = typeof body?.stopLossPrice === "number" ? body.stopLossPrice : null;
+  const targetPrice = typeof body?.targetPrice === "number" ? body.targetPrice : null;
 
   if (!symbol || (side !== "BUY" && side !== "SELL") || !Number.isFinite(qty)) {
     return NextResponse.json({ error: "symbol, side ('BUY'|'SELL') and qty are required" }, { status: 400 });
   }
 
   try {
-    const result = await placeOrder({ userId, symbol, side, qty, clientOrderId, orderType, validity, limitPrice, triggerPrice });
+    const result = await placeOrder({ userId, symbol, side, qty, clientOrderId, orderType, validity, limitPrice, triggerPrice, product, stopLossPrice, targetPrice });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     if (err instanceof OrderPlacementError) {

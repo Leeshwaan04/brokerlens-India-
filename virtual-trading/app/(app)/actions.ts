@@ -57,11 +57,14 @@ export async function placeOrderAction(_prev: OrderActionState, formData: FormDa
       validity,
       limitPrice: price("limitPrice"),
       triggerPrice: price("triggerPrice"),
+      product: String(formData.get("product") ?? "CNC") === "MIS" ? "MIS" : "CNC",
+      stopLossPrice: price("stopLossPrice"),
+      targetPrice: price("targetPrice"),
     });
     revalidateTradingPages();
     return {
       status: "ok",
-      message: `${ORDER_TYPE_LABEL[orderType] ?? "Market"} ${side === "BUY" ? "buy" : "sell"} order for ${qty} ${symbol} placed.`,
+      message: `${String(formData.get("product")) === "MIS" ? "Intraday " : ""}${ORDER_TYPE_LABEL[orderType] ?? "Market"} ${side === "BUY" ? "buy" : "sell"} order for ${qty} ${symbol} placed.`,
       orderId: result.orderId,
       targetTradeDate: result.targetTradeDate,
     };

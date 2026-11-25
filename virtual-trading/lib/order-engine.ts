@@ -22,9 +22,24 @@ import {
 } from "./schema";
 import { isoDateOnly, nextTradingDay, targetTradeDateFor } from "./market-calendar";
 import { marketMoment, marketNow } from "./market-clock";
-import { buyLegFor, sellLegFor, deliveryFeesFromRow, type DeliveryFees } from "./trade-costs";
+import {
+  buyLegFor,
+  sellLegFor,
+  deliveryFeesFromRow,
+  intradayFeesFromRow,
+  intradayLegFor,
+  type DeliveryFees,
+  type IntradayFees,
+} from "./trade-costs";
 import {
   buyReserve,
+  misEntryReference,
+  misReserve,
+  misTermsError,
+  MIS_MARGIN_PCT,
+  PRODUCTS,
+  resolveIntradayExit,
+  type Product,
   GTT_DAYS,
   ORDER_TYPES,
   VALIDITIES,
@@ -65,6 +80,10 @@ export interface PlaceOrderInput {
   limitPrice?: number | null;
   triggerPrice?: number | null;
   validity?: Validity;
+  product?: Product;
+  // Intraday only: optional exits within the session.
+  stopLossPrice?: number | null;
+  targetPrice?: number | null;
 }
 
 
@@ -90,7 +109,7 @@ export interface Reservations {
  * lakh buys could all be accepted against a Rs 10 lakh balance and then all
  * but one rejected at settlement.
  */
-export async function getReservations(accountId: string, fees: DeliveryFees): Promise<Reservations> {
+export async function getReservations(accountId: string, fees: DeliveryFees, intraday: IntradayFees): Promise<Reservations> {
   const db = getDb();
   const pending = await db
     .select({
@@ -100,14 +119,19 @@ export async function getReservations(accountId: string, fees: DeliveryFees): Pr
       orderType: orders.orderType,
       limitPrice: orders.limitPrice,
       triggerPrice: orders.triggerPrice,
+      product: orders.product,
     })
     .from(orders)
     .where(and(eq(orders.accountId, accountId), eq(orders.status, "PENDING")));
-  const closes = await latestCloses(pending.filter((o) => o.side === "BUY").map((o) => o.symbol));
+  const closes = await latestCloses(pending.filter((o) => o.side === "BUY" || o.product === "MIS").map((o) => o.symbol));
   let reservedCash = 0;
   const pendingSellQty = new Map<string, number>();
   for (const o of pending) {
-    if (o.side === "BUY") {
+    if (o.product === "MIS") {
+      // Intraday buys and short sells both block margin; neither touches holdings.
+      const c = closes.get(o.symbol);
+      if (c) reservedCash += misReserve(o.orderType, c.close, num(o.limitPrice), num(o.triggerPrice), o.qty, intraday);
+    } else if (o.side === "BUY") {
       const c = closes.get(o.symbol);
       if (c) reservedCash += buyReserve(o.orderType, c.close, num(o.limitPrice), num(o.triggerPrice), o.qty, fees);
     } else {
@@ -143,6 +167,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   }
   const limitPrice = orderType === "LIMIT" ? (input.limitPrice ?? null) : null;
   const triggerPrice = orderType === "SL_M" ? (input.triggerPrice ?? null) : null;
+  const product: Product = input.product ?? "CNC";
+  if (!(PRODUCTS as readonly string[]).includes(product)) {
+    throw new OrderPlacementError("Choose delivery or intraday.", "invalid_terms");
+  }
+  const stopLossPrice = product === "MIS" ? (input.stopLossPrice ?? null) : null;
+  const targetPrice = product === "MIS" ? (input.targetPrice ?? null) : null;
 
   const db = getDb();
   const [account] = await db
@@ -182,15 +212,39 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   }
   const termsError = priceTermsError(input.side, orderType, limitPrice, triggerPrice, last.close);
   if (termsError) throw new OrderPlacementError(termsError, "invalid_price");
+  const holidaySet = await loadHolidaySet();
+  const now = new Date();
+  const sessionOpen = marketMoment(holidaySet, now).phase === "open";
+  if (product === "MIS") {
+    const misError = misTermsError({
+      side: input.side,
+      type: orderType,
+      validity,
+      sessionOpen,
+      entryRef: misEntryReference(orderType, last.close, limitPrice, triggerPrice),
+      stopLoss: stopLossPrice,
+      target: targetPrice,
+    });
+    if (misError) throw new OrderPlacementError(misError, "invalid_intraday");
+  }
 
   const [broker] = await db.select().from(brokerCatalog).where(eq(brokerCatalog.id, account.brokerId)).limit(1);
   if (!broker) {
     throw new OrderPlacementError("Your selected broker is no longer available. Choose a broker again.", "broker_missing");
   }
   const fees = deliveryFeesFromRow(broker);
-  const reservations = await getReservations(account.id, fees);
+  const intraday = intradayFeesFromRow(broker);
+  const reservations = await getReservations(account.id, fees, intraday);
 
-  if (input.side === "BUY") {
+  if (product === "MIS") {
+    const available = Number(account.cashBalance) - reservations.reservedCash;
+    if (misReserve(orderType, last.close, limitPrice, triggerPrice, input.qty, intraday) > available) {
+      throw new OrderPlacementError(
+        "Not enough free virtual cash for the intraday margin, counting orders you already have pending.",
+        "insufficient_cash",
+      );
+    }
+  } else if (input.side === "BUY") {
     const available = Number(account.cashBalance) - reservations.reservedCash;
     if (buyReserve(orderType, last.close, limitPrice, triggerPrice, input.qty, fees) > available) {
       throw new OrderPlacementError(
@@ -215,12 +269,10 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     }
   }
 
-  const holidaySet = await loadHolidaySet();
   // The practice market's session, not the real calendar's (market-clock.ts).
   // An order is in before that session opens unless the market is open now.
-  const now = new Date();
   const targetTradeDate = targetTradeDateFor(marketNow(now), holidaySet);
-  const beforeOpen = marketMoment(holidaySet, now).phase !== "open";
+  const beforeOpen = !sessionOpen;
   const expiresOn =
     validity === "GTT" ? isoDateOnly(new Date(new Date(`${targetTradeDate}T00:00:00Z`).getTime() + GTT_DAYS * 86_400_000)) : null;
 
@@ -240,6 +292,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       validity,
       beforeOpen,
       expiresOn,
+      product,
+      stopLossPrice: stopLossPrice === null ? null : String(stopLossPrice),
+      targetPrice: targetPrice === null ? null : String(targetPrice),
     })
     .onConflictDoNothing({ target: [orders.accountId, orders.clientOrderId] })
     .returning({ id: orders.id, targetTradeDate: orders.targetTradeDate });
@@ -360,6 +415,73 @@ export async function settlePendingOrders(
       if (!broker) return;
 
       const fees = deliveryFeesFromRow(broker);
+
+      if (order.product === "MIS") {
+        // Opened and closed within this session (fills.ts): entry by the
+        // order's own terms, exit at its stop-loss, target or the close.
+        const intraday = intradayFeesFromRow(broker);
+        const exit = resolveIntradayExit(
+          order.side,
+          fillPrice,
+          num(order.stopLossPrice),
+          num(order.targetPrice),
+          { open: num(bar.open), high: num(bar.high), low: num(bar.low), close: Number(bar.close) },
+        );
+        const entryLeg = intradayLegFor(order.side, fillPrice, order.qty, intraday);
+        const exitLeg = intradayLegFor(order.side === "BUY" ? "SELL" : "BUY", exit.price, order.qty, intraday);
+        const charges = entryLeg.totalCharges + exitLeg.totalCharges;
+        const gross = order.side === "BUY" ? exitLeg.turnover - entryLeg.turnover : entryLeg.turnover - exitLeg.turnover;
+        const pnl = gross - charges;
+
+        const currentCash = Number(account.cashBalance);
+        if (entryLeg.turnover * MIS_MARGIN_PCT + charges > currentCash) {
+          await tx
+            .update(orders)
+            .set({ status: "REJECTED", rejectionReason: "insufficient_margin_at_settlement" })
+            .where(eq(orders.id, order.id));
+          rejected++;
+          return;
+        }
+        await tx
+          .update(virtualAccounts)
+          .set({ cashBalance: String(currentCash + pnl) })
+          .where(eq(virtualAccounts.id, account.id));
+
+        const buyLeg = order.side === "BUY" ? entryLeg : exitLeg;
+        const sellLeg = order.side === "BUY" ? exitLeg : entryLeg;
+        await tx.insert(realizedPnlEvents).values({
+          accountId: account.id,
+          orderId: order.id,
+          symbol: order.symbol,
+          qty: order.qty,
+          buyAvgCost: String((buyLeg.turnover + buyLeg.totalCharges) / order.qty),
+          sellNetPrice: String((sellLeg.turnover - sellLeg.totalCharges) / order.qty),
+          realizedPnl: String(pnl),
+        });
+        const sum = (k: "brokerage" | "stt" | "exchangeCharges" | "sebiCharges" | "stampDuty" | "gst") => String(entryLeg[k] + exitLeg[k]);
+        await tx
+          .update(orders)
+          .set({
+            status: "FILLED",
+            fillPrice: String(fillPrice),
+            exitPrice: String(exit.price),
+            exitReason: exit.reason,
+            grossAmount: String(entryLeg.turnover),
+            brokerage: sum("brokerage"),
+            stt: sum("stt"),
+            exchangeCharges: sum("exchangeCharges"),
+            sebiCharges: sum("sebiCharges"),
+            stampDuty: sum("stampDuty"),
+            gst: sum("gst"),
+            dpCharge: "0",
+            totalCharges: String(charges),
+            netAmount: String(pnl),
+            filledAt: new Date(),
+          })
+          .where(eq(orders.id, order.id));
+        settled++;
+        return;
+      }
 
       if (order.side === "BUY") {
         const charges = buyLegFor(fillPrice, order.qty, fees);

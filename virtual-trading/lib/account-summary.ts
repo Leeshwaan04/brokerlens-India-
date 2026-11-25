@@ -1,13 +1,13 @@
 // Everything the dashboard, performance and cost-replay pages show about one
 // account, computed once, the same way, from the account's own rows.
 
-import type { OrderType, Validity } from "./fills";
+import type { OrderType, Product, Validity } from "./fills";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "./db";
 import { brokerCatalog, orders, realizedPnlEvents, stockUniverse, type virtualAccounts } from "./schema";
 import { getValuedHoldings, largestWeight, totalHoldingsValue, totalUnrealizedPnl, type ValuedHolding } from "./portfolio";
 import { getReservations } from "./order-engine";
-import { deliveryFeesFromRow, type DeliveryFees } from "./trade-costs";
+import { deliveryFeesFromRow, intradayFeesFromRow, type DeliveryFees } from "./trade-costs";
 import { computeConfidenceScore, MIN_TRADES_FOR_SCORE } from "./scoring";
 import { readinessMilestones, readinessProgress, type Milestone } from "./readiness";
 import type { ReplayFill } from "./cost-replay";
@@ -28,6 +28,9 @@ export interface PendingOrderView {
   validity: Validity;
   beforeOpen: boolean;
   expiresOn: string | null;
+  product: Product;
+  stopLossPrice: string | null;
+  targetPrice: string | null;
 }
 
 export interface AccountSummary {
@@ -76,6 +79,9 @@ export async function getAccountSummary(account: AccountRow, asOf?: string): Pro
         status: orders.status,
         targetTradeDate: orders.targetTradeDate,
         orderType: orders.orderType,
+        product: orders.product,
+        stopLossPrice: orders.stopLossPrice,
+        targetPrice: orders.targetPrice,
         limitPrice: orders.limitPrice,
         triggerPrice: orders.triggerPrice,
         validity: orders.validity,
@@ -90,7 +96,7 @@ export async function getAccountSummary(account: AccountRow, asOf?: string): Pro
       .where(eq(orders.accountId, account.id))
       .orderBy(desc(orders.requestedAt)),
     db.select({ realizedPnl: realizedPnlEvents.realizedPnl }).from(realizedPnlEvents).where(and(eq(realizedPnlEvents.accountId, account.id))),
-    getReservations(account.id, fees),
+    getReservations(account.id, fees, intradayFeesFromRow(broker)),
   ]);
 
   const cash = Number(account.cashBalance);
@@ -149,8 +155,12 @@ export async function getAccountSummary(account: AccountRow, asOf?: string): Pro
         validity: o.validity,
         beforeOpen: o.beforeOpen,
         expiresOn: o.expiresOn,
+        product: o.product,
+        stopLossPrice: o.stopLossPrice,
+        targetPrice: o.targetPrice,
       })),
-    fills: filled.map((o) => ({ side: o.side, fillPrice: Number(o.fillPrice), qty: o.qty })),
+    // The cost replay compares delivery fee schedules, so it replays delivery fills only.
+    fills: filled.filter((o) => o.product === "CNC").map((o) => ({ side: o.side, fillPrice: Number(o.fillPrice), qty: o.qty })),
     score,
     milestones,
     readiness: readinessProgress(milestones),

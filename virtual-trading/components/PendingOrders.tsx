@@ -16,6 +16,7 @@ export function PendingOrders({ orders, compact = false }: { orders: PendingOrde
                 <span className="num">{o.qty}</span> {o.symbol}
               </span>
               <span className="num text-xs text-muted">{orderTermsLabel(o)}</span>
+              {o.product === "MIS" && <Pill tone="warn">Intraday</Pill>}
               {o.beforeOpen && o.orderType === "MARKET" && <Pill tone="info">After-market</Pill>}
             </div>
             {!compact && <div className="mt-0.5 truncate text-xs text-muted">{o.name}</div>}

@@ -3,14 +3,28 @@
 import { useActionState, useMemo, useState } from "react";
 import Link from "next/link";
 import { placeOrderAction, type OrderActionState } from "@/app/(app)/actions";
-import { buyLegFor, PRICE_MOVE_BUFFER_PCT, sellLegFor, type DeliveryFees, type LegCharges } from "@/lib/trade-costs";
+import {
+  buyLegFor,
+  intradayRoundTrip,
+  PRICE_MOVE_BUFFER_PCT,
+  sellLegFor,
+  type DeliveryFees,
+  type IntradayFees,
+  type LegCharges,
+} from "@/lib/trade-costs";
 import {
   buyReserve,
   GTT_DAYS,
   maxBuyQty,
+  maxMisQty,
+  misEntryReference,
+  misReserve,
+  misTermsError,
+  MIS_MARGIN_PCT,
   ORDER_TYPE_LABEL,
   priceTermsError,
   type OrderType,
+  type Product,
   type Validity,
 } from "@/lib/fills";
 import { inr, inrWhole, shortDate, signedInr, pnlTone } from "@/lib/format";
@@ -20,6 +34,7 @@ export interface TicketBroker {
   id: string;
   brand: string;
   fees: DeliveryFees;
+  intraday: IntradayFees;
 }
 
 interface Props {
@@ -68,6 +83,22 @@ function fillSentence(side: "BUY" | "SELL", type: OrderType, price: number | nul
     : `Buys at market if the price rises to ${inr(price)} ${when}. A gap above the trigger fills at the higher open.`;
 }
 
+function misSentence(side: "BUY" | "SELL", type: OrderType, entry: number | null, stop: number | null, target: number | null, target_day: string) {
+  const day = shortDate(target_day);
+  const verb = side === "BUY" ? "Buys" : "Short-sells";
+  const enter =
+    type === "MARKET"
+      ? `${verb} at the ${day} open`
+      : entry === null
+        ? `${verb} once your entry price is set`
+        : type === "LIMIT"
+          ? `${verb} at ${inr(entry)} if the price trades ${side === "BUY" ? "below" : "above"} it on ${day}`
+          : `${verb} at market if the price ${side === "BUY" ? "rises" : "falls"} to ${inr(entry)} on ${day}`;
+  const exits = [stop !== null ? `your stop-loss at ${inr(stop)}` : null, target !== null ? `your target at ${inr(target)}` : null].filter(Boolean);
+  const exitText = exits.length ? `, then exits at ${exits.join(" or ")} if reached (the stop counts first if the day reached both)` : "";
+  return `Intraday: ${enter}${exitText}. Anything still open is squared off at the 15:30 close.`;
+}
+
 function legFor(side: "BUY" | "SELL", price: number, qty: number, fees: DeliveryFees): LegCharges {
   return side === "BUY" ? buyLegFor(price, qty, fees) : sellLegFor(price, qty, fees);
 }
@@ -76,6 +107,9 @@ export function OrderTicket(props: Props) {
   const { symbol, lastClose, currentBroker, rankable, freeCash, freeShares, avgCost } = props;
   const [side, setSide] = useState<"BUY" | "SELL">(props.defaultSide === "SELL" && freeShares > 0 ? "SELL" : "BUY");
   const [qtyText, setQtyText] = useState("");
+  const [product, setProduct] = useState<Product>("CNC");
+  const [stopText, setStopText] = useState("");
+  const [targetText, setTargetText] = useState("");
   const [orderType, setOrderType] = useState<OrderType>("MARKET");
   const [validity, setValidity] = useState<Validity>("DAY");
   const [priceText, setPriceText] = useState(lastClose.toFixed(2));
@@ -95,18 +129,47 @@ export function OrderTicket(props: Props) {
   const enteredPrice = needsPrice && /^\d+(\.\d{0,2})?$/.test(priceText) ? Number(priceText) : null;
   const limitPrice = orderType === "LIMIT" ? enteredPrice : null;
   const triggerPrice = orderType === "SL_M" ? enteredPrice : null;
-  const termsError = needsPrice ? priceTermsError(side, orderType, limitPrice, triggerPrice, lastClose) : null;
+  const mis = product === "MIS";
+  const parsePrice = (t: string) => (/^\d+(\.\d{0,2})?$/.test(t.trim()) ? Number(t.trim()) : null);
+  const stopLoss = mis ? parsePrice(stopText) : null;
+  const target = mis ? parsePrice(targetText) : null;
+  const badExitInput = mis && ((stopText.trim() !== "" && stopLoss === null) || (targetText.trim() !== "" && target === null));
+  const termsError =
+    (needsPrice ? priceTermsError(side, orderType, limitPrice, triggerPrice, lastClose) : null) ??
+    (mis
+      ? misTermsError({
+          side,
+          type: orderType,
+          validity,
+          sessionOpen: !props.beforeOpen,
+          entryRef: misEntryReference(orderType, lastClose, limitPrice, triggerPrice),
+          stopLoss,
+          target,
+        })
+      : null) ??
+    (badExitInput ? "Prices are numbers with up to two decimals." : null);
   // Estimates use the price the order is most likely to fill at.
   const estPrice = enteredPrice ?? lastClose;
   const maxBuy = useMemo(
-    () => maxBuyQty(orderType, lastClose, limitPrice, triggerPrice, freeCash, currentBroker.fees),
-    [orderType, lastClose, limitPrice, triggerPrice, freeCash, currentBroker.fees],
+    () =>
+      mis
+        ? maxMisQty(orderType, lastClose, limitPrice, triggerPrice, freeCash, currentBroker.intraday)
+        : maxBuyQty(orderType, lastClose, limitPrice, triggerPrice, freeCash, currentBroker.fees),
+    [mis, orderType, lastClose, limitPrice, triggerPrice, freeCash, currentBroker.fees, currentBroker.intraday],
   );
   const leg = qty > 0 ? legFor(side, estPrice, qty, currentBroker.fees) : null;
-  const reserve = side === "BUY" && qty > 0 ? buyReserve(orderType, lastClose, limitPrice, triggerPrice, qty, currentBroker.fees) : 0;
+  const reserve =
+    qty > 0
+      ? mis
+        ? misReserve(orderType, lastClose, limitPrice, triggerPrice, qty, currentBroker.intraday)
+        : side === "BUY"
+          ? buyReserve(orderType, lastClose, limitPrice, triggerPrice, qty, currentBroker.fees)
+          : 0
+      : 0;
+  const misCharges = mis && qty > 0 ? intradayRoundTrip(estPrice, qty, currentBroker.intraday) : 0;
 
-  const overCash = side === "BUY" && qty > 0 && reserve > freeCash;
-  const overShares = side === "SELL" && qty > freeShares;
+  const overCash = (mis || side === "BUY") && qty > 0 && reserve > freeCash;
+  const overShares = !mis && side === "SELL" && qty > freeShares;
   const canSubmit = qty > 0 && !overCash && !overShares && !termsError && !pending;
 
   const chooseType = (t: OrderType) => {
@@ -115,6 +178,15 @@ export function OrderTicket(props: Props) {
     // Start a stop a little beyond the last close, on the side it must sit.
     const start = t === "SL_M" ? lastClose * (side === "SELL" ? 0.97 : 1.03) : lastClose;
     setPriceText(start.toFixed(2));
+  };
+  const chooseProduct = (p: Product) => {
+    setProduct(p);
+    if (p === "MIS") {
+      setValidity("DAY");
+      // No live price mid-session, so an intraday entry then needs a price.
+      if (orderType === "MARKET" && !props.beforeOpen) chooseType("LIMIT");
+    }
+    if (p === "CNC" && side === "SELL" && freeShares === 0) setSide("BUY");
   };
   const chooseSide = (s: "BUY" | "SELL") => {
     setSide(s);
@@ -126,14 +198,17 @@ export function OrderTicket(props: Props) {
   // alphabetical tie-break winner is uniquely cheapest.
   const cheapest = useMemo(() => {
     if (!leg || rankable.length === 0) return null;
-    const costs = rankable.map((b) => ({ brand: b.brand, charges: legFor(side, estPrice, qty, b.fees).totalCharges }));
+    const costs = rankable.map((b) => ({
+      brand: b.brand,
+      charges: mis ? intradayRoundTrip(estPrice, qty, b.intraday) : legFor(side, estPrice, qty, b.fees).totalCharges,
+    }));
     const min = Math.min(...costs.map((c) => c.charges));
     const tied = costs.filter((c) => Math.abs(c.charges - min) < 0.005).sort((a, b) => a.brand.localeCompare(b.brand));
     return { brand: tied[0].brand, charges: min, others: tied.length - 1 };
-  }, [leg, rankable, side, estPrice, qty]);
+  }, [leg, rankable, side, estPrice, qty, mis]);
 
   const currentIsRankable = rankable.some((b) => b.id === currentBroker.id);
-  const saving = leg && cheapest ? leg.totalCharges - cheapest.charges : 0;
+  const saving = leg && cheapest ? (mis ? misCharges : leg.totalCharges) - cheapest.charges : 0;
   const estPnl = side === "SELL" && leg && avgCost !== null ? leg.turnover - leg.totalCharges - avgCost * qty : null;
 
   return (
@@ -142,13 +217,34 @@ export function OrderTicket(props: Props) {
       <input type="hidden" name="side" value={side} />
       <input type="hidden" name="clientOrderId" value={clientOrderId} />
       <input type="hidden" name="orderType" value={orderType} />
+      <input type="hidden" name="product" value={product} />
+      {mis && <input type="hidden" name="stopLossPrice" value={stopText.trim()} />}
+      {mis && <input type="hidden" name="targetPrice" value={targetText.trim()} />}
       <input type="hidden" name="validity" value={validity} />
       {orderType === "LIMIT" && <input type="hidden" name="limitPrice" value={priceText} />}
       {orderType === "SL_M" && <input type="hidden" name="triggerPrice" value={priceText} />}
 
+      <div role="radiogroup" aria-label="Product" className="flex gap-1 text-sm">
+        {(["CNC", "MIS"] as const).map((p) => (
+          <button
+            key={p}
+            type="button"
+            role="radio"
+            aria-checked={product === p}
+            onClick={() => chooseProduct(p)}
+            className={cx(
+              "flex-1 rounded-lg border px-3 py-1.5 font-medium transition-colors",
+              product === p ? "border-accent bg-accent-soft text-accent-ink" : "border-line text-muted hover:text-ink",
+            )}
+          >
+            {p === "CNC" ? "Delivery (CNC)" : "Intraday (MIS)"}
+          </button>
+        ))}
+      </div>
+
       <div role="radiogroup" aria-label="Order side" className="grid grid-cols-2 gap-1 rounded-xl bg-sub p-1">
         {(["BUY", "SELL"] as const).map((s) => {
-          const disabled = s === "SELL" && freeShares === 0;
+          const disabled = s === "SELL" && freeShares === 0 && !mis;
           return (
             <button
               key={s}
@@ -163,7 +259,7 @@ export function OrderTicket(props: Props) {
                 side === s ? (s === "BUY" ? "bg-up text-invert" : "bg-down text-invert") : "text-muted hover:text-ink",
               )}
             >
-              {s === "BUY" ? "Buy" : "Sell"}
+              {s === "BUY" ? "Buy" : mis ? "Sell (short)" : "Sell"}
             </button>
           );
         })}
@@ -176,9 +272,11 @@ export function OrderTicket(props: Props) {
             type="button"
             role="radio"
             aria-checked={orderType === t}
+            disabled={mis && t === "MARKET" && !props.beforeOpen}
+            title={mis && t === "MARKET" && !props.beforeOpen ? "No live price mid-session: use a limit or stop-loss entry" : undefined}
             onClick={() => chooseType(t)}
             className={cx(
-              "flex-1 rounded-lg border px-3 py-1.5 font-medium transition-colors",
+              "flex-1 rounded-lg border px-3 py-1.5 font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40",
               orderType === t ? "border-accent bg-accent-soft text-accent-ink" : "border-line text-muted hover:text-ink",
             )}
           >
@@ -213,8 +311,8 @@ export function OrderTicket(props: Props) {
         <label htmlFor="qty" className="mb-1.5 flex items-center justify-between text-sm">
           <span className="font-medium text-ink">Quantity (shares)</span>
           <span className="text-xs text-muted">
-            {side === "BUY" ? (
-              <>Up to <span className="num">{maxBuy.toLocaleString("en-IN")}</span> with free cash</>
+            {mis || side === "BUY" ? (
+              <>Up to <span className="num">{maxBuy.toLocaleString("en-IN")}</span> {mis ? "on margin" : "with free cash"}</>
             ) : (
               <><span className="num">{freeShares.toLocaleString("en-IN")}</span> free to sell</>
             )}
@@ -235,7 +333,7 @@ export function OrderTicket(props: Props) {
           )}
         />
         <div className="mt-2 flex flex-wrap gap-2">
-          {side === "BUY"
+          {mis || side === "BUY"
             ? BUY_SIZES.map((amt) => {
                 const q = Math.min(Math.floor(amt / lastClose), maxBuy);
                 return (
@@ -267,16 +365,42 @@ export function OrderTicket(props: Props) {
         </div>
         {overCash && (
           <p className="mt-2 text-sm text-down">
-            That needs about {inr(reserve)} and you have {inr(freeCash)} free. The most you can buy is {maxBuy} shares.
+            That needs about {inr(reserve)} and you have {inr(freeCash)} free. The most you can {mis ? "trade" : "buy"} is {maxBuy} shares.
           </p>
         )}
         {overShares && <p className="mt-2 text-sm text-down">You can sell at most {freeShares} shares right now.</p>}
       </div>
 
+      {mis && (
+        <div className="grid grid-cols-2 gap-3">
+          {(
+            [
+              ["stop", "Stop-loss (optional)", stopText, setStopText],
+              ["target", "Target (optional)", targetText, setTargetText],
+            ] as const
+          ).map(([id, label, value, set]) => (
+            <div key={id}>
+              <label htmlFor={`mis-${id}`} className="mb-1.5 block text-sm font-medium text-ink">
+                {label}
+              </label>
+              <input
+                id={`mis-${id}`}
+                inputMode="decimal"
+                autoComplete="off"
+                value={value}
+                placeholder="None"
+                onChange={(e) => set(e.target.value.replace(/[^\d.]/g, "").slice(0, 10))}
+                className="num w-full rounded-xl border border-line-strong bg-raised px-3 py-2.5 text-ink focus:border-accent focus:outline-none"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
         <span className="font-medium text-ink">Validity</span>
         {(["DAY", "GTT"] as const).map((v) => {
-          const disabled = v === "GTT" && orderType === "MARKET";
+          const disabled = v === "GTT" && (orderType === "MARKET" || mis);
           return (
             <label key={v} className={cx("inline-flex items-center gap-1.5", disabled ? "text-faint" : "text-ink")}>
               <input
@@ -291,11 +415,17 @@ export function OrderTicket(props: Props) {
             </label>
           );
         })}
-        {orderType === "MARKET" && <span className="text-xs text-muted">GTT needs a limit or stop-loss price</span>}
+        {mis ? (
+          <span className="text-xs text-muted">Intraday orders last one session</span>
+        ) : (
+          orderType === "MARKET" && <span className="text-xs text-muted">GTT needs a limit or stop-loss price</span>
+        )}
       </div>
 
       <p className="rounded-lg bg-accent-soft px-3 py-2 text-sm text-ink">
-        {fillSentence(side, orderType, enteredPrice, validity, props.beforeOpen, props.targetTradeDate)}
+        {mis
+          ? misSentence(side, orderType, orderType === "MARKET" ? null : enteredPrice, stopLoss, target, props.targetTradeDate)
+          : fillSentence(side, orderType, enteredPrice, validity, props.beforeOpen, props.targetTradeDate)}
       </p>
 
       <div className="rounded-xl border border-line bg-sub p-4 text-sm">
@@ -306,9 +436,20 @@ export function OrderTicket(props: Props) {
         <dl className="grid grid-cols-2 gap-y-1.5">
           <dt className="text-muted">Order value</dt>
           <dd className="num text-right text-ink">{leg ? inr(leg.turnover) : "-"}</dd>
-          <dt className="text-muted">Charges and taxes</dt>
-          <dd className="num text-right text-ink">{leg ? inr(leg.totalCharges) : "-"}</dd>
-          {side === "BUY" ? (
+          {!mis && (
+            <>
+              <dt className="text-muted">Charges and taxes</dt>
+              <dd className="num text-right text-ink">{leg ? inr(leg.totalCharges) : "-"}</dd>
+            </>
+          )}
+          {mis ? (
+            <>
+              <dt className="text-muted">Round trip, if closed at the same price</dt>
+              <dd className="num text-right text-ink">{leg ? inr(misCharges) : "-"}</dd>
+              <dt className="font-medium text-ink">Margin blocked ({Math.round(MIS_MARGIN_PCT * 100)}%, up to {Math.round(1 / MIS_MARGIN_PCT)}x)</dt>
+              <dd className="num text-right font-medium text-ink">{leg ? inr(reserve) : "-"}</dd>
+            </>
+          ) : side === "BUY" ? (
             <>
               <dt className="font-medium text-ink">Cash reserved now</dt>
               <dd className="num text-right font-medium text-ink">{leg ? inr(reserve) : "-"}</dd>
@@ -326,7 +467,7 @@ export function OrderTicket(props: Props) {
             </>
           )}
         </dl>
-        {leg && (
+        {leg && !mis && (
           <details className="mt-3 text-xs text-muted">
             <summary className="cursor-pointer select-none text-accent-ink">Itemised charges</summary>
             <dl className="mt-2 grid grid-cols-2 gap-y-1">

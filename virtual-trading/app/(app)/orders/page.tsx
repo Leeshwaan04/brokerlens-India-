@@ -5,8 +5,8 @@ import { desc, eq } from "drizzle-orm";
 import { getCurrentAccount } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { orders, stockUniverse } from "@/lib/schema";
-import { inr, shortDate } from "@/lib/format";
-import { orderTermsLabel } from "@/lib/fills";
+import { inr, pnlTone, shortDate, signedInr } from "@/lib/format";
+import { EXIT_REASON_LABEL, MIS_MARGIN_PCT, orderTermsLabel } from "@/lib/fills";
 import { PendingOrders } from "@/components/PendingOrders";
 import { buttonClass, Card, CardTitle, cx, PageHeader, Pill } from "@/components/ui";
 
@@ -18,6 +18,7 @@ const REJECTION_TEXT: Record<string, string> = {
   corporate_action: "Cancelled on a split or bonus ex-date, as brokers cancel open orders when the share count changes",
   expired: "Its price was not reached during the session, so the day order ended",
   gtt_expired: "Its price was not reached within a year, so the GTT order ended",
+  insufficient_margin_at_settlement: "Not enough cash for the intraday margin on the session date",
 };
 
 function money(v: string | null): string {
@@ -79,6 +80,9 @@ export default async function OrdersPage() {
               validity: r.order.validity,
               beforeOpen: r.order.beforeOpen,
               expiresOn: r.order.expiresOn,
+              product: r.order.product,
+              stopLossPrice: r.order.stopLossPrice,
+              targetPrice: r.order.targetPrice,
             }))}
           />
         </Card>
@@ -110,6 +114,7 @@ export default async function OrdersPage() {
                   <td className="px-4 py-3">
                     <Pill tone={o.side === "BUY" ? "up" : "down"}>{o.side === "BUY" ? "Buy" : "Sell"}</Pill>
                     <div className="num mt-1 whitespace-nowrap text-xs text-muted">
+                      {o.product === "MIS" ? "Intraday, " : ""}
                       {orderTermsLabel(o)}
                       {o.validity === "GTT" ? ", GTT" : ""}
                       {o.orderType === "MARKET" && o.beforeOpen ? ", at open" : ""}
@@ -122,7 +127,15 @@ export default async function OrdersPage() {
                       <div className="mt-1 max-w-[200px] text-xs text-down">{REJECTION_TEXT[o.rejectionReason] ?? o.rejectionReason.replaceAll("_", " ")}</div>
                     )}
                   </td>
-                  <td className="num px-4 py-3 text-right text-ink">{money(o.fillPrice)}</td>
+                  <td className="num px-4 py-3 text-right text-ink">
+                    {money(o.fillPrice)}
+                    {o.product === "MIS" && o.exitPrice && (
+                      <div className="whitespace-nowrap text-xs text-muted">
+                        Exit {money(o.exitPrice)}
+                        {o.exitReason ? `, ${EXIT_REASON_LABEL[o.exitReason].toLowerCase()}` : ""}
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     {o.totalCharges ? (
                       <details className="text-left">
@@ -141,9 +154,16 @@ export default async function OrdersPage() {
                       <span className="text-muted">-</span>
                     )}
                   </td>
-                  <td className={cx("num px-4 py-3 text-right", o.netAmount ? (o.side === "BUY" ? "text-down" : "text-up") : "text-muted")}>
-                    {o.netAmount ? `${o.side === "BUY" ? "-" : "+"}${money(o.netAmount)}` : "-"}
-                  </td>
+                  {o.product === "MIS" ? (
+                    <td className={cx("num px-4 py-3 text-right", o.netAmount ? pnlTone(Number(o.netAmount)) : "text-muted")}>
+                      {o.netAmount ? signedInr(Number(o.netAmount)) : "-"}
+                      {o.netAmount && <div className="text-xs text-muted">P&amp;L after charges</div>}
+                    </td>
+                  ) : (
+                    <td className={cx("num px-4 py-3 text-right", o.netAmount ? (o.side === "BUY" ? "text-down" : "text-up") : "text-muted")}>
+                      {o.netAmount ? `${o.side === "BUY" ? "-" : "+"}${money(o.netAmount)}` : "-"}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -164,6 +184,12 @@ export default async function OrdersPage() {
           <li>Placed during the session, a limit or stop order that was already executable fills at the close; otherwise at its limit or trigger.</li>
           <li>A day order that does not fill ends with its session. A GTT order is checked every session for up to a year.</li>
           <li>Open orders are cancelled on a split or bonus ex-date, as brokers do when the share count changes.</li>
+          <li>
+            Intraday (MIS) positions open and close in one session on {Math.round(MIS_MARGIN_PCT * 100)}% margin. An intraday
+            market order must be in before the session opens and enters at the open. A stop-loss or target exits the position
+            if the day&apos;s range reached it, and if it reached both, the stop is assumed to have come first. Anything still
+            open is squared off at the close. Intraday charges apply: STT 0.025% on the sell leg, stamp duty 0.003% on the buy leg.
+          </li>
         </ul>
       </Card>
     </>

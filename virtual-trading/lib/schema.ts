@@ -2,7 +2,7 @@
 // See /Users/sumitbagewadi/.claude/plans/graceful-painting-neumann.md section 2
 // for the design rationale behind each table.
 
-import type { OrderType, Validity } from "./fills";
+import type { ExitReason, OrderType, Product, Validity } from "./fills";
 import {
   pgTable,
   text,
@@ -154,12 +154,22 @@ export const orders = pgTable(
   beforeOpen: boolean("before_open").notNull().default(false),
   // Last session a GTT order may fill in.
   expiresOn: date("expires_on"),
+  // CNC (delivery) or MIS (intraday: opened and closed in one session, on
+  // margin, with an optional stop-loss and target; see fills.ts). For MIS,
+  // fill_price is the entry, exit_price where it closed, the charge columns
+  // cover both legs and net_amount is the signed P&L credited to cash.
+  product: text("product").notNull().$type<Product>().default("CNC"),
+  stopLossPrice: numeric("stop_loss_price"),
+  targetPrice: numeric("target_price"),
+  exitPrice: numeric("exit_price"),
+  exitReason: text("exit_reason").$type<ExitReason>(),
   },
   (t) => [
     check("orders_side_check", sql`${t.side} IN ('BUY', 'SELL')`),
     check("orders_qty_positive", sql`${t.qty} > 0`),
     check("orders_type_check", sql`${t.orderType} IN ('MARKET', 'LIMIT', 'SL_M')`),
     check("orders_validity_check", sql`${t.validity} IN ('DAY', 'GTT')`),
+    check("orders_product_check", sql`${t.product} IN ('CNC', 'MIS')`),
     index("orders_account_status_idx").on(t.accountId, t.status),
     uniqueIndex("orders_account_client_order_idx").on(t.accountId, t.clientOrderId),
   ],

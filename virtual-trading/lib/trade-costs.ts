@@ -19,6 +19,8 @@ export const SEBI_TURNOVER_RATE = 0.000001; // Rs 10 per crore (0.0001%)
 export const GST_RATE = 0.18; // 18% on brokerage + exchange charges + SEBI charges
 export const STT_DELIVERY_RATE = 0.001; // 0.1%, charged on both the buy and the sell leg
 export const STAMP_DUTY_DELIVERY_BUY_RATE = 0.00015; // 0.015%, buy leg only
+export const STT_INTRADAY_SELL_RATE = 0.00025; // 0.025%, sell leg only
+export const STAMP_DUTY_INTRADAY_BUY_RATE = 0.00003; // 0.003%, buy leg only
 const SEBI_CHARGE_FLOOR = 0.01;
 
 // A brokerage plan encoded as (flat, pct) is only a genuine "lower of Rs flat
@@ -189,4 +191,48 @@ export function maxAffordableQty(lastClose: number, freeCash: number, fees: Deli
     else hi = mid - 1;
   }
   return lo;
+}
+
+/** The intraday (MIS) fee fields, per broker. */
+export interface IntradayFees {
+  intradayFlat: number;
+  intradayPct: number;
+  capVerified: boolean;
+}
+
+export function intradayFeesFromRow(row: { intradayFlat: string; intradayPct: string; capVerifiedAsof: string | null }): IntradayFees {
+  return { intradayFlat: Number(row.intradayFlat), intradayPct: Number(row.intradayPct), capVerified: row.capVerifiedAsof !== null };
+}
+
+/**
+ * Charges for one leg of an intraday (MIS) trade, with the same statutory
+ * rates as pipeline/trade_cost_engine.py: STT 0.025% on the sell leg only,
+ * stamp duty 0.003% on the buy leg only, no DP charge (nothing reaches the
+ * demat account). Each leg is rounded on its own, as each is billed.
+ */
+export function intradayLegFor(side: "BUY" | "SELL", fillPrice: number, qty: number, fees: IntradayFees): LegCharges {
+  const turnover = round2(fillPrice * qty);
+  const brokerage = brokerageForLeg(turnover, fees.intradayFlat, fees.intradayPct, fees.capVerified);
+  const stt = side === "SELL" ? turnover * STT_INTRADAY_SELL_RATE : 0;
+  const exchangeCharges = turnover * NSE_TURNOVER_RATE;
+  const sebiCharges = Math.max(turnover * SEBI_TURNOVER_RATE, SEBI_CHARGE_FLOOR);
+  const stampDuty = side === "BUY" ? turnover * STAMP_DUTY_INTRADAY_BUY_RATE : 0;
+  const gst = (brokerage + exchangeCharges + sebiCharges) * GST_RATE;
+  const totalCharges = round2(brokerage + stt + exchangeCharges + sebiCharges + stampDuty + gst);
+  return {
+    turnover,
+    brokerage: round2(brokerage),
+    stt: round2(stt),
+    exchangeCharges: round2(exchangeCharges),
+    sebiCharges: round2(sebiCharges),
+    stampDuty: round2(stampDuty),
+    gst: round2(gst),
+    dpCharge: 0,
+    totalCharges,
+  };
+}
+
+/** Both legs of an intraday trade entered and exited at the same price. */
+export function intradayRoundTrip(price: number, qty: number, fees: IntradayFees): number {
+  return round2(intradayLegFor("BUY", price, qty, fees).totalCharges + intradayLegFor("SELL", price, qty, fees).totalCharges);
 }

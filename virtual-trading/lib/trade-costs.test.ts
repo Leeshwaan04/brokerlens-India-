@@ -95,3 +95,22 @@ describe("maxAffordableQty", () => {
     expect(maxAffordableQty(1351, 500, fees)).toBe(0);
   });
 });
+
+describe("intraday (MIS) charges", async () => {
+  const { intradayLegFor, intradayRoundTrip } = await import("./trade-costs");
+  const flat20 = { intradayFlat: 20, intradayPct: 0.0003, capVerified: false };
+  it("match brokerlens.in's Rs 1 lakh intraday round trip (Rs 82.45) to within a paisa of rounding", () => {
+    // pipeline/trade_cost_engine.py: brokerage 40, STT 25, exchange 5.94,
+    // SEBI 0.20, stamp 3.00, GST 8.31. Legs are rounded separately here.
+    expect(intradayRoundTrip(100000, 1, flat20)).toBeCloseTo(82.45, 1);
+  });
+  it("charge STT only on the sell leg and stamp duty only on the buy leg", () => {
+    const buy = intradayLegFor("BUY", 1000, 100, flat20);
+    const sell = intradayLegFor("SELL", 1000, 100, flat20);
+    expect(buy.stt).toBe(0);
+    expect(buy.stampDuty).toBe(3);
+    expect(sell.stt).toBe(25);
+    expect(sell.stampDuty).toBe(0);
+    expect(buy.dpCharge + sell.dpCharge).toBe(0);
+  });
+});

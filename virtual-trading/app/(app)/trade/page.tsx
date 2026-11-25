@@ -11,6 +11,7 @@ import { getRankableBrokers, toReplayBroker } from "@/lib/brokers";
 import { targetTradeDateFor } from "@/lib/market-calendar";
 import { marketMoment, marketNow } from "@/lib/market-clock";
 import { inr, shortDate, signedPct, pnlTone } from "@/lib/format";
+import { intradayFeesFromRow } from "@/lib/trade-costs";
 import { StockSearch } from "@/components/StockSearch";
 import { OrderTicket } from "@/components/OrderTicket";
 import { PendingOrders } from "@/components/PendingOrders";
@@ -319,8 +320,13 @@ export default async function TradePage({
                   lastClose={stockClose.close}
                   lastCloseDate={stockClose.tradeDate}
                   defaultSide={ticketSide}
-                  currentBroker={{ id: summary.broker.id, brand: summary.broker.brand, fees: summary.fees }}
-                  rankable={rankable.map(toReplayBroker)}
+                  currentBroker={{
+                    id: summary.broker.id,
+                    brand: summary.broker.brand,
+                    fees: summary.fees,
+                    intraday: intradayFeesFromRow(summary.broker),
+                  }}
+                  rankable={rankable.map((b) => ({ ...toReplayBroker(b), intraday: intradayFeesFromRow(b) }))}
                   freeCash={summary.availableCash}
                   freeShares={freeShares}
                   avgCost={holding?.avgCost ?? null}

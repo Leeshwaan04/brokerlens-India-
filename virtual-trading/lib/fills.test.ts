@@ -89,3 +89,38 @@ describe("price terms", () => {
     expect(priceTermsError("BUY", "MARKET", null, null, 100)).toBeNull();
   });
 });
+
+describe("intraday exits", async () => {
+  const { resolveIntradayExit, misTermsError } = await import("./fills");
+  it("square off at the close when neither stop nor target was reached", () => {
+    expect(resolveIntradayExit("BUY", 100, 94, 107, bar)).toEqual({ price: 103, reason: "square_off" });
+  });
+  it("take the target when the high traded through it", () => {
+    expect(resolveIntradayExit("BUY", 100, 94, 105, bar)).toEqual({ price: 105, reason: "target" });
+  });
+  it("assume the stop came first when the day reached both", () => {
+    expect(resolveIntradayExit("BUY", 100, 96, 105, bar)).toEqual({ price: 96, reason: "stop" });
+  });
+  it("exit at the entry, not the better stop, when the entry was already past the stop", () => {
+    expect(resolveIntradayExit("BUY", 95, 97, null, bar)).toEqual({ price: 95, reason: "stop" });
+  });
+  it("mirror the rules for a short sell", () => {
+    expect(resolveIntradayExit("SELL", 100, 105, 96, bar)).toEqual({ price: 105, reason: "stop" });
+    expect(resolveIntradayExit("SELL", 100, 107, 96, bar)).toEqual({ price: 96, reason: "target" });
+    expect(resolveIntradayExit("SELL", 100, null, null, bar)).toEqual({ price: 103, reason: "square_off" });
+  });
+  const base = { side: "BUY" as const, type: "LIMIT" as const, validity: "DAY" as const, sessionOpen: true, entryRef: 100, stopLoss: null, target: null };
+  it("refuse a mid-session intraday market order, which has no price to enter at", () => {
+    expect(misTermsError({ ...base, type: "MARKET" })).toMatch(/no live price/);
+    expect(misTermsError({ ...base, type: "MARKET", sessionOpen: false })).toBeNull();
+  });
+  it("keep stops and targets on the right side of the entry", () => {
+    expect(misTermsError({ ...base, stopLoss: 101 })).toMatch(/below the entry/);
+    expect(misTermsError({ ...base, target: 99 })).toMatch(/above the entry/);
+    expect(misTermsError({ ...base, side: "SELL", stopLoss: 99 })).toMatch(/above the entry/);
+    expect(misTermsError({ ...base, stopLoss: 97, target: 104 })).toBeNull();
+  });
+  it("are day orders only", () => {
+    expect(misTermsError({ ...base, validity: "GTT" })).toMatch(/day orders/);
+  });
+});

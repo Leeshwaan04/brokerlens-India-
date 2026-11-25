@@ -36,6 +36,13 @@
       "when": 1795624343754,
       "tag": "0004_order_types",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795626660023,
+      "tag": "0005_intraday",
+      "breakpoints": true
     }
   ]
 }

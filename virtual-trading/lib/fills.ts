@@ -9,7 +9,7 @@
 //   day's range, and gets the worst price its own terms allow.
 // - A limit fills only if the price traded through it, not merely touched it.
 
-import { buyLegFor, estimateBuyCost, type DeliveryFees } from "./trade-costs";
+import { buyLegFor, estimateBuyCost, intradayRoundTrip, PRICE_MOVE_BUFFER_PCT, type DeliveryFees, type IntradayFees } from "./trade-costs";
 import { inr, shortDate } from "./format";
 
 export const ORDER_TYPES = ["MARKET", "LIMIT", "SL_M"] as const;
@@ -177,9 +177,136 @@ export function orderTermsLabel(o: Pick<OrderTermsView, "orderType" | "limitPric
 }
 
 /** When a pending order next gets a chance to fill, in a few words. */
-export function nextChanceText(o: OrderTermsView): string {
+export function nextChanceText(o: OrderTermsView & { product?: Product }): string {
   const day = shortDate(o.targetTradeDate);
+  if (o.product === "MIS") return `Intraday on ${day}, squared off by the close`;
   if (o.orderType === "MARKET") return o.beforeOpen ? `Fills at the ${day} open` : `Fills at the ${day} close`;
   const until = o.validity === "GTT" && o.expiresOn ? `, GTT until ${shortDate(o.expiresOn)}` : ", day order";
   return `Checked against the ${day} session${until}`;
+}
+
+// ---------------------------------------------------------------------------
+// Intraday (MIS)
+//
+// An intraday position opens and closes in the same session. The practice
+// market has each session's open, high, low and close, not its ticks, so:
+// - an intraday market order must be in before the session opens, and
+//   enters at the open (mid-session there is no live price to enter at);
+// - limit and stop-loss entries fill by the same rules as delivery orders;
+// - an optional stop-loss and target exit the position if the day's range
+//   reached them, and when both were reached the stop is assumed to have
+//   come first; anything still open is squared off at the session's close.
+
+export const PRODUCTS = ["CNC", "MIS"] as const;
+export type Product = (typeof PRODUCTS)[number];
+export const PRODUCT_LABEL: Record<Product, string> = { CNC: "Delivery", MIS: "Intraday" };
+
+// Margin blocked for an intraday position: 20% of its value, i.e. up to 5x.
+// The simulator's own simplification; each broker sets its own per stock.
+export const MIS_MARGIN_PCT = 0.2;
+
+export type ExitReason = "stop" | "target" | "square_off";
+export const EXIT_REASON_LABEL: Record<ExitReason, string> = {
+  stop: "Stop-loss hit",
+  target: "Target hit",
+  square_off: "Squared off at close",
+};
+
+/** Where an intraday position entered at `entry` was closed in this session. */
+export function resolveIntradayExit(
+  side: "BUY" | "SELL",
+  entry: number,
+  stopLoss: number | null,
+  target: number | null,
+  bar: Bar,
+): { price: number; reason: ExitReason } {
+  const close = bar.close;
+  const open = bar.open ?? close;
+  const high = Math.max(bar.high ?? close, open, close);
+  const low = Math.min(bar.low ?? close, open, close);
+  // Entered beyond its own stop (a gap past it): the stop triggers at once,
+  // at about the entry price, never at the better stop price.
+  if (stopLoss !== null && (side === "BUY" ? stopLoss >= entry : stopLoss <= entry)) return { price: entry, reason: "stop" };
+  if (side === "BUY") {
+    if (stopLoss !== null && low <= stopLoss) return { price: stopLoss, reason: "stop" };
+    if (target !== null && high > target) return { price: target, reason: "target" };
+  } else {
+    if (stopLoss !== null && high >= stopLoss) return { price: stopLoss, reason: "stop" };
+    if (target !== null && low < target) return { price: target, reason: "target" };
+  }
+  return { price: close, reason: "square_off" };
+}
+
+/** The price an intraday order is most likely to enter at, for margin and checks. */
+export function misEntryReference(type: OrderType, lastClose: number, limitPrice: number | null, triggerPrice: number | null): number {
+  if (type === "LIMIT" && limitPrice) return limitPrice;
+  if (type === "SL_M" && triggerPrice) return triggerPrice;
+  return lastClose;
+}
+
+/** Why an intraday order's terms are not acceptable, or null. */
+export function misTermsError(o: {
+  side: "BUY" | "SELL";
+  type: OrderType;
+  validity: Validity;
+  sessionOpen: boolean;
+  entryRef: number;
+  stopLoss: number | null;
+  target: number | null;
+}): string | null {
+  if (o.validity !== "DAY") return "Intraday orders last one session, so they are day orders.";
+  if (o.type === "MARKET" && o.sessionOpen) {
+    return "This practice market has no live price mid-session. Place an intraday market order before the session opens (it enters at the open), or use a limit or stop-loss entry.";
+  }
+  const twoDecimals = (p: number) => Math.abs(Math.round(p * 100) - p * 100) < 1e-6;
+  const pct = Math.round(PRICE_BAND_PCT * 100);
+  const inBand = (p: number) => p >= o.entryRef * (1 - PRICE_BAND_PCT) && p <= o.entryRef * (1 + PRICE_BAND_PCT);
+  for (const [label, p] of [["stop-loss", o.stopLoss], ["target", o.target]] as const) {
+    if (p === null) continue;
+    if (!Number.isFinite(p) || p <= 0) return `Enter a valid ${label} price, or leave it empty.`;
+    if (!twoDecimals(p)) return "Prices go to two decimal places at most.";
+    if (!inBand(p)) return `Keep the ${label} within ${pct}% of the entry price.`;
+  }
+  const long = o.side === "BUY";
+  if (o.stopLoss !== null && (long ? o.stopLoss >= o.entryRef : o.stopLoss <= o.entryRef)) {
+    return long ? "For a buy, the stop-loss goes below the entry price." : "For a short sell, the stop-loss goes above the entry price.";
+  }
+  if (o.target !== null && (long ? o.target <= o.entryRef : o.target >= o.entryRef)) {
+    return long ? "For a buy, the target goes above the entry price." : "For a short sell, the target goes below the entry price.";
+  }
+  return null;
+}
+
+/** Cash blocked for an intraday order: margin plus round-trip charges, with headroom on market and stop entries. */
+export function misReserve(
+  type: OrderType,
+  lastClose: number,
+  limitPrice: number | null,
+  triggerPrice: number | null,
+  qty: number,
+  fees: IntradayFees,
+): number {
+  const entry = misEntryReference(type, lastClose, limitPrice, triggerPrice);
+  const price = type === "LIMIT" ? entry : entry * (1 + PRICE_MOVE_BUFFER_PCT);
+  return price * qty * MIS_MARGIN_PCT + intradayRoundTrip(price, qty, fees);
+}
+
+export function maxMisQty(
+  type: OrderType,
+  lastClose: number,
+  limitPrice: number | null,
+  triggerPrice: number | null,
+  freeCash: number,
+  fees: IntradayFees,
+): number {
+  const unit = misEntryReference(type, lastClose, limitPrice, triggerPrice) * MIS_MARGIN_PCT;
+  if (unit <= 0 || freeCash <= 0) return 0;
+  let lo = 0;
+  let hi = Math.floor(freeCash / unit) + 1;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (misReserve(type, lastClose, limitPrice, triggerPrice, mid, fees) <= freeCash) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo;
 }
