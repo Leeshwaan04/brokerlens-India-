@@ -3,7 +3,7 @@
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { isDevAuth } from "@/lib/session";
-import { CAMPAIGN_COOKIE, encodeCampaign } from "@/lib/events";
+import { CAMPAIGN_COOKIE, encodeCampaign } from "@/lib/campaign";
 
 const isPublicRoute = createRouteMatcher([
   "/",

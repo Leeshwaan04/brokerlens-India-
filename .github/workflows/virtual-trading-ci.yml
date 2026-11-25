@@ -6,8 +6,11 @@ name: Virtual Trading CI
 # fully separate deploy paths, per
 # /Users/sumitbagewadi/.claude/plans/graceful-painting-neumann.md.
 #
-# Deployment is configured for Cloudflare Pages (brokerlens-virtual-trading),
-# guarded by CLOUDFLARE_API_TOKEN in repository secrets.
+# Deployment: Cloudflare Workers (worker "brokerlens-paper") via
+# @opennextjs/cloudflare, see virtual-trading/LAUNCH.md. The deploy job is a
+# no-op until the CLOUDFLARE_API_TOKEN repository secret exists, and needs the
+# NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY repository variable (inlined at build time).
+# Runtime secrets live on the worker (wrangler secret put), not in GitHub.
 
 on:
   push:
@@ -69,21 +72,44 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    concurrency:
+      group: virtual-trading-deploy
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 60b50388dc161e3a172c8a5fc35ba3a9
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
     steps:
+      - name: Skip until Cloudflare is configured
+        if: env.CLOUDFLARE_API_TOKEN == ''
+        run: echo "CLOUDFLARE_API_TOKEN not configured in GitHub secrets; deploy skipped."
+
       - uses: actions/checkout@v4
+        if: env.CLOUDFLARE_API_TOKEN != ''
 
       - uses: actions/setup-node@v4
+        if: env.CLOUDFLARE_API_TOKEN != ''
         with:
           node-version: "22"
+          cache: "npm"
+          cache-dependency-path: virtual-trading/package-lock.json
 
-      - name: Deploy to Cloudflare Pages
+      - name: Check build-time configuration
+        if: env.CLOUDFLARE_API_TOKEN != ''
         run: |
-          if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "Deploying virtual-trading to Cloudflare Pages..."
-            npx wrangler pages deploy .next --project-name=brokerlens-virtual-trading
-          else
-            echo "CLOUDFLARE_API_TOKEN not configured in GitHub secrets; deploy step skipped in CI."
+          if [ -z "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ]; then
+            echo "::error::Set the NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY repository variable (Clerk production publishable key) before deploying."
+            exit 1
           fi
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: 60b50388dc161e3a172c8a5fc35ba3a9
+
+      - name: Install dependencies
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: npm ci
+
+      - name: Build worker (OpenNext)
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: npm run cf:build
+
+      - name: Deploy worker
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        run: npx opennextjs-cloudflare deploy

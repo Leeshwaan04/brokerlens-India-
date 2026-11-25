@@ -1,9 +1,26 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "brokerlens-virtual-trading",
-  "compatibility_date": "2026-11-14",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-  "pages_build_output_dir": ".next"
+  // BrokerLens Virtual Trading on Cloudflare Workers, built by
+  // @opennextjs/cloudflare (npm run cf:build). See LAUNCH.md before the first
+  // deploy: secrets come from `wrangler secret put`, never from this file.
+  //
+  // Production domain, added after the first deploy (LAUNCH.md step 8):
+  //   "routes": [{ "pattern": "paper.brokerlens.in", "custom_domain": true }]
+  "name": "brokerlens-paper",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-10",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Every page is per-user and rendered on request, so the app needs no
+  // incremental cache (R2/KV), image binding or Durable Objects.
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    // Days the practice market runs behind the real one. Only lower on legal advice.
+    "VT_PRICE_LAG_DAYS": "30"
+  }
 }

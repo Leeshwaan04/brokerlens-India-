@@ -6,6 +6,7 @@ import { eq, and, or, isNull, lt } from "drizzle-orm";
 import { getDb } from "./db";
 import { events, virtualAccounts, type EventName } from "./schema";
 import { istDate } from "./market-calendar";
+import { CAMPAIGN_COOKIE, CAMPAIGN_TAG } from "./campaign";
 
 type Props = Record<string, string | number | boolean | null>;
 
@@ -27,16 +28,9 @@ export function valueBucket(rupees: number): string {
   return "5l_plus";
 }
 
-// Set by proxy.ts when a visitor arrives with utm_* tags, so the campaign
-// survives the trip through sign-up. Holds only the tags, no identifier.
-export const CAMPAIGN_COOKIE = "vt_src";
-const TAG = /^[a-z0-9_.-]{1,40}$/i;
-
-export function encodeCampaign(params: URLSearchParams): string | null {
-  const parts = ["utm_source", "utm_medium", "utm_campaign"].map((k) => params.get(k) ?? "");
-  if (!parts[0] || !parts.every((p) => p === "" || TAG.test(p))) return null;
-  return parts.join("|");
-}
+// The cookie and tag rules live in campaign.ts, which proxy.ts imports.
+export { CAMPAIGN_COOKIE, encodeCampaign } from "./campaign";
+const TAG = CAMPAIGN_TAG;
 
 export async function readCampaign(): Promise<Props> {
   try {

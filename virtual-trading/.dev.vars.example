@@ -1,0 +1,17 @@
+# Copy to .dev.vars for `npm run cf:preview` (wrangler dev on the built
+# worker). Production values are set with `npx wrangler secret put <NAME>`
+# (see LAUNCH.md) and never written to a file in this repo.
+
+# Local Postgres (node-postgres over TCP on workerd with nodejs_compat) or a
+# Neon connection string.
+DATABASE_URL="postgresql://<you>@localhost:5432/virtual_trading_dev"
+
+# Clerk. A production build ignores VT_DEV_AUTH_USER_ID, so signed-in pages
+# need real keys (a Clerk development instance is fine for a preview).
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_xxx"
+CLERK_SECRET_KEY="sk_test_xxx"
+CLERK_WEBHOOK_SIGNING_SECRET="whsec_xxx"
+
+CRON_SECRET="change-me"
+ADMIN_USER_IDS=""
+VT_PRICE_LAG_DAYS="30"
