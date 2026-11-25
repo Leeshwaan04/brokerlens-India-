@@ -91,3 +91,25 @@ export function targetTradeDateFor(now: Date, holidaySet: ReadonlySet<string>): 
   }
   return nextTradingDay(todayIso, holidaySet);
 }
+
+export type MissingCloseAction = "ingest" | "retarget" | "wait";
+
+/**
+ * What to do about a past date that PENDING orders target but that has no
+ * ingested close. NSE publishes a bhavcopy for every trading session, so a
+ * date it never published, while a LATER date's close is already ingested,
+ * had no session: a holiday the calendar did not list yet (the 2027 list,
+ * say, before NSE publishes it). Those orders move to the next trading day
+ * instead of waiting forever. A fetch error proves nothing, so on an error
+ * the orders wait for the next run.
+ */
+export function missingCloseAction(
+  fetchStatus: "ok" | "not_published" | "error",
+  knownHoliday: boolean,
+  laterCloseIngested: boolean,
+): MissingCloseAction {
+  if (knownHoliday) return laterCloseIngested ? "retarget" : "wait";
+  if (fetchStatus === "ok") return "ingest";
+  if (fetchStatus === "not_published" && laterCloseIngested) return "retarget";
+  return "wait";
+}

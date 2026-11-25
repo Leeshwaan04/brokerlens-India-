@@ -6,6 +6,7 @@ import { isDevAuth } from "@/lib/session";
 
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/privacy",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/go/(.*)",

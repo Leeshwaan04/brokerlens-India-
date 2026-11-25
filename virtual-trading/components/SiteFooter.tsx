@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AffiliateDisclosure } from "./ui";
 
 export function SiteFooter() {
@@ -18,6 +19,17 @@ export function SiteFooter() {
           . Confirm current charges on the broker&apos;s own site before opening an account.
         </p>
         <AffiliateDisclosure />
+        <nav aria-label="Legal" className="flex flex-wrap gap-x-4 gap-y-1">
+          <Link href="/privacy" className="text-accent-ink underline-offset-2 hover:underline">
+            Privacy notice
+          </Link>
+          <a href="https://www.brokerlens.in/terms-of-service/" className="text-accent-ink underline-offset-2 hover:underline">
+            Terms of service
+          </a>
+          <a href="https://www.brokerlens.in/" className="text-accent-ink underline-offset-2 hover:underline">
+            brokerlens.in
+          </a>
+        </nav>
       </div>
     </footer>
   );

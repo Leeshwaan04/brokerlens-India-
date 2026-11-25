@@ -8,8 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { dailyPrices, stockUniverse, marketHolidays, priceSyncRuns } from "@/lib/schema";
 import { fetchBhavcopy, type DailyPriceRow } from "@/lib/bhavcopy";
-import { isoDateOnly, previousTradingDaysFrom } from "@/lib/market-calendar";
-import { pendingDatesMissingPrices, settleAllDue } from "@/lib/order-engine";
+import { isoDateOnly, missingCloseAction, nextTradingDay, previousTradingDaysFrom } from "@/lib/market-calendar";
+import { pendingDatesMissingPrices, retargetPendingOrders, settleAllDue } from "@/lib/order-engine";
 import { writeSnapshotsFor } from "@/lib/snapshots";
 
 // Covers a long weekend plus a missed cron run or two; previousTradingDaysFrom
@@ -91,16 +91,38 @@ export async function GET(request: NextRequest) {
     await upsertDailyPrices(iso, result.rows);
     await db.insert(priceSyncRuns).values({ tradeDate: iso, rowsIngested: result.rows.length, status: "ok" });
 
-    // Backfill any earlier trading day a PENDING order is still waiting on.
+    // Every earlier day a PENDING order is still waiting on: backfill its
+    // close, or, if NSE never published one while this later close exists,
+    // it was a market holiday missing from the calendar, so move those
+    // orders to the next trading day rather than leave them PENDING forever.
     const backfilled: string[] = [];
+    const retargeted: { from: string; to: string; orders: number }[] = [];
     for (const missing of (await pendingDatesMissingPrices(iso)).slice(0, MAX_BACKFILL_DATES)) {
-      if (holidaySet.has(missing)) continue;
-      const [my, mm, md] = missing.split("-").map(Number);
-      const back = await fetchBhavcopy(new Date(Date.UTC(my, mm - 1, md)), allowedSymbols);
-      if (back.status === "ok" && back.rows.length > 0) {
-        await upsertDailyPrices(missing, back.rows);
-        await db.insert(priceSyncRuns).values({ tradeDate: missing, rowsIngested: back.rows.length, status: "ok" });
-        backfilled.push(missing);
+      const knownHoliday = holidaySet.has(missing);
+      let status: "ok" | "not_published" | "error" = "not_published";
+      if (!knownHoliday) {
+        const [my, mm, md] = missing.split("-").map(Number);
+        const back = await fetchBhavcopy(new Date(Date.UTC(my, mm - 1, md)), allowedSymbols);
+        if (back.status === "ok" && back.rows.length > 0) {
+          await upsertDailyPrices(missing, back.rows);
+          await db.insert(priceSyncRuns).values({ tradeDate: missing, rowsIngested: back.rows.length, status: "ok" });
+          backfilled.push(missing);
+          continue;
+        }
+        status = back.status === "error" ? "error" : "not_published";
+      }
+      // pendingDatesMissingPrices only returns dates on or before iso that
+      // lack a close, and iso now has one, so a later close always exists here.
+      if (missingCloseAction(status, knownHoliday, missing < iso) === "retarget") {
+        const to = nextTradingDay(missing, new Set([...holidaySet, missing]));
+        const moved = await retargetPendingOrders(missing, to);
+        await db.insert(priceSyncRuns).values({
+          tradeDate: missing,
+          rowsIngested: 0,
+          status: "retargeted",
+          error: `NSE published no close for ${missing}; ${moved} pending order(s) moved to ${to}.`,
+        });
+        retargeted.push({ from: missing, to, orders: moved });
       }
     }
 
@@ -111,6 +133,7 @@ export async function GET(request: NextRequest) {
       tradeDate: iso,
       rowsIngested: result.rows.length,
       backfilled,
+      retargeted,
       settled: settlement.settled,
       rejected: settlement.rejected,
       settledDates: settlement.dates,

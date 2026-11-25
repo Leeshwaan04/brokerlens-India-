@@ -411,3 +411,13 @@ export async function pendingDatesMissingPrices(upToDate: string): Promise<strin
   }
   return missing.sort();
 }
+
+/** Moves every PENDING order targeting fromDate to toDate. Returns how many moved. */
+export async function retargetPendingOrders(fromDate: string, toDate: string): Promise<number> {
+  const moved = await getDb()
+    .update(orders)
+    .set({ targetTradeDate: toDate })
+    .where(and(eq(orders.status, "PENDING"), eq(orders.targetTradeDate, fromDate)))
+    .returning({ id: orders.id });
+  return moved.length;
+}

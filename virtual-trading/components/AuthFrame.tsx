@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { AppHeader } from "./AppHeader";
 import { SiteFooter } from "./SiteFooter";
@@ -23,7 +24,17 @@ export function AuthFrame({ title, children }: { title: string; children: ReactN
               </li>
             ))}
           </ul>
-          <p className="mt-6 text-xs text-faint">A simulation for investor education. No real money moves.</p>
+          <p className="mt-6 text-xs text-faint">
+            A simulation for investor education. No real money moves. By creating an account you agree to the{" "}
+            <a href="https://www.brokerlens.in/terms-of-service/" className="underline underline-offset-2">
+              terms of service
+            </a>{" "}
+            and the{" "}
+            <Link href="/privacy" className="underline underline-offset-2">
+              privacy notice
+            </Link>
+            .
+          </p>
         </div>
         <div className="flex justify-center md:justify-end">{children}</div>
       </main>

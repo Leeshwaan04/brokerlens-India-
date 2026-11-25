@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isTradingDay, previousTradingDaysFrom } from "./market-calendar";
+import { isTradingDay, missingCloseAction, previousTradingDaysFrom } from "./market-calendar";
 import holidaysFile from "../seed/market-holidays.json";
 
 // Real NSE CM-segment holidays for 2026 (see seed/market-holidays.json's
@@ -37,5 +37,23 @@ describe("previousTradingDaysFrom against the real 2026 NSE holiday calendar", (
   it("does not include the starting date when it is itself a holiday", () => {
     const result = previousTradingDaysFrom("2026-11-10", HOLIDAYS, 1);
     expect(result).toEqual(["2026-11-09"]);
+  });
+});
+
+describe("missingCloseAction", () => {
+  it("ingests a close that turns out to be published", () => {
+    expect(missingCloseAction("ok", false, true)).toBe("ingest");
+  });
+  it("re-targets a day NSE never published once a later close exists (an unlisted holiday)", () => {
+    expect(missingCloseAction("not_published", false, true)).toBe("retarget");
+  });
+  it("waits when the close may simply not be published yet", () => {
+    expect(missingCloseAction("not_published", false, false)).toBe("wait");
+  });
+  it("never re-targets on a fetch error, which proves nothing", () => {
+    expect(missingCloseAction("error", false, true)).toBe("wait");
+  });
+  it("re-targets a known holiday once a later close exists", () => {
+    expect(missingCloseAction("error", true, true)).toBe("retarget");
   });
 });
