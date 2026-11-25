@@ -102,12 +102,13 @@ export const getHolidaySet = cache(async (): Promise<Set<string>> => {
   return new Set(rows.map((r) => r.d));
 });
 
-const LONG_DATE = new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-/** "Mon, 26 Oct 2026" for a YYYY-MM-DD date. */
+/** "Mon 26 Oct 2026" for a YYYY-MM-DD date. */
 export function longDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
-  return LONG_DATE.format(new Date(Date.UTC(y, m - 1, d)));
+  return `${WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]} ${d} ${MONTHS[m - 1]} ${y}`;
 }
 
 export const PHASE_LABEL: Record<SessionPhase, string> = {

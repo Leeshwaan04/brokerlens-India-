@@ -1,10 +1,10 @@
 // Order placement and settlement. See the plan's "Order simulation" section
 // for the full rules this implements.
 //
-// Equity delivery (CNC-equivalent) only, no intraday. An order never looks at
-// a live price: it is always priced at whatever daily_prices row lands for
-// its target_trade_date, resolved at placement time by market-calendar.ts
-// and filled later by settlePendingOrders() once that close is published.
+// Equity delivery (CNC-equivalent) only. An order never looks at a live
+// price: it targets a session of the practice market (market-clock.ts) and
+// is filled later by settlePendingOrders() against that session's official
+// open, high, low and close, by the rules in fills.ts.
 
 import { and, eq, asc, lte } from "drizzle-orm";
 import { getDb } from "./db";
@@ -20,9 +20,19 @@ import {
   ORDER_SIDES,
   type OrderSide,
 } from "./schema";
-import { targetTradeDateFor } from "./market-calendar";
-import { marketNow } from "./market-clock";
-import { buyLegFor, sellLegFor, deliveryFeesFromRow, estimateBuyCost, type DeliveryFees } from "./trade-costs";
+import { isoDateOnly, nextTradingDay, targetTradeDateFor } from "./market-calendar";
+import { marketMoment, marketNow } from "./market-clock";
+import { buyLegFor, sellLegFor, deliveryFeesFromRow, type DeliveryFees } from "./trade-costs";
+import {
+  buyReserve,
+  GTT_DAYS,
+  ORDER_TYPES,
+  VALIDITIES,
+  priceTermsError,
+  resolveFill,
+  type OrderType,
+  type Validity,
+} from "./fills";
 import { latestClose, latestCloses } from "./prices";
 
 export const MAX_ORDER_QTY = 1_000_000;
@@ -51,7 +61,12 @@ export interface PlaceOrderInput {
   // Idempotency key from the order ticket; the same key never creates a
   // second order for the same account.
   clientOrderId?: string;
+  orderType?: OrderType;
+  limitPrice?: number | null;
+  triggerPrice?: number | null;
+  validity?: Validity;
 }
+
 
 const CLIENT_ORDER_ID = /^[A-Za-z0-9-]{8,64}$/;
 
@@ -59,6 +74,8 @@ export interface PlaceOrderResult {
   orderId: string;
   targetTradeDate: string;
 }
+
+const num = (v: string | null) => (v === null ? null : Number(v));
 
 export interface Reservations {
   // Cash already spoken for by PENDING buys, at their estimated cost.
@@ -76,7 +93,14 @@ export interface Reservations {
 export async function getReservations(accountId: string, fees: DeliveryFees): Promise<Reservations> {
   const db = getDb();
   const pending = await db
-    .select({ symbol: orders.symbol, side: orders.side, qty: orders.qty })
+    .select({
+      symbol: orders.symbol,
+      side: orders.side,
+      qty: orders.qty,
+      orderType: orders.orderType,
+      limitPrice: orders.limitPrice,
+      triggerPrice: orders.triggerPrice,
+    })
     .from(orders)
     .where(and(eq(orders.accountId, accountId), eq(orders.status, "PENDING")));
   const closes = await latestCloses(pending.filter((o) => o.side === "BUY").map((o) => o.symbol));
@@ -85,7 +109,7 @@ export async function getReservations(accountId: string, fees: DeliveryFees): Pr
   for (const o of pending) {
     if (o.side === "BUY") {
       const c = closes.get(o.symbol);
-      if (c) reservedCash += estimateBuyCost(c.close, o.qty, fees);
+      if (c) reservedCash += buyReserve(o.orderType, c.close, num(o.limitPrice), num(o.triggerPrice), o.qty, fees);
     } else {
       pendingSellQty.set(o.symbol, (pendingSellQty.get(o.symbol) ?? 0) + o.qty);
     }
@@ -109,6 +133,16 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   if (input.qty > MAX_ORDER_QTY) {
     throw new OrderPlacementError("Quantity is larger than this simulator accepts in one order.", "qty_too_large");
   }
+  const orderType: OrderType = input.orderType ?? "MARKET";
+  const validity: Validity = input.validity ?? "DAY";
+  if (!(ORDER_TYPES as readonly string[]).includes(orderType) || !(VALIDITIES as readonly string[]).includes(validity)) {
+    throw new OrderPlacementError("Choose an order type and validity.", "invalid_terms");
+  }
+  if (validity === "GTT" && orderType === "MARKET") {
+    throw new OrderPlacementError("A GTT order waits for a price, so give it a limit or a stop-loss trigger.", "invalid_terms");
+  }
+  const limitPrice = orderType === "LIMIT" ? (input.limitPrice ?? null) : null;
+  const triggerPrice = orderType === "SL_M" ? (input.triggerPrice ?? null) : null;
 
   const db = getDb();
   const [account] = await db
@@ -146,6 +180,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   if (last === null) {
     throw new OrderPlacementError("No price data on file for this symbol yet.", "no_price");
   }
+  const termsError = priceTermsError(input.side, orderType, limitPrice, triggerPrice, last.close);
+  if (termsError) throw new OrderPlacementError(termsError, "invalid_price");
 
   const [broker] = await db.select().from(brokerCatalog).where(eq(brokerCatalog.id, account.brokerId)).limit(1);
   if (!broker) {
@@ -156,7 +192,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   if (input.side === "BUY") {
     const available = Number(account.cashBalance) - reservations.reservedCash;
-    if (estimateBuyCost(last.close, input.qty, fees) > available) {
+    if (buyReserve(orderType, last.close, limitPrice, triggerPrice, input.qty, fees) > available) {
       throw new OrderPlacementError(
         "Not enough free virtual cash for this order, counting buys you already have pending.",
         "insufficient_cash",
@@ -181,7 +217,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   const holidaySet = await loadHolidaySet();
   // The practice market's session, not the real calendar's (market-clock.ts).
-  const targetTradeDate = targetTradeDateFor(marketNow(), holidaySet);
+  // An order is in before that session opens unless the market is open now.
+  const now = new Date();
+  const targetTradeDate = targetTradeDateFor(marketNow(now), holidaySet);
+  const beforeOpen = marketMoment(holidaySet, now).phase !== "open";
+  const expiresOn =
+    validity === "GTT" ? isoDateOnly(new Date(new Date(`${targetTradeDate}T00:00:00Z`).getTime() + GTT_DAYS * 86_400_000)) : null;
 
   const [inserted] = await db
     .insert(orders)
@@ -193,6 +234,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       targetTradeDate,
       status: "PENDING",
       clientOrderId,
+      orderType,
+      limitPrice: limitPrice === null ? null : String(limitPrice),
+      triggerPrice: triggerPrice === null ? null : String(triggerPrice),
+      validity,
+      beforeOpen,
+      expiresOn,
     })
     .onConflictDoNothing({ target: [orders.accountId, orders.clientOrderId] })
     .returning({ id: orders.id, targetTradeDate: orders.targetTradeDate });
@@ -232,10 +279,15 @@ export async function cancelPendingOrder(userId: string, orderId: string): Promi
  * holds for that date, which is how Slice 1 exercises the full loop before
  * the real bhavcopy feed exists.
  */
-export async function settlePendingOrders(tradeDate: string): Promise<{ settled: number; rejected: number }> {
+export async function settlePendingOrders(
+  tradeDate: string,
+): Promise<{ settled: number; rejected: number; expired: number; carried: number }> {
   const db = getDb();
   let settled = 0;
   let rejected = 0;
+  let expired = 0;
+  let carried = 0;
+  const holidaySet = await loadHolidaySet();
 
   const pending = await db
     .select()
@@ -255,16 +307,41 @@ export async function settlePendingOrders(tradeDate: string): Promise<{ settled:
         .for("update", { skipLocked: true });
       if (!claimed) return;
 
-      const [priceRow] = await tx
-        .select({ close: dailyPrices.close })
+      const [bar] = await tx
+        .select({ open: dailyPrices.open, high: dailyPrices.high, low: dailyPrices.low, close: dailyPrices.close })
         .from(dailyPrices)
         .where(and(eq(dailyPrices.symbol, order.symbol), eq(dailyPrices.tradeDate, tradeDate)))
         .limit(1);
-      if (!priceRow) {
+      if (!bar) {
         // Close for this date isn't ingested yet; leave PENDING for the next run.
         return;
       }
-      const fillPrice = Number(priceRow.close);
+      const fillPrice = resolveFill(
+        {
+          side: order.side,
+          type: order.orderType,
+          limitPrice: num(order.limitPrice),
+          triggerPrice: num(order.triggerPrice),
+          beforeOpen: order.beforeOpen,
+        },
+        { open: num(bar.open), high: num(bar.high), low: num(bar.low), close: Number(bar.close) },
+      );
+      if (fillPrice === null) {
+        // Its price was not reached. A day order ends with the session; a GTT
+        // order waits for the next one, in before it opens, until it expires.
+        const next = nextTradingDay(tradeDate, holidaySet);
+        if (order.validity === "GTT" && order.expiresOn && next <= order.expiresOn) {
+          await tx.update(orders).set({ targetTradeDate: next, beforeOpen: true }).where(eq(orders.id, order.id));
+          carried++;
+        } else {
+          await tx
+            .update(orders)
+            .set({ status: "CANCELLED", rejectionReason: order.validity === "GTT" ? "gtt_expired" : "expired" })
+            .where(eq(orders.id, order.id));
+          expired++;
+        }
+        return;
+      }
 
       // Lock the account so two orders settling at once cannot both read the
       // same cash balance and overwrite each other's update.
@@ -415,7 +492,7 @@ export async function settlePendingOrders(tradeDate: string): Promise<{ settled:
     });
   }
 
-  return { settled, rejected };
+  return { settled, rejected, expired, carried };
 }
 
 /** Distinct target dates of PENDING orders on or before upToDate, oldest first. */

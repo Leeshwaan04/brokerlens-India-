@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUserId } from "@/lib/session";
 import { placeOrder, OrderPlacementError } from "@/lib/order-engine";
+import type { OrderType, Validity } from "@/lib/fills";
 import type { OrderSide } from "@/lib/schema";
 
 export async function POST(request: Request) {
@@ -12,13 +13,17 @@ export async function POST(request: Request) {
   const side = body?.side as OrderSide;
   const qty = Number(body?.qty);
   const clientOrderId = typeof body?.clientOrderId === "string" ? body.clientOrderId : undefined;
+  const orderType = typeof body?.orderType === "string" ? (body.orderType as OrderType) : undefined;
+  const validity = typeof body?.validity === "string" ? (body.validity as Validity) : undefined;
+  const limitPrice = typeof body?.limitPrice === "number" ? body.limitPrice : null;
+  const triggerPrice = typeof body?.triggerPrice === "number" ? body.triggerPrice : null;
 
   if (!symbol || (side !== "BUY" && side !== "SELL") || !Number.isFinite(qty)) {
     return NextResponse.json({ error: "symbol, side ('BUY'|'SELL') and qty are required" }, { status: 400 });
   }
 
   try {
-    const result = await placeOrder({ userId, symbol, side, qty, clientOrderId });
+    const result = await placeOrder({ userId, symbol, side, qty, clientOrderId, orderType, validity, limitPrice, triggerPrice });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     if (err instanceof OrderPlacementError) {

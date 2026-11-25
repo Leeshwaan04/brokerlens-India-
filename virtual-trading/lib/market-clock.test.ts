@@ -36,3 +36,10 @@ describe("market clock with a 30-day lag", () => {
     expect(publishCeiling(at("2026-11-25T10:00:00Z"), 0)).toBeNull();
   });
 });
+
+describe("longDate", async () => {
+  const { longDate } = await import("./market-clock");
+  it("reads like a dateline", () => {
+    expect(longDate("2026-10-26")).toBe("Mon 26 Oct 2026");
+  });
+});

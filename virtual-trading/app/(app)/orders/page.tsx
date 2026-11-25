@@ -6,6 +6,7 @@ import { getCurrentAccount } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { orders, stockUniverse } from "@/lib/schema";
 import { inr, shortDate } from "@/lib/format";
+import { orderTermsLabel } from "@/lib/fills";
 import { PendingOrders } from "@/components/PendingOrders";
 import { buttonClass, Card, CardTitle, cx, PageHeader, Pill } from "@/components/ui";
 
@@ -15,6 +16,8 @@ const REJECTION_TEXT: Record<string, string> = {
   insufficient_funds_at_settlement: "Not enough cash on the fill date at the actual closing price",
   insufficient_holdings_at_settlement: "Not enough shares held on the fill date",
   corporate_action: "Cancelled on a split or bonus ex-date, as brokers cancel open orders when the share count changes",
+  expired: "Its price was not reached during the session, so the day order ended",
+  gtt_expired: "Its price was not reached within a year, so the GTT order ended",
 };
 
 function money(v: string | null): string {
@@ -54,11 +57,14 @@ export default async function OrdersPage() {
 
   return (
     <>
-      <PageHeader title="Orders" subtitle="Orders fill at the official NSE close of their fill date, once NSE publishes it that evening." />
+      <PageHeader
+        title="Orders"
+        subtitle="Each order is checked against its practice-market session's official open, high, low and close. How fills work is set out below."
+      />
 
       {pending.length > 0 && (
         <Card className="mb-6">
-          <CardTitle>Waiting for the next close</CardTitle>
+          <CardTitle>Open orders</CardTitle>
           <PendingOrders
             orders={pending.map((r) => ({
               id: r.order.id,
@@ -67,6 +73,12 @@ export default async function OrdersPage() {
               side: r.order.side,
               qty: r.order.qty,
               targetTradeDate: r.order.targetTradeDate,
+              orderType: r.order.orderType,
+              limitPrice: r.order.limitPrice,
+              triggerPrice: r.order.triggerPrice,
+              validity: r.order.validity,
+              beforeOpen: r.order.beforeOpen,
+              expiresOn: r.order.expiresOn,
             }))}
           />
         </Card>
@@ -77,9 +89,9 @@ export default async function OrdersPage() {
           <table className="w-full min-w-[820px] text-sm">
             <thead className="bg-sub text-left text-xs uppercase tracking-wide text-muted">
               <tr>
-                <th className="px-4 py-3 font-medium">Close date</th>
+                <th className="px-4 py-3 font-medium">Session</th>
                 <th className="px-4 py-3 font-medium">Stock</th>
-                <th className="px-4 py-3 font-medium">Side</th>
+                <th className="px-4 py-3 font-medium">Order</th>
                 <th className="px-4 py-3 text-right font-medium">Qty</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 text-right font-medium">Fill price</th>
@@ -97,6 +109,11 @@ export default async function OrdersPage() {
                   </td>
                   <td className="px-4 py-3">
                     <Pill tone={o.side === "BUY" ? "up" : "down"}>{o.side === "BUY" ? "Buy" : "Sell"}</Pill>
+                    <div className="num mt-1 whitespace-nowrap text-xs text-muted">
+                      {orderTermsLabel(o)}
+                      {o.validity === "GTT" ? ", GTT" : ""}
+                      {o.orderType === "MARKET" && o.beforeOpen ? ", at open" : ""}
+                    </div>
                   </td>
                   <td className="num px-4 py-3 text-right text-ink">{o.qty}</td>
                   <td className="px-4 py-3">
@@ -133,6 +150,22 @@ export default async function OrdersPage() {
           </table>
         </div>
       )}
+
+      <Card className="mt-6">
+        <h2 className="font-semibold text-ink">How fills work</h2>
+        <p className="mt-2 text-sm text-muted">
+          This practice market has each session&apos;s official open, high, low and close, not every trade during the day,
+          so these rules never assume prices moved in your favour.
+        </p>
+        <ul className="mt-3 flex list-disc flex-col gap-1.5 pl-5 text-sm text-muted">
+          <li>An order placed before the session opens (the evening before, over a weekend, or before 9:15) can fill at the open. Placed during the session, a market order fills at the close.</li>
+          <li>A limit order fills only if the price traded through your limit, not if it merely touched it, and never at a worse price than your limit.</li>
+          <li>A stop-loss order turns into a market order when its trigger trades. If the session opens beyond the trigger, it fills at that worse opening price.</li>
+          <li>Placed during the session, a limit or stop order that was already executable fills at the close; otherwise at its limit or trigger.</li>
+          <li>A day order that does not fill ends with its session. A GTT order is checked every session for up to a year.</li>
+          <li>Open orders are cancelled on a split or bonus ex-date, as brokers do when the share count changes.</li>
+        </ul>
+      </Card>
     </>
   );
 }

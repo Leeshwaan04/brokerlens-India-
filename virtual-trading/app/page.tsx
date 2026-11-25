@@ -21,7 +21,7 @@ const STEPS = [
   },
   {
     title: "Trade Nifty 100 stocks with ₹10 lakh of virtual cash",
-    body: "See every charge before you place an order. It fills at the next official NSE close, never instantly.",
+    body: "See every charge before you place an order. It fills against the next session's official NSE prices, never instantly.",
   },
   {
     title: "Replay your trades at every broker",

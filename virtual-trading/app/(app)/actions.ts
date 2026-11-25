@@ -10,6 +10,7 @@ import { brokerCatalog, stockUniverse, virtualAccounts, watchlistItems } from "@
 import { deleteUserData, resetPortfolio } from "@/lib/account-admin";
 import { isDevAuth } from "@/lib/session";
 import { track } from "@/lib/events";
+import { ORDER_TYPE_LABEL, type OrderType, type Validity } from "@/lib/fills";
 import { cancelPendingOrder, placeOrder, OrderPlacementError } from "@/lib/order-engine";
 
 export interface OrderActionState {
@@ -38,20 +39,36 @@ export async function placeOrderAction(_prev: OrderActionState, formData: FormDa
   const side = String(formData.get("side") ?? "");
   const qty = Number(formData.get("qty"));
   const clientOrderId = String(formData.get("clientOrderId") ?? "") || undefined;
+  const orderType = String(formData.get("orderType") ?? "MARKET") as OrderType;
+  const validity = String(formData.get("validity") ?? "DAY") as Validity;
+  const price = (name: string) => {
+    const raw = String(formData.get(name) ?? "").trim();
+    return raw === "" ? null : Number(raw);
+  };
 
   try {
-    const result = await placeOrder({ userId: current.userId, symbol, side: side as "BUY" | "SELL", qty, clientOrderId });
+    const result = await placeOrder({
+      userId: current.userId,
+      symbol,
+      side: side as "BUY" | "SELL",
+      qty,
+      clientOrderId,
+      orderType,
+      validity,
+      limitPrice: price("limitPrice"),
+      triggerPrice: price("triggerPrice"),
+    });
     revalidateTradingPages();
     return {
       status: "ok",
-      message: `${side === "BUY" ? "Buy" : "Sell"} order for ${qty} ${symbol} placed.`,
+      message: `${ORDER_TYPE_LABEL[orderType] ?? "Market"} ${side === "BUY" ? "buy" : "sell"} order for ${qty} ${symbol} placed.`,
       orderId: result.orderId,
       targetTradeDate: result.targetTradeDate,
     };
   } catch (err) {
     await track(
       "order_rejected",
-      { reason: err instanceof OrderPlacementError ? err.code : "error", side, symbol },
+      { reason: err instanceof OrderPlacementError ? err.code : "error", side, symbol, order_type: orderType },
       current.account.id,
     );
     return {

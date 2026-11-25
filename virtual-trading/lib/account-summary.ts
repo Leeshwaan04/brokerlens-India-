@@ -1,6 +1,7 @@
 // Everything the dashboard, performance and cost-replay pages show about one
 // account, computed once, the same way, from the account's own rows.
 
+import type { OrderType, Validity } from "./fills";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "./db";
 import { brokerCatalog, orders, realizedPnlEvents, stockUniverse, type virtualAccounts } from "./schema";
@@ -21,6 +22,12 @@ export interface PendingOrderView {
   side: "BUY" | "SELL";
   qty: number;
   targetTradeDate: string;
+  orderType: OrderType;
+  limitPrice: string | null;
+  triggerPrice: string | null;
+  validity: Validity;
+  beforeOpen: boolean;
+  expiresOn: string | null;
 }
 
 export interface AccountSummary {
@@ -68,6 +75,12 @@ export async function getAccountSummary(account: AccountRow, asOf?: string): Pro
         qty: orders.qty,
         status: orders.status,
         targetTradeDate: orders.targetTradeDate,
+        orderType: orders.orderType,
+        limitPrice: orders.limitPrice,
+        triggerPrice: orders.triggerPrice,
+        validity: orders.validity,
+        beforeOpen: orders.beforeOpen,
+        expiresOn: orders.expiresOn,
         fillPrice: orders.fillPrice,
         grossAmount: orders.grossAmount,
         totalCharges: orders.totalCharges,
@@ -123,7 +136,20 @@ export async function getAccountSummary(account: AccountRow, asOf?: string): Pro
     ordersFilled: filled.length,
     pending: allOrders
       .filter((o) => o.status === "PENDING")
-      .map((o) => ({ id: o.id, symbol: o.symbol, name: o.name, side: o.side, qty: o.qty, targetTradeDate: o.targetTradeDate })),
+      .map((o) => ({
+        id: o.id,
+        symbol: o.symbol,
+        name: o.name,
+        side: o.side,
+        qty: o.qty,
+        targetTradeDate: o.targetTradeDate,
+        orderType: o.orderType,
+        limitPrice: o.limitPrice,
+        triggerPrice: o.triggerPrice,
+        validity: o.validity,
+        beforeOpen: o.beforeOpen,
+        expiresOn: o.expiresOn,
+      })),
     fills: filled.map((o) => ({ side: o.side, fillPrice: Number(o.fillPrice), qty: o.qty })),
     score,
     milestones,

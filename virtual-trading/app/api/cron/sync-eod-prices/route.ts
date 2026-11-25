@@ -220,7 +220,7 @@ export async function GET(request: NextRequest) {
         ).map((r) => r.d)
       : [];
   const days = [...new Set([...skipped, ...backfilled, through, ...(await pendingDueDates(through))])].sort();
-  const settlement = { settled: 0, rejected: 0, dates: [] as string[] };
+  const settlement = { settled: 0, rejected: 0, expired: 0, carried: 0, dates: [] as string[] };
   const corporateActions: AppliedAction[] = [];
   const unrecognised: UnrecognisedAdjustment[] = [];
   for (const day of days) {
@@ -230,6 +230,8 @@ export async function GET(request: NextRequest) {
     const r = await settlePendingOrders(day);
     settlement.settled += r.settled;
     settlement.rejected += r.rejected;
+    settlement.expired += r.expired;
+    settlement.carried += r.carried;
     if (r.settled + r.rejected > 0) settlement.dates.push(day);
   }
   if (unrecognised.length) {
@@ -255,6 +257,8 @@ export async function GET(request: NextRequest) {
     unrecognisedAdjustments: unrecognised,
     settled: settlement.settled,
     rejected: settlement.rejected,
+    expired: settlement.expired,
+    carriedToNextSession: settlement.carried,
     settledDates: settlement.dates,
     snapshots,
   });

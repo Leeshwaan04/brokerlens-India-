@@ -9,7 +9,7 @@ import { marketHolidays, stockUniverse, watchlistItems } from "@/lib/schema";
 import { closesWithChange } from "@/lib/prices";
 import { getRankableBrokers, toReplayBroker } from "@/lib/brokers";
 import { targetTradeDateFor } from "@/lib/market-calendar";
-import { marketNow } from "@/lib/market-clock";
+import { marketMoment, marketNow } from "@/lib/market-clock";
 import { inr, shortDate, signedPct, pnlTone } from "@/lib/format";
 import { StockSearch } from "@/components/StockSearch";
 import { OrderTicket } from "@/components/OrderTicket";
@@ -86,7 +86,7 @@ export default async function TradePage({
         subtitle={
           <>
             Nifty 100 stocks at official NSE closing prices{anyClose ? `, latest close ${shortDate(anyClose.tradeDate)}` : ""}.
-            Orders fill at the next close, never instantly.
+            Orders fill against the next session's official prices, never instantly.
           </>
         }
         action={
@@ -188,6 +188,7 @@ export default async function TradePage({
                 freeShares={freeShares}
                 avgCost={holding?.avgCost ?? null}
                 targetTradeDate={targetTradeDate}
+                beforeOpen={marketMoment(new Set(holidayRows.map((h) => h.holidayDate))).phase !== "open"}
                 clientOrderId={crypto.randomUUID()}
               />
             </Card>
