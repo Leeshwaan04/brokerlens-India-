@@ -9,6 +9,7 @@ import { marketHolidays, stockUniverse, watchlistItems } from "@/lib/schema";
 import { closesWithChange } from "@/lib/prices";
 import { getRankableBrokers, toReplayBroker } from "@/lib/brokers";
 import { targetTradeDateFor } from "@/lib/market-calendar";
+import { marketNow } from "@/lib/market-clock";
 import { inr, shortDate, signedPct, pnlTone } from "@/lib/format";
 import { StockSearch } from "@/components/StockSearch";
 import { OrderTicket } from "@/components/OrderTicket";
@@ -68,7 +69,7 @@ export default async function TradePage({
   ]);
   const watching = stock ? watchRows.some((w) => w.symbol === stock.symbol) : false;
   const stockClose = stock ? closes.get(stock.symbol) : undefined;
-  const targetTradeDate = targetTradeDateFor(new Date(), new Set(holidayRows.map((h) => h.holidayDate)));
+  const targetTradeDate = targetTradeDateFor(marketNow(), new Set(holidayRows.map((h) => h.holidayDate)));
 
   const holding = stock ? summary.holdings.find((h) => h.symbol === stock.symbol) : undefined;
   const pendingSells = stock

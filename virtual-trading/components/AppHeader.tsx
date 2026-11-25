@@ -2,6 +2,7 @@ import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { isDevAuth } from "@/lib/session";
 import { LensMark } from "./LensMark";
+import { MarketClock } from "./MarketClock";
 import { NavLinks } from "./NavLinks";
 import { buttonClass, Pill } from "./ui";
 
@@ -26,6 +27,7 @@ export function AppHeader({
         <div className="ml-auto flex items-center gap-3 md:order-last">
           {signedIn ? (
             <>
+              <MarketClock className="hidden lg:inline-flex" />
               {brokerBrand && (
                 <Link href="/broker" className="hidden text-sm text-muted hover:text-ink sm:inline" title="Change practice broker">
                   Practising with <span className="font-medium text-ink">{brokerBrand}</span>

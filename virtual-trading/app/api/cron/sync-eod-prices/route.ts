@@ -5,10 +5,18 @@
 // callable by hand with ?date=YYYY-MM-DD for backfill, same as the plan's
 // "Verification" section describes.
 import { NextRequest, NextResponse } from "next/server";
+import { and, desc, eq, gt, lte } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { dailyPrices, stockUniverse, marketHolidays, priceSyncRuns } from "@/lib/schema";
 import { fetchBhavcopy, type DailyPriceRow } from "@/lib/bhavcopy";
-import { isoDateOnly, missingCloseAction, nextTradingDay, previousTradingDaysFrom } from "@/lib/market-calendar";
+import {
+  isoDateOnly,
+  missingCloseAction,
+  nextTradingDay,
+  previousTradingDaysFrom,
+  tradingDaysBetween,
+} from "@/lib/market-calendar";
+import { priceLagDays, publishCeiling } from "@/lib/market-clock";
 import { pendingDatesMissingPrices, pendingDueDates, retargetPendingOrders, settlePendingOrders } from "@/lib/order-engine";
 import { applyCorporateActionsFor, type AppliedAction, type UnrecognisedAdjustment } from "@/lib/corporate-actions";
 import { writeSnapshotsFor } from "@/lib/snapshots";
@@ -19,6 +27,20 @@ const MAX_WALK_BACK_ATTEMPTS = 10;
 // Most earlier days a single run will backfill for orders still waiting on
 // a close that was never ingested (missed runs, a CI outage).
 const MAX_BACKFILL_DATES = 15;
+// History the delayed market needs: closes from a little before the practice
+// market's date (for day changes and charts) up to the real latest. Missing
+// days are fetched a few per run, or more with ?history=N on a first deploy.
+const HISTORY_LEAD_DAYS = 10;
+const DEFAULT_HISTORY_FETCHES = 5;
+const MAX_HISTORY_FETCHES = 60;
+const NSE_PAUSE_MS = 400;
+
+const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const utcDate = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+};
+const shiftDays = (iso: string, days: number) => isoDateOnly(new Date(utcDate(iso).getTime() + days * 86_400_000));
 
 async function upsertDailyPrices(tradeDate: string, rows: DailyPriceRow[]) {
   const db = getDb();
@@ -75,114 +97,165 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const lag = priceLagDays();
+  const ceiling = publishCeiling(new Date(), lag);
+
+  // 1. Ingest the newest close NSE has published (walking back over days it
+  // has not published yet). With a lag this only stocks up for later: the
+  // practice market will not reach these closes for another `lag` days.
   const candidates = previousTradingDaysFrom(startIso, holidaySet, MAX_WALK_BACK_ATTEMPTS);
-  if (candidates.length === 0) {
-    return NextResponse.json(
-      { error: `${startIso} and the trading days before it are not trading days` },
-      { status: 422 },
-    );
-  }
-
   const errors: string[] = [];
+  let ingested: { tradeDate: string; rows: number } | null = null;
   for (const iso of candidates) {
-    const [y, m, d] = iso.split("-").map(Number);
-    const date = new Date(Date.UTC(y, m - 1, d));
-    const result = await fetchBhavcopy(date, allowedSymbols);
-
+    const result = await fetchBhavcopy(utcDate(iso), allowedSymbols);
     if (result.status === "error") {
       errors.push(`${iso}: ${result.error}`);
       continue;
     }
-    if (result.status === "not_published" || result.rows.length === 0) {
-      continue;
-    }
-
+    if (result.status === "not_published" || result.rows.length === 0) continue;
     await upsertDailyPrices(iso, result.rows);
     await db.insert(priceSyncRuns).values({ tradeDate: iso, rowsIngested: result.rows.length, status: "ok" });
-
-    // Every earlier day a PENDING order is still waiting on: backfill its
-    // close, or, if NSE never published one while this later close exists,
-    // it was a market holiday missing from the calendar, so move those
-    // orders to the next trading day rather than leave them PENDING forever.
-    const backfilled: string[] = [];
-    const retargeted: { from: string; to: string; orders: number }[] = [];
-    for (const missing of (await pendingDatesMissingPrices(iso)).slice(0, MAX_BACKFILL_DATES)) {
-      const knownHoliday = holidaySet.has(missing);
-      let status: "ok" | "not_published" | "error" = "not_published";
-      if (!knownHoliday) {
-        const [my, mm, md] = missing.split("-").map(Number);
-        const back = await fetchBhavcopy(new Date(Date.UTC(my, mm - 1, md)), allowedSymbols);
-        if (back.status === "ok" && back.rows.length > 0) {
-          await upsertDailyPrices(missing, back.rows);
-          await db.insert(priceSyncRuns).values({ tradeDate: missing, rowsIngested: back.rows.length, status: "ok" });
-          backfilled.push(missing);
-          continue;
-        }
-        status = back.status === "error" ? "error" : "not_published";
-      }
-      // pendingDatesMissingPrices only returns dates on or before iso that
-      // lack a close, and iso now has one, so a later close always exists here.
-      if (missingCloseAction(status, knownHoliday, missing < iso) === "retarget") {
-        const to = nextTradingDay(missing, new Set([...holidaySet, missing]));
-        const moved = await retargetPendingOrders(missing, to);
-        await db.insert(priceSyncRuns).values({
-          tradeDate: missing,
-          rowsIngested: 0,
-          status: "retargeted",
-          error: `NSE published no close for ${missing}; ${moved} pending order(s) moved to ${to}.`,
-        });
-        retargeted.push({ from: missing, to, orders: moved });
-      }
-    }
-
-    // Day by day in date order: a day's splits and bonuses are applied before
-    // that day's orders fill, so an order is always settled against the share
-    // count of its own session.
-    const days = [...new Set([...backfilled, iso, ...(await pendingDueDates(iso))])].sort();
-    const settlement = { settled: 0, rejected: 0, dates: [] as string[] };
-    const corporateActions: AppliedAction[] = [];
-    const unrecognised: UnrecognisedAdjustment[] = [];
-    for (const day of days) {
-      const ca = await applyCorporateActionsFor(day);
-      corporateActions.push(...ca.applied);
-      unrecognised.push(...ca.unrecognised);
-      const r = await settlePendingOrders(day);
-      settlement.settled += r.settled;
-      settlement.rejected += r.rejected;
-      if (r.settled + r.rejected > 0) settlement.dates.push(day);
-    }
-    if (unrecognised.length) {
-      await db.insert(priceSyncRuns).values({
-        tradeDate: iso,
-        rowsIngested: 0,
-        status: "unrecognised_adjustment",
-        error: unrecognised.map((u) => `${u.symbol} ${u.exDate}: stored ${u.storedPrevClose} vs NSE ${u.nsePrevClose}`).join("; "),
-      });
-    }
-    const snapshots = await writeSnapshotsFor(iso);
-
-    return NextResponse.json({
-      tradeDate: iso,
-      rowsIngested: result.rows.length,
-      backfilled,
-      retargeted,
-      corporateActions,
-      unrecognisedAdjustments: unrecognised,
-      settled: settlement.settled,
-      rejected: settlement.rejected,
-      settledDates: settlement.dates,
-      snapshots,
-    });
+    ingested = { tradeDate: iso, rows: result.rows.length };
+    break;
+  }
+  if (!ingested) {
+    const errorMessage = `No published bhavcopy found among candidate trading day(s): ${candidates.join(", ") || "none"}.${
+      errors.length ? ` Fetch errors: ${errors.join("; ")}` : ""
+    }`;
+    await db.insert(priceSyncRuns).values({ tradeDate: startIso, rowsIngested: 0, status: "failed", error: errorMessage });
+    // Without a lag there is nothing new to settle against. With one, the
+    // practice market runs on closes ingested weeks ago, so carry on.
+    if (lag === 0) return NextResponse.json({ error: errorMessage }, { status: 502 });
   }
 
-  const errorMessage = `No published bhavcopy found among candidate trading day(s): ${candidates.join(", ")}.${
-    errors.length ? ` Fetch errors: ${errors.join("; ")}` : ""
-  }`;
-  await db.insert(priceSyncRuns).values({
-    tradeDate: startIso,
-    rowsIngested: 0,
-    status: "failed",
-    error: errorMessage,
+  // 2. History the delayed market needs, oldest first, a few days per run.
+  const historyFetched: string[] = [];
+  if (ceiling) {
+    const requested = Number(request.nextUrl.searchParams.get("history"));
+    const budget = Number.isInteger(requested) && requested > 0 ? Math.min(requested, MAX_HISTORY_FETCHES) : DEFAULT_HISTORY_FETCHES;
+    const have = new Set(
+      (await db.selectDistinct({ d: dailyPrices.tradeDate }).from(dailyPrices).where(gt(dailyPrices.tradeDate, shiftDays(ceiling, -HISTORY_LEAD_DAYS - 1)))).map(
+        (r) => r.d,
+      ),
+    );
+    const wanted = tradingDaysBetween(shiftDays(ceiling, -HISTORY_LEAD_DAYS), ingested?.tradeDate ?? startIso, holidaySet).filter(
+      (d) => !have.has(d),
+    );
+    for (const day of wanted.slice(0, budget)) {
+      await pause(NSE_PAUSE_MS);
+      const back = await fetchBhavcopy(utcDate(day), allowedSymbols);
+      if (back.status === "ok" && back.rows.length > 0) {
+        await upsertDailyPrices(day, back.rows);
+        await db.insert(priceSyncRuns).values({ tradeDate: day, rowsIngested: back.rows.length, status: "ok" });
+        historyFetched.push(day);
+      }
+    }
+  }
+
+  // 3. Move the practice market forward: the newest ingested session it may
+  // show (with no lag, the close just ingested).
+  const [through] = ceiling
+    ? await db
+        .select({ d: dailyPrices.tradeDate })
+        .from(dailyPrices)
+        .where(lte(dailyPrices.tradeDate, ceiling))
+        .orderBy(desc(dailyPrices.tradeDate))
+        .limit(1)
+        .then((r) => r.map((x) => x.d))
+    : [ingested!.tradeDate];
+  if (!through) {
+    return NextResponse.json({ ingested, historyFetched, error: "No closes on file for the practice market's date yet; run with ?history=40" }, { status: 503 });
+  }
+
+  // Every earlier day a PENDING order is still waiting on: backfill its
+  // close, or, if NSE never published one while a later close exists, it
+  // was a market holiday missing from the calendar, so move those orders to
+  // the next trading day rather than leave them PENDING forever.
+  const backfilled: string[] = [];
+  const retargeted: { from: string; to: string; orders: number }[] = [];
+  for (const missing of (await pendingDatesMissingPrices(through)).slice(0, MAX_BACKFILL_DATES)) {
+    const knownHoliday = holidaySet.has(missing);
+    let status: "ok" | "not_published" | "error" = "not_published";
+    if (!knownHoliday) {
+      const back = await fetchBhavcopy(utcDate(missing), allowedSymbols);
+      if (back.status === "ok" && back.rows.length > 0) {
+        await upsertDailyPrices(missing, back.rows);
+        await db.insert(priceSyncRuns).values({ tradeDate: missing, rowsIngested: back.rows.length, status: "ok" });
+        backfilled.push(missing);
+        continue;
+      }
+      status = back.status === "error" ? "error" : "not_published";
+    }
+    // pendingDatesMissingPrices only returns dates on or before `through`
+    // that lack a close, and `through` has one, so a later close exists.
+    if (missingCloseAction(status, knownHoliday, missing < through) === "retarget") {
+      const to = nextTradingDay(missing, new Set([...holidaySet, missing]));
+      const moved = await retargetPendingOrders(missing, to);
+      await db.insert(priceSyncRuns).values({
+        tradeDate: missing,
+        rowsIngested: 0,
+        status: "retargeted",
+        error: `NSE published no close for ${missing}; ${moved} pending order(s) moved to ${to}.`,
+      });
+      retargeted.push({ from: missing, to, orders: moved });
+    }
+  }
+
+  // Day by day in date order, including any session a missed run skipped:
+  // a day's splits and bonuses are applied before that day's orders fill, so
+  // an order is always settled against the share count of its own session.
+  const [lastPublished] = await db
+    .select({ d: priceSyncRuns.tradeDate })
+    .from(priceSyncRuns)
+    .where(eq(priceSyncRuns.status, "published"))
+    .orderBy(desc(priceSyncRuns.tradeDate))
+    .limit(1);
+  const skipped =
+    lastPublished?.d && lastPublished.d < through
+      ? (
+          await db
+            .selectDistinct({ d: dailyPrices.tradeDate })
+            .from(dailyPrices)
+            .where(and(gt(dailyPrices.tradeDate, lastPublished.d), lte(dailyPrices.tradeDate, through)))
+        ).map((r) => r.d)
+      : [];
+  const days = [...new Set([...skipped, ...backfilled, through, ...(await pendingDueDates(through))])].sort();
+  const settlement = { settled: 0, rejected: 0, dates: [] as string[] };
+  const corporateActions: AppliedAction[] = [];
+  const unrecognised: UnrecognisedAdjustment[] = [];
+  for (const day of days) {
+    const ca = await applyCorporateActionsFor(day);
+    corporateActions.push(...ca.applied);
+    unrecognised.push(...ca.unrecognised);
+    const r = await settlePendingOrders(day);
+    settlement.settled += r.settled;
+    settlement.rejected += r.rejected;
+    if (r.settled + r.rejected > 0) settlement.dates.push(day);
+  }
+  if (unrecognised.length) {
+    await db.insert(priceSyncRuns).values({
+      tradeDate: through,
+      rowsIngested: 0,
+      status: "unrecognised_adjustment",
+      error: unrecognised.map((u) => `${u.symbol} ${u.exDate}: stored ${u.storedPrevClose} vs NSE ${u.nsePrevClose}`).join("; "),
+    });
+  }
+  const snapshots = await writeSnapshotsFor(through);
+  // Only now may pages show `through`: its orders are settled.
+  await db.insert(priceSyncRuns).values({ tradeDate: through, rowsIngested: 0, status: "published" });
+
+  return NextResponse.json({
+    lagDays: lag,
+    ingested,
+    historyFetched,
+    marketDate: through,
+    backfilled,
+    retargeted,
+    corporateActions,
+    unrecognisedAdjustments: unrecognised,
+    settled: settlement.settled,
+    rejected: settlement.rejected,
+    settledDates: settlement.dates,
+    snapshots,
   });
-  return NextResponse.json({ error: errorMessage }, { status: 502 });
 }

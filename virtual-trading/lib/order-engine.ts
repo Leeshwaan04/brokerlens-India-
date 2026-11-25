@@ -21,6 +21,7 @@ import {
   type OrderSide,
 } from "./schema";
 import { targetTradeDateFor } from "./market-calendar";
+import { marketNow } from "./market-clock";
 import { buyLegFor, sellLegFor, deliveryFeesFromRow, estimateBuyCost, type DeliveryFees } from "./trade-costs";
 import { latestClose, latestCloses } from "./prices";
 
@@ -179,7 +180,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   }
 
   const holidaySet = await loadHolidaySet();
-  const targetTradeDate = targetTradeDateFor(new Date(), holidaySet);
+  // The practice market's session, not the real calendar's (market-clock.ts).
+  const targetTradeDate = targetTradeDateFor(marketNow(), holidaySet);
 
   const [inserted] = await db
     .insert(orders)

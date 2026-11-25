@@ -2,8 +2,10 @@ name: Virtual Trading EOD Price Sync
 
 on:
   schedule:
-    # 13:30 UTC = 19:00 IST (NSE bhavcopy available by ~18:30-19:00 IST Monday to Friday)
-    - cron: "30 13 * * 1-5"
+    # 13:30 UTC = 19:00 IST, after NSE publishes the day's bhavcopy. Every
+    # day, not just weekdays: the practice market runs VT_PRICE_LAG_DAYS
+    # behind the real one, so its sessions fall on real weekends too.
+    - cron: "30 13 * * *"
   workflow_dispatch: {}
 
 jobs:

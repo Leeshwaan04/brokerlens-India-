@@ -97,6 +97,20 @@ export function targetTradeDateFor(now: Date, holidaySet: ReadonlySet<string>): 
   return nextTradingDay(todayIso, holidaySet);
 }
 
+/** Trading days from `from` to `to`, both included, oldest first. */
+export function tradingDaysBetween(from: string, to: string, holidaySet: ReadonlySet<string>): string[] {
+  const out: string[] = [];
+  const [y, m, d] = from.split("-").map(Number);
+  let cursor = new Date(Date.UTC(y, m - 1, d));
+  for (let i = 0; i < 400; i++) {
+    const iso = cursor.toISOString().slice(0, 10);
+    if (iso > to) break;
+    if (isTradingDay(iso, holidaySet)) out.push(iso);
+    cursor = new Date(cursor.getTime() + 86_400_000);
+  }
+  return out;
+}
+
 export type MissingCloseAction = "ingest" | "retarget" | "wait";
 
 /**

@@ -4,17 +4,24 @@
 import { and, desc, inArray, lte } from "drizzle-orm";
 import { getDb } from "./db";
 import { dailyPrices } from "./schema";
+import { getMarketAsOf } from "./market-clock";
 
 export interface LatestClose {
   close: number;
   tradeDate: string;
 }
 
-/** Latest close per symbol, optionally as of a date (on or before asOf). */
-export async function latestCloses(symbols: string[], asOf?: string): Promise<Map<string, LatestClose>> {
+/**
+ * Latest close per symbol on or before asOf. asOf defaults to the practice
+ * market's current date (see market-clock.ts), so no caller can show a close
+ * the market has not reached yet by leaving it out.
+ */
+export async function latestCloses(symbols: string[], asOfDate?: string): Promise<Map<string, LatestClose>> {
   const unique = [...new Set(symbols)];
   const out = new Map<string, LatestClose>();
   if (unique.length === 0) return out;
+  const asOf = asOfDate ?? (await getMarketAsOf());
+  if (!asOf) return out;
   const db = getDb();
   const rows = await db
     .selectDistinctOn([dailyPrices.symbol], {
@@ -23,7 +30,7 @@ export async function latestCloses(symbols: string[], asOf?: string): Promise<Ma
       tradeDate: dailyPrices.tradeDate,
     })
     .from(dailyPrices)
-    .where(asOf ? and(inArray(dailyPrices.symbol, unique), lte(dailyPrices.tradeDate, asOf)) : inArray(dailyPrices.symbol, unique))
+    .where(and(inArray(dailyPrices.symbol, unique), lte(dailyPrices.tradeDate, asOf)))
     .orderBy(dailyPrices.symbol, desc(dailyPrices.tradeDate));
   for (const r of rows) out.set(r.symbol, { close: Number(r.close), tradeDate: r.tradeDate });
   return out;
@@ -39,11 +46,14 @@ export interface CloseWithChange {
   prevClose: number | null;
 }
 
-/** The two most recent ingested trading dates, newest first. */
+/** The most recent ingested trading dates the practice market has reached, newest first. */
 export async function latestTradeDates(limit = 2): Promise<string[]> {
+  const asOf = await getMarketAsOf();
+  if (!asOf) return [];
   const rows = await getDb()
     .selectDistinct({ tradeDate: dailyPrices.tradeDate })
     .from(dailyPrices)
+    .where(lte(dailyPrices.tradeDate, asOf))
     .orderBy(desc(dailyPrices.tradeDate))
     .limit(limit);
   return rows.map((r) => r.tradeDate);
