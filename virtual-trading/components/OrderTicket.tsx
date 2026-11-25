@@ -33,6 +33,8 @@ interface Props {
   freeShares: number;
   avgCost: number | null;
   targetTradeDate: string;
+  // Idempotency key generated on the server for this render.
+  clientOrderId: string;
 }
 
 const INITIAL: OrderActionState = { status: "idle", message: "" };
@@ -46,9 +48,14 @@ export function OrderTicket(props: Props) {
   const { symbol, lastClose, currentBroker, rankable, freeCash, freeShares, avgCost } = props;
   const [side, setSide] = useState<"BUY" | "SELL">(props.defaultSide === "SELL" && freeShares > 0 ? "SELL" : "BUY");
   const [qtyText, setQtyText] = useState("");
+  const [clientOrderId, setClientOrderId] = useState(props.clientOrderId);
   const [state, formAction, pending] = useActionState(async (prev: OrderActionState, fd: FormData) => {
     const next = await placeOrderAction(prev, fd);
-    if (next.status === "ok") setQtyText("");
+    if (next.status === "ok") {
+      setQtyText("");
+      // A new key for the next order; repeats of this one stay deduplicated.
+      setClientOrderId(crypto.randomUUID());
+    }
     return next;
   }, INITIAL);
 
@@ -80,6 +87,7 @@ export function OrderTicket(props: Props) {
     <form action={formAction} className="flex flex-col gap-5">
       <input type="hidden" name="symbol" value={symbol} />
       <input type="hidden" name="side" value={side} />
+      <input type="hidden" name="clientOrderId" value={clientOrderId} />
 
       <div role="radiogroup" aria-label="Order side" className="grid grid-cols-2 gap-1 rounded-xl bg-sub p-1">
         {(["BUY", "SELL"] as const).map((s) => {

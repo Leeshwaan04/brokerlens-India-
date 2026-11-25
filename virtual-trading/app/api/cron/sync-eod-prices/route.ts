@@ -9,7 +9,8 @@ import { getDb } from "@/lib/db";
 import { dailyPrices, stockUniverse, marketHolidays, priceSyncRuns } from "@/lib/schema";
 import { fetchBhavcopy, type DailyPriceRow } from "@/lib/bhavcopy";
 import { isoDateOnly, missingCloseAction, nextTradingDay, previousTradingDaysFrom } from "@/lib/market-calendar";
-import { pendingDatesMissingPrices, retargetPendingOrders, settleAllDue } from "@/lib/order-engine";
+import { pendingDatesMissingPrices, pendingDueDates, retargetPendingOrders, settlePendingOrders } from "@/lib/order-engine";
+import { applyCorporateActionsFor, type AppliedAction, type UnrecognisedAdjustment } from "@/lib/corporate-actions";
 import { writeSnapshotsFor } from "@/lib/snapshots";
 
 // Covers a long weekend plus a missed cron run or two; previousTradingDaysFrom
@@ -30,13 +31,21 @@ async function upsertDailyPrices(tradeDate: string, rows: DailyPriceRow[]) {
       low: row.low !== null ? String(row.low) : null,
       close: String(row.close),
       volume: row.volume !== null ? String(row.volume) : null,
+      prevClose: row.prevClose !== null ? String(row.prevClose) : null,
     };
     await db
       .insert(dailyPrices)
       .values(values)
       .onConflictDoUpdate({
         target: [dailyPrices.symbol, dailyPrices.tradeDate],
-        set: { open: values.open, high: values.high, low: values.low, close: values.close, volume: values.volume },
+        set: {
+          open: values.open,
+          high: values.high,
+          low: values.low,
+          close: values.close,
+          volume: values.volume,
+          prevClose: values.prevClose,
+        },
       });
   }
 }
@@ -126,7 +135,30 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const settlement = await settleAllDue(iso);
+    // Day by day in date order: a day's splits and bonuses are applied before
+    // that day's orders fill, so an order is always settled against the share
+    // count of its own session.
+    const days = [...new Set([...backfilled, iso, ...(await pendingDueDates(iso))])].sort();
+    const settlement = { settled: 0, rejected: 0, dates: [] as string[] };
+    const corporateActions: AppliedAction[] = [];
+    const unrecognised: UnrecognisedAdjustment[] = [];
+    for (const day of days) {
+      const ca = await applyCorporateActionsFor(day);
+      corporateActions.push(...ca.applied);
+      unrecognised.push(...ca.unrecognised);
+      const r = await settlePendingOrders(day);
+      settlement.settled += r.settled;
+      settlement.rejected += r.rejected;
+      if (r.settled + r.rejected > 0) settlement.dates.push(day);
+    }
+    if (unrecognised.length) {
+      await db.insert(priceSyncRuns).values({
+        tradeDate: iso,
+        rowsIngested: 0,
+        status: "unrecognised_adjustment",
+        error: unrecognised.map((u) => `${u.symbol} ${u.exDate}: stored ${u.storedPrevClose} vs NSE ${u.nsePrevClose}`).join("; "),
+      });
+    }
     const snapshots = await writeSnapshotsFor(iso);
 
     return NextResponse.json({
@@ -134,6 +166,8 @@ export async function GET(request: NextRequest) {
       rowsIngested: result.rows.length,
       backfilled,
       retargeted,
+      corporateActions,
+      unrecognisedAdjustments: unrecognised,
       settled: settlement.settled,
       rejected: settlement.rejected,
       settledDates: settlement.dates,

@@ -14,6 +14,7 @@ export const metadata: Metadata = { title: "Orders" };
 const REJECTION_TEXT: Record<string, string> = {
   insufficient_funds_at_settlement: "Not enough cash on the fill date at the actual closing price",
   insufficient_holdings_at_settlement: "Not enough shares held on the fill date",
+  corporate_action: "Cancelled on a split or bonus ex-date, as brokers cancel open orders when the share count changes",
 };
 
 function money(v: string | null): string {
@@ -100,7 +101,7 @@ export default async function OrdersPage() {
                   <td className="num px-4 py-3 text-right text-ink">{o.qty}</td>
                   <td className="px-4 py-3">
                     <Pill tone={STATUS_TONE[o.status]}>{o.status.charAt(0) + o.status.slice(1).toLowerCase()}</Pill>
-                    {o.status === "REJECTED" && o.rejectionReason && (
+                    {(o.status === "REJECTED" || o.status === "CANCELLED") && o.rejectionReason && (
                       <div className="mt-1 max-w-[200px] text-xs text-down">{REJECTION_TEXT[o.rejectionReason] ?? o.rejectionReason.replaceAll("_", " ")}</div>
                     )}
                   </td>

@@ -15,6 +15,13 @@
       "when": 1795586724894,
       "tag": "0001_conversion_and_correctness",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795614833406,
+      "tag": "0002_corporate_actions_idempotency_watchlist",
+      "breakpoints": true
     }
   ]
 }

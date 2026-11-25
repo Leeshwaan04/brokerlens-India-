@@ -21,6 +21,8 @@ export interface DailyPriceRow {
   low: number | null;
   close: number;
   volume: number | null;
+  // NSE's previous close (PrvsClsgPric), adjusted on a split or bonus ex-date.
+  prevClose: number | null;
 }
 
 function dateStamp(date: Date): string {
@@ -82,6 +84,7 @@ export function parseBhavcopyCsv(csvText: string, allowedSymbols?: ReadonlySet<s
       low: toNum(r.LwPric),
       close,
       volume: toNum(r.TtlTradgVol),
+      prevClose: toNum(r.PrvsClsgPric),
     });
   }
   return out;

@@ -11,13 +11,14 @@ export async function POST(request: Request) {
   const symbol = typeof body?.symbol === "string" ? body.symbol.toUpperCase() : "";
   const side = body?.side as OrderSide;
   const qty = Number(body?.qty);
+  const clientOrderId = typeof body?.clientOrderId === "string" ? body.clientOrderId : undefined;
 
   if (!symbol || (side !== "BUY" && side !== "SELL") || !Number.isFinite(qty)) {
     return NextResponse.json({ error: "symbol, side ('BUY'|'SELL') and qty are required" }, { status: 400 });
   }
 
   try {
-    const result = await placeOrder({ userId, symbol, side, qty });
+    const result = await placeOrder({ userId, symbol, side, qty, clientOrderId });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     if (err instanceof OrderPlacementError) {

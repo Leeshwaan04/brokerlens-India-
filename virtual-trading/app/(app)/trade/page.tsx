@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { getCurrentAccount } from "@/lib/auth";
 import { getAccountSummary } from "@/lib/account-summary";
 import { getDb } from "@/lib/db";
-import { marketHolidays, stockUniverse } from "@/lib/schema";
+import { marketHolidays, stockUniverse, watchlistItems } from "@/lib/schema";
 import { closesWithChange } from "@/lib/prices";
 import { getRankableBrokers, toReplayBroker } from "@/lib/brokers";
 import { targetTradeDateFor } from "@/lib/market-calendar";
@@ -13,7 +13,8 @@ import { inr, shortDate, signedPct, pnlTone } from "@/lib/format";
 import { StockSearch } from "@/components/StockSearch";
 import { OrderTicket } from "@/components/OrderTicket";
 import { PendingOrders } from "@/components/PendingOrders";
-import { Card, CardTitle, cx, PageHeader, Pill } from "@/components/ui";
+import { buttonClass, Card, CardTitle, cx, PageHeader, Pill } from "@/components/ui";
+import { toggleWatchlistAction } from "../actions";
 
 export const metadata: Metadata = { title: "Trade" };
 
@@ -43,7 +44,7 @@ export default async function TradePage({
   const symbol = rawSymbol?.trim().toUpperCase().slice(0, 20);
   const db = getDb();
 
-  const [stockRows, popularRows, holidayRows, rankable] = await Promise.all([
+  const [stockRows, popularRows, holidayRows, rankable, watchRows] = await Promise.all([
     symbol ? db.select().from(stockUniverse).where(eq(stockUniverse.symbol, symbol)).limit(1) : Promise.resolve([]),
     db
       .select({ symbol: stockUniverse.symbol, name: stockUniverse.name })
@@ -51,10 +52,21 @@ export default async function TradePage({
       .where(inArray(stockUniverse.symbol, POPULAR)),
     db.select({ holidayDate: marketHolidays.holidayDate }).from(marketHolidays),
     getRankableBrokers(),
+    db
+      .select({ symbol: stockUniverse.symbol, name: stockUniverse.name })
+      .from(watchlistItems)
+      .innerJoin(stockUniverse, eq(watchlistItems.symbol, stockUniverse.symbol))
+      .where(eq(watchlistItems.accountId, current.account.id))
+      .orderBy(asc(watchlistItems.addedAt)),
   ]);
   const stock = stockRows[0];
   const popular = POPULAR.map((s) => popularRows.find((r) => r.symbol === s)).filter((r) => r !== undefined);
-  const closes = await closesWithChange([...popular.map((p) => p.symbol), ...(stock ? [stock.symbol] : [])]);
+  const closes = await closesWithChange([
+    ...popular.map((p) => p.symbol),
+    ...watchRows.map((w) => w.symbol),
+    ...(stock ? [stock.symbol] : []),
+  ]);
+  const watching = stock ? watchRows.some((w) => w.symbol === stock.symbol) : false;
   const stockClose = stock ? closes.get(stock.symbol) : undefined;
   const targetTradeDate = targetTradeDateFor(new Date(), new Set(holidayRows.map((h) => h.holidayDate)));
 
@@ -106,6 +118,16 @@ export default async function TradePage({
                   <div className="flex items-center gap-2">
                     <h2 className="text-xl font-semibold text-ink">{stock.symbol}</h2>
                     <Pill tone="neutral">NSE</Pill>
+                    <form action={toggleWatchlistAction}>
+                      <input type="hidden" name="symbol" value={stock.symbol} />
+                      <button
+                        type="submit"
+                        aria-pressed={watching}
+                        className={cx(buttonClass("ghost", "sm"), "px-2 py-0.5 text-xs")}
+                      >
+                        {watching ? "★ Watching" : "☆ Watch"}
+                      </button>
+                    </form>
                   </div>
                   <p className="truncate text-sm text-muted">{stock.name}</p>
                 </div>
@@ -165,6 +187,7 @@ export default async function TradePage({
                 freeShares={freeShares}
                 avgCost={holding?.avgCost ?? null}
                 targetTradeDate={targetTradeDate}
+                clientOrderId={crypto.randomUUID()}
               />
             </Card>
           ) : stock ? (
@@ -184,7 +207,34 @@ export default async function TradePage({
           </div>
         </div>
 
-        <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+        <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-2">
+          {watchRows.length > 0 && (
+            <Card>
+              <CardTitle>Your watchlist</CardTitle>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {watchRows.map((w) => {
+                  const c = closes.get(w.symbol);
+                  return (
+                    <Link
+                      key={w.symbol}
+                      href={`/trade?symbol=${w.symbol}`}
+                      className={cx(
+                        "rounded-lg border px-3 py-2.5 transition-colors hover:border-accent",
+                        stock?.symbol === w.symbol ? "border-accent bg-accent-soft" : "border-line",
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-ink">{w.symbol}</span>
+                        {c && <Change close={c.close} prevClose={c.prevClose} />}
+                      </div>
+                      <div className="truncate text-xs text-muted">{w.name}</div>
+                      {c && <div className="num mt-1 text-sm text-ink">{inr(c.close)}</div>}
+                    </Link>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
           <Card>
             <CardTitle>Popular stocks</CardTitle>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

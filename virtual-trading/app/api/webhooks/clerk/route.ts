@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { getDb } from "@/lib/db";
 import { users } from "@/lib/schema";
+import { deleteUserData } from "@/lib/account-admin";
 
 export async function POST(request: NextRequest) {
   let event;
@@ -24,6 +25,11 @@ export async function POST(request: NextRequest) {
       .insert(users)
       .values({ id, email: primaryEmail, displayName })
       .onConflictDoNothing({ target: users.id });
+  }
+
+  if (event.type === "user.deleted" && event.data.id) {
+    // The privacy notice promises deletion of the account and its practice data.
+    await deleteUserData(event.data.id);
   }
 
   return new Response("OK", { status: 200 });

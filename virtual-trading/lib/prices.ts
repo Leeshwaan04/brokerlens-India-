@@ -61,13 +61,16 @@ export async function closesWithChange(symbols: string[]): Promise<Map<string, C
   const dates = await latestTradeDates(2);
   if (dates.length === 0) return out;
   const rows = await getDb()
-    .select({ symbol: dailyPrices.symbol, tradeDate: dailyPrices.tradeDate, close: dailyPrices.close })
+    .select({ symbol: dailyPrices.symbol, tradeDate: dailyPrices.tradeDate, close: dailyPrices.close, nsePrevClose: dailyPrices.prevClose })
     .from(dailyPrices)
     .where(and(inArray(dailyPrices.symbol, unique), inArray(dailyPrices.tradeDate, dates)));
   for (const s of unique) {
     const latest = rows.find((r) => r.symbol === s && r.tradeDate === dates[0]);
     const prev = dates[1] ? rows.find((r) => r.symbol === s && r.tradeDate === dates[1]) : undefined;
-    if (latest) out.set(s, { close: Number(latest.close), tradeDate: latest.tradeDate, prevClose: prev ? Number(prev.close) : null });
+    // Prefer NSE's printed previous close: on a split or bonus ex-date it is
+    // adjusted, so the day's change does not show the ratio as a crash.
+    const prevClose = latest?.nsePrevClose != null ? Number(latest.nsePrevClose) : prev ? Number(prev.close) : null;
+    if (latest) out.set(s, { close: Number(latest.close), tradeDate: latest.tradeDate, prevClose });
   }
   const missing = unique.filter((s) => !out.has(s));
   if (missing.length) {

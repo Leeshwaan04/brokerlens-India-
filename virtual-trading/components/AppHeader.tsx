@@ -31,6 +31,9 @@ export function AppHeader({
                   Practising with <span className="font-medium text-ink">{brokerBrand}</span>
                 </Link>
               )}
+              <Link href="/account" className="text-sm text-muted hover:text-ink">
+                Account
+              </Link>
               {isDevAuth() ? <Pill tone="warn">Local dev mode</Pill> : <UserButton />}
             </>
           ) : (

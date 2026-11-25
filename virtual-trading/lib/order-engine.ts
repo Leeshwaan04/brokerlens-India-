@@ -39,7 +39,12 @@ export interface PlaceOrderInput {
   symbol: string;
   side: OrderSide;
   qty: number;
+  // Idempotency key from the order ticket; the same key never creates a
+  // second order for the same account.
+  clientOrderId?: string;
 }
+
+const CLIENT_ORDER_ID = /^[A-Za-z0-9-]{8,64}$/;
 
 export interface PlaceOrderResult {
   orderId: string;
@@ -106,6 +111,19 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     throw new OrderPlacementError("No virtual account found. Select a broker first.");
   }
 
+  // A repeat of an order already placed (a double-click, a retried request)
+  // returns that order instead of running the checks again, which would
+  // otherwise count the first order's reservation against the repeat.
+  const clientOrderId = input.clientOrderId && CLIENT_ORDER_ID.test(input.clientOrderId) ? input.clientOrderId : null;
+  if (clientOrderId) {
+    const [existing] = await db
+      .select({ id: orders.id, targetTradeDate: orders.targetTradeDate })
+      .from(orders)
+      .where(and(eq(orders.accountId, account.id), eq(orders.clientOrderId, clientOrderId)))
+      .limit(1);
+    if (existing) return { orderId: existing.id, targetTradeDate: existing.targetTradeDate };
+  }
+
   const [stock] = await db
     .select({ symbol: stockUniverse.symbol, isActive: stockUniverse.isActive })
     .from(stockUniverse)
@@ -162,10 +180,19 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       qty: input.qty,
       targetTradeDate,
       status: "PENDING",
+      clientOrderId,
     })
-    .returning({ id: orders.id });
+    .onConflictDoNothing({ target: [orders.accountId, orders.clientOrderId] })
+    .returning({ id: orders.id, targetTradeDate: orders.targetTradeDate });
+  if (inserted) return { orderId: inserted.id, targetTradeDate: inserted.targetTradeDate };
 
-  return { orderId: inserted.id, targetTradeDate };
+  // Lost a race with an identical request that inserted first.
+  const [winner] = await db
+    .select({ id: orders.id, targetTradeDate: orders.targetTradeDate })
+    .from(orders)
+    .where(and(eq(orders.accountId, account.id), eq(orders.clientOrderId, clientOrderId!)))
+    .limit(1);
+  return { orderId: winner.id, targetTradeDate: winner.targetTradeDate };
 }
 
 /** Cancels a PENDING order, only if it belongs to this user. Returns whether it did. */
@@ -206,6 +233,16 @@ export async function settlePendingOrders(tradeDate: string): Promise<{ settled:
 
   for (const order of pending) {
     await db.transaction(async (tx) => {
+      // Claim the order. If another run is settling it right now, skip it;
+      // if that run already finished, it is no longer PENDING. Either way it
+      // can never be filled twice.
+      const [claimed] = await tx
+        .select({ id: orders.id })
+        .from(orders)
+        .where(and(eq(orders.id, order.id), eq(orders.status, "PENDING")))
+        .for("update", { skipLocked: true });
+      if (!claimed) return;
+
       const [priceRow] = await tx
         .select({ close: dailyPrices.close })
         .from(dailyPrices)
@@ -217,11 +254,13 @@ export async function settlePendingOrders(tradeDate: string): Promise<{ settled:
       }
       const fillPrice = Number(priceRow.close);
 
+      // Lock the account so two orders settling at once cannot both read the
+      // same cash balance and overwrite each other's update.
       const [account] = await tx
         .select()
         .from(virtualAccounts)
         .where(eq(virtualAccounts.id, order.accountId))
-        .limit(1);
+        .for("update");
       if (!account) return;
 
       const [broker] = await tx
@@ -367,30 +406,14 @@ export async function settlePendingOrders(tradeDate: string): Promise<{ settled:
   return { settled, rejected };
 }
 
-/**
- * Settles every PENDING order due on or before upToDate whose target date
- * now has an ingested close. The cron route used to settle only the one date
- * it had just ingested, so an order targeting a day the cron missed (a
- * failed run, a CI outage) stayed PENDING forever. Dates still without a
- * close are left PENDING for a later run or a ?date= backfill.
- */
-export async function settleAllDue(upToDate: string): Promise<{ settled: number; rejected: number; dates: string[] }> {
-  const db = getDb();
-  const due = await db
+/** Distinct target dates of PENDING orders on or before upToDate, oldest first. */
+export async function pendingDueDates(upToDate: string): Promise<string[]> {
+  const rows = await getDb()
     .selectDistinct({ targetTradeDate: orders.targetTradeDate })
     .from(orders)
     .where(and(eq(orders.status, "PENDING"), lte(orders.targetTradeDate, upToDate)))
     .orderBy(asc(orders.targetTradeDate));
-  let settled = 0;
-  let rejected = 0;
-  const dates: string[] = [];
-  for (const { targetTradeDate } of due) {
-    const r = await settlePendingOrders(targetTradeDate);
-    settled += r.settled;
-    rejected += r.rejected;
-    if (r.settled + r.rejected > 0) dates.push(targetTradeDate);
-  }
-  return { settled, rejected, dates };
+  return rows.map((r) => r.targetTradeDate);
 }
 
 /** Distinct target dates of PENDING orders, on or before upToDate, that have no ingested close yet. */
