@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { track } from "@/lib/events";
 import { getCurrentAccount } from "@/lib/auth";
 import { getAccountSummary } from "@/lib/account-summary";
 import { getAllBrokers, toReplayBroker } from "@/lib/brokers";
@@ -47,6 +49,20 @@ export default async function CostsPage({ searchParams }: { searchParams: Promis
   const saving = Math.max(0, yours.totalCharges - cheapest.totalCharges);
   const turnover = hasFills ? summary.turnoverTraded : SAMPLE_TURNOVER * 2;
   const savingPerLakh = turnover > 0 ? (saving / turnover) * 1_00_000 : 0;
+  const yourRank = rows.find((r) => r.id === summary.broker.id)?.rank ?? null;
+  const accountId = summary.account.id;
+  after(() =>
+    track(
+      "replay_viewed",
+      {
+        fills: summary.fills.length,
+        sample: !hasFills,
+        your_rank: yourRank,
+        saving_bucket: saving < 1 ? "none" : saving < 100 ? "under_100" : saving < 1000 ? "100_1000" : "1000_plus",
+      },
+      accountId,
+    ),
+  );
 
   return (
     <>

@@ -4,6 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   ctaClicks,
+  events,
   holdings,
   orders,
   performanceSnapshots,
@@ -35,8 +36,8 @@ export async function resetPortfolio(accountId: string): Promise<void> {
 
 /**
  * Deletes a user and every row tied to them, as the privacy notice promises.
- * Account-opening clicks are kept as anonymous counts: the link to the
- * account is removed, so nothing left identifies the person.
+ * Account-opening clicks and usage events are kept as anonymous counts: the
+ * link to the account is removed, so nothing left identifies the person.
  */
 export async function deleteUserData(userId: string): Promise<boolean> {
   return getDb().transaction(async (tx) => {
@@ -44,6 +45,7 @@ export async function deleteUserData(userId: string): Promise<boolean> {
     const ids = accounts.map((a) => a.id);
     if (ids.length) {
       await tx.update(ctaClicks).set({ accountId: null }).where(inArray(ctaClicks.accountId, ids));
+      await tx.update(events).set({ accountId: null }).where(inArray(events.accountId, ids));
       await tx.delete(watchlistItems).where(inArray(watchlistItems.accountId, ids));
       await tx.delete(realizedPnlEvents).where(inArray(realizedPnlEvents.accountId, ids));
       await tx.delete(performanceSnapshots).where(inArray(performanceSnapshots.accountId, ids));

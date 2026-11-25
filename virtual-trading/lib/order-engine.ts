@@ -26,7 +26,15 @@ import { latestClose, latestCloses } from "./prices";
 
 export const MAX_ORDER_QTY = 1_000_000;
 
-export class OrderPlacementError extends Error {}
+export class OrderPlacementError extends Error {
+  constructor(
+    message: string,
+    // Stable machine-readable reason for analytics; the message is for people.
+    readonly code: string = "other",
+  ) {
+    super(message);
+  }
+}
 
 async function loadHolidaySet(): Promise<Set<string>> {
   const db = getDb();
@@ -92,13 +100,13 @@ export async function getReservations(accountId: string, fees: DeliveryFees): Pr
  */
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
   if (!(ORDER_SIDES as readonly string[]).includes(input.side)) {
-    throw new OrderPlacementError("Choose Buy or Sell.");
+    throw new OrderPlacementError("Choose Buy or Sell.", "invalid_side");
   }
   if (!Number.isInteger(input.qty) || input.qty <= 0) {
-    throw new OrderPlacementError("Quantity must be a positive whole number.");
+    throw new OrderPlacementError("Quantity must be a positive whole number.", "invalid_qty");
   }
   if (input.qty > MAX_ORDER_QTY) {
-    throw new OrderPlacementError("Quantity is larger than this simulator accepts in one order.");
+    throw new OrderPlacementError("Quantity is larger than this simulator accepts in one order.", "qty_too_large");
   }
 
   const db = getDb();
@@ -108,7 +116,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     .where(eq(virtualAccounts.userId, input.userId))
     .limit(1);
   if (!account) {
-    throw new OrderPlacementError("No virtual account found. Select a broker first.");
+    throw new OrderPlacementError("No virtual account found. Select a broker first.", "no_account");
   }
 
   // A repeat of an order already placed (a double-click, a retried request)
@@ -130,17 +138,17 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     .where(eq(stockUniverse.symbol, input.symbol))
     .limit(1);
   if (!stock || !stock.isActive) {
-    throw new OrderPlacementError("That stock is not available in this simulator.");
+    throw new OrderPlacementError("That stock is not available in this simulator.", "not_available");
   }
 
   const last = await latestClose(input.symbol);
   if (last === null) {
-    throw new OrderPlacementError("No price data on file for this symbol yet.");
+    throw new OrderPlacementError("No price data on file for this symbol yet.", "no_price");
   }
 
   const [broker] = await db.select().from(brokerCatalog).where(eq(brokerCatalog.id, account.brokerId)).limit(1);
   if (!broker) {
-    throw new OrderPlacementError("Your selected broker is no longer available. Choose a broker again.");
+    throw new OrderPlacementError("Your selected broker is no longer available. Choose a broker again.", "broker_missing");
   }
   const fees = deliveryFeesFromRow(broker);
   const reservations = await getReservations(account.id, fees);
@@ -150,6 +158,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     if (estimateBuyCost(last.close, input.qty, fees) > available) {
       throw new OrderPlacementError(
         "Not enough free virtual cash for this order, counting buys you already have pending.",
+        "insufficient_cash",
       );
     }
   } else {
@@ -164,6 +173,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         free > 0
           ? `You can sell up to ${free} shares, counting sells you already have pending.`
           : "You do not hold any free shares of this stock to sell.",
+        "insufficient_shares",
       );
     }
   }

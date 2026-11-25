@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { ensureUserRow } from "@/lib/auth";
+import { readCampaign, track } from "@/lib/events";
 import { getSessionUserId } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { brokerCatalog, virtualAccounts } from "@/lib/schema";
@@ -27,10 +28,12 @@ async function selectBroker(formData: FormData) {
   if (!broker) redirect("/onboarding/broker");
 
   await ensureUserRow(userId);
-  await db
+  const [created] = await db
     .insert(virtualAccounts)
     .values({ userId, brokerId: broker.id, cashBalance: STARTING_BALANCE, startingBalance: STARTING_BALANCE })
-    .onConflictDoNothing({ target: virtualAccounts.userId });
+    .onConflictDoNothing({ target: virtualAccounts.userId })
+    .returning({ id: virtualAccounts.id });
+  if (created) await track("onboarding_completed", { broker_id: broker.id, ...(await readCampaign()) }, created.id);
 
   redirect("/dashboard");
 }

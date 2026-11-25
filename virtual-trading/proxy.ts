@@ -3,6 +3,7 @@
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { isDevAuth } from "@/lib/session";
+import { CAMPAIGN_COOKIE, encodeCampaign } from "@/lib/events";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -20,11 +21,26 @@ const clerk = clerkMiddleware(async (auth, req) => {
   }
 });
 
-export default function proxy(req: NextRequest, event: NextFetchEvent) {
+// Arriving with utm_* tags: keep just the tags for 30 minutes so the
+// campaign is still known when the visitor finishes signing up.
+function rememberCampaign(req: NextRequest, res: Response | void | null | undefined) {
+  const tags = encodeCampaign(req.nextUrl.searchParams);
+  if (!tags || !(res instanceof NextResponse)) return res;
+  res.cookies.set(CAMPAIGN_COOKIE, tags, {
+    maxAge: 1800,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+  return res;
+}
+
+export default async function proxy(req: NextRequest, event: NextFetchEvent) {
   // Local development without a Clerk instance (see lib/session.ts). Never
   // true in a production build.
-  if (isDevAuth()) return NextResponse.next();
-  return clerk(req, event);
+  if (isDevAuth()) return rememberCampaign(req, NextResponse.next());
+  return rememberCampaign(req, await clerk(req, event));
 }
 
 export const config = {

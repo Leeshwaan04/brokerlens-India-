@@ -49,6 +49,16 @@ export default async function PrivacyPage() {
                 broker, we record which broker and which part of the app the link was on, tied to your practice account if
                 you are signed in. We do not store your IP address, browser details or any other identifier with it.
               </li>
+              <li>
+                <span className="text-ink">How you use the app.</span> A short record of key steps, such as opening the
+                cost replay, switching broker, an order the app could not accept and why, and the date you last used the
+                app. These are tied to your practice account and hold no amounts beyond broad ranges.
+              </li>
+              <li>
+                <span className="text-ink">How you found us.</span> If you arrive from a link carrying campaign tags (such as
+                utm_source), we keep just those tags in a cookie for 30 minutes, and save them with your account if you sign
+                up in that time. The cookie holds no identifier and is used for nothing else.
+              </li>
             </ul>
           </section>
 
@@ -64,8 +74,9 @@ export default async function PrivacyPage() {
           <section>
             <h2>Why we use it</h2>
             <p>
-              To run your practice account, show your portfolio, performance and broker cost comparisons, and to measure
-              which parts of the app lead people to open a broker account. We do not sell your data or use it for
+              To run your practice account, show your portfolio, performance and broker cost comparisons, to find and fix
+              the places where the app gets in your way, and to measure which parts of the app and which links bring people
+              here and lead them to open a broker account. We do not sell your data or use it for
               advertising profiles.
             </p>
           </section>
@@ -82,10 +93,11 @@ export default async function PrivacyPage() {
           <section>
             <h2>How long we keep it, and your choices</h2>
             <p>
-              We keep your account and practice history while your account exists. To see what we hold about you, correct
-              it, or have your account and all its practice data deleted, email{" "}
-              <span className="font-medium text-ink">{CONTACT}</span> from the address on your account and we will act on
-              it.
+              We keep your account and practice history while your account exists. You can start over or delete your
+              account and all its practice data yourself from the Account page. When an account is deleted, its
+              account-opening clicks and usage records stay only as anonymous counts. To see what we hold about you or
+              correct it, email <span className="font-medium text-ink">{CONTACT}</span> from the address on your account
+              and we will act on it.
             </p>
           </section>
         </div>

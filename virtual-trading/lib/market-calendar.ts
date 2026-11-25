@@ -48,6 +48,11 @@ export function isoDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+/** The calendar date in India (IST, UTC+5:30) at the given instant. */
+export function istDate(now: Date = new Date()): string {
+  return new Date(now.getTime() + 330 * 60_000).toISOString().slice(0, 10);
+}
+
 /**
  * Up to maxCount trading-day dates, most recent first, starting at isoDate
  * itself (included only if isoDate is a trading day) and walking backward

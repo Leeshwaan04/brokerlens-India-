@@ -2,7 +2,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { getDb } from "./db";
 import { users, virtualAccounts } from "./schema";
+import { after } from "next/server";
 import { devAuthUserId, getSessionUserId } from "./session";
+import { touchLastActive } from "./events";
 
 export interface CurrentAccount {
   userId: string;
@@ -21,6 +23,7 @@ export async function getCurrentAccount(): Promise<CurrentAccount | null> {
   const db = getDb();
   const [account] = await db.select().from(virtualAccounts).where(eq(virtualAccounts.userId, userId)).limit(1);
 
+  if (account) after(() => touchLastActive(account.id));
   return { userId, account: account ?? null };
 }
 

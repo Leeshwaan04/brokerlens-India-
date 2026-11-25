@@ -15,6 +15,7 @@ import {
   uniqueIndex,
   index,
   check,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -99,6 +100,9 @@ export const virtualAccounts = pgTable("virtual_accounts", {
   cashBalance: numeric("cash_balance").notNull(),
   startingBalance: numeric("starting_balance").notNull().default("1000000"), // virtual Rs 10L
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  // A date, not a timestamp, written at most once a day: enough for daily and
+  // weekly active users and retention without logging every visit.
+  lastActiveOn: date("last_active_on"),
 });
 
 export const ORDER_SIDES = ["BUY", "SELL"] as const;
@@ -265,6 +269,34 @@ export const ctaClicks = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("cta_clicks_broker_created_idx").on(t.brokerId, t.createdAt)],
+);
+
+// First-party product analytics, written on the server (route handlers,
+// server actions, after() on page renders) so ad blockers cannot drop them.
+// Properties never hold IP addresses, user agents, free text or exact money
+// amounts (value buckets only). account_id is null for anonymous views.
+export const EVENT_NAMES = [
+  "landing_viewed",
+  "signup_viewed",
+  "onboarding_completed",
+  "order_rejected",
+  "replay_viewed",
+  "broker_switched",
+  "portfolio_reset",
+  "account_deleted",
+] as const;
+export type EventName = (typeof EVENT_NAMES)[number];
+
+export const events = pgTable(
+  "events",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    accountId: uuid("account_id").references(() => virtualAccounts.id),
+    name: text("name").notNull().$type<EventName>(),
+    props: jsonb("props").$type<Record<string, string | number | boolean | null>>().notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("events_name_created_idx").on(t.name, t.createdAt)],
 );
 
 // Observability for the daily EOD-sync cron job (Slice 2).

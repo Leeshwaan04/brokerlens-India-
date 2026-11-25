@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { readCampaign, track } from "@/lib/events";
 import { getSessionUserId } from "@/lib/session";
 import { getAllBrokers, toReplayBroker } from "@/lib/brokers";
 import { rankBrokersForFills } from "@/lib/cost-replay";
@@ -32,6 +34,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   const { amount: rawAmount } = await searchParams;
   const amount = AMOUNTS.includes(Number(rawAmount)) ? Number(rawAmount) : 1_00_000;
+  // Read before after(): request APIs are not available inside its callback.
+  const campaign = await readCampaign();
+  after(() => track("landing_viewed", { amount, ...campaign }));
 
   const [all, dates] = await Promise.all([getAllBrokers(), latestTradeDates(1)]);
   const rankable = all.filter((b) => b.feeScheduleComplete);

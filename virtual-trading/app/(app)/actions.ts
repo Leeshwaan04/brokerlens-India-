@@ -9,6 +9,7 @@ import { getDb } from "@/lib/db";
 import { brokerCatalog, stockUniverse, virtualAccounts, watchlistItems } from "@/lib/schema";
 import { deleteUserData, resetPortfolio } from "@/lib/account-admin";
 import { isDevAuth } from "@/lib/session";
+import { track } from "@/lib/events";
 import { cancelPendingOrder, placeOrder, OrderPlacementError } from "@/lib/order-engine";
 
 export interface OrderActionState {
@@ -48,6 +49,11 @@ export async function placeOrderAction(_prev: OrderActionState, formData: FormDa
       targetTradeDate: result.targetTradeDate,
     };
   } catch (err) {
+    await track(
+      "order_rejected",
+      { reason: err instanceof OrderPlacementError ? err.code : "error", side, symbol },
+      current.account.id,
+    );
     return {
       status: "error",
       message: err instanceof OrderPlacementError ? err.message : "Could not place the order. Please try again.",
@@ -77,6 +83,7 @@ export async function switchBrokerAction(formData: FormData): Promise<void> {
   if (!broker) redirect(returnTo);
 
   await db.update(virtualAccounts).set({ brokerId: broker.id }).where(eq(virtualAccounts.id, current.account.id));
+  await track("broker_switched", { from: current.account.brokerId, to: broker.id, via: returnTo.slice(1) }, current.account.id);
   // Header shows the practice broker, so refresh the whole layout, not one page.
   revalidatePath("/", "layout");
   redirect(`${returnTo}?switched=${encodeURIComponent(broker.id)}`);
@@ -96,6 +103,7 @@ export async function resetPortfolioAction(_prev: ConfirmActionState, formData: 
     return { status: "error", message: 'Type RESET to confirm. Nothing was changed.' };
   }
   await resetPortfolio(current.account.id);
+  await track("portfolio_reset", {}, current.account.id);
   revalidatePath("/", "layout");
   redirect("/dashboard");
 }
@@ -108,6 +116,7 @@ export async function deleteAccountAction(_prev: ConfirmActionState, formData: F
     return { status: "error", message: 'Type DELETE to confirm. Nothing was changed.' };
   }
   await deleteUserData(current.userId);
+  await track("account_deleted"); // anonymous: the account no longer exists
   if (!isDevAuth()) {
     const clerk = await clerkClient();
     await clerk.users.deleteUser(current.userId);
