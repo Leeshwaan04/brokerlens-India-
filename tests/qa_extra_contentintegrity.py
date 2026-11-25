@@ -522,6 +522,45 @@ def run(check, ROOT, load):
         pub_src = _read(ROOT, "pipeline", "publish.py")
         check("contentintegrity: the sitemap lists /stock-market-holidays/ only when the page was built",
               'if os.path.isfile(os.path.join(ROOT, "site", "stock-market-holidays", "index.html")):' in pub_src)
+
+    # ------------------------------------------------------------------
+    # 12. /paper-trading-apps-india/ is hand-written, so it is held to what
+    #     each platform says about itself: a source on every row, live or
+    #     delayed price claims attributed ("says"), one date for the visible
+    #     "Last checked" and dateModified, FAQ schema equal to the visible
+    #     text, no dashes, and no link to the unlaunched practice app.
+    # ------------------------------------------------------------------
+    try:
+        from pipeline import paper_trading_guide as PTG
+        import pipeline.publish as PUB
+    except ImportError as e:
+        PTG = None
+        check("contentintegrity: paper_trading_guide importable", False, str(e))
+    if PTG:
+        import html as _html
+        page = PTG.render(PUB._esc, PUB._REGISTRY_PAGE_HEAD, PUB._REGISTRY_PAGE_FOOT, PUB._breadcrumb, PUB.SITE_URL)
+        ld = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', page, re.S).group(1))
+        graph = {g["@type"]: g for g in ld["@graph"]}
+        lc = PTG.LAST_CHECKED
+        check("contentintegrity: paper trading guide's visible 'Last checked' date and dateModified are the same date",
+              ("Last checked: %d %s %d" % (lc.day, lc.strftime("%B"), lc.year)) in page
+              and graph["Article"]["dateModified"] == lc.isoformat())
+        check("contentintegrity: every paper trading platform row cites a source, and every source is linked on the page",
+              all(p["sources"] and all(k in PTG.SOURCES for k in p["sources"]) for p in PTG.PLATFORMS)
+              and all(PUB._esc(url) in page for _label, url in PTG.SOURCES.values()))
+        check("contentintegrity: a platform's live or delayed price claim is attributed to the platform, never stated as ours",
+              all("says" in p["prices"] for p in PTG.PLATFORMS
+                  if re.search(r"\b(live|delayed)\b", p["prices"], re.I)))
+        visible = [(_html.unescape(q), _html.unescape(a)) for q, a in re.findall(
+            r'<h3 style="font-size:16px[^>]*>(.*?)</h3><p class="small"[^>]*>(.*?)</p>', page)]
+        check("contentintegrity: paper trading guide FAQPage text equals the visible questions and answers",
+              visible == [(m["name"], m["acceptedAnswer"]["text"]) for m in graph["FAQPage"]["mainEntity"]])
+        check("contentintegrity: paper trading guide has no em or en dashes and no link to the unlaunched practice app",
+              not any(d in page for d in ("—", "–", "&mdash;", "&ndash;", "&#8212;", "&#8211;"))
+              and "paper.brokerlens" not in page)
+        check("contentintegrity: the sitemap lists /paper-trading-apps-india/ only when the page was built",
+              'if os.path.isfile(os.path.join(ROOT, "site", "paper-trading-apps-india", "index.html")):'
+              in _read(ROOT, "pipeline", "publish.py"))
     try:
         from pipeline.stock_compare_engine import render_stock_comparison_page as RSC
     except ImportError:

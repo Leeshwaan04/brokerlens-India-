@@ -598,6 +598,9 @@ def build():
     if not holidays_page.write(os.path.join(ROOT, "site"), _esc, _REGISTRY_PAGE_HEAD, _REGISTRY_PAGE_FOOT,
                                _breadcrumb, _write_text, SITE_URL):
         log("stock market holidays page skipped: no usable NSE holiday file", "warn")
+    from . import paper_trading_guide
+    paper_trading_guide.write(os.path.join(ROOT, "site"), _esc, _REGISTRY_PAGE_HEAD, _REGISTRY_PAGE_FOOT,
+                              _breadcrumb, _write_text, SITE_URL)
     from . import bse_only as _bse_only
     bse_scrips, bse_fresh = _bse_only.load_universe(bse_d.get("bse_only"), equity_companies, _stock_slug)
     active_stock_syms = {c.get("symbol", "").upper().strip() for c in equity_companies} | {str(s.get("scrip_cd") or "").upper().strip() for s in bse_scrips}
@@ -1264,6 +1267,7 @@ _REGISTRY_PAGE_FOOT = f"""</main>
   <a href="/ipo/sme/">SME IPOs →</a> ·
   <a href="/ipo/subscription/">IPO subscription status →</a> ·
   <a href="/stock-market-holidays/">NSE holidays &amp; Muhurat trading →</a> ·
+  <a href="/paper-trading-apps-india/">Paper trading apps in India →</a> ·
   <a href="/trade-costs/">Trade cost calculator →</a> ·
   <a href="/index/nifty-50/">Nifty 50 constituents →</a> ·
   <a href="/etf/niftybees/">Nifty 50 ETF: NIFTYBEES →</a></p>
@@ -8367,6 +8371,8 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     # Listed only when it was actually built (it needs data/manual/nse_holidays.json).
     if os.path.isfile(os.path.join(ROOT, "site", "stock-market-holidays", "index.html")):
         core_urls.append("/stock-market-holidays/")
+    if os.path.isfile(os.path.join(ROOT, "site", "paper-trading-apps-india", "index.html")):
+        core_urls.append("/paper-trading-apps-india/")
     for slug in (report_slugs or []):
         core_urls.append("/reports/%s/" % slug)
     for slug in (calc_slugs or []):
