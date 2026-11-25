@@ -6,7 +6,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "BrokerLens Virtual Trading", template: "%s | BrokerLens Virtual Trading" },
   description:
-    "Practise investing with real NSE closing prices, delayed by a day for investor education, and see what every broker would really charge for the trades you make.",
+    "Practise investing with official NSE closing prices and see what every broker would really charge for the trades you make.",
 };
 
 export const viewport: Viewport = {

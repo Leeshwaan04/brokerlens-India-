@@ -78,8 +78,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 </a>
               </div>
               <p className="mt-4 text-xs text-muted">
-                No real money, no exchange orders, no account opened. Prices are official closes, delayed by a day for
-                investor education.
+                No real money, no exchange orders, no account opened. Prices are official NSE closes, never live
+                prices.
               </p>
             </div>
 
