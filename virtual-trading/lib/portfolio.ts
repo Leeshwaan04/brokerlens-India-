@@ -2,43 +2,49 @@
 // performance pages so they all compute holdings value and unrealized P&L
 // the same way.
 
-import { eq, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getDb } from "./db";
-import { holdings, dailyPrices } from "./schema";
+import { holdings, stockUniverse } from "./schema";
+import { latestCloses } from "./prices";
 
 export interface ValuedHolding {
   symbol: string;
+  name: string;
   qty: number;
   avgCost: number;
   lastClose: number | null;
+  lastCloseDate: string | null;
   marketValue: number;
   unrealizedPnl: number | null;
 }
 
-async function latestClose(symbol: string): Promise<number | null> {
+export async function getValuedHoldings(accountId: string, asOf?: string): Promise<ValuedHolding[]> {
   const db = getDb();
-  const [row] = await db
-    .select({ close: dailyPrices.close })
-    .from(dailyPrices)
-    .where(eq(dailyPrices.symbol, symbol))
-    .orderBy(desc(dailyPrices.tradeDate))
-    .limit(1);
-  return row ? Number(row.close) : null;
-}
+  const rows = await db
+    .select({ symbol: holdings.symbol, qty: holdings.qty, avgCost: holdings.avgCost, name: stockUniverse.name })
+    .from(holdings)
+    .innerJoin(stockUniverse, eq(holdings.symbol, stockUniverse.symbol))
+    .where(eq(holdings.accountId, accountId));
+  const closes = await latestCloses(rows.map((r) => r.symbol), asOf);
 
-export async function getValuedHoldings(accountId: string): Promise<ValuedHolding[]> {
-  const db = getDb();
-  const rows = await db.select().from(holdings).where(eq(holdings.accountId, accountId));
-
-  return Promise.all(
-    rows.map(async (h) => {
+  return rows
+    .map((h) => {
       const avgCost = Number(h.avgCost);
-      const lastClose = await latestClose(h.symbol);
-      const marketValue = lastClose !== null ? lastClose * h.qty : avgCost * h.qty;
-      const unrealizedPnl = lastClose !== null ? (lastClose - avgCost) * h.qty : null;
-      return { symbol: h.symbol, qty: h.qty, avgCost, lastClose, marketValue, unrealizedPnl };
-    }),
-  );
+      const c = closes.get(h.symbol) ?? null;
+      const marketValue = c ? c.close * h.qty : avgCost * h.qty;
+      const unrealizedPnl = c ? (c.close - avgCost) * h.qty : null;
+      return {
+        symbol: h.symbol,
+        name: h.name,
+        qty: h.qty,
+        avgCost,
+        lastClose: c?.close ?? null,
+        lastCloseDate: c?.tradeDate ?? null,
+        marketValue,
+        unrealizedPnl,
+      };
+    })
+    .sort((a, b) => b.marketValue - a.marketValue);
 }
 
 export function totalHoldingsValue(valued: ValuedHolding[]): number {
@@ -47,4 +53,10 @@ export function totalHoldingsValue(valued: ValuedHolding[]): number {
 
 export function totalUnrealizedPnl(valued: ValuedHolding[]): number {
   return valued.reduce((sum, h) => sum + (h.unrealizedPnl ?? 0), 0);
+}
+
+export function largestWeight(valued: ValuedHolding[]): number | null {
+  const total = totalHoldingsValue(valued);
+  if (total <= 0) return null;
+  return valued.reduce((max, h) => Math.max(max, h.marketValue), 0) / total;
 }

@@ -9,11 +9,15 @@ import { getDb } from "@/lib/db";
 import { dailyPrices, stockUniverse, marketHolidays, priceSyncRuns } from "@/lib/schema";
 import { fetchBhavcopy, type DailyPriceRow } from "@/lib/bhavcopy";
 import { isoDateOnly, previousTradingDaysFrom } from "@/lib/market-calendar";
-import { settlePendingOrders } from "@/lib/order-engine";
+import { pendingDatesMissingPrices, settleAllDue } from "@/lib/order-engine";
+import { writeSnapshotsFor } from "@/lib/snapshots";
 
 // Covers a long weekend plus a missed cron run or two; previousTradingDaysFrom
 // itself also refuses to walk back more than 60 calendar days regardless.
 const MAX_WALK_BACK_ATTEMPTS = 10;
+// Most earlier days a single run will backfill for orders still waiting on
+// a close that was never ingested (missed runs, a CI outage).
+const MAX_BACKFILL_DATES = 15;
 
 async function upsertDailyPrices(tradeDate: string, rows: DailyPriceRow[]) {
   const db = getDb();
@@ -85,14 +89,32 @@ export async function GET(request: NextRequest) {
     }
 
     await upsertDailyPrices(iso, result.rows);
-    const settlement = await settlePendingOrders(iso);
     await db.insert(priceSyncRuns).values({ tradeDate: iso, rowsIngested: result.rows.length, status: "ok" });
+
+    // Backfill any earlier trading day a PENDING order is still waiting on.
+    const backfilled: string[] = [];
+    for (const missing of (await pendingDatesMissingPrices(iso)).slice(0, MAX_BACKFILL_DATES)) {
+      if (holidaySet.has(missing)) continue;
+      const [my, mm, md] = missing.split("-").map(Number);
+      const back = await fetchBhavcopy(new Date(Date.UTC(my, mm - 1, md)), allowedSymbols);
+      if (back.status === "ok" && back.rows.length > 0) {
+        await upsertDailyPrices(missing, back.rows);
+        await db.insert(priceSyncRuns).values({ tradeDate: missing, rowsIngested: back.rows.length, status: "ok" });
+        backfilled.push(missing);
+      }
+    }
+
+    const settlement = await settleAllDue(iso);
+    const snapshots = await writeSnapshotsFor(iso);
 
     return NextResponse.json({
       tradeDate: iso,
       rowsIngested: result.rows.length,
+      backfilled,
       settled: settlement.settled,
       rejected: settlement.rejected,
+      settledDates: settlement.dates,
+      snapshots,
     });
   }
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
-import { auth } from "@clerk/nextjs/server";
+import { getSessionUserId } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { orders, virtualAccounts } from "@/lib/schema";
 
@@ -16,7 +16,7 @@ async function loadOwnedOrder(userId: string, orderId: string) {
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await context.params;
@@ -27,7 +27,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await context.params;

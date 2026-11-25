@@ -21,6 +21,8 @@ type BrokerRateEntry = {
   account_open: number | null;
   cta_url: string;
   partner_badge: string | null;
+  cap_verified_asof: string | null;
+  fee_schedule_complete: boolean;
 };
 
 async function main() {
@@ -48,6 +50,8 @@ async function main() {
         accountOpen: b.account_open == null ? null : String(b.account_open),
         ctaUrl: b.cta_url,
         partnerBadge: b.partner_badge,
+        capVerifiedAsof: b.cap_verified_asof,
+        feeScheduleComplete: b.fee_schedule_complete,
         syncedAt,
       })
       .onConflictDoUpdate({
@@ -64,6 +68,8 @@ async function main() {
           accountOpen: b.account_open == null ? null : String(b.account_open),
           ctaUrl: b.cta_url,
           partnerBadge: b.partner_badge,
+          capVerifiedAsof: b.cap_verified_asof,
+          feeScheduleComplete: b.fee_schedule_complete,
           syncedAt,
         },
       });

@@ -1,26 +1,103 @@
 @import "tailwindcss";
 
+/* BrokerLens design tokens, ported from site/assets/css/tokens.css so the
+   simulator reads as part of the same product: deep indigo accent, Indian
+   market convention of green up and red down, same neutrals and dark mode. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  color-scheme: light dark;
+  --bg: #fbfbfa;
+  --bg-raised: #ffffff;
+  --bg-sunken: #f2f2f0;
+  --bg-sub: #f4f4f2;
+  --bg-hover: #f6f6f4;
+  --border: #e3e3df;
+  --border-strong: #cfcfc9;
+  --text: #1a1a18;
+  --text-muted: #6b6b64;
+  --text-faint: #96968d;
+  --text-invert: #fbfbfa;
+  --accent: #2f4a8f;
+  --accent-hover: #263d76;
+  --accent-soft: #eaeefa;
+  --accent-text: #2f4a8f;
+  --up: #0f7a4d;
+  --up-soft: #e6f4ec;
+  --down: #c0392b;
+  --down-soft: #fbeae8;
+  --warn: #9a6b00;
+  --warn-soft: #fdf3dc;
+  --info: #1f6a8f;
+  --info-soft: #e6f2f8;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #131316;
+    --bg-raised: #1b1b1f;
+    --bg-sunken: #0e0e11;
+    --bg-sub: #16161a;
+    --bg-hover: #23232a;
+    --border: #2c2c33;
+    --border-strong: #3d3d46;
+    --text: #ececef;
+    --text-muted: #a2a2ac;
+    --text-faint: #74747e;
+    --text-invert: #131316;
+    --accent: #8fa8e8;
+    --accent-hover: #a8bcf0;
+    --accent-soft: #1e2438;
+    --accent-text: #a8bcf0;
+    --up: #4cc38a;
+    --up-soft: #14291f;
+    --down: #f0736a;
+    --down-soft: #2d1917;
+    --warn: #e0b155;
+    --warn-soft: #2b2213;
+    --info: #6ab6d8;
+    --info-soft: #12242c;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-raised: var(--bg-raised);
+  --color-sunken: var(--bg-sunken);
+  --color-sub: var(--bg-sub);
+  --color-hover: var(--bg-hover);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-invert: var(--text-invert);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-text);
+  --color-up: var(--up);
+  --color-up-soft: var(--up-soft);
+  --color-down: var(--down);
+  --color-down-soft: var(--down-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

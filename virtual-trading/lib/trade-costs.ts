@@ -45,11 +45,14 @@ function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
-function brokerageForLeg(turnover: number, flat: number, pct: number): number {
+function brokerageForLeg(turnover: number, flat: number, pct: number, capVerified: boolean): number {
   const p = pct || 0;
   const pctCost = turnover * p;
   if (!flat && !p) return 0;
-  if (p > CAP_RULE_MAX_PCT) return pctCost; // uncapped ad-valorem plan, no flat-fee floor
+  // Uncapped ad-valorem plan, no flat-fee floor, unless the broker's own
+  // current pricing page confirms a genuine whichever-is-lower cap
+  // (cap_verified_asof, same exception as pipeline/trade_cost_engine.py).
+  if (p > CAP_RULE_MAX_PCT && !capVerified) return pctCost;
   if (!flat) return pctCost;
   return pctCost > 0 ? Math.min(flat, pctCost) : flat;
 }
@@ -63,9 +66,10 @@ export function computeBuyLegCharges(
   qty: number,
   deliveryFlat: number,
   deliveryPct: number,
+  capVerified = false,
 ): LegCharges {
   const turnover = round2(fillPrice * qty);
-  const brokerage = brokerageForLeg(turnover, deliveryFlat, deliveryPct);
+  const brokerage = brokerageForLeg(turnover, deliveryFlat, deliveryPct, capVerified);
   const stt = turnover * STT_DELIVERY_RATE;
   const exchangeCharges = turnover * NSE_TURNOVER_RATE;
   const sebiCharges = Math.max(turnover * SEBI_TURNOVER_RATE, SEBI_CHARGE_FLOOR);
@@ -98,9 +102,10 @@ export function computeSellLegCharges(
   deliveryFlat: number,
   deliveryPct: number,
   dpChargeRate: number,
+  capVerified = false,
 ): LegCharges {
   const turnover = round2(fillPrice * qty);
-  const brokerage = brokerageForLeg(turnover, deliveryFlat, deliveryPct);
+  const brokerage = brokerageForLeg(turnover, deliveryFlat, deliveryPct, capVerified);
   const stt = turnover * STT_DELIVERY_RATE;
   const exchangeCharges = turnover * NSE_TURNOVER_RATE;
   const sebiCharges = Math.max(turnover * SEBI_TURNOVER_RATE, SEBI_CHARGE_FLOOR);
@@ -119,4 +124,69 @@ export function computeSellLegCharges(
     dpCharge: round2(dpCharge),
     totalCharges,
   };
+}
+
+/** The delivery-segment fee fields the leg calculators need, per broker. */
+export interface DeliveryFees {
+  deliveryFlat: number;
+  deliveryPct: number;
+  dpCharge: number;
+  capVerified: boolean;
+}
+
+/** Converts a broker_catalog row (numerics arrive as strings) to DeliveryFees. */
+export function deliveryFeesFromRow(row: {
+  deliveryFlat: string;
+  deliveryPct: string;
+  dpCharge: string;
+  capVerifiedAsof: string | null;
+}): DeliveryFees {
+  return {
+    deliveryFlat: Number(row.deliveryFlat),
+    deliveryPct: Number(row.deliveryPct),
+    dpCharge: Number(row.dpCharge),
+    capVerified: row.capVerifiedAsof !== null,
+  };
+}
+
+export function buyLegFor(fillPrice: number, qty: number, fees: DeliveryFees): LegCharges {
+  return computeBuyLegCharges(fillPrice, qty, fees.deliveryFlat, fees.deliveryPct, fees.capVerified);
+}
+
+export function sellLegFor(fillPrice: number, qty: number, fees: DeliveryFees): LegCharges {
+  return computeSellLegCharges(fillPrice, qty, fees.deliveryFlat, fees.deliveryPct, fees.dpCharge, fees.capVerified);
+}
+
+/**
+ * Charges for buying and later selling the same turnover (one order each
+ * way), the same worked example brokerlens.in publishes on every broker's
+ * charges page (e.g. 5paisa, Rs 1,00,000 each way: Rs 284.20).
+ */
+export function roundTripCharges(turnover: number, fees: DeliveryFees): number {
+  return round2(buyLegFor(turnover, 1, fees).totalCharges + sellLegFor(turnover, 1, fees).totalCharges);
+}
+
+// An order fills at the NEXT official close, not the one shown when it is
+// placed, so a buy reserves its estimated cost plus this much headroom for
+// the price moving in between. Settlement still re-checks against the real
+// balance on the day it fills.
+export const PRICE_MOVE_BUFFER_PCT = 0.02;
+
+/** Estimated cash a buy needs: turnover and real buy-leg charges at the last close, plus headroom. */
+export function estimateBuyCost(lastClose: number, qty: number, fees: DeliveryFees): number {
+  const leg = buyLegFor(lastClose, qty, fees);
+  return leg.turnover + leg.totalCharges + leg.turnover * PRICE_MOVE_BUFFER_PCT;
+}
+
+/** Largest whole quantity whose estimated buy cost fits in freeCash (0 if none). */
+export function maxAffordableQty(lastClose: number, freeCash: number, fees: DeliveryFees): number {
+  if (lastClose <= 0 || freeCash <= 0) return 0;
+  let lo = 0;
+  let hi = Math.floor(freeCash / lastClose) + 1;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (estimateBuyCost(lastClose, mid, fees) <= freeCash) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo;
 }

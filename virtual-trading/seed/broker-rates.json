@@ -11,7 +11,9 @@
     "demat_amc": 300,
     "account_open": 200,
     "cta_url": "https://zerodha.com/open-account?c=ZE5729",
-    "partner_badge": "BrokerLens Partner"
+    "partner_badge": "BrokerLens Partner",
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "groww",
@@ -25,7 +27,9 @@
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://groww.in",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "angel-one",
@@ -39,7 +43,9 @@
     "demat_amc": 240,
     "account_open": 0,
     "cta_url": "https://www.angelone.in/open-demat-account?referral=BROKERLENS",
-    "partner_badge": "BrokerLens Partner"
+    "partner_badge": "BrokerLens Partner",
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "dhan",
@@ -53,7 +59,9 @@
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://dhan.co/?ref=BROKERLENS",
-    "partner_badge": "BrokerLens Partner"
+    "partner_badge": "BrokerLens Partner",
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "upstox",
@@ -67,7 +75,9 @@
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://upstox.com/open-account/?f=BROKERLENS",
-    "partner_badge": "BrokerLens Partner"
+    "partner_badge": "BrokerLens Partner",
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "5paisa",
@@ -81,7 +91,9 @@
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://www.5paisa.com/demat-account?ReferralCode=53293333&ReturnUrl=invest-open-account",
-    "partner_badge": "BrokerLens Partner"
+    "partner_badge": "BrokerLens Partner",
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "icici-direct",
@@ -95,21 +107,25 @@
     "demat_amc": 700,
     "account_open": 0,
     "cta_url": "https://www.icicidirect.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "kotak-securities",
     "brand": "Kotak Securities",
-    "tagline": "Trade Free Plan, zero brokerage for young investors",
+    "tagline": "0.20% equity delivery, Rs 10 or 0.05% intraday, whichever is lower",
     "delivery_flat": 0.0,
-    "delivery_pct": 0.0,
-    "intraday_flat": 0.0,
-    "intraday_pct": 0.0,
+    "delivery_pct": 0.002,
+    "intraday_flat": 10.0,
+    "intraday_pct": 0.0005,
     "dp_charge": 15.34,
     "demat_amc": 300,
     "account_open": 0,
     "cta_url": "https://www.kotaksecurities.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "hdfc-securities",
@@ -123,7 +139,9 @@
     "demat_amc": 500,
     "account_open": 0,
     "cta_url": "https://www.hdfcsec.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "motilal-oswal",
@@ -137,7 +155,9 @@
     "demat_amc": 400,
     "account_open": 0,
     "cta_url": "https://www.motilaloswal.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "sharekhan",
@@ -151,7 +171,9 @@
     "demat_amc": 400,
     "account_open": 0,
     "cta_url": "https://www.sharekhan.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "fyers",
@@ -165,7 +187,9 @@
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://fyers.in",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "paytm-money",
@@ -179,7 +203,9 @@
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://www.paytmmoney.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "sbi-securities",
@@ -193,7 +219,9 @@
     "demat_amc": 500,
     "account_open": 0,
     "cta_url": "https://www.sbisecurities.in",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "axis-direct",
@@ -207,7 +235,9 @@
     "demat_amc": 650,
     "account_open": 0,
     "cta_url": "https://simplehai.axisdirect.in",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "anand-rathi",
@@ -221,7 +251,9 @@
     "demat_amc": 450,
     "account_open": 0,
     "cta_url": "https://www.rathi.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "geojit",
@@ -235,7 +267,9 @@
     "demat_amc": 400,
     "account_open": 0,
     "cta_url": "https://www.geojit.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "smc",
@@ -249,7 +283,9 @@
     "demat_amc": 400,
     "account_open": 0,
     "cta_url": "https://www.smcindiaonline.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "ventura",
@@ -259,11 +295,13 @@
     "delivery_pct": 0.002,
     "intraday_flat": 20.0,
     "intraday_pct": 0.0003,
-    "dp_charge": 17.7,
+    "dp_charge": 23.6,
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://www.ventura1.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "nirmal-bang",
@@ -277,7 +315,9 @@
     "demat_amc": 450,
     "account_open": 0,
     "cta_url": "https://www.nirmalbang.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "hdfc-sky",
@@ -291,7 +331,9 @@
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://www.hdfcsky.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "alice-blue",
@@ -305,7 +347,9 @@
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://aliceblueonline.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "prostocks",
@@ -319,7 +363,9 @@
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://www.prostocks.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "tradejini",
@@ -329,11 +375,13 @@
     "delivery_pct": 0.0,
     "intraday_flat": 20.0,
     "intraday_pct": 0.0003,
-    "dp_charge": 17.7,
+    "dp_charge": 14.75,
     "demat_amc": 354,
     "account_open": 0,
     "cta_url": "https://www.tradejini.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": true
   },
   {
     "id": "choice-broking",
@@ -343,11 +391,13 @@
     "delivery_pct": 0.002,
     "intraday_flat": 20.0,
     "intraday_pct": 0.0002,
-    "dp_charge": 21.24,
+    "dp_charge": 11.8,
     "demat_amc": 236,
     "account_open": 0,
     "cta_url": "https://choiceindia.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": "2026-11-17",
+    "fee_schedule_complete": true
   },
   {
     "id": "swastika-investmart",
@@ -361,7 +411,9 @@
     "demat_amc": 350,
     "account_open": 0,
     "cta_url": "https://www.swastika.co.in",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "espresso",
@@ -375,7 +427,9 @@
     "demat_amc": 0,
     "account_open": 0,
     "cta_url": "https://www.myespresso.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "samco",
@@ -389,7 +443,9 @@
     "demat_amc": 400,
     "account_open": 0,
     "cta_url": "https://www.samco.in",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "religare",
@@ -403,7 +459,9 @@
     "demat_amc": 354,
     "account_open": 0,
     "cta_url": "https://www.religareonline.com",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   },
   {
     "id": "yes-securities",
@@ -417,6 +475,8 @@
     "demat_amc": 413,
     "account_open": 0,
     "cta_url": "https://yesinvest.in",
-    "partner_badge": null
+    "partner_badge": null,
+    "cap_verified_asof": null,
+    "fee_schedule_complete": false
   }
 ]

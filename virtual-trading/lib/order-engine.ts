@@ -6,7 +6,7 @@
 // its target_trade_date, resolved at placement time by market-calendar.ts
 // and filled later by settlePendingOrders() once that close is published.
 
-import { and, eq, asc, desc } from "drizzle-orm";
+import { and, eq, asc, lte } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   orders,
@@ -16,12 +16,15 @@ import {
   marketHolidays,
   realizedPnlEvents,
   brokerCatalog,
+  stockUniverse,
+  ORDER_SIDES,
   type OrderSide,
 } from "./schema";
 import { targetTradeDateFor } from "./market-calendar";
-import { computeBuyLegCharges, computeSellLegCharges } from "./trade-costs";
+import { buyLegFor, sellLegFor, deliveryFeesFromRow, estimateBuyCost, type DeliveryFees } from "./trade-costs";
+import { latestClose, latestCloses } from "./prices";
 
-const AFFORDABILITY_BUFFER_PCT = 0.01; // rough charges estimate at placement time only
+export const MAX_ORDER_QTY = 1_000_000;
 
 export class OrderPlacementError extends Error {}
 
@@ -29,17 +32,6 @@ async function loadHolidaySet(): Promise<Set<string>> {
   const db = getDb();
   const rows = await db.select({ holidayDate: marketHolidays.holidayDate }).from(marketHolidays);
   return new Set(rows.map((r) => r.holidayDate));
-}
-
-async function latestKnownClose(symbol: string): Promise<number | null> {
-  const db = getDb();
-  const [row] = await db
-    .select({ close: dailyPrices.close })
-    .from(dailyPrices)
-    .where(eq(dailyPrices.symbol, symbol))
-    .orderBy(desc(dailyPrices.tradeDate))
-    .limit(1);
-  return row ? Number(row.close) : null;
 }
 
 export interface PlaceOrderInput {
@@ -54,15 +46,54 @@ export interface PlaceOrderResult {
   targetTradeDate: string;
 }
 
+export interface Reservations {
+  // Cash already spoken for by PENDING buys, at their estimated cost.
+  reservedCash: number;
+  // Shares already spoken for by PENDING sells, per symbol.
+  pendingSellQty: Map<string, number>;
+}
+
 /**
- * Inserts a PENDING order after a best-effort affordability/holdings check
- * against the latest known close. No cash or holdings move yet: the real,
- * authoritative check happens again at settlement time, against whatever the
- * balance actually is on the day the order fills.
+ * What PENDING orders already hold back. Without this, placement only
+ * compared each new order against the full balance, so ten pending Rs 9
+ * lakh buys could all be accepted against a Rs 10 lakh balance and then all
+ * but one rejected at settlement.
+ */
+export async function getReservations(accountId: string, fees: DeliveryFees): Promise<Reservations> {
+  const db = getDb();
+  const pending = await db
+    .select({ symbol: orders.symbol, side: orders.side, qty: orders.qty })
+    .from(orders)
+    .where(and(eq(orders.accountId, accountId), eq(orders.status, "PENDING")));
+  const closes = await latestCloses(pending.filter((o) => o.side === "BUY").map((o) => o.symbol));
+  let reservedCash = 0;
+  const pendingSellQty = new Map<string, number>();
+  for (const o of pending) {
+    if (o.side === "BUY") {
+      const c = closes.get(o.symbol);
+      if (c) reservedCash += estimateBuyCost(c.close, o.qty, fees);
+    } else {
+      pendingSellQty.set(o.symbol, (pendingSellQty.get(o.symbol) ?? 0) + o.qty);
+    }
+  }
+  return { reservedCash, pendingSellQty };
+}
+
+/**
+ * Inserts a PENDING order after checking it against what is actually free:
+ * cash not already reserved by pending buys, and shares not already promised
+ * to pending sells. No cash or holdings move yet: the authoritative check
+ * happens again at settlement time, against the real balance on fill day.
  */
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
+  if (!(ORDER_SIDES as readonly string[]).includes(input.side)) {
+    throw new OrderPlacementError("Choose Buy or Sell.");
+  }
   if (!Number.isInteger(input.qty) || input.qty <= 0) {
     throw new OrderPlacementError("Quantity must be a positive whole number.");
+  }
+  if (input.qty > MAX_ORDER_QTY) {
+    throw new OrderPlacementError("Quantity is larger than this simulator accepts in one order.");
   }
 
   const db = getDb();
@@ -75,15 +106,33 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     throw new OrderPlacementError("No virtual account found. Select a broker first.");
   }
 
-  const lastClose = await latestKnownClose(input.symbol);
-  if (lastClose === null) {
+  const [stock] = await db
+    .select({ symbol: stockUniverse.symbol, isActive: stockUniverse.isActive })
+    .from(stockUniverse)
+    .where(eq(stockUniverse.symbol, input.symbol))
+    .limit(1);
+  if (!stock || !stock.isActive) {
+    throw new OrderPlacementError("That stock is not available in this simulator.");
+  }
+
+  const last = await latestClose(input.symbol);
+  if (last === null) {
     throw new OrderPlacementError("No price data on file for this symbol yet.");
   }
 
+  const [broker] = await db.select().from(brokerCatalog).where(eq(brokerCatalog.id, account.brokerId)).limit(1);
+  if (!broker) {
+    throw new OrderPlacementError("Your selected broker is no longer available. Choose a broker again.");
+  }
+  const fees = deliveryFeesFromRow(broker);
+  const reservations = await getReservations(account.id, fees);
+
   if (input.side === "BUY") {
-    const estimatedCost = lastClose * input.qty * (1 + AFFORDABILITY_BUFFER_PCT);
-    if (estimatedCost > Number(account.cashBalance)) {
-      throw new OrderPlacementError("Estimated order cost exceeds available virtual cash balance.");
+    const available = Number(account.cashBalance) - reservations.reservedCash;
+    if (estimateBuyCost(last.close, input.qty, fees) > available) {
+      throw new OrderPlacementError(
+        "Not enough free virtual cash for this order, counting buys you already have pending.",
+      );
     }
   } else {
     const [holding] = await db
@@ -91,8 +140,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
       .from(holdings)
       .where(and(eq(holdings.accountId, account.id), eq(holdings.symbol, input.symbol)))
       .limit(1);
-    if (!holding || holding.qty < input.qty) {
-      throw new OrderPlacementError("Not enough shares held to place this sell order.");
+    const free = (holding?.qty ?? 0) - (reservations.pendingSellQty.get(input.symbol) ?? 0);
+    if (free < input.qty) {
+      throw new OrderPlacementError(
+        free > 0
+          ? `You can sell up to ${free} shares, counting sells you already have pending.`
+          : "You do not hold any free shares of this stock to sell.",
+      );
     }
   }
 
@@ -112,6 +166,23 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     .returning({ id: orders.id });
 
   return { orderId: inserted.id, targetTradeDate };
+}
+
+/** Cancels a PENDING order, only if it belongs to this user. Returns whether it did. */
+export async function cancelPendingOrder(userId: string, orderId: string): Promise<boolean> {
+  const db = getDb();
+  const [account] = await db
+    .select({ id: virtualAccounts.id })
+    .from(virtualAccounts)
+    .where(eq(virtualAccounts.userId, userId))
+    .limit(1);
+  if (!account) return false;
+  const updated = await db
+    .update(orders)
+    .set({ status: "CANCELLED" })
+    .where(and(eq(orders.id, orderId), eq(orders.accountId, account.id), eq(orders.status, "PENDING")))
+    .returning({ id: orders.id });
+  return updated.length > 0;
 }
 
 /**
@@ -160,11 +231,10 @@ export async function settlePendingOrders(tradeDate: string): Promise<{ settled:
         .limit(1);
       if (!broker) return;
 
-      const deliveryFlat = Number(broker.deliveryFlat);
-      const deliveryPct = Number(broker.deliveryPct);
+      const fees = deliveryFeesFromRow(broker);
 
       if (order.side === "BUY") {
-        const charges = computeBuyLegCharges(fillPrice, order.qty, deliveryFlat, deliveryPct);
+        const charges = buyLegFor(fillPrice, order.qty, fees);
         const netAmount = charges.turnover + charges.totalCharges;
 
         const currentCash = Number(account.cashBalance);
@@ -243,7 +313,7 @@ export async function settlePendingOrders(tradeDate: string): Promise<{ settled:
         return;
       }
 
-      const charges = computeSellLegCharges(fillPrice, order.qty, deliveryFlat, deliveryPct, Number(broker.dpCharge));
+      const charges = sellLegFor(fillPrice, order.qty, fees);
       const netAmount = charges.turnover - charges.totalCharges;
       const sellNetPricePerShare = netAmount / order.qty;
       const buyAvgCost = Number(existing.avgCost);
@@ -295,4 +365,49 @@ export async function settlePendingOrders(tradeDate: string): Promise<{ settled:
   }
 
   return { settled, rejected };
+}
+
+/**
+ * Settles every PENDING order due on or before upToDate whose target date
+ * now has an ingested close. The cron route used to settle only the one date
+ * it had just ingested, so an order targeting a day the cron missed (a
+ * failed run, a CI outage) stayed PENDING forever. Dates still without a
+ * close are left PENDING for a later run or a ?date= backfill.
+ */
+export async function settleAllDue(upToDate: string): Promise<{ settled: number; rejected: number; dates: string[] }> {
+  const db = getDb();
+  const due = await db
+    .selectDistinct({ targetTradeDate: orders.targetTradeDate })
+    .from(orders)
+    .where(and(eq(orders.status, "PENDING"), lte(orders.targetTradeDate, upToDate)))
+    .orderBy(asc(orders.targetTradeDate));
+  let settled = 0;
+  let rejected = 0;
+  const dates: string[] = [];
+  for (const { targetTradeDate } of due) {
+    const r = await settlePendingOrders(targetTradeDate);
+    settled += r.settled;
+    rejected += r.rejected;
+    if (r.settled + r.rejected > 0) dates.push(targetTradeDate);
+  }
+  return { settled, rejected, dates };
+}
+
+/** Distinct target dates of PENDING orders, on or before upToDate, that have no ingested close yet. */
+export async function pendingDatesMissingPrices(upToDate: string): Promise<string[]> {
+  const db = getDb();
+  const due = await db
+    .selectDistinct({ targetTradeDate: orders.targetTradeDate })
+    .from(orders)
+    .where(and(eq(orders.status, "PENDING"), lte(orders.targetTradeDate, upToDate)));
+  const missing: string[] = [];
+  for (const { targetTradeDate } of due) {
+    const [row] = await db
+      .select({ id: dailyPrices.id })
+      .from(dailyPrices)
+      .where(eq(dailyPrices.tradeDate, targetTradeDate))
+      .limit(1);
+    if (!row) missing.push(targetTradeDate);
+  }
+  return missing.sort();
 }

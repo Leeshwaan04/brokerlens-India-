@@ -13,6 +13,8 @@ import {
   date,
   uuid,
   uniqueIndex,
+  index,
+  check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -39,6 +41,14 @@ export const brokerCatalog = pgTable("broker_catalog", {
   accountOpen: numeric("account_open"),
   ctaUrl: text("cta_url").notNull(),
   partnerBadge: text("partner_badge"),
+  // Set when the broker's own current pricing page confirms a genuine "lower
+  // of Rs flat or pct%" cap even though pct is above CAP_RULE_MAX_PCT (see
+  // trade-costs.ts). Mirrors cap_verified_asof in pipeline/trade_cost_engine.py.
+  capVerifiedAsof: date("cap_verified_asof"),
+  // True only for brokers whose full fee schedule brokerlens.in has on file
+  // (pipeline/broker_charges_engine.py eligible_keys()). Cost rankings use
+  // only these, so no broker is ranked on an incomplete or indicative schedule.
+  feeScheduleComplete: boolean("fee_schedule_complete").notNull().default(false),
   syncedAt: timestamp("synced_at", { withTimezone: true }).notNull(),
 });
 
@@ -92,7 +102,9 @@ export type OrderSide = (typeof ORDER_SIDES)[number];
 export const ORDER_STATUSES = ["PENDING", "FILLED", "REJECTED", "CANCELLED"] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
-export const orders = pgTable("orders", {
+export const orders = pgTable(
+  "orders",
+  {
   id: uuid("id").primaryKey().defaultRandom(),
   accountId: uuid("account_id")
     .notNull()
@@ -118,7 +130,13 @@ export const orders = pgTable("orders", {
   netAmount: numeric("net_amount"), // debit (BUY) or credit (SELL) to cash_balance
   rejectionReason: text("rejection_reason"),
   filledAt: timestamp("filled_at", { withTimezone: true }),
-});
+  },
+  (t) => [
+    check("orders_side_check", sql`${t.side} IN ('BUY', 'SELL')`),
+    check("orders_qty_positive", sql`${t.qty} > 0`),
+    index("orders_account_status_idx").on(t.accountId, t.status),
+  ],
+);
 
 export const holdings = pgTable(
   "holdings",
@@ -171,6 +189,38 @@ export const performanceSnapshots = pgTable(
     confidenceScore: numeric("confidence_score"),
   },
   (t) => [uniqueIndex("performance_snapshots_account_date_idx").on(t.accountId, t.snapshotDate)],
+);
+
+// One row per click on an "open a real account" link, written by the
+// /go/[brokerId] redirect route before it forwards to the broker's real
+// cta_url. This is how conversion is measured: which placement (landing,
+// cost replay, order ticket, ...) sent the click, and for which broker. No
+// IP, user agent or other personal data is stored; account_id is null for
+// signed-out visitors.
+export const CTA_PLACEMENTS = [
+  "landing",
+  "replay",
+  "ticket",
+  "broker",
+  "dashboard",
+  "readiness",
+  "onboarding",
+  "other",
+] as const;
+export type CtaPlacement = (typeof CTA_PLACEMENTS)[number];
+
+export const ctaClicks = pgTable(
+  "cta_clicks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    accountId: uuid("account_id").references(() => virtualAccounts.id),
+    brokerId: text("broker_id")
+      .notNull()
+      .references(() => brokerCatalog.id),
+    placement: text("placement").notNull().$type<CtaPlacement>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("cta_clicks_broker_created_idx").on(t.brokerId, t.createdAt)],
 );
 
 // Observability for the daily EOD-sync cron job (Slice 2).

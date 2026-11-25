@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeBuyLegCharges, computeSellLegCharges } from "./trade-costs";
+import { computeBuyLegCharges, computeSellLegCharges, roundTripCharges, estimateBuyCost, maxAffordableQty } from "./trade-costs";
 
 // 5paisa's published equity-delivery round trip for a Rs 1,00,000 buy + Rs
 // 1,00,000 sell, as computed by pipeline/trade_cost_engine.py's
@@ -61,10 +61,37 @@ describe("brokerage cap rule", () => {
     expect(buy.brokerage).toBe(10);
   });
 
+  it("honours a verified cap above the threshold (Choice Broking: lower of Rs 20 or 0.20%)", () => {
+    // Rs 1,00,000 turnover: 0.20% is Rs 200, so the verified cap gives Rs 20.
+    // Before cap_verified_asof was exported, the app charged the full Rs 200.
+    const capped = computeBuyLegCharges(1000, 100, 20, 0.002, true);
+    expect(capped.brokerage).toBe(20);
+    const uncapped = computeBuyLegCharges(1000, 100, 20, 0.002, false);
+    expect(uncapped.brokerage).toBe(200);
+  });
+
+  it("roundTripCharges reproduces the published 5paisa Rs 1 lakh worked example", () => {
+    const fees = { deliveryFlat: 20, deliveryPct: 0, dpCharge: 14.75, capVerified: false };
+    expect(Math.abs(roundTripCharges(100000, fees) - 284.2)).toBeLessThanOrEqual(0.02);
+  });
+
   it("charges the full percentage, uncapped, above the discount-broker threshold", () => {
     // ICICI Direct-shaped plan: delivery_pct=0.0055 (0.55%), no flat-fee cap
     // applies once pct exceeds CAP_RULE_MAX_PCT (0.1%).
     const buy = computeBuyLegCharges(1000, 100, 20, 0.0055);
     expect(buy.brokerage).toBe(100000 * 0.0055);
+  });
+});
+
+describe("maxAffordableQty", () => {
+  const fees = { deliveryFlat: 20, deliveryPct: 0, dpCharge: 14.75, capVerified: false };
+  it("never returns a quantity whose estimated cost exceeds the cash", () => {
+    const q = maxAffordableQty(1351, 100000, fees);
+    expect(q).toBeGreaterThan(0);
+    expect(estimateBuyCost(1351, q, fees)).toBeLessThanOrEqual(100000);
+    expect(estimateBuyCost(1351, q + 1, fees)).toBeGreaterThan(100000);
+  });
+  it("is 0 when even one share does not fit", () => {
+    expect(maxAffordableQty(1351, 500, fees)).toBe(0);
   });
 });

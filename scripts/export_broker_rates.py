@@ -24,6 +24,7 @@ if ROOT not in sys.path:
     # on PYTHONPATH or `-m` invocation.
     sys.path.insert(0, ROOT)
 
+import pipeline.broker_charges_engine as bce
 import pipeline.trade_cost_engine as tce
 
 FIELDS = (
@@ -38,15 +39,25 @@ FIELDS = (
     "account_open",
     "cta_url",
     "partner_badge",
+    # Without this, a broker whose real pricing page confirms a "lower of Rs
+    # flat or pct%" cap above CAP_RULE_MAX_PCT (Choice Broking) would be
+    # costed as an uncapped percentage in the app, ten times its real
+    # brokerage on a Rs 1 lakh order.
+    "cap_verified_asof",
 )
 
 
 def main():
+    # The same "full fee schedule on file" test brokerlens.in applies before it
+    # publishes a broker's charges page; the app ranks brokers by cost only
+    # within this set.
+    complete = set(bce.eligible_keys())
     out = []
     for broker_id, rates in tce.BROKER_RATES.items():
         entry = {"id": broker_id}
         for field in FIELDS:
             entry[field] = rates.get(field)
+        entry["fee_schedule_complete"] = broker_id in complete
         out.append(entry)
 
     out_path = os.path.join(ROOT, "virtual-trading", "seed", "broker-rates.json")

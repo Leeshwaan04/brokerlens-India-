@@ -1,9 +1,27 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { SignUp } from "@clerk/nextjs";
+import { devAuthUserId, isDevAuth } from "@/lib/session";
+import { AuthFrame } from "@/components/AuthFrame";
+
+export const metadata: Metadata = { title: "Start practising" };
 
 export default function SignUpPage() {
+  if (devAuthUserId()) redirect("/onboarding/broker");
+  if (isDevAuth()) {
+    // Local dev, signed out: there is no Clerk instance to render a form for.
+    return (
+      <AuthFrame title="Start practising, free">
+        <p className="max-w-sm rounded-xl border border-line bg-raised p-5 text-sm text-muted">
+          Local dev mode: Clerk handles this form in production. Set VT_DEV_AUTH_USER_ID to a user id in .env.local to
+          sign in locally.
+        </p>
+      </AuthFrame>
+    );
+  }
   return (
-    <div className="flex min-h-screen items-center justify-center p-6">
-      <SignUp />
-    </div>
+    <AuthFrame title="Start practising, free">
+      <SignUp fallbackRedirectUrl="/onboarding/broker" signInUrl="/sign-in" />
+    </AuthFrame>
   );
 }

@@ -16,10 +16,20 @@ export interface ScoreInput {
 
 export type ScoreLabel = "Building Track Record" | "Developing" | "Consistent" | "Strong";
 
+export interface ScoreComponents {
+  base: number;
+  returnTerm: number;
+  consistencyTerm: number;
+  concentrationPenalty: number;
+  experienceBonus: number;
+}
+
 export interface ScoreResult {
   score: number;
   label: ScoreLabel;
   enoughTrades: boolean;
+  // Each term of the formula, so the UI can show how the number was built.
+  components: ScoreComponents;
 }
 
 function clamp(n: number, lo: number, hi: number): number {
@@ -45,5 +55,10 @@ export function computeConfidenceScore(input: ScoreInput): ScoreResult {
   const raw = 50 + returnTerm + consistencyTerm - concentrationPenalty + experienceBonus;
   const score = clamp(Math.round(raw), 0, 100);
 
-  return { score, label: labelFor(score), enoughTrades };
+  return {
+    score,
+    label: labelFor(score),
+    enoughTrades,
+    components: { base: 50, returnTerm, consistencyTerm, concentrationPenalty, experienceBonus },
+  };
 }

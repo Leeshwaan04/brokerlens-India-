@@ -1,33 +1,28 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { isDevAuth } from "@/lib/session";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "BrokerLens Virtual Trading",
+  title: { default: "BrokerLens Virtual Trading", template: "%s | BrokerLens Virtual Trading" },
   description:
-    "Practice investing with real NSE closing prices and real broker costs, delayed by a day, for investor education only.",
+    "Practise investing with real NSE closing prices, delayed by a day for investor education, and see what every broker would really charge for the trades you make.",
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbfbfa" },
+    { media: "(prefers-color-scheme: dark)", color: "#131316" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
-  return (
-    <ClerkProvider>
-      <html
-        lang="en"
-        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      >
-        <body className="min-h-full flex flex-col">{children}</body>
-      </html>
-    </ClerkProvider>
+  const doc = (
+    <html lang="en-IN" className="h-full">
+      <body className="flex min-h-full flex-col">{children}</body>
+    </html>
   );
+  // Local development without a Clerk instance renders no ClerkProvider at
+  // all (see lib/session.ts), so nothing can start a Clerk session from here.
+  return isDevAuth() ? doc : <ClerkProvider>{doc}</ClerkProvider>;
 }

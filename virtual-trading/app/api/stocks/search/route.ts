@@ -1,22 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ilike, or } from "drizzle-orm";
-import { auth } from "@clerk/nextjs/server";
+import { and, asc, eq, ilike, or } from "drizzle-orm";
+import { getSessionUserId } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { stockUniverse } from "@/lib/schema";
 
 export async function GET(request: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
+  const q = (request.nextUrl.searchParams.get("q")?.trim() ?? "").slice(0, 40);
   if (q.length < 1) return NextResponse.json({ results: [] });
 
   const db = getDb();
   const results = await db
-    .select()
+    .select({ symbol: stockUniverse.symbol, name: stockUniverse.name })
     .from(stockUniverse)
-    .where(or(ilike(stockUniverse.symbol, `%${q}%`), ilike(stockUniverse.name, `%${q}%`)))
-    .limit(20);
+    .where(
+      and(
+        eq(stockUniverse.isActive, true),
+        or(ilike(stockUniverse.symbol, `%${q}%`), ilike(stockUniverse.name, `%${q}%`)),
+      ),
+    )
+    .orderBy(asc(stockUniverse.symbol))
+    .limit(12);
 
   return NextResponse.json({ results });
 }
