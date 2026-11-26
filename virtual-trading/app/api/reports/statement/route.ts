@@ -12,9 +12,11 @@ const COLUMNS = [
 ] as const;
 
 function csvCell(v: unknown): string {
-  const s = v === null || v === undefined ? "" : String(v);
-  // Quote everything that could break a row or be read as a formula.
-  return /[",\n\r]|^[=+\-@]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
+  let s = v === null || v === undefined ? "" : String(v);
+  // A spreadsheet runs a cell starting with = + - @ tab or CR as a formula,
+  // even when quoted, so prefix an apostrophe; plain numbers stay numbers.
+  if (/^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s)) s = `'${s}`;
+  return /[",\n\r]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s;
 }
 
 // Plus: every order with its fill, each charge and tax, and the cash it moved

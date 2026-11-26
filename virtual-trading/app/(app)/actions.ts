@@ -10,7 +10,7 @@ import { brokerCatalog, stockUniverse, virtualAccounts, watchlistItems } from "@
 import { deleteUserData, resetPortfolio } from "@/lib/account-admin";
 import { isDevAuth } from "@/lib/session";
 import { track } from "@/lib/events";
-import { ORDER_TYPE_LABEL, type OrderType, type Validity } from "@/lib/fills";
+import { ORDER_TYPE_LABEL, ORDER_TYPES, type OrderType, type Validity } from "@/lib/fills";
 import { cancelPendingOrder, placeOrder, OrderPlacementError } from "@/lib/order-engine";
 
 export interface OrderActionState {
@@ -71,7 +71,13 @@ export async function placeOrderAction(_prev: OrderActionState, formData: FormDa
   } catch (err) {
     await track(
       "order_rejected",
-      { reason: err instanceof OrderPlacementError ? err.code : "error", side, symbol, order_type: orderType },
+      {
+        reason: err instanceof OrderPlacementError ? err.code : "error",
+        // Only known values, never free text from the request (see the events table).
+        side: side === "BUY" || side === "SELL" ? side : "invalid",
+        symbol: /^[A-Z0-9&_-]{1,20}$/.test(symbol) ? symbol : "invalid",
+        order_type: (ORDER_TYPES as readonly string[]).includes(orderType) ? orderType : "invalid",
+      },
       current.account.id,
     );
     return {
@@ -85,7 +91,9 @@ export async function cancelOrderAction(formData: FormData): Promise<void> {
   const current = await getCurrentAccount();
   if (!current) redirect("/sign-in");
   const orderId = String(formData.get("orderId") ?? "");
-  if (orderId) await cancelPendingOrder(current.userId, orderId);
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId)) {
+    await cancelPendingOrder(current.userId, orderId);
+  }
   revalidateTradingPages();
 }
 

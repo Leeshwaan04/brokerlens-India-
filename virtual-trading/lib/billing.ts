@@ -38,12 +38,12 @@ export function razorpayConfig(env: Env = process.env): RazorpayConfig | null {
   const keyId = env.RAZORPAY_KEY_ID?.trim();
   const keySecret = env.RAZORPAY_KEY_SECRET?.trim();
   if (!keyId || !keySecret) return null;
-  return {
-    keyId,
-    keySecret,
-    webhookSecret: env.RAZORPAY_WEBHOOK_SECRET?.trim() || null,
-    mode: keyId.startsWith("rzp_live_") ? "live" : "test",
-  };
+  const mode = keyId.startsWith("rzp_live_") ? "live" : "test";
+  // Test keys on the production site would let anyone get Plus with test
+  // cards, so production with test keys counts as payments off unless a
+  // staging deploy opts in explicitly.
+  if (mode === "test" && env.NODE_ENV === "production" && env.RAZORPAY_ALLOW_TEST_MODE !== "true") return null;
+  return { keyId, keySecret, webhookSecret: env.RAZORPAY_WEBHOOK_SECRET?.trim() || null, mode };
 }
 
 export function plusActive(plusUntil: Date | null | undefined, now: Date = new Date()): boolean {
@@ -137,7 +137,7 @@ export async function createPlusOrder(cfg: RazorpayConfig, userId: string, plan:
 
 export type ConfirmResult =
   | { ok: true; plusUntil: Date; alreadyGranted: boolean }
-  | { ok: false; reason: "bad_signature" | "unknown_order" | "not_paid" | "mismatch" };
+  | { ok: false; reason: "bad_signature" | "unknown_order" | "not_paid" | "mismatch" | "duplicate_payment" };
 
 /**
  * Confirms a payment against Razorpay and grants Plus once. Used by the
@@ -162,6 +162,12 @@ export async function confirmPlusPayment(
   let payment = await razorpay<RazorpayPayment>(cfg, `/payments/${encodeURIComponent(paymentId)}`);
   if (payment.order_id !== orderId || payment.amount !== row.amountPaise || payment.currency !== row.currency) {
     return { ok: false, reason: "mismatch" };
+  }
+  // The order is already paid by a different payment (a retry, or a late UPI
+  // authorisation): never capture this one. Razorpay refunds an authorised
+  // payment that is not captured.
+  if (row.status === "paid" && row.razorpayPaymentId && row.razorpayPaymentId !== paymentId) {
+    return { ok: false, reason: "duplicate_payment" };
   }
   if (payment.status === "authorized") {
     payment = await razorpay<RazorpayPayment>(cfg, `/payments/${encodeURIComponent(paymentId)}/capture`, {

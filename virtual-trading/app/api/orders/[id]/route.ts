@@ -3,6 +3,9 @@ import { and, eq } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/session";
 import { getDb } from "@/lib/db";
 import { orders, virtualAccounts } from "@/lib/schema";
+import { cancelPendingOrder } from "@/lib/order-engine";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function loadOwnedOrder(userId: string, orderId: string) {
   const db = getDb();
@@ -20,6 +23,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await context.params;
+  if (!UUID.test(id)) return NextResponse.json({ error: "Order not found" }, { status: 404 });
   const order = await loadOwnedOrder(userId, id);
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
@@ -31,13 +35,13 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await context.params;
+  if (!UUID.test(id)) return NextResponse.json({ error: "Order not found" }, { status: 404 });
   const order = await loadOwnedOrder(userId, id);
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  if (order.status !== "PENDING") {
+  // Cancels only while still PENDING, in one statement, so a fill landing at
+  // the same moment can never be overwritten as cancelled.
+  if (!(await cancelPendingOrder(userId, id))) {
     return NextResponse.json({ error: "Only a PENDING order can be cancelled" }, { status: 409 });
   }
-
-  const db = getDb();
-  await db.update(orders).set({ status: "CANCELLED" }).where(eq(orders.id, id));
   return NextResponse.json({ ok: true });
 }

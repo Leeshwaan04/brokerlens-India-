@@ -26,6 +26,12 @@ export async function POST(request: Request) {
   }
   try {
     const result = await confirmPlusPayment(cfg, orderId, paymentId, { signature, userId });
+    if (!result.ok && result.reason === "duplicate_payment") {
+      return NextResponse.json(
+        { error: "This order was already paid. The second payment was not taken and Razorpay will refund it." },
+        { status: 409 },
+      );
+    }
     if (!result.ok) {
       await track("payment_failed", { reason: result.reason, mode: cfg.mode });
       return NextResponse.json({ error: "We could not confirm that payment. If money left your account, it will be refunded by Razorpay." }, { status: 400 });

@@ -35,6 +35,12 @@ describe("config and plans", () => {
     expect(razorpayConfig({ RAZORPAY_KEY_ID: "rzp_test_x", RAZORPAY_KEY_SECRET: "s" })?.mode).toBe("test");
     expect(razorpayConfig({ RAZORPAY_KEY_ID: "rzp_live_x", RAZORPAY_KEY_SECRET: "s" })?.mode).toBe("live");
   });
+  it("never takes test payments on the production site unless a staging deploy opts in", () => {
+    const test = { RAZORPAY_KEY_ID: "rzp_test_x", RAZORPAY_KEY_SECRET: "s", NODE_ENV: "production" };
+    expect(razorpayConfig(test)).toBeNull();
+    expect(razorpayConfig({ ...test, RAZORPAY_ALLOW_TEST_MODE: "true" })?.mode).toBe("test");
+    expect(razorpayConfig({ ...test, RAZORPAY_KEY_ID: "rzp_live_x" })?.mode).toBe("live");
+  });
   it("accepts only known plans", () => {
     expect(isPlanId("plus_year")).toBe(true);
     expect(isPlanId("toString")).toBe(false);

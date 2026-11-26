@@ -193,6 +193,30 @@ npx wrangler secret put RAZORPAY_WEBHOOK_SECRET  # a long random string you choo
 Payment records stay in the `payments` table after an account is deleted,
 unlinked from the person, as tax records must be kept.
 
+## 12b. Abuse limits at Cloudflare (Owner, in the dashboard)
+
+The app caps each account at 50 open orders (20 GTT) and 10 checkouts an
+hour, but per-IP limits belong at the edge. Under **Security > WAF > Rate
+limiting rules** for paper.brokerlens.in:
+
+- `POST` to `/api/orders`, `/api/billing/` and any path with the
+  `next-action` header (server actions): about 30 requests a minute per IP.
+- `/go/`: about 30 a minute per IP (keeps account-opening click counts clean).
+- `/api/cron/` and `/api/webhooks/`: leave open (they authenticate themselves).
+
+After step 7 (custom domain) set `"workers_dev": false` in `wrangler.jsonc`
+and deploy again, so the app is reachable only at paper.brokerlens.in.
+
+At go-live with live Razorpay keys, clear any Plus granted in test mode:
+
+```sql
+update users set plus_until = null
+where id in (select user_id from payments where mode = 'test' and status = 'paid');
+```
+
+A production build with `rzp_test_` keys treats payments as switched off,
+unless `RAZORPAY_ALLOW_TEST_MODE=true` is set (for a staging copy only).
+
 ## 13. Smoke test (Agent, a few gentle requests; never a load or scan tool)
 
 - [ ] `/` loads signed out and shows broker fees and a close date about 30 days ago.

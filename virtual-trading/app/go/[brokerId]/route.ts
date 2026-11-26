@@ -25,7 +25,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ bro
     return NextResponse.redirect(new URL("/", request.url), 302);
   }
 
-  try {
+  // One click per visitor per broker per minute, so reloads and scripted
+  // repeats do not inflate the counts broker decisions rely on.
+  const seenCookie = `vt_go_${broker.id.replace(/[^a-z0-9_-]/gi, "")}`;
+  const repeat = request.cookies.get(seenCookie) !== undefined;
+  if (!repeat) try {
     let accountId: string | null = null;
     const userId = await getSessionUserId();
     if (userId) {
@@ -49,5 +53,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ bro
   const res = NextResponse.redirect(broker.ctaUrl, 302);
   res.headers.set("X-Robots-Tag", "noindex, nofollow");
   res.headers.set("Cache-Control", "no-store");
+  res.cookies.set(seenCookie, "1", { maxAge: 60, httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/go" });
   return res;
 }

@@ -6,7 +6,7 @@
 // is filled later by settlePendingOrders() against that session's official
 // open, high, low and close, by the rules in fills.ts.
 
-import { and, eq, asc, lte } from "drizzle-orm";
+import { and, eq, asc, count, lte, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   orders,
@@ -51,6 +51,11 @@ import {
 import { latestClose, latestCloses } from "./prices";
 
 export const MAX_ORDER_QTY = 1_000_000;
+// Per-account caps on waiting orders. Each one is re-checked at every daily
+// settlement (GTT orders for up to a year), so one account must not be able
+// to load the shared run.
+export const MAX_OPEN_ORDERS = 50;
+export const MAX_OPEN_GTT = 20;
 
 export class OrderPlacementError extends Error {
   constructor(
@@ -109,8 +114,14 @@ export interface Reservations {
  * lakh buys could all be accepted against a Rs 10 lakh balance and then all
  * but one rejected at settlement.
  */
-export async function getReservations(accountId: string, fees: DeliveryFees, intraday: IntradayFees): Promise<Reservations> {
-  const db = getDb();
+type Reader = { select: ReturnType<typeof getDb>["select"] };
+
+export async function getReservations(
+  accountId: string,
+  fees: DeliveryFees,
+  intraday: IntradayFees,
+  db: Reader = getDb(),
+): Promise<Reservations> {
   const pending = await db
     .select({
       symbol: orders.symbol,
@@ -234,41 +245,6 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   }
   const fees = deliveryFeesFromRow(broker);
   const intraday = intradayFeesFromRow(broker);
-  const reservations = await getReservations(account.id, fees, intraday);
-
-  if (product === "MIS") {
-    const available = Number(account.cashBalance) - reservations.reservedCash;
-    if (misReserve(orderType, last.close, limitPrice, triggerPrice, input.qty, intraday) > available) {
-      throw new OrderPlacementError(
-        "Not enough free virtual cash for the intraday margin, counting orders you already have pending.",
-        "insufficient_cash",
-      );
-    }
-  } else if (input.side === "BUY") {
-    const available = Number(account.cashBalance) - reservations.reservedCash;
-    if (buyReserve(orderType, last.close, limitPrice, triggerPrice, input.qty, fees) > available) {
-      throw new OrderPlacementError(
-        "Not enough free virtual cash for this order, counting buys you already have pending.",
-        "insufficient_cash",
-      );
-    }
-  } else {
-    const [holding] = await db
-      .select()
-      .from(holdings)
-      .where(and(eq(holdings.accountId, account.id), eq(holdings.symbol, input.symbol)))
-      .limit(1);
-    const free = (holding?.qty ?? 0) - (reservations.pendingSellQty.get(input.symbol) ?? 0);
-    if (free < input.qty) {
-      throw new OrderPlacementError(
-        free > 0
-          ? `You can sell up to ${free} shares, counting sells you already have pending.`
-          : "You do not hold any free shares of this stock to sell.",
-        "insufficient_shares",
-      );
-    }
-  }
-
   // The practice market's session, not the real calendar's (market-clock.ts).
   // An order is in before that session opens unless the market is open now.
   const targetTradeDate = targetTradeDateFor(marketNow(now), holidaySet);
@@ -276,37 +252,93 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const expiresOn =
     validity === "GTT" ? isoDateOnly(new Date(new Date(`${targetTradeDate}T00:00:00Z`).getTime() + GTT_DAYS * 86_400_000)) : null;
 
-  const [inserted] = await db
-    .insert(orders)
-    .values({
-      accountId: account.id,
-      symbol: input.symbol,
-      side: input.side,
-      qty: input.qty,
-      targetTradeDate,
-      status: "PENDING",
-      clientOrderId,
-      orderType,
-      limitPrice: limitPrice === null ? null : String(limitPrice),
-      triggerPrice: triggerPrice === null ? null : String(triggerPrice),
-      validity,
-      beforeOpen,
-      expiresOn,
-      product,
-      stopLossPrice: stopLossPrice === null ? null : String(stopLossPrice),
-      targetPrice: targetPrice === null ? null : String(targetPrice),
-    })
-    .onConflictDoNothing({ target: [orders.accountId, orders.clientOrderId] })
-    .returning({ id: orders.id, targetTradeDate: orders.targetTradeDate });
-  if (inserted) return { orderId: inserted.id, targetTradeDate: inserted.targetTradeDate };
+  // Check and insert under a lock on the account row, so parallel requests
+  // queue: each sees the orders the others placed, and none can spend the
+  // same free cash or shares twice.
+  return db.transaction(async (tx) => {
+    const [locked] = await tx
+      .select({ cashBalance: virtualAccounts.cashBalance })
+      .from(virtualAccounts)
+      .where(eq(virtualAccounts.id, account.id))
+      .for("update");
+    if (!locked) throw new OrderPlacementError("No virtual account found. Select a broker first.", "no_account");
 
-  // Lost a race with an identical request that inserted first.
-  const [winner] = await db
-    .select({ id: orders.id, targetTradeDate: orders.targetTradeDate })
-    .from(orders)
-    .where(and(eq(orders.accountId, account.id), eq(orders.clientOrderId, clientOrderId!)))
-    .limit(1);
-  return { orderId: winner.id, targetTradeDate: winner.targetTradeDate };
+    if (clientOrderId) {
+      const [existing] = await tx
+        .select({ id: orders.id, targetTradeDate: orders.targetTradeDate })
+        .from(orders)
+        .where(and(eq(orders.accountId, account.id), eq(orders.clientOrderId, clientOrderId)))
+        .limit(1);
+      if (existing) return { orderId: existing.id, targetTradeDate: existing.targetTradeDate };
+    }
+
+    const [open] = await tx
+      .select({ all: count(), gtt: sql<number>`count(*) filter (where ${orders.validity} = 'GTT')` })
+      .from(orders)
+      .where(and(eq(orders.accountId, account.id), eq(orders.status, "PENDING")));
+    if (Number(open?.all ?? 0) >= MAX_OPEN_ORDERS) {
+      throw new OrderPlacementError(`You can have up to ${MAX_OPEN_ORDERS} open orders. Cancel some first.`, "too_many_orders");
+    }
+    if (validity === "GTT" && Number(open?.gtt ?? 0) >= MAX_OPEN_GTT) {
+      throw new OrderPlacementError(`You can have up to ${MAX_OPEN_GTT} open GTT orders. Cancel some first.`, "too_many_orders");
+    }
+
+    const reservations = await getReservations(account.id, fees, intraday, tx);
+    const available = Number(locked.cashBalance) - reservations.reservedCash;
+    if (product === "MIS") {
+      if (misReserve(orderType, last.close, limitPrice, triggerPrice, input.qty, intraday) > available) {
+        throw new OrderPlacementError(
+          "Not enough free virtual cash for the intraday margin, counting orders you already have pending.",
+          "insufficient_cash",
+        );
+      }
+    } else if (input.side === "BUY") {
+      if (buyReserve(orderType, last.close, limitPrice, triggerPrice, input.qty, fees) > available) {
+        throw new OrderPlacementError(
+          "Not enough free virtual cash for this order, counting buys you already have pending.",
+          "insufficient_cash",
+        );
+      }
+    } else {
+      const [holding] = await tx
+        .select()
+        .from(holdings)
+        .where(and(eq(holdings.accountId, account.id), eq(holdings.symbol, input.symbol)))
+        .limit(1);
+      const free = (holding?.qty ?? 0) - (reservations.pendingSellQty.get(input.symbol) ?? 0);
+      if (free < input.qty) {
+        throw new OrderPlacementError(
+          free > 0
+            ? `You can sell up to ${free} shares, counting sells you already have pending.`
+            : "You do not hold any free shares of this stock to sell.",
+          "insufficient_shares",
+        );
+      }
+    }
+
+    const [inserted] = await tx
+      .insert(orders)
+      .values({
+        accountId: account.id,
+        symbol: input.symbol,
+        side: input.side,
+        qty: input.qty,
+        targetTradeDate,
+        status: "PENDING",
+        clientOrderId,
+        orderType,
+        limitPrice: limitPrice === null ? null : String(limitPrice),
+        triggerPrice: triggerPrice === null ? null : String(triggerPrice),
+        validity,
+        beforeOpen,
+        expiresOn,
+        product,
+        stopLossPrice: stopLossPrice === null ? null : String(stopLossPrice),
+        targetPrice: targetPrice === null ? null : String(targetPrice),
+      })
+      .returning({ id: orders.id, targetTradeDate: orders.targetTradeDate });
+    return { orderId: inserted.id, targetTradeDate: inserted.targetTradeDate };
+  });
 }
 
 /** Cancels a PENDING order, only if it belongs to this user. Returns whether it did. */
@@ -358,7 +390,7 @@ export async function settlePendingOrders(
       const [claimed] = await tx
         .select({ id: orders.id })
         .from(orders)
-        .where(and(eq(orders.id, order.id), eq(orders.status, "PENDING")))
+        .where(and(eq(orders.id, order.id), eq(orders.status, "PENDING"), eq(orders.targetTradeDate, tradeDate)))
         .for("update", { skipLocked: true });
       if (!claimed) return;
 
@@ -433,8 +465,23 @@ export async function settlePendingOrders(
         const gross = order.side === "BUY" ? exitLeg.turnover - entryLeg.turnover : entryLeg.turnover - exitLeg.turnover;
         const pnl = gross - charges;
 
+        // Intraday positions in one session are open at the same time, so this
+        // one's margin must fit beside the margin the account's other filled
+        // intraday positions that session already used.
         const currentCash = Number(account.cashBalance);
-        if (entryLeg.turnover * MIS_MARGIN_PCT + charges > currentCash) {
+        const [used] = await tx
+          .select({ turnover: sql<string>`coalesce(sum(${orders.grossAmount}), 0)` })
+          .from(orders)
+          .where(
+            and(
+              eq(orders.accountId, account.id),
+              eq(orders.product, "MIS"),
+              eq(orders.status, "FILLED"),
+              eq(orders.targetTradeDate, tradeDate),
+            ),
+          );
+        const marginInUse = Number(used?.turnover ?? 0) * MIS_MARGIN_PCT;
+        if (entryLeg.turnover * MIS_MARGIN_PCT + charges > currentCash - marginInUse) {
           await tx
             .update(orders)
             .set({ status: "REJECTED", rejectionReason: "insufficient_margin_at_settlement" })

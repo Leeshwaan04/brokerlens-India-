@@ -16,8 +16,9 @@ export async function POST(request: NextRequest) {
   }
 
   if (event.type === "user.created") {
-    const { id, email_addresses, first_name, last_name } = event.data;
-    const primaryEmail = email_addresses?.[0]?.email_address ?? "";
+    const { id, email_addresses, primary_email_address_id, first_name, last_name } = event.data;
+    const primaryEmail =
+      email_addresses?.find((e) => e.id === primary_email_address_id)?.email_address ?? email_addresses?.[0]?.email_address ?? "";
     const displayName = [first_name, last_name].filter(Boolean).join(" ") || null;
 
     const db = getDb();

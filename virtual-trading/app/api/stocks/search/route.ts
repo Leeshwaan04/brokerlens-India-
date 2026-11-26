@@ -8,7 +8,13 @@ export async function GET(request: NextRequest) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const q = (request.nextUrl.searchParams.get("q")?.trim() ?? "").slice(0, 40);
+  // Strip control characters (a NUL makes Postgres error) and escape LIKE's
+  // own wildcards so they match literally.
+  const q = (request.nextUrl.searchParams.get("q") ?? "")
+    .replace(/[\u0000-\u001f]/g, "")
+    .trim()
+    .slice(0, 40)
+    .replace(/[\\%_]/g, (c) => `\\${c}`);
   if (q.length < 1) return NextResponse.json({ results: [] });
 
   const db = getDb();

@@ -1,6 +1,6 @@
 // Starting over, and deleting everything a user has, in one transaction each.
 
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   ctaClicks,
@@ -54,7 +54,9 @@ export async function deleteUserData(userId: string): Promise<boolean> {
       await tx.delete(orders).where(inArray(orders.accountId, ids));
       await tx.delete(virtualAccounts).where(inArray(virtualAccounts.id, ids));
     }
-    // Payment records are kept for tax, unlinked from the person.
+    // Paid records are kept for tax, unlinked from the person; checkouts that
+    // were never paid are not tax records and go.
+    await tx.delete(payments).where(and(eq(payments.userId, userId), ne(payments.status, "paid")));
     await tx.update(payments).set({ userId: null }).where(eq(payments.userId, userId));
     const deleted = await tx.delete(users).where(eq(users.id, userId)).returning({ id: users.id });
     return deleted.length > 0 || ids.length > 0;

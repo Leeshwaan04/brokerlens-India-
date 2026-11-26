@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const symbol = typeof body?.symbol === "string" ? body.symbol.toUpperCase() : "";
   const side = body?.side as OrderSide;
-  const qty = Number(body?.qty);
+  const qty = typeof body?.qty === "number" ? body.qty : NaN;
   const clientOrderId = typeof body?.clientOrderId === "string" ? body.clientOrderId : undefined;
   const orderType = typeof body?.orderType === "string" ? (body.orderType as OrderType) : undefined;
   const validity = typeof body?.validity === "string" ? (body.validity as Validity) : undefined;

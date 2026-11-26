@@ -41,7 +41,7 @@ export default async function PrivacyPage() {
               </li>
               <li>
                 <span className="text-ink">Your practice activity.</span> The broker you practise with, your virtual cash
-                balance, virtual orders, holdings and the daily value of your virtual portfolio. None of it is real money or
+                balance, virtual orders, holdings, the stocks on your watchlist and the daily value of your virtual portfolio. None of it is real money or
                 a real position.
               </li>
               <li>
@@ -57,8 +57,8 @@ export default async function PrivacyPage() {
               <li>
                 <span className="text-ink">Payments for Plus.</span> The plan, amount, date and Razorpay&apos;s order and payment
                 references. Your card, UPI or bank details are entered with Razorpay, our payment processor, and never reach
-                BrokerLens. Payment records are kept as tax law requires, even after an account is deleted, with the link to
-                you removed.
+                BrokerLens. Paid payment records are kept as tax law requires, even after an account is deleted, with the link
+                to you removed; checkouts that were never paid are deleted with the account.
               </li>
               <li>
                 <span className="text-ink">How you found us.</span> If you arrive from a link carrying campaign tags (such as
@@ -91,7 +91,9 @@ export default async function PrivacyPage() {
             <h2>Who else handles it</h2>
             <p>
               The sign-in provider and the database host store it on our behalf, to run the app and for no other purpose.
-              Razorpay processes Plus payments under its own privacy policy.
+              Razorpay processes Plus payments under its own privacy policy. The app runs on Cloudflare, whose request
+              logs record technical details of each request (such as the address it came from) for operating and securing
+              the service.
               When you follow an account-opening link you leave this app for the broker&apos;s own site, where its privacy
               policy applies. Some of those links are referral links, which tell the broker that you came from BrokerLens.
             </p>

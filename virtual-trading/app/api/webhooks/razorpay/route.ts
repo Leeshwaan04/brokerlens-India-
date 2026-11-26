@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { confirmPlusPayment, razorpayConfig, verifyWebhookSignature } from "@/lib/billing";
 import { getDb } from "@/lib/db";
 import { track } from "@/lib/events";
@@ -18,28 +19,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Bad signature" }, { status: 400 });
   }
 
-  // A retried delivery carries the same event id: acknowledge it, apply nothing.
+  // A delivery already processed carries the same event id: acknowledge it.
+  // The id is recorded only after processing succeeds, so a delivery that
+  // failed half-way is retried by Razorpay instead of being dropped.
   const eventId = request.headers.get("x-razorpay-event-id");
+  const db = getDb();
   if (eventId) {
-    const [fresh] = await getDb()
-      .insert(webhookEvents)
-      .values({ id: eventId, source: "razorpay" })
-      .onConflictDoNothing()
-      .returning({ id: webhookEvents.id });
-    if (!fresh) return NextResponse.json({ ok: true, duplicate: true });
+    const [seen] = await db.select({ id: webhookEvents.id }).from(webhookEvents).where(eq(webhookEvents.id, eventId)).limit(1);
+    if (seen) return NextResponse.json({ ok: true, duplicate: true });
   }
 
-  const event = JSON.parse(raw) as {
-    event?: string;
-    payload?: { payment?: { entity?: { id?: string; order_id?: string } } };
-  };
-  const payment = event.payload?.payment?.entity;
-  if ((event.event === "payment.captured" || event.event === "order.paid") && payment?.id && payment.order_id) {
-    // Re-read from Razorpay and grant once, exactly as the Checkout return does.
-    const result = await confirmPlusPayment(cfg, payment.order_id, payment.id, {});
-    if (result.ok && !result.alreadyGranted) await track("payment_succeeded", { mode: cfg.mode, via: "webhook" });
-  } else if (event.event === "payment.failed") {
-    await track("payment_failed", { reason: "declined", mode: cfg.mode });
+  let event: { event?: string; payload?: { payment?: { entity?: { id?: string; order_id?: string } } } };
+  try {
+    event = JSON.parse(raw);
+  } catch {
+    return NextResponse.json({ error: "Bad body" }, { status: 400 });
   }
+  const payment = event.payload?.payment?.entity;
+  try {
+    if ((event.event === "payment.captured" || event.event === "order.paid") && payment?.id && payment.order_id) {
+      // Re-read from Razorpay and grant once, exactly as the Checkout return does.
+      const result = await confirmPlusPayment(cfg, payment.order_id, payment.id, {});
+      if (result.ok && !result.alreadyGranted) await track("payment_succeeded", { mode: cfg.mode, via: "webhook" });
+    } else if (event.event === "payment.failed") {
+      await track("payment_failed", { reason: "declined", mode: cfg.mode });
+    }
+  } catch (err) {
+    console.error("razorpay webhook processing failed", err);
+    return NextResponse.json({ error: "Processing failed; retry" }, { status: 500 });
+  }
+  if (eventId) await db.insert(webhookEvents).values({ id: eventId, source: "razorpay" }).onConflictDoNothing();
   return NextResponse.json({ ok: true });
 }

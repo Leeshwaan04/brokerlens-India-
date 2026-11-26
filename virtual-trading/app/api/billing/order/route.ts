@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { crossSiteRejection } from "@/lib/request-guard";
 import { and, count, eq, gte } from "drizzle-orm";
-import { ensureUserRow } from "@/lib/auth";
+import { ensureUserRow, getCurrentAccount } from "@/lib/auth";
 import { createPlusOrder, isPlanId, razorpayConfig } from "@/lib/billing";
 import { getDb } from "@/lib/db";
 import { track } from "@/lib/events";
@@ -32,6 +32,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Too many payment attempts. Please try again in an hour." }, { status: 429 });
   }
 
+  const current = await getCurrentAccount();
+  if (!current?.account) return NextResponse.json({ error: "Set up your practice account first." }, { status: 403 });
   await ensureUserRow(userId);
   const [user] = await getDb().select({ email: users.email, name: users.displayName }).from(users).where(eq(users.id, userId)).limit(1);
   try {

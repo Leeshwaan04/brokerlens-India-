@@ -19,8 +19,14 @@
   "observability": {
     "enabled": true
   },
+  // No per-version preview URLs: they would expose every uploaded version,
+  // cron and webhooks included, on a second public address. Turn workers_dev
+  // off too once paper.brokerlens.in serves the app (LAUNCH.md step 7).
+  "preview_urls": false,
   "vars": {
     // Days the practice market runs behind the real one. Only lower on legal advice.
-    "VT_PRICE_LAG_DAYS": "30"
+    "VT_PRICE_LAG_DAYS": "30",
+    // Canonical URLs, the sitemap and Clerk's authorised origin.
+    "NEXT_PUBLIC_APP_URL": "https://paper.brokerlens.in"
   }
 }

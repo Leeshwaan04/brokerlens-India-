@@ -10,6 +10,9 @@ export async function GET(_request: Request, context: { params: Promise<{ symbol
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { symbol } = await context.params;
+  if (!/^[A-Za-z0-9&_-]{1,20}$/.test(symbol)) {
+    return NextResponse.json({ error: "No price data on file for this symbol" }, { status: 404 });
+  }
   // Never later than the practice market's date (see market-clock.ts).
   const asOf = await getMarketAsOf();
   if (!asOf) return NextResponse.json({ error: "No price data on file for this symbol" }, { status: 404 });

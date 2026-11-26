@@ -4,6 +4,7 @@ import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { isDevAuth } from "@/lib/session";
 import { CAMPAIGN_COOKIE, encodeCampaign } from "@/lib/campaign";
+import { APP_URL } from "@/lib/site";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -20,11 +21,16 @@ const isPublicRoute = createRouteMatcher([
   "/api/cron/(.*)",
 ]);
 
-const clerk = clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
-  }
-});
+const clerk = clerkMiddleware(
+  async (auth, req) => {
+    if (!isPublicRoute(req)) {
+      await auth.protect();
+    }
+  },
+  // Accept session tokens issued for this app's own origin only, so a token
+  // from another *.brokerlens.in site is not honoured here.
+  { authorizedParties: [APP_URL] },
+);
 
 // Arriving with utm_* tags: keep just the tags for 30 minutes so the
 // campaign is still known when the visitor finishes signing up.
