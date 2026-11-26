@@ -2,10 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   // BrokerLens Virtual Trading on Cloudflare Workers, built by
   // @opennextjs/cloudflare (npm run cf:build). See LAUNCH.md before the first
-  // deploy: secrets come from `wrangler secret put`, never from this file.
-  //
-  // Production domain, added after the first deploy (LAUNCH.md step 8):
-  //   "routes": [{ "pattern": "paper.brokerlens.in", "custom_domain": true }]
+  // deploy: secrets come from `wrangler secret put` (or --secrets-file),
+  // never from this file.
   "name": "brokerlens-paper",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-11-10",
@@ -39,7 +37,15 @@
   "preview_urls": false,
   // Served only at paper.brokerlens.in: Cloudflare created its DNS record and
   // certificate. Not on *.workers.dev, which would be a second public copy.
-  "routes": [{ "pattern": "paper.brokerlens.in", "custom_domain": true }],
+  // The zone also has a dashboard route "*brokerlens.in/*" for the main site
+  // (worker brokerlens-india), whose leading wildcard matches every
+  // subdomain and won over the custom domain; the explicit route below is
+  // more specific, so paper.brokerlens.in reaches this worker while
+  // brokerlens.in and www keep theirs.
+  "routes": [
+    { "pattern": "paper.brokerlens.in", "custom_domain": true },
+    { "pattern": "paper.brokerlens.in/*", "zone_name": "brokerlens.in" }
+  ],
   "workers_dev": false,
   "vars": {
     // Days the practice market runs behind the real one. Only lower on legal advice.
