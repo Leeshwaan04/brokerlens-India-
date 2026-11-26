@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-26T13:21:42.978389+00:00",
-  "total_articles": 25,
+  "generated_at": "2026-11-26T21:49:01.757101+00:00",
+  "total_articles": 26,
   "articles": [
     {
       "slug": "indian-stock-market-wrap-2026-11-26",
@@ -28,6 +28,16 @@
       "description": "Foodlink F&B Holdings (India) Limited IPO is currently open for bidding. Price band is Rs.181 to Rs.191 with issue closing on 30 November 2026. Track live subscription numbers and broker application procedures.",
       "date": "2026-11-25",
       "date_str": "25 November 2026",
+      "category": "IPO Bulletin",
+      "category_badge": "badge-up",
+      "read_time": "1 min read"
+    },
+    {
+      "slug": "ipo-airpro-live-subscription-bidding-review",
+      "title": "Airpro Technology India Limited IPO Live Status: Subscribed Bidding underway, Price Band Rs.99",
+      "description": "Airpro Technology India Limited IPO is currently open for bidding. Price band is Rs.99 with issue closing on 01 December 2026. Track live subscription numbers and broker application procedures.",
+      "date": "2026-11-26",
+      "date_str": "26 November 2026",
       "category": "IPO Bulletin",
       "category_badge": "badge-up",
       "read_time": "1 min read"
