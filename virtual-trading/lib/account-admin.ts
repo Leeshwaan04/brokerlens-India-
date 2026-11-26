@@ -7,6 +7,7 @@ import {
   events,
   holdings,
   orders,
+  payments,
   performanceSnapshots,
   realizedPnlEvents,
   users,
@@ -53,6 +54,8 @@ export async function deleteUserData(userId: string): Promise<boolean> {
       await tx.delete(orders).where(inArray(orders.accountId, ids));
       await tx.delete(virtualAccounts).where(inArray(virtualAccounts.id, ids));
     }
+    // Payment records are kept for tax, unlinked from the person.
+    await tx.update(payments).set({ userId: null }).where(eq(payments.userId, userId));
     const deleted = await tx.delete(users).where(eq(users.id, userId)).returning({ id: users.id });
     return deleted.length > 0 || ids.length > 0;
   });

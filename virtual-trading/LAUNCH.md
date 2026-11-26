@@ -159,6 +159,40 @@ npx wrangler secret put ADMIN_USER_IDS          # comma-separated user ids
 `VT_PRICE_LAG_DAYS` is `30` in `wrangler.jsonc`. Change it only on legal
 advice, then deploy again.
 
+## 12a. Payments for Plus (Owner; optional at launch)
+
+Plus is a prepaid pass (Rs 99 for 30 days, Rs 799 for 12 months, set in
+`lib/billing.ts`), bought through Razorpay Checkout. The practice market
+stays free. With no Razorpay keys set, the Plus page says payments are not
+available and nothing else changes.
+
+Before taking real money:
+
+1. Decide the legal entity that sells Plus, its GST registration, and whether
+   the prices include GST (ask your accountant). Publish refund and
+   cancellation terms on the Terms page; Razorpay's activation needs them.
+2. Complete Razorpay account activation (KYC) so live keys are issued.
+3. Generate fresh keys. The test key shared in chat on 26 Nov 2026 should be
+   regenerated too.
+4. Set the worker's secrets (live keys only here, never in a file):
+
+```bash
+npx wrangler secret put RAZORPAY_KEY_ID          # rzp_live_...
+npx wrangler secret put RAZORPAY_KEY_SECRET
+npx wrangler secret put RAZORPAY_WEBHOOK_SECRET  # a long random string you choose
+```
+
+5. In the Razorpay dashboard, **Webhooks**: URL
+   `https://paper.brokerlens.in/api/webhooks/razorpay`, the same secret, events
+   `payment.captured` and `order.paid`. The webhook grants Plus if a buyer
+   closes the browser before returning from Checkout.
+6. Make one real Rs 99 purchase yourself, check `/plus` shows Plus active and
+   `/admin` shows it under Plus payments, then refund it from the Razorpay
+   dashboard if you like.
+
+Payment records stay in the `payments` table after an account is deleted,
+unlinked from the person, as tax records must be kept.
+
 ## 13. Smoke test (Agent, a few gentle requests; never a load or scan tool)
 
 - [ ] `/` loads signed out and shows broker fees and a close date about 30 days ago.

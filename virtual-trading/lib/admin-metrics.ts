@@ -3,7 +3,7 @@
 
 import { count, countDistinct, desc, eq, gte, sql } from "drizzle-orm";
 import { getDb } from "./db";
-import { brokerCatalog, ctaClicks, events, orders, priceSyncRuns, virtualAccounts } from "./schema";
+import { brokerCatalog, ctaClicks, events, orders, payments, priceSyncRuns, virtualAccounts } from "./schema";
 import { istDate } from "./market-calendar";
 
 /** Comma-separated user ids in ADMIN_USER_IDS. Nobody is an admin by default. */
@@ -107,6 +107,16 @@ export async function getAdminMetrics(days: number, now: Date = new Date()) {
         .groupBy(sql`1`),
       db.select().from(priceSyncRuns).orderBy(desc(priceSyncRuns.runAt)).limit(8),
     ]);
+  const revenue = await db
+    .select({
+      mode: payments.mode,
+      paid: sql<number>`count(*) filter (where ${payments.status} = 'paid')`,
+      started: count(),
+      paise: sql<number>`coalesce(sum(${payments.amountPaise}) filter (where ${payments.status} = 'paid'), 0)`,
+    })
+    .from(payments)
+    .where(gte(payments.createdAt, since))
+    .groupBy(payments.mode);
 
   const ev = (name: string) => eventRows.find((r) => r.name === name);
   const funnel = [
@@ -159,6 +169,7 @@ export async function getAdminMetrics(days: number, now: Date = new Date()) {
     sources: sources.map((r) => ({ source: r.source, landings: n(r.landings), signups: n(r.signups) })),
     daily,
     cronRuns,
+    revenue: revenue.map((r) => ({ mode: r.mode, paid: n(r.paid), started: n(r.started), rupees: n(r.paise) / 100 })),
     hoursSinceLastOkSync: (() => {
       const ok = cronRuns.find((r) => r.status === "ok");
       return ok ? (now.getTime() - ok.runAt.getTime()) / 3_600_000 : null;

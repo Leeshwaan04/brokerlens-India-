@@ -43,6 +43,13 @@
       "when": 1795626660023,
       "tag": "0005_intraday",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795627624801,
+      "tag": "0006_payments",
+      "breakpoints": true
     }
   ]
 }

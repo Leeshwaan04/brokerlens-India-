@@ -25,6 +25,8 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   displayName: text("display_name"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  // BrokerLens Plus is a prepaid pass: active while this is in the future.
+  plusUntil: timestamp("plus_until", { withTimezone: true }),
 });
 
 // Synced monthly from pipeline.trade_cost_engine.BROKER_RATES via
@@ -308,6 +310,10 @@ export const EVENT_NAMES = [
   "broker_switched",
   "portfolio_reset",
   "account_deleted",
+  "plus_viewed",
+  "checkout_started",
+  "payment_succeeded",
+  "payment_failed",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
@@ -331,4 +337,41 @@ export const priceSyncRuns = pgTable("price_sync_runs", {
   rowsIngested: integer("rows_ingested"),
   status: text("status").notNull(),
   error: text("error"),
+});
+
+// One row per Razorpay order for a Plus pass. Kept after account deletion
+// with user_id cleared, because payment records must be retained for tax.
+// Card, UPI and bank details never reach BrokerLens: Razorpay handles them.
+export const PAYMENT_STATUSES = ["created", "paid", "failed"] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id").references(() => users.id),
+    plan: text("plan").notNull(),
+    amountPaise: integer("amount_paise").notNull(),
+    currency: text("currency").notNull().default("INR"),
+    mode: text("mode").notNull().$type<"test" | "live">(),
+    razorpayOrderId: text("razorpay_order_id").notNull(),
+    razorpayPaymentId: text("razorpay_payment_id"),
+    status: text("status").notNull().$type<PaymentStatus>().default("created"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("payments_order_idx").on(t.razorpayOrderId),
+    uniqueIndex("payments_payment_idx").on(t.razorpayPaymentId),
+    check("payments_status_check", sql`${t.status} IN ('created', 'paid', 'failed')`),
+    check("payments_amount_positive", sql`${t.amountPaise} > 0`),
+  ],
+);
+
+// Razorpay webhook deliveries already processed, by their event id, so a
+// retried delivery is acknowledged without being applied twice.
+export const webhookEvents = pgTable("webhook_events", {
+  id: text("id").primaryKey(),
+  source: text("source").notNull(),
+  receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
 });

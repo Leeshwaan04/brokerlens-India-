@@ -6,6 +6,7 @@ import { getCurrentAccount } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { brokerCatalog, users } from "@/lib/schema";
 import { inr } from "@/lib/format";
+import { plusActive } from "@/lib/billing";
 import { deleteAccountAction, resetPortfolioAction } from "../actions";
 import { ConfirmForm } from "@/components/ConfirmForm";
 import { Card, CardTitle, PageHeader } from "@/components/ui";
@@ -32,6 +33,15 @@ export default async function AccountPage() {
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
             <dt className="text-muted">Email</dt>
             <dd className="text-ink">{user?.email || "Not on file"}</dd>
+            <dt className="text-muted">Plus</dt>
+            <dd className="text-ink">
+              {plusActive(user?.plusUntil) && user?.plusUntil
+                ? `Active until ${user.plusUntil.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}`
+                : "Not active"}{" "}
+              <Link href="/plus" className="text-accent-ink hover:underline">
+                {plusActive(user?.plusUntil) ? "Details" : "See Plus"}
+              </Link>
+            </dd>
             <dt className="text-muted">Practice broker</dt>
             <dd className="text-ink">
               {broker?.brand ?? current.account.brokerId}{" "}

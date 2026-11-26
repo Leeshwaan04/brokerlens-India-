@@ -12,6 +12,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/go/(.*)",
   "/api/webhooks/clerk",
+  "/api/webhooks/razorpay",
   "/api/cron/(.*)",
 ]);
 

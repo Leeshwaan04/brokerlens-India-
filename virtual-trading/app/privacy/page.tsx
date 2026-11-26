@@ -55,6 +55,12 @@ export default async function PrivacyPage() {
                 app. These are tied to your practice account and hold no amounts beyond broad ranges.
               </li>
               <li>
+                <span className="text-ink">Payments for Plus.</span> The plan, amount, date and Razorpay&apos;s order and payment
+                references. Your card, UPI or bank details are entered with Razorpay, our payment processor, and never reach
+                BrokerLens. Payment records are kept as tax law requires, even after an account is deleted, with the link to
+                you removed.
+              </li>
+              <li>
                 <span className="text-ink">How you found us.</span> If you arrive from a link carrying campaign tags (such as
                 utm_source), we keep just those tags in a cookie for 30 minutes, and save them with your account if you sign
                 up in that time. The cookie holds no identifier and is used for nothing else.
@@ -85,6 +91,7 @@ export default async function PrivacyPage() {
             <h2>Who else handles it</h2>
             <p>
               The sign-in provider and the database host store it on our behalf, to run the app and for no other purpose.
+              Razorpay processes Plus payments under its own privacy policy.
               When you follow an account-opening link you leave this app for the broker&apos;s own site, where its privacy
               policy applies. Some of those links are referral links, which tell the broker that you came from BrokerLens.
             </p>

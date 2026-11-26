@@ -209,6 +209,15 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </div>
 
         <Card className="mt-6">
+          <CardTitle>Plus payments, last {days} days</CardTitle>
+          <Table
+            head={["Mode", "Checkouts started", "Paid", "Revenue"]}
+            rows={m.revenue.map((r) => [r.mode === "live" ? "Live" : "Test (no real money)", r.started, r.paid, `₹${r.rupees.toLocaleString("en-IN")}`])}
+            empty="No Plus checkouts in this period."
+          />
+        </Card>
+
+        <Card className="mt-6">
           <CardTitle>Last 14 days</CardTitle>
           <Table
             head={["Day", "Landing views", "Accounts created", "Orders", "Account-opening clicks"]}

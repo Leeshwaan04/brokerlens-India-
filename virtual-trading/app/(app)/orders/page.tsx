@@ -61,6 +61,11 @@ export default async function OrdersPage() {
       <PageHeader
         title="Orders"
         subtitle="Each order is checked against its practice-market session's official open, high, low and close. How fills work is set out below."
+        action={
+          <a href="/api/reports/statement" className={buttonClass("secondary", "sm")}>
+            Download statement (Plus)
+          </a>
+        }
       />
 
       {pending.length > 0 && (
