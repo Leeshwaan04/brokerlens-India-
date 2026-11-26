@@ -16,6 +16,20 @@
   },
   // Every page is per-user and rendered on request, so the app needs no
   // incremental cache (R2/KV), image binding or Durable Objects.
+  //
+  // The database (Supabase Postgres, Mumbai) through Hyperdrive, which pools
+  // connections and verifies Supabase's certificate against its pinned root
+  // (sslmode verify-full, CA "supabase-root-2021"). Query caching is off so a
+  // page never shows an order or balance from before the user's last action.
+  // lib/db.ts uses this binding on Workers and DATABASE_URL everywhere else.
+  // For `npm run cf:preview`, set
+  // CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE to a local database.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "ade55fc3221945f6a997d9525a371bc4"
+    }
+  ],
   "observability": {
     "enabled": true
   },

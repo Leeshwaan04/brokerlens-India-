@@ -1,28 +1,68 @@
 name: Virtual Trading EOD Price Sync
 
+# Fetches the day's NSE closes, moves the practice market forward and settles
+# orders, by running lib/eod-sync.ts as a Node script against the database.
+# It runs here rather than inside the Cloudflare Worker because it needs far
+# more CPU than the 10 ms a request gets on the Workers Free plan.
 on:
   schedule:
     # 13:30 UTC = 19:00 IST, after NSE publishes the day's bhavcopy. Every
     # day, not just weekdays: the practice market runs VT_PRICE_LAG_DAYS
     # behind the real one, so its sessions fall on real weekends too.
     - cron: "30 13 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      history:
+        description: "Missing history days to fetch this run (1 to 60; blank for the default 5)"
+        required: false
+        default: ""
+
+# Never two syncs at once: both would settle the same orders.
+concurrency:
+  group: virtual-trading-eod-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   sync-and-settle:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: virtual-trading
+    env:
+      DATABASE_URL: ${{ secrets.VT_DATABASE_URL }}
+      # Keep in step with wrangler.jsonc. Only change on legal advice.
+      VT_PRICE_LAG_DAYS: "30"
     steps:
-      - name: Trigger EOD price sync and order settlement
+      - name: Check the database secret
+        id: secret
+        working-directory: ${{ github.workspace }}
         run: |
-          APP_URL="${{ secrets.VT_APP_URL || 'https://paper.brokerlens.in' }}"
-          CRON_SECRET="${{ secrets.CRON_SECRET }}"
-          if [ -n "$CRON_SECRET" ]; then
-            echo "Triggering EOD sync on $APP_URL..."
-            curl -f -X GET "$APP_URL/api/cron/sync-eod-prices" \
-              -H "Authorization: Bearer $CRON_SECRET" \
-              --retry 3 \
-              --retry-delay 10
-            echo "EOD sync trigger complete."
+          if [ -z "$DATABASE_URL" ]; then
+            echo "VT_DATABASE_URL is not set; nothing to sync."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.secret.outputs.skip != 'true'
+      - uses: actions/setup-node@v4
+        if: steps.secret.outputs.skip != 'true'
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: virtual-trading/package-lock.json
+      - name: Install
+        if: steps.secret.outputs.skip != 'true'
+        run: npm ci --no-audit --no-fund
+      - name: Sync closes and settle orders
+        if: steps.secret.outputs.skip != 'true'
+        env:
+          HISTORY: ${{ github.event.inputs.history }}
+        run: |
+          if [ -n "$HISTORY" ]; then
+            npx tsx scripts/eod-sync.mts --history "$HISTORY"
           else
-            echo "CRON_SECRET not configured in secrets; skipping trigger."
+            npx tsx scripts/eod-sync.mts
           fi
