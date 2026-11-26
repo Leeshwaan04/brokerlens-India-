@@ -212,6 +212,45 @@ are run by hand (steps 4 to 8).
 - Worker logs: **Workers & Pages > brokerlens-paper > Observability**
   (200,000 events a day on the Free plan).
 
+## 10b. Daily prices from the owner's Mac (installed 26 Nov 2026)
+
+NSE refuses GitHub's runners but serves this Mac, so `scripts/install-mac-job.sh`
+installs a launchd agent (`in.brokerlens.paper-daily`) that runs at 19:40 every
+day (or when the Mac next wakes). `scripts/mac-daily.sh` keeps its own clone of
+`main` in `~/.local/share/brokerlens-paper/repo`, reads
+`~/.config/brokerlens-paper/prod.env`, and runs `scripts/eod-sync.mts --history 20`:
+equity closes, index closes, the practice market's date, order settlement.
+Log: `~/Library/Logs/brokerlens-paper-daily.log`. Run now:
+`launchctl kickstart gui/$(id -u)/in.brokerlens.paper-daily`. Remove:
+`scripts/install-mac-job.sh --remove`. If the Mac is off for days, the next run
+catches up; the uptime monitor (10a) warns when fewer than 10 days of closes
+remain.
+
+## 10c. Backups (live from 26 Nov 2026)
+
+`virtual-trading-backup.yml` backs up every table except the re-fetchable
+price tables each night at 02:00 IST and keeps the file as a GitHub Actions
+artifact for 90 days. The file is encrypted to a **public** key (GitHub secret
+`VT_BACKUP_PUBLIC_KEY`); the **private key** is
+`~/.config/brokerlens-paper/backup-private.pem` on the owner's Mac.
+**Copy that file into your password manager now**: without it no backup can be
+read, and nobody (including us) can recover it. This repository is public, so
+its artifacts are downloadable by any GitHub user; the encryption (RSA-4096
+wrapping an AES-256-GCM key, `lib/backup-crypto.ts`) is what keeps them private.
+
+Restore into an EMPTY database whose tables exist (`npx drizzle-kit migrate`
+first):
+
+```bash
+gh run download -R Leeshwaan04/brokerlens-India- -n vt-backup-<stamp> -D /tmp/vt-backup
+DATABASE_URL=<empty db url> npx tsx scripts/restore-backup.mts /tmp/vt-backup/backup-<stamp>.bin \
+  --private-key ~/.config/brokerlens-paper/backup-private.pem --apply
+```
+
+Then re-run the daily sync to refill prices. Tested end to end on 26 Nov 2026
+(every table's rows matched, ciphertext holds no readable text). To read a
+backup without restoring, use `--out dump.ndjson` instead of `--apply`.
+
 ## 11. Admin access (Owner)
 
 Sign up on `https://paper.brokerlens.in`, find your user id in Clerk

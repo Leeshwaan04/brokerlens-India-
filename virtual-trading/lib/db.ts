@@ -8,7 +8,6 @@
 //   verifies its certificate. Workers cannot verify Supabase's private CA on a
 //   direct socket, and Hyperdrive also keeps connection setup off the
 //   Worker's CPU budget (10 ms a request on the Free plan).
-// - A Neon URL: Neon's Pool-based neon-serverless driver (WebSockets).
 // - Anything else (localhost, Supabase from Node): node-postgres over TCP,
 //   with Supabase's root CA pinned (lib/pg-ssl.ts).
 // All of them support interactive transactions, which order settlement needs
@@ -23,15 +22,13 @@
 // by OpenNext's per-request context object, and dropped with it. Everywhere
 // else (next dev, next start, tests, scripts) one client per process.
 
-import { Pool as NeonPool } from "@neondatabase/serverless";
-import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
-import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
+import { drizzle as drizzleNodePg, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { getCloudflareContext } from "@opennextjs/cloudflare/cloudflare-context";
 import { pgSslFor } from "./pg-ssl";
 import * as schema from "./schema";
 
-type Db = ReturnType<typeof drizzleNeon<typeof schema>>;
+type Db = NodePgDatabase<typeof schema>;
 
 let cached: Db | null = null;
 
@@ -47,16 +44,6 @@ export function isLocalDatabaseUrl(url: string): boolean {
 
 const ON_WORKERS = typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
 const perRequest = new WeakMap<object, Db>();
-
-const NEON_HOST = /\.neon\.tech$/i;
-
-function isNeonUrl(url: string): boolean {
-  try {
-    return NEON_HOST.test(new URL(url).hostname);
-  } catch {
-    return false;
-  }
-}
 
 /** Hyperdrive's connection string inside a Worker request, when the binding exists. */
 function hyperdriveConnectionString(): string | null {
@@ -74,7 +61,7 @@ function nodePg(config: pg.PoolConfig): Db {
   pool.on("error", (err) => {
     if (!/socket has been closed/i.test(err.message)) console.error("database connection dropped:", err.message);
   });
-  return drizzleNodePg(pool, { schema }) as unknown as Db;
+  return drizzleNodePg(pool, { schema });
 }
 
 function createDb(): Db {
@@ -96,7 +83,6 @@ function createDb(): Db {
       "DATABASE_URL is not set. Copy .env.example to .env.local and set a Postgres connection string.",
     );
   }
-  if (isNeonUrl(url)) return drizzleNeon(new NeonPool({ connectionString: url }), { schema });
   return nodePg({
     connectionString: url,
     ssl: isLocalDatabaseUrl(url) ? undefined : pgSslFor(url),

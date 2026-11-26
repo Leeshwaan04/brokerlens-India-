@@ -1,0 +1,61 @@
+name: Virtual Trading Backup
+
+# Nightly encrypted backup of the practice app's database (users, accounts,
+# orders, holdings, payments; not the prices, which the daily sync rebuilds).
+#
+# Encrypted to a PUBLIC key (secret VT_BACKUP_PUBLIC_KEY). The matching private
+# key lives only on the owner's Mac (~/.config/brokerlens-paper/) and in their
+# password manager, so the file is unreadable to anyone who downloads it.
+# That matters because this repository is public, and so are its Actions
+# artifacts. Restore: virtual-trading/LAUNCH.md, "Backups".
+on:
+  schedule:
+    # 20:30 UTC = 02:00 IST, a quiet hour.
+    - cron: "30 20 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: virtual-trading-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: virtual-trading
+    env:
+      DATABASE_URL: ${{ secrets.VT_DATABASE_URL }}
+      BACKUP_PUBLIC_KEY: ${{ secrets.VT_BACKUP_PUBLIC_KEY }}
+    steps:
+      - name: Check secrets
+        id: secrets
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$BACKUP_PUBLIC_KEY" ]; then
+            echo "::error::VT_DATABASE_URL and VT_BACKUP_PUBLIC_KEY must both be set"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: virtual-trading/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Back up and encrypt
+        run: |
+          stamp="$(date -u +%Y%m%d-%H%M)"
+          npx tsx scripts/backup-db.mts "backup-$stamp.bin"
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+      - name: Keep it for 90 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: vt-backup-${{ env.STAMP }}
+          path: virtual-trading/backup-${{ env.STAMP }}.bin
+          retention-days: 90
+          if-no-files-found: error
