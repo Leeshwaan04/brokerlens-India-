@@ -6,7 +6,7 @@ import { SignUp } from "@clerk/nextjs";
 import { devAuthUserId, isDevAuth } from "@/lib/session";
 import { AuthFrame } from "@/components/AuthFrame";
 
-export const metadata: Metadata = { title: "Start practising" };
+export const metadata: Metadata = { title: "Start practising", robots: { index: false, follow: true } };
 
 export default async function SignUpPage() {
   if (devAuthUserId()) redirect("/onboarding/broker");

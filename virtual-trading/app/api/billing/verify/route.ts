@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { crossSiteRejection } from "@/lib/request-guard";
 import { confirmPlusPayment, razorpayConfig } from "@/lib/billing";
 import { track } from "@/lib/events";
 import { getSessionUserId } from "@/lib/session";
@@ -9,6 +10,8 @@ const SIG = /^[a-f0-9]{64}$/;
 // Checkout's success handler posts here. Plus is granted only after the
 // signature checks out and Razorpay itself confirms the payment was captured.
 export async function POST(request: Request) {
+  const refused = crossSiteRejection(request);
+  if (refused) return refused;
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   const cfg = razorpayConfig();

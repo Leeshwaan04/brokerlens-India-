@@ -19,13 +19,13 @@ function csvCell(v: unknown): string {
 
 // Plus: every order with its fill, each charge and tax, and the cash it moved
 // (or, for intraday, its P&L after charges), like a broker's statement.
-export async function GET() {
+export async function GET(request: Request) {
   const current = await getCurrentAccount();
   if (!current?.account) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   const db = getDb();
   const [user] = await db.select({ plusUntil: users.plusUntil }).from(users).where(eq(users.id, current.userId)).limit(1);
   if (!plusActive(user?.plusUntil)) {
-    return NextResponse.redirect(new URL("/plus?from=statement", process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3100"));
+    return NextResponse.redirect(new URL("/plus?from=statement", request.url));
   }
 
   const rows = await db.select().from(orders).where(eq(orders.accountId, current.account.id)).orderBy(desc(orders.targetTradeDate));

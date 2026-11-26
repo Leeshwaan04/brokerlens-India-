@@ -8,6 +8,10 @@ import { CAMPAIGN_COOKIE, encodeCampaign } from "@/lib/campaign";
 const isPublicRoute = createRouteMatcher([
   "/",
   "/privacy",
+  "/how-it-works",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/og.png",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/go/(.*)",

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { eq } from "drizzle-orm";
 import { AppHeader } from "@/components/AppHeader";
@@ -5,6 +6,9 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { getCurrentAccount } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { brokerCatalog } from "@/lib/schema";
+
+// Private to each user: never indexed.
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 // Shell for every signed-in page. Each page still does its own auth and
 // onboarding redirect: a layout is not re-rendered on client-side navigation

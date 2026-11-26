@@ -4,7 +4,7 @@ import { SignIn } from "@clerk/nextjs";
 import { devAuthUserId, isDevAuth } from "@/lib/session";
 import { AuthFrame } from "@/components/AuthFrame";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Sign in", robots: { index: false, follow: true } };
 
 export default function SignInPage() {
   if (devAuthUserId()) redirect("/dashboard");

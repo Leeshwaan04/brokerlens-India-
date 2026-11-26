@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { readCampaign, track } from "@/lib/events";
+import { APP_URL, SITE_NAME } from "@/lib/site";
 import { getSessionUserId } from "@/lib/session";
 import { getAllBrokers, toReplayBroker } from "@/lib/brokers";
 import { rankBrokersForFills } from "@/lib/cost-replay";
@@ -21,11 +22,38 @@ const STEPS = [
   },
   {
     title: "Trade Nifty 100 stocks with ₹10 lakh of virtual cash",
-    body: "See every charge before you place an order. It fills against the next session's official NSE prices, never instantly.",
+    body: "Market, limit, stop-loss and GTT orders, delivery or intraday, with every charge shown before you place it. Orders fill against official NSE prices, never instantly.",
   },
   {
     title: "Replay your trades at every broker",
     body: "Find out which broker would actually have charged you least for the way you trade, before you open a real account.",
+  },
+];
+
+const FAQ = [
+  {
+    q: "Is BrokerLens Virtual Trading free?",
+    a: "Yes. Practising is free: ₹10 lakh of virtual cash, every order type and both delivery and intraday. An optional Plus pass adds a downloadable statement of your practice trades.",
+  },
+  {
+    q: "Is any real money involved, or a real broker account?",
+    a: "No. Orders never reach an exchange, no real money moves and no broker account is opened. Virtual profits cannot be withdrawn.",
+  },
+  {
+    q: "Where do the prices come from, and why are they not live?",
+    a: "Prices are NSE's official open, high, low and close for each session. The practice market runs 30 days behind the real one, so every price is at least 30 days old, and orders fill against those official prices by published rules.",
+  },
+  {
+    q: "What can I practise?",
+    a: "Nifty 100 stocks, delivery (CNC) and intraday (MIS) including short selling, with market, limit and stop-loss orders, valid for the day or GTT for up to a year.",
+  },
+  {
+    q: "How are charges calculated?",
+    a: "Each order is charged with your practice broker's published brokerage plus STT, NSE transaction charges, SEBI fees, stamp duty, GST and DP charges, leg by leg. You can switch broker at any time and replay your trades at every broker.",
+  },
+  {
+    q: "Does BrokerLens earn from brokers?",
+    a: "Some account-opening links are referral links, so BrokerLens may earn a fee if you open an account through them. That never changes the fees shown or the order of any ranking, which is by cost alone.",
   },
 ];
 
@@ -52,6 +80,27 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   // The hero always shows the ₹1 lakh case, whatever size the table is set to.
   const heroRanked = amount === 1_00_000 ? ranked : rankAt(1_00_000);
   const cheapest = heroRanked[0];
+  // Structured data mirrors what the page shows: a free web app and its FAQ.
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        name: SITE_NAME,
+        url: `${APP_URL}/`,
+        applicationCategory: "FinanceApplication",
+        operatingSystem: "Web",
+        isAccessibleForFree: true,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
+        inLanguage: "en-IN",
+        publisher: { "@type": "Organization", name: "BrokerLens", url: "https://www.brokerlens.in/" },
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+      },
+    ],
+  }).replace(/</g, "\\u003c");
   const dearest = heroRanked[heroRanked.length - 1];
 
   return (
@@ -188,6 +237,26 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </div>
           </div>
         </section>
+
+        <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
+          <h2 className="text-2xl font-semibold tracking-tight text-ink">Questions</h2>
+          <div className="mt-6 flex flex-col divide-y divide-line rounded-xl border border-line bg-raised">
+            {FAQ.map((f) => (
+              <details key={f.q} className="group px-5 py-4">
+                <summary className="cursor-pointer list-none font-medium text-ink marker:hidden">{f.q}</summary>
+                <p className="mt-2 text-sm text-muted">{f.a}</p>
+              </details>
+            ))}
+          </div>
+          <p className="mt-4 text-sm text-muted">
+            The full rules for orders, fills, intraday and charges are on{" "}
+            <Link href="/how-it-works" className="text-accent-ink underline-offset-2 hover:underline">
+              How it works
+            </Link>
+            .
+          </p>
+        </section>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
       </main>
       <SiteFooter />
     </>

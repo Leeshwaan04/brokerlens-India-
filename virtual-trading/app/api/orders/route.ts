@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { crossSiteRejection } from "@/lib/request-guard";
 import { getSessionUserId } from "@/lib/session";
 import { placeOrder, OrderPlacementError } from "@/lib/order-engine";
 import type { OrderType, Validity } from "@/lib/fills";
 import type { OrderSide } from "@/lib/schema";
 
 export async function POST(request: Request) {
+  const refused = crossSiteRejection(request);
+  if (refused) return refused;
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

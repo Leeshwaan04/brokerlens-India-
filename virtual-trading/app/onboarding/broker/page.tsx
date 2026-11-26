@@ -13,7 +13,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { buttonClass, cx } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Choose a practice broker" };
+export const metadata: Metadata = { title: "Choose a practice broker", robots: { index: false, follow: false } };
 
 const STARTING_BALANCE = "1000000";
 

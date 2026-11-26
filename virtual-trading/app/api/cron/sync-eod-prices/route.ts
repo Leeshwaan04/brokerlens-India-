@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { and, desc, eq, gt, lte } from "drizzle-orm";
 import { getDb } from "@/lib/db";
+import { safeEqual } from "@/lib/billing";
 import { dailyPrices, stockUniverse, marketHolidays, priceSyncRuns } from "@/lib/schema";
 import { fetchBhavcopy, type DailyPriceRow } from "@/lib/bhavcopy";
 import {
@@ -76,7 +77,7 @@ async function upsertDailyPrices(tradeDate: string, rows: DailyPriceRow[]) {
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get("authorization");
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || !safeEqual(authHeader ?? "", `Bearer ${cronSecret}`)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
