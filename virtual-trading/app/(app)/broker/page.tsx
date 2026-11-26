@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAccount } from "@/lib/auth";
+import { SubmitButton } from "@/components/SubmitButton";
 import { getAllBrokers, goHref, type BrokerRow } from "@/lib/brokers";
 import { deliveryFeesFromRow, roundTripCharges } from "@/lib/trade-costs";
 import { deliveryRuleText } from "@/lib/fee-text";
@@ -107,9 +108,9 @@ export default async function BrokerPage({ searchParams }: { searchParams: Promi
                   action={
                     <form action={switchBrokerAction}>
                       <input type="hidden" name="brokerId" value={b.id} />
-                      <button type="submit" className={buttonClass("secondary", "sm")}>
+                      <SubmitButton className={buttonClass("secondary", "sm")} pendingLabel="Switching…">
                         Switch
-                      </button>
+                      </SubmitButton>
                     </form>
                   }
                 />

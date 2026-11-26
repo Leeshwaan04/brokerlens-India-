@@ -4,6 +4,7 @@ import type { CtaPlacement } from "@/lib/schema";
 import { switchBrokerAction } from "@/app/(app)/actions";
 import { inr, signedInr } from "@/lib/format";
 import { buttonClass, cx, Pill } from "./ui";
+import { SubmitButton } from "./SubmitButton";
 
 // Brokers ranked by what the same trades cost at each, cheapest first. The
 // order comes only from rankBrokersForFills (cost, then name), never from
@@ -74,9 +75,9 @@ export function RankingTable({
                       <form action={switchBrokerAction}>
                         <input type="hidden" name="brokerId" value={r.id} />
                         <input type="hidden" name="returnTo" value="/costs" />
-                        <button type="submit" className={buttonClass("ghost", "sm")}>
+                        <SubmitButton className={buttonClass("ghost", "sm")} pendingLabel="Switching…">
                           Practise with
-                        </button>
+                        </SubmitButton>
                       </form>
                     )}
                     <a

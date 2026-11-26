@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/SubmitButton";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -222,9 +223,9 @@ export default async function TradePage({
                     <Pill tone="neutral">NSE</Pill>
                     <form action={toggleWatchlistAction}>
                       <input type="hidden" name="symbol" value={stock.symbol} />
-                      <button type="submit" aria-pressed={watching} className={cx(buttonClass("ghost", "sm"), "px-2 py-0.5 text-xs")}>
+                      <SubmitButton aria-pressed={watching} className={cx(buttonClass("ghost", "sm"), "px-2 py-0.5 text-xs")}>
                         {watching ? "★ Watching" : "☆ Watch"}
-                      </button>
+                      </SubmitButton>
                     </form>
                   </div>
                   <p className="truncate text-sm text-muted">{stock.name}</p>

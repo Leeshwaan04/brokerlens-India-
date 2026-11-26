@@ -1,3 +1,4 @@
+import { SubmitButton } from "./SubmitButton";
 import { cancelOrderAction } from "@/app/(app)/actions";
 import type { PendingOrderView } from "@/lib/account-summary";
 import { nextChanceText, orderTermsLabel } from "@/lib/fills";
@@ -25,9 +26,9 @@ export function PendingOrders({ orders, compact = false }: { orders: PendingOrde
             <span className="text-xs text-muted">{nextChanceText(o)}</span>
             <form action={cancelOrderAction}>
               <input type="hidden" name="orderId" value={o.id} />
-              <button type="submit" className={buttonClass("danger", "sm")}>
+              <SubmitButton className={buttonClass("danger", "sm")} pendingLabel="Cancelling…">
                 Cancel
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </li>

@@ -65,14 +65,26 @@ function hyperdriveConnectionString(): string | null {
 }
 
 function nodePg(config: pg.PoolConfig): Db {
-  return drizzleNodePg(new pg.Pool(config), { schema }) as unknown as Db;
+  const pool = new pg.Pool(config);
+  // An idle connection the server or the runtime drops ("Network connection
+  // lost" when a Worker request ends) surfaces here; without a listener it
+  // becomes an unhandled error. The next query simply opens a new one.
+  pool.on("error", (err) => console.error("database connection dropped:", err.message));
+  return drizzleNodePg(pool, { schema }) as unknown as Db;
 }
 
 function createDb(): Db {
   if (ON_WORKERS) {
     const hyperdrive = hyperdriveConnectionString();
-    // A few connections at most per request: Promise.all reads run side by side.
-    if (hyperdrive) return nodePg({ connectionString: hyperdrive, max: 5 });
+    // OpenNext's pattern for Hyperdrive: a connection is closed after one use
+    // (maxUses: 1) so none is left open when the request ends, which is what
+    // left sockets dangling and requests hanging; Hyperdrive keeps the real
+    // database connections warm, so reconnecting to it is cheap. A few at
+    // most at once (Promise.all reads run side by side), and never wait for
+    // one forever.
+    if (hyperdrive) {
+      return nodePg({ connectionString: hyperdrive, max: 5, maxUses: 1, connectionTimeoutMillis: 10_000 });
+    }
   }
   const url = process.env.DATABASE_URL;
   if (!url) {
@@ -81,7 +93,11 @@ function createDb(): Db {
     );
   }
   if (isNeonUrl(url)) return drizzleNeon(new NeonPool({ connectionString: url }), { schema });
-  return nodePg({ connectionString: url, ssl: isLocalDatabaseUrl(url) ? undefined : pgSslFor(url) });
+  return nodePg({
+    connectionString: url,
+    ssl: isLocalDatabaseUrl(url) ? undefined : pgSslFor(url),
+    connectionTimeoutMillis: 15_000,
+  });
 }
 
 export function getDb(): Db {
