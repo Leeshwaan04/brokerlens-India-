@@ -92,11 +92,17 @@ printf '%s' '<new session URL>' | gh secret set VT_DATABASE_URL
   `clk2._domainkey.paper`, all DNS only) were added through Cloudflare's
   one-time Domain Connect approval; brokerlens.in's own records, including
   its Hostinger mail, are untouched.
-- Sign-in is by email (code or link). Phone numbers and SMS MFA were switched
-  off (Clerk Pro features). Google is off in production until it has its own
-  OAuth client: create one in Google Cloud with the redirect URI
-  `https://clerk.paper.brokerlens.in/v1/oauth_callback`, enter its ID and
-  secret under **SSO connections > Google**, then switch it on.
+- Sign-in is by email (code or link) or Google. Phone numbers and SMS MFA
+  are off (Clerk Pro features). Google uses its own OAuth client in the
+  Google Cloud project `brokerlens-seo` (Google Auth Platform: app
+  "BrokerLens Virtual Trading", External, **In production**, authorised
+  domain `brokerlens.in`, no logo so no verification is needed; client
+  "Clerk production (paper.brokerlens.in)" with origin
+  `https://paper.brokerlens.in` and redirect
+  `https://clerk.paper.brokerlens.in/v1/oauth_callback`). Its client secret
+  lives only in Clerk (**SSO connections > Google**). To rotate it: Google
+  Cloud > Clients > that client > **Add secret**, paste the new one into
+  Clerk and save, then disable and delete the old secret in Google Cloud.
 - Keys: the publishable key `pk_live_...` is public and lives in
   `wrangler.jsonc`. The secret key (named `cloudflare-worker-brokerlens-paper`
   in Clerk) and the webhook signing secret are worker secrets, with copies in
@@ -194,6 +200,17 @@ gh secret set CLOUDFLARE_API_TOKEN              # a token scoped to Workers Scri
 
 Without it, `virtual-trading-ci.yml` tests but skips the deploy, and deploys
 are run by hand (steps 4 to 8).
+
+## 10a. Monitoring (live since 26 Nov 2026)
+
+- `GET /api/health` (public, never cached): 200 with `ok`, `db`, the newest
+  stored close and `priceRunwayDays` (days before the practice market reaches
+  it); 503 if the database does not answer.
+- `.github/workflows/virtual-trading-uptime.yml` calls the home page and the
+  health check every 30 minutes and fails, which emails the owner, when
+  either is down or fewer than 10 days of closes remain (lib/health.ts).
+- Worker logs: **Workers & Pages > brokerlens-paper > Observability**
+  (200,000 events a day on the Free plan).
 
 ## 11. Admin access (Owner)
 

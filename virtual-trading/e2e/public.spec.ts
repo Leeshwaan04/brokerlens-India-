@@ -108,3 +108,14 @@ test("search treats hostile input as text", async ({ request }) => {
     expect(await res.text()).not.toContain("<script>");
   }
 });
+
+test("the health check answers signed out and is never cached", async ({ request }) => {
+  const res = await request.get("/api/health");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["cache-control"]).toContain("no-store");
+  const body = await res.json();
+  expect(body).toMatchObject({ ok: true, db: "ok" });
+  expect(["ok", "low"]).toContain(body.prices);
+  // Nothing beyond the newest close date and the runway.
+  expect(Object.keys(body).sort()).toEqual(["db", "latestClose", "ok", "priceRunwayDays", "prices"]);
+});

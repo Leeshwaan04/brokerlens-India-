@@ -1,0 +1,33 @@
+name: Virtual Trading Uptime
+
+# Every 30 minutes: does paper.brokerlens.in answer, does its database answer,
+# and are there enough stored NSE closes ahead of the practice market? A failed
+# run is the alert: GitHub emails it to whoever last changed this schedule.
+# A few gentle requests per run, never a load or scan tool.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Site, database and price supply
+        run: |
+          set -euo pipefail
+          base="https://paper.brokerlens.in"
+          curl -fsS --retry 3 --retry-delay 20 --retry-all-errors -o /dev/null \
+            -w "home page: HTTP %{http_code} in %{time_total}s\n" "$base/"
+          body=$(curl -fsS --retry 3 --retry-delay 20 --retry-all-errors "$base/api/health") || {
+            echo "::error::$base/api/health failed: the app or its database is down"; exit 1; }
+          echo "health: $body"
+          echo "$body" | jq -e '.ok == true' > /dev/null || { echo "::error::database check failed"; exit 1; }
+          if ! echo "$body" | jq -e '.prices == "ok"' > /dev/null; then
+            echo "::error::Only $(echo "$body" | jq -r '.priceRunwayDays') days of NSE closes left before the practice market runs out (newest close $(echo "$body" | jq -r '.latestClose')). Fetch new closes: virtual-trading/LAUNCH.md step 10."
+            exit 1
+          fi

@@ -19,6 +19,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks/clerk",
   "/api/webhooks/razorpay",
   "/api/cron/(.*)",
+  "/api/health",
 ]);
 
 const clerk = clerkMiddleware(
