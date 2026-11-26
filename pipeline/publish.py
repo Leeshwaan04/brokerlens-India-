@@ -2999,15 +2999,15 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
 
         trade_cta_html = (
             '<div class="card" style="margin-top:20px;background:var(--accent-soft);border-style:solid">'
-            '<div class="card-title">Trade %s</div>'
-            '<p class="small muted" style="margin:4px 0 10px 0">%s is tradable through any SEBI-registered broker '
+            f'<div class="card-title">Trade {_esc(symbol)}</div>'
+            f'<p class="small muted" style="margin:4px 0 10px 0">{_esc(name)} is tradable through any SEBI-registered broker '
             'with an NSE cash-market membership. Compare broker charges, STT, and breakeven point movements:</p>'
             + paper_trade_cta
             + trade_badges
             + selected_cost_links
             + demat_cta_html +
             '</div>'
-        ) % (_esc(symbol), _esc(name))
+        )
 
         ipo_callout_html = ""
         if slug in ipo_by_slug:
@@ -8462,6 +8462,11 @@ def _demand_sitemap_entries(xml_url, today):
     return out
 
 
+def _trade_cost_sitemap_urls(urls):
+    """Filters candidate trade cost URLs so only the /trade-costs/ hub is included in sitemaps."""
+    return [u for u in (urls or []) if u == "/trade-costs/"]
+
+
 def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indices=None, etfs=None,
                     fund_slugs=None, report_slugs=None, calc_slugs=None, stock_letters=None, amc_slugs=None,
                     crypto_slugs=None, ipo_records=None, registry_letters=None, equity_history=None,
@@ -8681,7 +8686,7 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     # Only the indexable hub belongs here. The selected stock x broker pages
     # under /trade-costs/ are explicitly noindex and must never enter a sitemap.
     trade_cost_entries = [_xml_url(SITE_URL + u, today, "monthly")
-                          for u in (trade_cost_urls or []) if u == "/trade-costs/"]
+                          for u in _trade_cost_sitemap_urls(trade_cost_urls)]
 
     # 10. IPO APPLICATION WALKTHROUGHS SITEMAP
     ipo_apply_entries = []

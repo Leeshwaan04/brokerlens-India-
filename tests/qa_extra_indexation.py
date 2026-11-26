@@ -95,6 +95,18 @@ def run(check, ROOT, load):
     check("indexation: /stocks/ hub lists index pages as crawlable links",
           'href="/index/nifty-50/"' in chips and 'href="/index/nifty-bank/"' in chips and "_index_chips_html(indices)" in pub_src)
     check("indexation: /calculators/ hub links /trade-costs/", 'href="/trade-costs/"' in pub_src[pub_src.index("def _write_calculator_hub"):])
+    practice = pub._paper_trade_cta_html(
+        "RELIANCE", [("nifty-50", "Nifty 50"), ("nifty-500", "Nifty 500")])
+    check("paper trading: deep link is shown for supported Nifty 500 stocks with the app disclosures",
+          'href="https://paper.brokerlens.in/trade?symbol=RELIANCE"' in practice
+          and "Practise RELIANCE" in practice and "delayed historical prices" in practice
+          and "virtual money" in practice)
+    check("paper trading: unsupported symbols and non-Nifty-500 membership get no deep link",
+          pub._paper_trade_cta_html("OUTSIDE", [("nifty-bank", "Nifty Bank")]) == ""
+          and pub._paper_trade_cta_html("ONLY50", [("nifty-50", "Nifty 50")]) == "")
+    check("paper trading: deep-link symbols are URL encoded",
+          "symbol=ABC%26X" in pub._paper_trade_cta_html(
+              "ABC&X", [("nifty-500", "Nifty 500")]))
 
     # ---- 4. SIP permutations -----------------------------------------------------
     n_ok = sum(1 for a in sip.AMOUNTS for y in sip.DURATIONS if ix.sip_indexable(a, y))
@@ -381,6 +393,7 @@ def run(check, ROOT, load):
     # held out of the sitemap (98% of a 500-URL indexed sample, 23 Oct 2026), and
     # impressions fell 97% on 2 Nov. Out of the sitemap is not out of the index.
     from pipeline import trade_cost_engine as tce
+    from pipeline import broker_charges_engine as bce
     import inspect
     check("indexation: trade-cost pages and each broker's /trade/ listing carry noindex,follow; the /trade-costs/ hub does not",
           tce.TRADE_PAGE_ROBOTS == ix.NOINDEX_META
@@ -392,6 +405,11 @@ def run(check, ROOT, load):
     check("indexation: vercel.json also sends X-Robots-Tag noindex for /broker/:broker/trade/(.*), a second layer if a template loses the tag",
           bool(rule) and any(x.get("key") == "X-Robots-Tag" and "noindex" in x.get("value", "")
                              for x in rule[0].get("headers", [])))
+    cost_headers = [h for h in vj.get("headers", []) if h.get("source") == "/trade-costs/:broker/:stock/"]
+    check("indexation: limited trade-cost pages also send an X-Robots-Tag noindex header",
+          bool(cost_headers) and any(
+              x.get("key") == "X-Robots-Tag" and "noindex" in x.get("value", "")
+              for x in cost_headers[0].get("headers", [])))
     site_dir = os.path.join(ROOT, "site")
     trade_root = os.path.join(site_dir, "broker", "zerodha", "trade")
     sample = []
@@ -418,14 +436,61 @@ def run(check, ROOT, load):
             leaked += re.findall(r"<loc>[^<]*/broker/[^/<]+/trade/[^<]*</loc>", _read(os.path.join(site_dir, "sitemaps", fn)))
     check("indexation: no sitemap lists a noindexed trade-cost page", not leaked, str(leaked[:3]))
 
+    # Generate an isolated sample under the project root (not the system temp
+    # directory) to check the hard cap, canonical and robots output.
+    old_site, old_stocks = tce.SITE_DIR, tce.get_trade_cost_stocks
+    test_site = os.path.join(ROOT, ".qa-trade-costs-%d" % os.getpid())
+    os.makedirs(test_site)
+    fake_cost_stocks = [
+        {"symbol": "TEST%02d" % i, "name": "Test Company %d" % i, "isin": "",
+         "price": 100.0 + i, "sector": "EQ"}
+        for i in range(12)
+    ]
+    tce.SITE_DIR = test_site
+    tce.get_trade_cost_stocks = lambda limit_stocks=1000: fake_cost_stocks[:limit_stocks]
+    try:
+        selected = tce.get_trade_cost_stocks(limit_stocks=tce.LIMITED_COST_STOCK_LIMIT + 2)
+        sitemap_urls = tce.build_trade_cost_pages(
+            limit_stocks=100, site_url="https://www.brokerlens.in", selected_stocks=selected)
+        cost_root = os.path.join(test_site, "trade-costs")
+        generated = []
+        for broker_id in tce.LIMITED_COST_BROKERS:
+            broker_root = os.path.join(cost_root, broker_id)
+            if not os.path.isdir(broker_root):
+                continue
+            for stock_slug in sorted(os.listdir(broker_root)):
+                page_path = os.path.join(broker_root, stock_slug, "index.html")
+                if os.path.isfile(page_path):
+                    generated.append((broker_id, stock_slug, _read(page_path)))
+        eligible_cost_brokers = [k for k in tce.LIMITED_COST_BROKERS if bce.has_page(k)]
+        check("trade-cost pages: generator caps output at top 10 stocks x eligible common brokers",
+              len(generated) == min(tce.LIMITED_COST_STOCK_LIMIT, len(fake_cost_stocks)) * len(eligible_cost_brokers)
+              and len(generated) <= 40, str(len(generated)))
+        check("trade-cost pages: generated combinations are noindex,follow with their new canonicals",
+              bool(generated) and all(
+                  'content="noindex,follow"' in page
+                  and '<link rel="canonical" href="https://www.brokerlens.in/trade-costs/%s/%s/">' % (broker, slug) in page
+                  for broker, slug, page in generated))
+        check("trade-cost pages: only the hub is a sitemap candidate",
+              sitemap_urls == ["/trade-costs/"]
+              and pub._trade_cost_sitemap_urls(sitemap_urls + [
+                  tce.trade_cost_page_path("zerodha", "RELIANCE")]) == ["/trade-costs/"])
+        check("trade-cost pages: combinations are not passed into search-index generation",
+              "trade_cost_urls" not in inspect.signature(pub._write_search_index).parameters
+              and "trade_cost_page_path" not in inspect.getsource(pub._write_search_index))
+    finally:
+        tce.SITE_DIR = old_site
+        tce.get_trade_cost_stocks = old_stocks
+        shutil.rmtree(test_site, ignore_errors=True)
+
     # ---- the broker x stock trade pages are retired (10 Nov 2026) ----------------
     # 75,000 near-identical pages took Google's crawl (URL Inspection, 10 Nov: last crawls
     # 17 to 25 Oct, noindex never seen) while the /ipo/ hub and broker profiles sat in
     # "Discovered - currently not indexed". They 308 to the broker's cost page now.
-    from pipeline import broker_charges_engine as bce
     build_src = inspect.getsource(tce.build_trade_cost_pages)
-    check("trade retirement: the build writes only the /trade-costs/ hub and deletes any old /broker/<id>/trade/ output",
-          "render_trade_cost_page(" not in build_src and "render_broker_trade_index(" not in build_src
+    check("trade retirement: the build writes limited /trade-costs/ pages, never the old /broker/<id>/trade/ family",
+          "trade_cost_page_path(" in build_src and "LIMITED_COST_STOCK_LIMIT" in build_src
+          and "render_broker_trade_index(" not in build_src
           and "remove_retired_trade_pages()" in build_src)
     gen_links = []
     for fn in sorted(os.listdir(os.path.join(ROOT, "pipeline"))):
@@ -470,7 +535,8 @@ def run(check, ROOT, load):
           not wrong, str(wrong[:3]))
     check("trade retirement: no other path is caught by the trade redirects",
           _vercel_redirect("/broker/zerodha/")[0] is None and _vercel_redirect("/broker/zerodha/charges/")[0] is None
-          and _vercel_redirect("/stock/reliance/")[0] is None)
+          and _vercel_redirect("/stock/reliance/")[0] is None
+          and _vercel_redirect("/trade-costs/zerodha/reliance/")[0] is None)
     if os.path.isdir(os.path.join(site_dir, "broker", "zerodha")):
         left = [b for b in os.listdir(os.path.join(site_dir, "broker")) if os.path.isdir(os.path.join(site_dir, "broker", b, "trade"))]
         check("trade retirement: the build leaves no /broker/<id>/trade/ directory behind", not left, str(left[:5]))

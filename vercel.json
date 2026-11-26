@@ -6807,6 +6807,15 @@
   ],
   "headers": [
     {
+      "source": "/trade-costs/:broker/:stock/",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
       "source": "/broker/:broker/trade/(.*)",
       "headers": [
         {
