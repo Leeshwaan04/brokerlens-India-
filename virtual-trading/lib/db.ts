@@ -69,7 +69,11 @@ function nodePg(config: pg.PoolConfig): Db {
   // An idle connection the server or the runtime drops ("Network connection
   // lost" when a Worker request ends) surfaces here; without a listener it
   // becomes an unhandled error. The next query simply opens a new one.
-  pool.on("error", (err) => console.error("database connection dropped:", err.message));
+  // On Workers, closing a used connection (maxUses: 1) can also report "This
+  // socket has been closed" from the socket's read loop: expected, not logged.
+  pool.on("error", (err) => {
+    if (!/socket has been closed/i.test(err.message)) console.error("database connection dropped:", err.message);
+  });
   return drizzleNodePg(pool, { schema }) as unknown as Db;
 }
 
