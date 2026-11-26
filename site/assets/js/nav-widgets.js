@@ -12,6 +12,7 @@
  * the live/closed math client-side, on every view.
  */
 import { esc, loadTimings, safeUrl } from './store.js?v=b59cf0df04';
+import './watchlist.js?v=51a60d4e37';
 
 /* ------------------------------------------------------------- mobile nav */
 

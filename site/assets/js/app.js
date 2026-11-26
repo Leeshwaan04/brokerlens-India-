@@ -8,7 +8,7 @@
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=b59cf0df04';
 import * as pages from './pages.js?v=9bfd23da0a';
 import { clearRedraws } from './chart.js?v=22460af914';
-import './nav-widgets.js?v=a28438a7fe';
+import './nav-widgets.js?v=5e2c9f7920';
 import './search.js?v=25ab1aa597';
 import './hero-video.js?v=9e658a1fa5';
 

@@ -1362,6 +1362,7 @@ _APP_SHELL_HEAD = """<!doctype html>
       <a href="/registry/" data-link>SEBI registry</a>
       <a href="/algo/" data-link>Algo platforms</a>
       <a href="/ipo/">IPO</a>
+      <a href="https://paper.brokerlens.in/" class="nav-paper-cta" target="_blank" rel="noopener">Paper Trade</a>
       <a href="/news/" data-link>News &amp; Blogs</a>
       <a href="/reports/state-of-indian-broking-2026/">Reports</a>
       <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
