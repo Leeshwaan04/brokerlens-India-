@@ -47,7 +47,8 @@ export function EquityChart({
   const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
   const area = `${line} L${x(points.length - 1).toFixed(1)},${H - PAD.bottom} L${x(0).toFixed(1)},${H - PAD.bottom} Z`;
   const dateIndex = new Map(points.map((p, i) => [p.date, i]));
-  const benchLine = benchmark
+  // Needs at least two dates, or the line is a point and the caption would describe nothing visible.
+  const benchLine = benchmark && dateIndex.size >= 2
     ? benchmark.points
         .filter((p) => dateIndex.has(p.date))
         .map((p, i) => `${i === 0 ? "M" : "L"}${x(dateIndex.get(p.date)!).toFixed(1)},${y(p.value).toFixed(1)}`)
