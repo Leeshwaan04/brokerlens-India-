@@ -82,6 +82,9 @@ jobs:
     steps:
       - name: Skip until Cloudflare is configured
         if: env.CLOUDFLARE_API_TOKEN == ''
+        # Nothing is checked out on this path, so run from the workspace root
+        # rather than the job default (virtual-trading/), which does not exist.
+        working-directory: ${{ github.workspace }}
         run: echo "CLOUDFLARE_API_TOKEN not configured in GitHub secrets; deploy skipped."
 
       - uses: actions/checkout@v4
