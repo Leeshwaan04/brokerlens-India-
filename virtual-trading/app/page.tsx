@@ -21,7 +21,7 @@ const STEPS = [
     body: "Your virtual orders are costed with its real, published fee schedule. Switch any time.",
   },
   {
-    title: "Trade Nifty 100 stocks with ₹10 lakh of virtual cash",
+    title: "Trade Nifty 500 stocks with ₹10 lakh of virtual cash",
     body: "Market, limit, stop-loss and GTT orders, delivery or intraday, with every charge shown before you place it. Orders fill against official NSE prices, never instantly.",
   },
   {
@@ -45,7 +45,7 @@ const FAQ = [
   },
   {
     q: "What can I practise?",
-    a: "Nifty 100 stocks, delivery (CNC) and intraday (MIS) including short selling, with market, limit and stop-loss orders, valid for the day or GTT for up to a year.",
+    a: "Nifty 500 stocks, delivery (CNC) and intraday (MIS) including short selling, with market, limit and stop-loss orders, valid for the day or GTT for up to a year.",
   },
   {
     q: "How are charges calculated?",

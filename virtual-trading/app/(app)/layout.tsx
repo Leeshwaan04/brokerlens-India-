@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { eq } from "drizzle-orm";
 import { AppHeader } from "@/components/AppHeader";
+import { IndexStrip } from "@/components/IndexStrip";
 import { SiteFooter } from "@/components/SiteFooter";
 import { getCurrentAccount } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -28,6 +29,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <AppHeader signedIn={current !== null} brokerBrand={brokerBrand} />
+      {current?.account && <IndexStrip />}
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">{children}</main>
       <SiteFooter />
     </>

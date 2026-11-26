@@ -36,7 +36,7 @@ const card = h(
     h(
       "div",
       { style: { fontSize: 30, color: muted, lineHeight: 1.35 } },
-      "₹10 lakh virtual cash · Nifty 100 · market, limit, stop-loss, GTT · delivery and intraday",
+      "₹10 lakh virtual cash · Nifty 500 · market, limit, stop-loss, GTT · delivery and intraday",
     ),
   ),
   h("div", { style: { display: "flex", fontSize: 26, color: accent } }, "paper.brokerlens.in"),

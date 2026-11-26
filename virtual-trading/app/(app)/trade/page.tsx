@@ -24,7 +24,7 @@ import { toggleWatchlistAction } from "../actions";
 export const metadata: Metadata = { title: "Trade" };
 
 // Well-known large caps to start from, shown only if present in the synced
-// Nifty 100 universe. Symbols, not prices: every figure shown is from the
+// Nifty 500 universe. Symbols, not prices: every figure shown is from the
 // ingested NSE closes.
 const POPULAR = ["RELIANCE", "HDFCBANK", "TCS", "INFY", "ICICIBANK", "SBIN", "BHARTIARTL", "ITC", "LT", "HINDUNILVR", "KOTAKBANK", "AXISBANK"];
 
@@ -165,7 +165,7 @@ export default async function TradePage({
         title="Trade"
         subtitle={
           <>
-            Nifty 100 stocks at official NSE prices{anyClose ? `, latest close ${shortDate(anyClose.tradeDate)}` : ""}. Orders fill
+            Nifty 500 stocks at official NSE prices{anyClose ? `, latest close ${shortDate(anyClose.tradeDate)}` : ""}. Orders fill
             against the next session&apos;s official prices, never instantly.
           </>
         }
@@ -209,7 +209,7 @@ export default async function TradePage({
           {symbol && !stock && (
             <Card>
               <p className="text-sm text-muted">
-                &quot;{symbol}&quot; is not in the Nifty 100 universe this simulator covers. Search or pick one from the market watch.
+                &quot;{symbol}&quot; is not in the Nifty 500 universe this simulator covers. Search or pick one from the market watch.
               </p>
             </Card>
           )}

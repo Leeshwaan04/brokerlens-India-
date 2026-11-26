@@ -13,11 +13,13 @@ import { and, desc, eq, gt, lte, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   dailyPrices,
+  indexCloses,
   stockUniverse,
   marketHolidays,
   priceSyncRuns,
 } from "./schema";
 import { fetchBhavcopy, type DailyPriceRow } from "./bhavcopy";
+import { fetchIndexCloses, type IndexCloseRow } from "./index-closes";
 import {
   isoDateOnly,
   missingCloseAction,
@@ -53,6 +55,8 @@ const HISTORY_LEAD_DAYS = 90;
 const DEFAULT_HISTORY_FETCHES = 5;
 const MAX_HISTORY_FETCHES = 60;
 const NSE_PAUSE_MS = 400;
+// A stored day with fewer than this share of the universe's stocks is fetched again.
+const THIN_DAY_FRACTION = 0.85;
 
 const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const utcDate = (iso: string) => {
@@ -93,6 +97,26 @@ async function upsertDailyPrices(tradeDate: string, rows: DailyPriceRow[]) {
         prevClose: sql`excluded.prev_close`,
       },
     });
+}
+
+async function upsertIndexCloses(tradeDate: string, rows: IndexCloseRow[]) {
+  if (rows.length === 0) return;
+  const num = (v: number | null) => (v !== null ? String(v) : null);
+  await getDb()
+    .insert(indexCloses)
+    .values(rows.map((r) => ({ indexKey: r.indexKey, tradeDate, open: num(r.open), high: num(r.high), low: num(r.low), close: String(r.close), changePct: num(r.changePct) })))
+    .onConflictDoUpdate({
+      target: [indexCloses.indexKey, indexCloses.tradeDate],
+      set: { open: sql`excluded.open`, high: sql`excluded.high`, low: sql`excluded.low`, close: sql`excluded.close`, changePct: sql`excluded.change_pct` },
+    });
+}
+
+/** Index closes for one session. Context only: a miss never fails the sync. */
+async function ingestIndexCloses(day: string): Promise<boolean> {
+  const res = await fetchIndexCloses(utcDate(day));
+  if (res.status !== "ok") return false;
+  await upsertIndexCloses(day, res.rows);
+  return true;
 }
 
 export interface EodSyncOptions {
@@ -151,6 +175,7 @@ export async function runEodSync(
     }
     if (result.status === "not_published" || result.rows.length === 0) continue;
     await upsertDailyPrices(iso, result.rows);
+    await ingestIndexCloses(iso).catch(() => false);
     await db
       .insert(priceSyncRuns)
       .values({
@@ -199,16 +224,24 @@ export async function runEodSync(
           )
       ).map((r) => r.d),
     );
-    const wanted = tradingDaysBetween(
-      shiftDays(ceiling, -HISTORY_LEAD_DAYS),
-      ingested?.tradeDate ?? startIso,
-      holidaySet,
-    ).filter((d) => !have.has(d));
+    const missingDays = tradingDaysBetween(shiftDays(ceiling, -HISTORY_LEAD_DAYS), ingested?.tradeDate ?? startIso, holidaySet).filter(
+      (d) => !have.has(d),
+    );
+    // Days stored when the universe was smaller (100 stocks, now 500): fetched
+    // again so every stock has its history. The upsert is idempotent.
+    const perDay = await db
+      .select({ d: dailyPrices.tradeDate, n: sql<number>`count(*)::int` })
+      .from(dailyPrices)
+      .where(gt(dailyPrices.tradeDate, shiftDays(ceiling, -HISTORY_LEAD_DAYS - 1)))
+      .groupBy(dailyPrices.tradeDate);
+    const thinDays = perDay.filter((r) => r.n < allowedSymbols.size * THIN_DAY_FRACTION).map((r) => r.d);
+    const wanted = [...new Set([...missingDays, ...thinDays])].sort();
     for (const day of wanted.slice(0, budget)) {
       await pause(NSE_PAUSE_MS);
       const back = await fetchBhavcopy(utcDate(day), allowedSymbols);
       if (back.status === "ok" && back.rows.length > 0) {
         await upsertDailyPrices(day, back.rows);
+        await ingestIndexCloses(day).catch(() => false);
         await db
           .insert(priceSyncRuns)
           .values({
@@ -218,6 +251,21 @@ export async function runEodSync(
           });
         historyFetched.push(day);
       }
+    }
+  }
+
+  // 2b. Index closes for stored sessions that lack them (the first run after
+  // the table was added, or a day whose index file was late). A few per run
+  // is plenty once caught up.
+  const indexFetched: string[] = [];
+  {
+    const haveIndex = new Set((await db.selectDistinct({ d: indexCloses.tradeDate }).from(indexCloses)).map((r) => r.d));
+    const priced = (
+      await db.selectDistinct({ d: dailyPrices.tradeDate }).from(dailyPrices).where(gt(dailyPrices.tradeDate, shiftDays(startIso, -200)))
+    ).map((r) => r.d);
+    for (const day of priced.filter((d) => !haveIndex.has(d)).sort().slice(0, MAX_HISTORY_FETCHES)) {
+      await pause(NSE_PAUSE_MS);
+      if (await ingestIndexCloses(day).catch(() => false)) indexFetched.push(day);
     }
   }
 
@@ -260,6 +308,7 @@ export async function runEodSync(
       const back = await fetchBhavcopy(utcDate(missing), allowedSymbols);
       if (back.status === "ok" && back.rows.length > 0) {
         await upsertDailyPrices(missing, back.rows);
+        await ingestIndexCloses(missing).catch(() => false);
         await db
           .insert(priceSyncRuns)
           .values({
@@ -365,6 +414,7 @@ export async function runEodSync(
       lagDays: lag,
       ingested,
       historyFetched,
+      indexSessionsFetched: indexFetched.length,
       marketDate: through,
       backfilled,
       retargeted,

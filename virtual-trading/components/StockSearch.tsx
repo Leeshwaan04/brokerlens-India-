@@ -83,7 +83,7 @@ export function StockSearch({ autoFocus = false, placeholder }: { autoFocus?: bo
   return (
     <div className="relative">
       <label htmlFor={`${listId}-input`} className="sr-only">
-        Search Nifty 100 stocks
+        Search Nifty 500 stocks
       </label>
       <input
         id={`${listId}-input`}
@@ -128,7 +128,7 @@ export function StockSearch({ autoFocus = false, placeholder }: { autoFocus?: bo
         </ul>
       )}
       {searched && !loading && !open && query.trim() && (
-        <p className="mt-2 text-sm text-muted">No Nifty 100 stock matches &quot;{query.trim()}&quot;.</p>
+        <p className="mt-2 text-sm text-muted">No Nifty 500 stock matches &quot;{query.trim()}&quot;.</p>
       )}
     </div>
   );

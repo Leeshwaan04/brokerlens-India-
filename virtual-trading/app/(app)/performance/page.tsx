@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getCurrentAccount } from "@/lib/auth";
 import { getAccountSummary } from "@/lib/account-summary";
 import { getSnapshots } from "@/lib/snapshots";
+import { benchmarkPoints, getIndexSeries } from "@/lib/index-data";
 import { MIN_TRADES_FOR_SCORE } from "@/lib/scoring";
 import { inr, signedInr, signedPct, pnlTone } from "@/lib/format";
 import { EquityChart } from "@/components/EquityChart";
@@ -32,6 +33,11 @@ export default async function PerformancePage() {
     { date: startDate, value: s.startingBalance },
     ...snapshots.map((p) => ({ date: p.snapshotDate, value: Number(p.portfolioValue) })),
   ];
+  const benchmark = benchmarkPoints(
+    points.map((p) => p.date),
+    await getIndexSeries("nifty50", startDate),
+    s.startingBalance,
+  );
   const { score, label, enoughTrades, components: c } = s.score;
   const costDrag = s.turnoverTraded > 0 ? (s.chargesPaid / s.turnoverTraded) * 100 : null;
 
@@ -45,7 +51,7 @@ export default async function PerformancePage() {
             Portfolio value
           </CardTitle>
           <div className="num mb-3 text-3xl font-semibold text-ink">{inr(s.portfolioValue)}</div>
-          <EquityChart points={points} startingBalance={s.startingBalance} />
+          <EquityChart points={points} startingBalance={s.startingBalance} benchmark={benchmark ? { label: "Nifty 50", points: benchmark } : null} />
         </Card>
 
         <Card>

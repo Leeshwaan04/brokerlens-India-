@@ -17,6 +17,7 @@ import {
   index,
   check,
   jsonb,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -84,6 +85,22 @@ export const dailyPrices = pgTable(
     prevClose: numeric("prev_close"),
   },
   (t) => [uniqueIndex("daily_prices_symbol_date_idx").on(t.symbol, t.tradeDate)],
+);
+
+// NSE's daily closes for a handful of indices (lib/index-closes.ts): market
+// context and the Performance benchmark. Not tradable, so no link to orders.
+export const indexCloses = pgTable(
+  "index_closes",
+  {
+    indexKey: text("index_key").notNull(),
+    tradeDate: date("trade_date").notNull(),
+    open: numeric("open"),
+    high: numeric("high"),
+    low: numeric("low"),
+    close: numeric("close").notNull(),
+    changePct: numeric("change_pct"),
+  },
+  (t) => [primaryKey({ columns: [t.indexKey, t.tradeDate] })],
 );
 
 export const marketHolidays = pgTable("market_holidays", {

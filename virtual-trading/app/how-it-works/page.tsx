@@ -62,7 +62,7 @@ export default async function HowItWorksPage() {
           <Card>
             <h2 id="market" className="scroll-mt-24">The practice market</h2>
             <p className="mt-2">
-              You trade the Nifty 100 with ₹10,00,000 of virtual cash. The practice market runs {lag} days behind the real one:
+              You trade the Nifty 500 with ₹10,00,000 of virtual cash. The practice market runs {lag} days behind the real one:
               {lag > 0
                 ? ` if today is 25 November, the practice market is on 26 October, with that day's session, holidays and official NSE prices. Every price you see is at least ${lag} days old.`
                 : " it follows the real calendar, with official closes published each evening."}{" "}

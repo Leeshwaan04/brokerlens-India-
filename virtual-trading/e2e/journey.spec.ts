@@ -110,10 +110,16 @@ test("an intraday order with a stop-loss and target is placed", async () => {
 test("keyboard shortcuts switch side and move through the market watch", async () => {
   await page.goto("/trade?symbol=RELIANCE");
   await page.locator("body").click({ position: { x: 5, y: 300 } });
-  await page.keyboard.press("s");
-  await expect(page).toHaveURL(/side=SELL/);
-  await page.keyboard.press("ArrowDown");
-  await expect(page).not.toHaveURL(/symbol=RELIANCE/);
+  // The shortcuts register when the page hydrates, which can be a moment after
+  // the load event: press again until they take, rather than guess a delay.
+  await expect(async () => {
+    await page.keyboard.press("s");
+    await expect(page).toHaveURL(/side=SELL/, { timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
+  await expect(async () => {
+    await page.keyboard.press("ArrowDown");
+    await expect(page).not.toHaveURL(/symbol=RELIANCE/, { timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
 });
 
 test("the watchlist toggles", async () => {

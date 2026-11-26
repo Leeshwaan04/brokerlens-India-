@@ -5,7 +5,7 @@ import { APP_URL, SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
 const DESCRIPTION =
-  "Free paper trading for Indian investors: practise Nifty 100 stocks with ₹10 lakh of virtual cash, market, limit, stop-loss and GTT orders, delivery and intraday, with every broker's real charges.";
+  "Free paper trading for Indian investors: practise Nifty 500 stocks with ₹10 lakh of virtual cash, market, limit, stop-loss and GTT orders, delivery and intraday, with every broker's real charges.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

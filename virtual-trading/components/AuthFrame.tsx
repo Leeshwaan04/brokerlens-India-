@@ -4,7 +4,7 @@ import { AppHeader } from "./AppHeader";
 import { SiteFooter } from "./SiteFooter";
 
 const POINTS = [
-  "₹10 lakh of virtual cash, Nifty 100 stocks",
+  "₹10 lakh of virtual cash, Nifty 500 stocks",
   "Every charge shown before you place an order",
   "Replay your trades at every broker to see who is cheapest for you",
 ];

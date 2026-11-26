@@ -119,7 +119,7 @@ export DATABASE_URL="$SUPABASE_SESSION_URL"
 npx drizzle-kit migrate            # applies every migration in drizzle/
 npm run sync:broker-rates          # broker fee schedules from seed/broker-rates.json
 npm run seed:market-holidays       # NSE trading holidays
-npm run sync:stock-universe        # Nifty 100 constituents from NSE
+npm run sync:stock-universe        # Nifty 50, 100 and 500 constituents (the universe is the Nifty 500)
 npx tsx scripts/eod-sync.mts --history 60   # price history; run twice on a new database
 unset DATABASE_URL
 # Supabase only: close its Data API to the app's tables (see the file)

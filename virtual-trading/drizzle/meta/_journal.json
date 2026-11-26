@@ -50,6 +50,13 @@
       "when": 1795627624801,
       "tag": "0006_payments",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795692630534,
+      "tag": "0007_index_closes",
+      "breakpoints": true
     }
   ]
 }

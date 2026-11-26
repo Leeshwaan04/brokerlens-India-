@@ -12,7 +12,16 @@ const PAD = { top: 12, right: 8, bottom: 24, left: 8 };
 // Portfolio value at each ingested close, drawn as an inline SVG area chart
 // with a dashed line at the starting balance. Server-rendered, no chart
 // library, no client JavaScript.
-export function EquityChart({ points, startingBalance }: { points: EquityPoint[]; startingBalance: number }) {
+export function EquityChart({
+  points,
+  startingBalance,
+  benchmark,
+}: {
+  points: EquityPoint[];
+  startingBalance: number;
+  /** The index's move on the same scale (lib/index-data.ts benchmarkPoints), drawn as a dotted line. */
+  benchmark?: { label: string; points: EquityPoint[] } | null;
+}) {
   if (points.length < 2) {
     return (
       <div className="flex h-[200px] items-center justify-center rounded-lg bg-sub px-6 text-center text-sm text-muted">
@@ -20,7 +29,7 @@ export function EquityChart({ points, startingBalance }: { points: EquityPoint[]
       </div>
     );
   }
-  const values = points.map((p) => p.value);
+  const values = [...points.map((p) => p.value), ...(benchmark?.points.map((p) => p.value) ?? [])];
   let min = Math.min(...values, startingBalance);
   let max = Math.max(...values, startingBalance);
   // Never let the axis auto-zoom below a 4% band (±2% of the starting
@@ -37,6 +46,13 @@ export function EquityChart({ points, startingBalance }: { points: EquityPoint[]
   const y = (v: number) => PAD.top + (1 - (v - min) / span) * (H - PAD.top - PAD.bottom);
   const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
   const area = `${line} L${x(points.length - 1).toFixed(1)},${H - PAD.bottom} L${x(0).toFixed(1)},${H - PAD.bottom} Z`;
+  const dateIndex = new Map(points.map((p, i) => [p.date, i]));
+  const benchLine = benchmark
+    ? benchmark.points
+        .filter((p) => dateIndex.has(p.date))
+        .map((p, i) => `${i === 0 ? "M" : "L"}${x(dateIndex.get(p.date)!).toFixed(1)},${y(p.value).toFixed(1)}`)
+        .join(" ")
+    : "";
   const last = points[points.length - 1];
   const up = last.value >= startingBalance;
   const stroke = up ? "var(--up)" : "var(--down)";
@@ -56,6 +72,7 @@ export function EquityChart({ points, startingBalance }: { points: EquityPoint[]
         <line x1={PAD.left} x2={W - PAD.right} y1={y(startingBalance)} y2={y(startingBalance)} stroke="var(--border-strong)" strokeDasharray="4 4" />
         <path d={area} fill="url(#equity-fill)" />
         <path d={line} fill="none" stroke={stroke} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        {benchLine && <path d={benchLine} fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeDasharray="1 4" strokeLinecap="round" />}
         <circle cx={x(points.length - 1)} cy={y(last.value)} r="3.5" fill={stroke} />
         <text x={PAD.left + 4} y={PAD.top + 10} fontSize="10" fill="var(--text-faint)">
           {inrWhole(max)}
@@ -70,7 +87,10 @@ export function EquityChart({ points, startingBalance }: { points: EquityPoint[]
           {shortDate(last.date)}
         </text>
       </svg>
-      <figcaption className="mt-1 text-xs text-muted">Dashed line: your starting balance of {inrWhole(startingBalance)}.</figcaption>
+      <figcaption className="mt-1 text-xs text-muted">
+        Dashed line: your starting balance of {inrWhole(startingBalance)}.
+        {benchLine && benchmark && <> Dotted line: what {inrWhole(startingBalance)} would have done in the {benchmark.label}, over the same dates.</>}
+      </figcaption>
     </figure>
   );
 }
