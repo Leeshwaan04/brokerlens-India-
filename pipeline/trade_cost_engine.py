@@ -36,21 +36,24 @@ except ImportError:  # run as a script
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_DIR = os.path.join(ROOT, "site")
 
-# Every broker x stock page, and each broker's /trade/ listing, is noindex,follow.
-# Wave 3 kept them out of the sitemap, but with no robots tag they were indexable and
-# every stock page links to them, so Google indexed them anyway: 491 of a 500-URL
-# sample of the 33.5K indexed pages (Search Console, 23 Oct 2026) were these
-# near-identical templates, on a two-month-old finance domain, and impressions fell
-# 97% overnight on 2 Nov. They stay crawlable (follow) so Google sees the noindex and
-# drops them; the single /trade-costs/ hub stays indexable. Releasing this family is
-# a deliberate decision (remove this tag), never a side effect of a missing one.
+# The retired /broker/<id>/trade/ family stays redirected. A deliberately limited
+# replacement set under /trade-costs/ remains noindex,follow and outside all
+# sitemaps/search output; the hub itself stays indexable.
 TRADE_PAGE_ROBOTS = _ix.NOINDEX_META
 DATA_DIR = os.path.join(ROOT, "data")
 CONFIG_DIR = os.path.join(ROOT, "config")
+LIMITED_COST_STOCK_LIMIT = 10
+LIMITED_COST_BROKERS = ("zerodha", "groww", "angel-one", "upstox")
 
 
 def _stock_slug(sym: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", (sym or "").lower()).strip("-")
+
+
+def trade_cost_page_path(broker_id: str, stock_sym: str) -> str:
+    """Canonical path for the limited, noindex stock-by-broker cost pages."""
+    return "/trade-costs/%s/%s/" % (broker_id, _stock_slug(stock_sym))
+
 
 # Standard statutory rates in India (post-2024 SEBI & Budget revisions)
 NSE_TURNOVER_RATE = 0.0000297  # 0.00297%
@@ -658,18 +661,29 @@ def calculate_trade_fees(price: float, qty: int, broker_key: str, trade_type: st
 
 
 def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin: str,
-                           price: float, sector: str, site_url: str = "https://www.brokerlens.in") -> str:
+                           price: float, sector: str, site_url: str = "https://www.brokerlens.in",
+                           url_path: str | None = None) -> str:
     """Generates a complete, beautiful, SEO-optimized static HTML page."""
     b = BROKER_RATES.get(broker_id, BROKER_RATES["zerodha"])
     brand = b["brand"]
     stock_slug = _stock_slug(stock_sym)
-    canonical_url = f"{site_url}/broker/{broker_id}/trade/{stock_slug}/"
-    page_title = f"{brand} Charges to Trade {stock_name} ({stock_sym}) | Brokerage & Tax Calculator"
-    meta_desc = (f"Exact brokerage, STT, exchange fees, GST, stamp duty and breakeven calculator for "
-                 f"buying {stock_name} ({stock_sym}) shares on {brand}. Compare delivery vs intraday.")[:290]
+    canonical_path = url_path or f"/broker/{broker_id}/trade/{stock_slug}/"
+    canonical_url = f"{site_url}{canonical_path}"
+    page_title = f"Indicative {brand} Charges for {stock_name} ({stock_sym}) | Cost Calculator"
+    meta_desc = (f"Indicative brokerage, STT, exchange fees, GST, stamp duty and breakeven estimate for "
+                 f"{stock_name} ({stock_sym}) on {brand}. BrokerLens model pricing is not verified against the broker's rate card.")[:290]
+    pricing_note = (
+        "Figures use an indicative schedule held in the BrokerLens model and statutory rates. "
+        "They have not been verified against the broker's own rate card; confirm current charges with the broker."
+    )
 
     # Link to the broker's canonical calculator page (one-line hook, see broker_charges_engine)
     charges_link_html = _charges_link_block(broker_id)
+    try:
+        from .broker_charges_engine import charges_link_html as _charges_link
+        charges_footer_link_html = _charges_link(broker_id) or ""
+    except Exception:
+        charges_footer_link_html = ""
 
     # Pre-calculated standard trade tiers
     quantities = [1, 10, 50, 100, 500]
@@ -677,7 +691,12 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
     intraday_tiers = [calculate_trade_fees(price, q, broker_id, "intraday") for q in quantities]
 
     # Comparison against alternative brokers for 100 shares
-    cmp_brokers = [k for k in ["zerodha", "groww", "angel-one", "dhan", "icici-direct"] if k != broker_id][:4]
+    try:
+        from .broker_charges_engine import has_page as _has_charges_page
+    except Exception:
+        _has_charges_page = lambda _key: False
+    cmp_brokers = [k for k in ["zerodha", "groww", "angel-one", "dhan", "icici-direct"]
+                   if k != broker_id and _has_charges_page(k)][:4]
     cmp_results = []
     for cb_id in cmp_brokers:
         cb_info = BROKER_RATES[cb_id]
@@ -701,12 +720,12 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
                     {"@type": "ListItem", "position": 1, "name": "BrokerLens", "item": f"{site_url}/"},
                     {"@type": "ListItem", "position": 2, "name": "Brokers", "item": f"{site_url}/brokers"},
                     {"@type": "ListItem", "position": 3, "name": brand, "item": f"{site_url}/broker/{broker_id}/"},
-                    {"@type": "ListItem", "position": 4, "name": f"Trade {stock_sym}", "item": canonical_url}
+                    {"@type": "ListItem", "position": 4, "name": f"Indicative cost for {stock_sym}", "item": canonical_url}
                 ]
             },
             {
                 "@type": "FinancialProduct",
-                "name": f"{brand} Trading Charges for {stock_name}",
+                "name": f"Indicative {brand} Trading Charges for {stock_name}",
                 "provider": {
                     "@type": "FinancialService",
                     "name": brand,
@@ -723,7 +742,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
                         "name": f"What is the brokerage for buying {stock_name} shares on {brand}?",
                         "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": f"On {brand}, equity delivery brokerage for {stock_name} is {_rule_text(b['delivery_flat'], b['delivery_pct'], b.get('cap_verified_asof'))}. Intraday brokerage is {_rule_text(b['intraday_flat'], b['intraday_pct'], b.get('cap_verified_asof'))}."
+                            "text": f"On the indicative schedule, equity delivery brokerage for {stock_name} on {brand} is {_rule_text(b['delivery_flat'], b['delivery_pct'], b.get('cap_verified_asof'))}. Intraday trades use {_rule_text(b['intraday_flat'], b['intraday_pct'], b.get('cap_verified_asof'))}. Check the broker's current rate card before placing an order."
                         }
                     },
                     {
@@ -841,13 +860,13 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
   <a href="/">BrokerLens</a><span class="sep"> &rsaquo; </span>
   <a href="/brokers/">Brokers</a><span class="sep"> &rsaquo; </span>
   <a href="/broker/{broker_id}/">{brand}</a><span class="sep"> &rsaquo; </span>
-  <span aria-current="page">Trade {stock_sym}</span>
+  <span aria-current="page">Indicative cost for {stock_sym}</span>
 </nav>
 
 <div class="row-between" style="align-items:flex-start;flex-wrap:wrap;gap:16px;margin-top:10px">
   <div>
     <div class="pill-tag accent" style="margin-bottom:8px"><span>✦</span> Primary-Disclosed Fee Matrix</div>
-    <h1 style="margin:0 0 4px 0">{brand} Charges for {stock_name}</h1>
+    <h1 style="margin:0 0 4px 0">Indicative {brand} Charges for {stock_name}</h1>
     <p class="muted" style="margin:0">NSE: <strong>{stock_sym}</strong> &middot; Last Close: <strong>&#8377;{price:,.2f}</strong> &middot; Sector: {sector or 'Diversified'}</p>
   </div>
   <div class="row-wrap" style="gap:10px">
@@ -857,6 +876,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 </div>
 
 {charges_link_html}
+<p class="pending" role="note" style="margin-top:14px">{_esc(pricing_note)}</p>
 <div class="grid g4" style="margin-top:24px">
   <div class="card stat">
     <div class="stat-label">Delivery Brokerage</div>
@@ -883,7 +903,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 <div class="section-title" style="margin-top:36px">
   <div>
     <div class="section-eyebrow">EQUITY DELIVERY FEE BREAKDOWN</div>
-    <h2>Exact Delivery Cost by Order Quantity (Roundtrip)</h2>
+    <h2>Indicative Delivery Cost by Order Quantity (Roundtrip)</h2>
   </div>
 </div>
 <div class="table-scroll">
@@ -986,7 +1006,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 <div style="max-width:72ch">
   <details class="faq-item" open>
     <summary>What is the brokerage for buying {stock_name} shares on {brand}?</summary>
-    <p>On {brand}, equity delivery brokerage for {stock_name} is {_rule_text(b['delivery_flat'], b['delivery_pct'], b.get('cap_verified_asof'))}. Intraday trades incur {_rule_text(b['intraday_flat'], b['intraday_pct'], b.get('cap_verified_asof'))}.</p>
+    <p>On the indicative schedule, equity delivery brokerage for {stock_name} on {brand} is {_rule_text(b['delivery_flat'], b['delivery_pct'], b.get('cap_verified_asof'))}. Intraday trades use {_rule_text(b['intraday_flat'], b['intraday_pct'], b.get('cap_verified_asof'))}. Check the broker's current rate card before placing an order.</p>
   </details>
   <details class="faq-item">
     <summary>How much STT and government tax is charged when buying {stock_name}?</summary>
@@ -1001,8 +1021,8 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
 </main>
 
 <footer class="site"><div class="wrap">
-  <p class="small muted" style="max-width:70ch">BrokerLens is an independent financial research service, not a SEBI-registered investment adviser. Calculations reflect official NSE, BSE, SEBI, and broker published rate schedules as of BrokerLens's latest data refresh. Nothing here constitutes a recommendation to buy, sell, or trade any security. <a href="/methodology/">Methodology</a> &middot; <a href="/sources/">Sources &amp; lineage</a> &middot; <a href="/editorial-policy/">Editorial Policy</a></p>
-  <p class="small"><a href="/brokers/">All Brokers</a> &middot; <a href="/compare/">Compare Brokers</a> &middot; <a href="/calculator/">Fee Calculator</a> &middot; <a href="/stocks/">Stocks Directory</a> &middot; <a href="/">BrokerLens Home</a></p>
+  <p class="small muted" style="max-width:70ch">BrokerLens is an independent financial research service, not a SEBI-registered investment adviser. Broker fees shown here are indicative model estimates and are not verified against the broker's current rate card. Statutory charges use the rates described in the calculation. Confirm all charges with your broker before trading. Nothing here constitutes a recommendation to buy, sell, or trade any security. <a href="/methodology/">Methodology</a> &middot; <a href="/sources/">Sources &amp; lineage</a> &middot; <a href="/editorial-policy/">Editorial Policy</a></p>
+  <p class="small"><a href="/stock/{stock_slug}/">View {stock_sym} facts</a> &middot; {charges_footer_link_html} <a href="/broker/{broker_id}/">Broker profile</a> &middot; <a href="/trade-costs/">Trade Costs hub</a></p>
 </div></footer>
 </body>
 </html>
@@ -1352,8 +1372,9 @@ def get_trade_cost_stocks(limit_stocks: int = 1000):
     return valid_stocks[:limit_stocks]
 
 
-def build_trade_cost_pages(limit_stocks: int = 1000, site_url: str = "https://www.brokerlens.in"):
-    """Writes the /trade-costs/ hub. The broker x stock pages are retired (see below)."""
+def build_trade_cost_pages(limit_stocks: int = 1000, site_url: str = "https://www.brokerlens.in",
+                           selected_stocks=None):
+    """Write the hub and a capped, noindex set of selected stock-by-broker pages."""
     removed = remove_retired_trade_pages()
     if removed:
         print(f"[trade_cost_engine] Removed {removed} retired /broker/<id>/trade/ directories")
@@ -1361,6 +1382,10 @@ def build_trade_cost_pages(limit_stocks: int = 1000, site_url: str = "https://ww
     if not valid_stocks:
         print("[trade_cost_engine] Error: no valid stocks found")
         return []
+    selected_stocks = list(
+        get_trade_cost_stocks(limit_stocks=LIMITED_COST_STOCK_LIMIT)
+        if selected_stocks is None else selected_stocks
+    )[:LIMITED_COST_STOCK_LIMIT]
 
     generated_urls = []
 
@@ -1372,14 +1397,37 @@ def build_trade_cost_pages(limit_stocks: int = 1000, site_url: str = "https://ww
         out.write(hub_html)
     generated_urls.append("/trade-costs/")
 
-    # 2. The broker x stock pages are retired (10 Nov 2026). 30 brokers x 2,500 stocks made
-    # 75,000 near-identical pages: Google indexed 33.5K of them, impressions fell 97% on
-    # 2 Nov, and on 10 Nov URL Inspection showed Google still spending its crawl on them
-    # (last crawls 17 to 25 Oct, so it had not even seen their noindex) while the /ipo/ hub
-    # and most broker profiles sat in "Discovered - currently not indexed". Each one now
-    # 308s to its broker's cost page (broker_charges_engine.cost_page_path, vercel.json),
-    # whose calculator takes any order value. Never regenerate them.
-    print("[trade_cost_engine] Wrote the /trade-costs/ hub")
+    # Keep only this allowlisted namespace in sync. The former /broker/<id>/trade/
+    # family is retired and its redirects are deliberately untouched.
+    import shutil
+    for broker_id in LIMITED_COST_BROKERS:
+        stale = os.path.join(hub_dir, broker_id)
+        if os.path.isdir(stale):
+            shutil.rmtree(stale)
+
+    try:
+        from .broker_charges_engine import has_page
+    except ImportError:
+        from broker_charges_engine import has_page
+    eligible_brokers = [k for k in LIMITED_COST_BROKERS if has_page(k)]
+    written = 0
+    for stock in selected_stocks:
+        symbol = stock["symbol"].upper()
+        for broker_id in eligible_brokers:
+            page = render_trade_cost_page(
+                broker_id, symbol, stock.get("name") or symbol, stock.get("isin") or "",
+                float(stock["price"]), stock.get("sector") or "Diversified",
+                site_url=site_url, url_path=trade_cost_page_path(broker_id, symbol),
+            )
+            dest = os.path.join(hub_dir, broker_id, _stock_slug(symbol), "index.html")
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            with open(dest, "w", encoding="utf-8") as out:
+                out.write(page)
+            written += 1
+
+    # Only the indexable hub is a sitemap candidate. Combination URLs are
+    # intentionally omitted and carry noindex,follow even when internally linked.
+    print(f"[trade_cost_engine] Wrote the /trade-costs/ hub and {written} noindex combination pages")
     return generated_urls
 
 

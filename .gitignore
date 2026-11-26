@@ -60,6 +60,7 @@ venv/
 .claude/
 dist/
 dist-vt/
+.qa-tmp/
 *.zip
 .vercel
 .wrangler/

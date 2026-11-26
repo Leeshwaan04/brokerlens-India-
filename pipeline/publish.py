@@ -22,6 +22,7 @@ import os
 import re
 import shutil
 import urllib.request
+from urllib.parse import quote
 from datetime import datetime, timezone
 
 from . import feeds, metrics
@@ -1918,6 +1919,51 @@ _BROKER_TYPE_BLURB = {
 }
 
 
+_MONTHS = ("January", "February", "March", "April", "May", "June", "July", "August",
+           "September", "October", "November", "December")
+
+
+def _month_label(as_of):
+    """'2026-10' or '2026-10-31' -> 'October 2026'; anything else is returned unchanged."""
+    m = re.match(r"^(\d{4})-(\d{2})", str(as_of or ""))
+    if m and 1 <= int(m.group(2)) <= 12:
+        return "%s %s" % (_MONTHS[int(m.group(2)) - 1], m.group(1))
+    return str(as_of or "")
+
+
+def _broker_summary(b):
+    """Two or three plain sentences stating the page's key facts, for readers and
+    answer engines. Built only from fields this page already shows; a fact that
+    is missing is left out, never estimated. Returns '' when there is too little."""
+    p, c, cost = b["profile"], b.get("clients") or {}, b.get("cost") or {}
+    brand = p.get("brand") or b["id"]
+    first = brand
+    if p.get("legal_name") and p["legal_name"] != brand:
+        first += " (%s)" % p["legal_name"]
+    kind = TYPE_LABEL.get(p.get("type"), p.get("type"))
+    first += " is a %s stock broker" % kind.lower() if kind else " is a stock broker"
+    if p.get("hq"):
+        first += " headquartered in %s" % p["hq"]
+    if p.get("founded"):
+        first += ", founded in %s" % p["founded"]
+    if p.get("sebi_reg_no"):
+        first += ", registered with SEBI under %s" % p["sebi_reg_no"]
+    sentences = [first + "."]
+    if c.get("active_clients") is not None and c.get("as_of"):
+        line = "It had %s active clients as of %s" % (format(c["active_clients"], ","), _month_label(c["as_of"]))
+        if c.get("market_share_pct") is not None:
+            line += ", %.2f%% of all active clients at NSE brokers" % c["market_share_pct"]
+        sentences.append(line + ".")
+    if cost.get("monthly_total") is not None:
+        sentences.append("A standard month of trading on BrokerLens's fixed basket costs Rs %.2f in brokerage and demat "
+                         "charges at %s (statutory charges, the same at every broker, excluded)."
+                         % (cost["monthly_total"], brand))
+    if len(sentences) < 2:
+        return ""
+    return ('<p class="lede" style="max-width:72ch;line-height:1.6;margin:8px 0 18px">%s '
+            '<a href="/methodology/">How these figures are sourced</a>.</p>' % _esc(" ".join(sentences)))
+
+
 def _broker_depth(b, built):
     """Real, sourced depth for a broker profile page: regulatory facts from the
     SEBI register, how to verify and complain through official channels, links
@@ -2016,6 +2062,17 @@ def _broker_depth(b, built):
     if dps:
         faqs.append(("Is %s a depository participant?" % brand,
                      "Yes. The register lists: %s." % "; ".join("%s registration %s" % (d.get("depository"), d.get("reg_no")) for d in dps)))
+    _c, _cost = b.get("clients") or {}, b.get("cost") or {}
+    if _c.get("active_clients") is not None and _c.get("as_of"):
+        faqs.append(("How many active clients does %s have?" % brand,
+                     "%s had %s active clients as of %s, from NSE's member-wise active client data." % (
+                         brand, format(_c["active_clients"], ","), _month_label(_c["as_of"]))))
+    if _cost.get("monthly_total") is not None:
+        faqs.append(("How much does trading with %s cost per month?" % brand,
+                     "On BrokerLens's fixed standard-month basket, %s costs Rs %.2f in brokerage plus demat AMC. "
+                     "Statutory charges (STT, stamp duty, exchange and SEBI fees, GST) are excluded because they are the "
+                     "same at every broker. Your own cost depends on what and how much you trade; the methodology page "
+                     "defines the basket." % (brand, _cost["monthly_total"])))
     faqs.append(("How do I complain about %s?" % brand,
                  "Raise it with %s's grievance cell first, then register it on SEBI SCORES (scores.sebi.gov.in) or use SMART ODR (smartodr.in) "
                  "if it is not resolved." % brand))
@@ -2029,6 +2086,7 @@ def _broker_depth(b, built):
     )
     body = (
         '<div class="wrap" data-static-only style="padding-top:0;padding-bottom:24px">'
+        + _broker_summary(b)
         + ibslBanner_html("wide", "broker")
         + reg_html + verify_html + complain_html + "".join(extra) + faq_html
         + '<p class="xs faint" style="margin-top:20px">BrokerLens is an information service, not a SEBI-registered investment '
@@ -2310,6 +2368,22 @@ def _stock_slug(symbol):
     so an index page's constituent links always land on the real stock page
     for the same company instead of a slightly different slug."""
     return re.sub(r"[^a-z0-9]+", "-", (symbol or "").lower()).strip("-")
+
+
+def _paper_trade_cta_html(symbol, member_of):
+    """Return a practice link only for stocks in the app's supported Nifty 500."""
+    if not any(slug == "nifty-500" for slug, _label in (member_of or [])):
+        return ""
+    symbol = (symbol or "").strip().upper()
+    if not symbol:
+        return ""
+    href = "https://paper.brokerlens.in/trade?symbol=%s" % quote(symbol, safe="")
+    return (
+        '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0">'
+        '<a class="btn btn-primary btn-sm" href="%s">Practise %s &rarr;</a>'
+        '<span class="xs muted">Practice with virtual money using delayed historical prices; not live trading.</span>'
+        '</div>'
+    ) % (_esc(href), _esc(symbol))
 
 
 def _stock_price_html(history):
@@ -2639,11 +2713,21 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
     valid_symbols = {(c.get("symbol") or "").strip().upper() for c in companies} - {""}
     try:
         from .broker_charges_engine import has_page as _has_charges, charges_path as _charges_path
-        from .trade_cost_engine import BROKER_RATES as _rates
+        from .trade_cost_engine import (
+            BROKER_RATES as _rates, LIMITED_COST_BROKERS as _cost_brokers,
+            LIMITED_COST_STOCK_LIMIT as _cost_stock_limit, get_trade_cost_stocks as _get_cost_stocks,
+            trade_cost_page_path as _cost_page_path,
+        )
         stock_cost_links = [(_rates[k]["brand"], _charges_path(k))
                             for k in ("zerodha", "groww", "angel-one", "upstox") if _has_charges(k)]
+        limited_cost_symbols = {
+            s["symbol"].upper() for s in _get_cost_stocks(limit_stocks=_cost_stock_limit)
+        }
+        limited_cost_brokers = [k for k in _cost_brokers if _has_charges(k)]
     except Exception:
         stock_cost_links = []
+        limited_cost_symbols = set()
+        limited_cost_brokers = []
     ipo_by_slug = {}
     for r in (ipo_records or []):
         sym_r = (r.get("symbol") or "").strip().lower()
@@ -2881,6 +2965,24 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             '<a class="badge" href="%s" style="text-decoration:none;padding:5px 9px">%s brokerage calculator &rarr;</a>'
             % (_esc(path), _esc(brand)) for brand, path in stock_cost_links)
 
+        selected_cost_links = ""
+        if symbol.upper() in limited_cost_symbols:
+            selected_cost_links = (
+                '<div style="margin-top:10px">'
+                '<p class="xs muted" style="margin:0 0 6px">Indicative cost examples for %s:</p>'
+                '<div style="display:flex;flex-wrap:wrap;gap:8px">%s</div>'
+                '</div>'
+            ) % (
+                _esc(symbol.upper()),
+                "".join(
+                    '<a class="badge" href="%s" style="text-decoration:none;padding:5px 9px">%s estimate &rarr;</a>'
+                    % (_esc(_cost_page_path(k, symbol)), _esc(_rates[k]["brand"]))
+                    for k in limited_cost_brokers
+                ),
+            )
+
+        paper_trade_cta = _paper_trade_cta_html(symbol, member_of)
+
         demat_cta_html = (
             '<div style="margin-top:14px;background:var(--bg-raised);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow-sm)">'
             '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
@@ -2900,7 +3002,9 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
             '<div class="card-title">Trade %s</div>'
             '<p class="small muted" style="margin:4px 0 10px 0">%s is tradable through any SEBI-registered broker '
             'with an NSE cash-market membership. Compare broker charges, STT, and breakeven point movements:</p>'
+            + paper_trade_cta
             + trade_badges
+            + selected_cost_links
             + demat_cta_html +
             '</div>'
         ) % (_esc(symbol), _esc(name))
@@ -8574,9 +8678,10 @@ def _write_sitemap(built, reg_rows=None, hub_groups=None, companies=None, indice
     ]
 
     # 9. TRADE COSTS SITEMAP (Transactional stock x broker calculations)
-    # Only the /trade-costs/ hub now: the broker x stock pages are retired (308s in vercel.json).
-    trade_cost_entries = [_xml_url(SITE_URL + u, today, "monthly") for u in (trade_cost_urls or [])
-                          if "/trade/" not in u]
+    # Only the indexable hub belongs here. The selected stock x broker pages
+    # under /trade-costs/ are explicitly noindex and must never enter a sitemap.
+    trade_cost_entries = [_xml_url(SITE_URL + u, today, "monthly")
+                          for u in (trade_cost_urls or []) if u == "/trade-costs/"]
 
     # 10. IPO APPLICATION WALKTHROUGHS SITEMAP
     ipo_apply_entries = []
@@ -8882,7 +8987,108 @@ def _write_feed(built, aggregates):
            "%s</channel></rss>" % (SITE_URL, "".join(items)))
     _write_text(os.path.join(SITE_DATA, "..", "feed.xml"), xml)
     _write_robots(extra_sitemaps=[_write_retired_sitemap()])
+    _write_llms_txt(built)
+    _write_indexnow_key()
     _write_ads_txt()
+
+
+# Hubs listed in /llms.txt, in reading order. Each entry is written only when its
+# page was built, so the file never points an assistant at a 404.
+_LLMS_HUBS = (
+    ("Brokers", (
+        ("/brokers/", "All brokers", "All Indian stock brokers tracked, with active clients, market share and reliability scores"),
+        ("/compare/", "Compare brokers", "Side-by-side broker comparisons"),
+        ("/find-broker/", "Broker finder", "Broker finder by trading style and charges"),
+        ("/trade-costs/", "Trade costs", "What a trade actually costs at each broker, all statutory charges included"),
+        ("/calculator/", "Brokerage calculator", "Brokerage and charges calculator"),
+        ("/branches/", "Branch locator", "Broker branch locator by city"),
+    )),
+    ("IPOs", (
+        ("/ipo/", "IPO hub", "IPO hub: open, upcoming and listed issues with lot size, subscription and listing performance"),
+        ("/ipo/upcoming/", "Upcoming IPOs", "Upcoming IPO calendar"),
+        ("/ipo/subscription/", "IPO subscription status", "IPO subscription status by investor category"),
+        ("/ipo/allotment-status/", "IPO allotment status", "How to check IPO allotment status, by registrar"),
+        ("/ipo/how-to-apply/", "How to apply for an IPO", "How to apply for an IPO through UPI ASBA"),
+        ("/ipo/archive/", "IPO archive", "Past IPOs with listing returns"),
+    )),
+    ("Markets and funds", (
+        ("/stocks/", "Stocks", "Stock pages for NSE and BSE listed companies"),
+        ("/etfs/", "ETFs", "ETF pages"),
+        ("/funds-by/", "Mutual funds by fund house", "Mutual fund schemes grouped by fund house"),
+        ("/calculators/", "Calculators", "Investment calculators (SIP, lumpsum, brokerage and more)"),
+        ("/stock-market-holidays/", "Stock market holidays", "NSE and BSE trading holidays"),
+        ("/news/", "News", "Market news and explainers"),
+    )),
+    ("Regulatory", (
+        ("/registry/", "SEBI registry", "SEBI-registered intermediaries directory: brokers, depository participants and more"),
+    )),
+    ("How BrokerLens works", (
+        ("/methodology/", "Methodology", "How every figure is computed and what BrokerLens does not do"),
+        ("/sources/", "Sources and data lineage", "Every primary exchange and regulator dataset used, with its refresh status"),
+        ("/editorial-policy/", "Editorial policy", "Editorial standards, corrections and affiliate disclosure"),
+        ("/about/", "About", "About BrokerLens"),
+        ("/contact/", "Contact", "Contact and data correction requests"),
+    )),
+)
+
+
+# IndexNow (Bing, Yandex, Seznam and others; ChatGPT search and Copilot read Bing's
+# index). The key is public by design: search engines verify ownership by fetching
+# /<key>.txt and checking it contains the key. scripts/indexnow_ping.py submits URLs.
+INDEXNOW_KEY = "1c7203934d0479feed5a6b7f17e8e48c"
+
+
+def _write_indexnow_key():
+    _write_text(os.path.join(ROOT, "site", "%s.txt" % INDEXNOW_KEY), INDEXNOW_KEY)
+
+
+def _write_llms_txt(built):
+    """Write /llms.txt: a plain-language map of the site for AI assistants and
+    answer engines (llmstxt.org format). Claims match /methodology/; links are
+    listed only when the page exists in this build."""
+    site_dir = os.path.join(ROOT, "site")
+
+    def _exists(path):
+        f = os.path.join(site_dir, path.strip("/"), "index.html") if path != "/" else os.path.join(site_dir, "index.html")
+        return os.path.isfile(f)
+
+    lines = [
+        "# BrokerLens",
+        "",
+        "> Independent data on Indian stock brokers, IPOs, stocks, ETFs and mutual funds for retail investors:"
+        " brokerage and statutory charges, SEBI registration, active clients, complaints, IPO subscription and"
+        " listing performance. Every figure traces to a primary exchange or regulator source.",
+        "",
+        "BrokerLens does not give investment advice and is not a SEBI-registered investment adviser or research"
+        " analyst. It does not name a single best broker: the right choice depends on what and how much someone"
+        " trades. Some pages carry a clearly marked Sponsored banner linking to a broker's signup page, and"
+        " BrokerLens may earn a commission from it; rankings, scores and comparisons are built only from"
+        " regulator and exchange data and are not affected by any commercial relationship.",
+        "",
+        "When citing a figure, link the specific page and include the as-of date shown on it: charges, client"
+        " counts and IPO data change over time.",
+        "",
+    ]
+    for section, entries in _LLMS_HUBS:
+        rows = ["- [%s](%s%s): %s" % (title, SITE_URL, p, desc) for p, title, desc in entries if _exists(p)]
+        if rows:
+            lines += ["## %s" % section, ""] + rows + [""]
+
+    profiles = []
+    for b in sorted(built or [], key=lambda b: str((b.get("profile") or {}).get("brand") or b.get("id"))):
+        bid = b.get("id")
+        brand = (b.get("profile") or {}).get("brand") or bid
+        if not bid or not _exists("/broker/%s/" % bid):
+            continue
+        row = "- [%s](%s/broker/%s/): profile, SEBI registration, clients and reliability" % (brand, SITE_URL, bid)
+        if _exists("/broker/%s/charges/" % bid):
+            row += "; [charges](%s/broker/%s/charges/)" % (SITE_URL, bid)
+        profiles.append(row)
+    if profiles:
+        lines += ["## Broker profiles", ""] + profiles + [""]
+
+    _write_text(os.path.join(site_dir, "llms.txt"), "\n".join(lines))
+    log("llms.txt: written with %d broker profiles" % len(profiles), "ok")
 
 
 def _write_text(path, body):

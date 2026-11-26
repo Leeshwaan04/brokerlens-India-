@@ -104,8 +104,13 @@ jobs:
         if: success()
         run: |
           if [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            # Save what is live before replacing it, so IndexNow gets only new and
+            # daily-changing URLs (scripts/indexnow_ping.py). Never fails the deploy.
+            python3 scripts/indexnow_ping.py snapshot || true
             echo "Deploying built site to Cloudflare Workers..."
             npx wrangler@4.114.0 deploy
+            sleep 20
+            python3 scripts/indexnow_ping.py ping || true
           else
             echo "CLOUDFLARE_API_TOKEN not configured in GitHub secrets; deploy step skipped in CI."
           fi
