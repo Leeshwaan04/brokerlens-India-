@@ -172,8 +172,10 @@ Before taking real money:
    the prices include GST (ask your accountant). Publish refund and
    cancellation terms on the Terms page; Razorpay's activation needs them.
 2. Complete Razorpay account activation (KYC) so live keys are issued.
-3. Generate fresh keys. The test key shared in chat on 26 Nov 2026 should be
-   regenerated too.
+3. Generate the live keys in the Razorpay dashboard and put them straight
+   into the worker's secrets (next step). Live keys never go into chat, email
+   or a file. (Test keys were regenerated on 26 Nov 2026; they cannot move
+   real money.)
 4. Set the worker's secrets (live keys only here, never in a file):
 
 ```bash
