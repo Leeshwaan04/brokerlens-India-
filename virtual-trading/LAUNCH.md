@@ -51,8 +51,11 @@ What makes the Free plan workable:
   connections, leaving room in Supabase's session pool for the sync.
 - From Node, `lib/pg-ssl.ts` pins the same root CA and verifies it.
 
-When to upgrade: the Worker's **Metrics** tab shows errors with "exceeded
-CPU" or requests near 100,000 a day, or Hyperdrive's metrics near 100,000
+Measured on launch day (383 requests): median 23 ms of CPU, 300 to 850 ms on
+a cold start, and no request refused; Cloudflare is not holding this worker
+to the 10 ms figure today, but it may. When to upgrade: the Worker's
+**Metrics** tab shows errors with "exceeded CPU" (error 1102) or requests
+near 100,000 a day, or Hyperdrive's metrics near 100,000
 queries a day. Workers Paid lifts both (CPU to 5 minutes a request,
 Hyperdrive unlimited) with no code change.
 
@@ -78,16 +81,29 @@ printf '%s' '<new session URL>' | gh secret set VT_DATABASE_URL
 # and edit ~/.config/brokerlens-paper/prod.env
 ```
 
-## 2. Create the sign-in service (Owner)
+## 2. Sign-in: Clerk (done 26 Nov 2026)
 
-1. Sign up at <https://dashboard.clerk.com>, create an application
-   (email sign-in; Google is optional) and create its **production instance**
-   for the domain `paper.brokerlens.in`.
-2. Clerk lists DNS records (CNAMEs) for the production instance. Add them in
-   Cloudflare DNS for `brokerlens.in` exactly as Clerk shows them (DNS only,
-   grey cloud, if Clerk says so) and wait for Clerk to verify them.
-3. From **API keys** keep the production publishable key (`pk_live_...`,
-   public) and secret key (`sk_live_...`, private).
+- Application **Brokerlens** in "Sumit's Organization" (Hobby, free). Its
+  production instance is a *secondary application* on `paper.brokerlens.in`,
+  so everything stays under that subdomain: Frontend API
+  `clerk.paper.brokerlens.in`, account portal `accounts.paper.brokerlens.in`,
+  email from `@paper.brokerlens.in`. Its five DNS records (CNAMEs for
+  `clerk.paper`, `accounts.paper`, `clkmail.paper`, `clk._domainkey.paper`,
+  `clk2._domainkey.paper`, all DNS only) were added through Cloudflare's
+  one-time Domain Connect approval; brokerlens.in's own records, including
+  its Hostinger mail, are untouched.
+- Sign-in is by email (code or link). Phone numbers and SMS MFA were switched
+  off (Clerk Pro features). Google is off in production until it has its own
+  OAuth client: create one in Google Cloud with the redirect URI
+  `https://clerk.paper.brokerlens.in/v1/oauth_callback`, enter its ID and
+  secret under **SSO connections > Google**, then switch it on.
+- Keys: the publishable key `pk_live_...` is public and lives in
+  `wrangler.jsonc`. The secret key (named `cloudflare-worker-brokerlens-paper`
+  in Clerk) and the webhook signing secret are worker secrets, with copies in
+  `~/.config/brokerlens-paper/prod.env`.
+- Webhook: `https://paper.brokerlens.in/api/webhooks/clerk`, events
+  `user.created` and `user.deleted`; its signing secret was rotated once on
+  26 Nov 2026 and tested (200).
 
 ## 3. Set up the database (Agent; done 26 Nov 2026)
 
@@ -100,68 +116,45 @@ npm run seed:market-holidays       # NSE trading holidays
 npm run sync:stock-universe        # Nifty 100 constituents from NSE
 npx tsx scripts/eod-sync.mts --history 60   # price history; run twice on a new database
 unset DATABASE_URL
+# Supabase only: close its Data API to the app's tables (see the file)
+PGPASSWORD="$SUPABASE_DB_PASSWORD" psql "host=aws-0-ap-south-1.pooler.supabase.com port=5432 dbname=postgres user=postgres.zojfefftkqbuvivwzqid sslmode=verify-full sslrootcert=<Supabase root CA file>" -f scripts/supabase-lockdown.sql
 ```
 
-Run new migrations the same way before deploying code that needs them.
+Run new migrations the same way before deploying code that needs them, and
+re-run `scripts/supabase-lockdown.sql` after any migration that adds tables.
+Supabase grants its public `anon` and `authenticated` API roles full rights
+on new tables by default; the lockdown removed them (checked: the REST API
+answers "permission denied" for every table).
 
-## 4. Put the publishable key in the build (Owner, then Agent)
+## 4 to 8. Keys, deploy, domain, webhook (done 26 Nov 2026)
 
-Next.js inlines `NEXT_PUBLIC_*` values at build time, so the publishable key
-must be present when the worker is built and at runtime:
-
-1. Add it to `wrangler.jsonc` under `vars` (it is public):
-   `"NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_..."`.
-2. For CI deploys, store it as a repository variable:
-   `gh variable set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY --body 'pk_live_...'`
-
-## 5. Set the worker's secrets (Owner)
-
-Log in once with `npx wrangler login`, then run each command and paste the
-value at the prompt. The first one creates the worker if it does not exist.
+Deploy from a clean worktree (no `.env.local`, whose dev values would
+otherwise be bundled), with the public values in the environment because
+Next.js inlines `NEXT_PUBLIC_*` at build time:
 
 ```bash
-npx wrangler secret put CLERK_SECRET_KEY             # sk_live_... (step 2)
-openssl rand -hex 32                                 # make a cron secret, keep it
-npx wrangler secret put CRON_SECRET                  # paste that value
+git worktree add --detach /tmp/vt-build HEAD && cd /tmp/vt-build/virtual-trading && npm ci
+export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_Y2xlcmsucGFwZXIuYnJva2VybGVucy5pbiQ \
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up \
+  NEXT_PUBLIC_APP_URL=https://paper.brokerlens.in
+npm run cf:build
+grep -rl -e user_local_dev -e rzp_test_ -e localhost:5432 .open-next || echo clean
+OPEN_NEXT_DEPLOY=true npx wrangler deploy
 ```
 
-The Worker gets its database through the Hyperdrive binding in
-`wrangler.jsonc`, so it needs no `DATABASE_URL` secret. `CRON_SECRET` only
-guards the sync route, which production does not use (the sync runs in
-GitHub Actions). `CLERK_WEBHOOK_SIGNING_SECRET` comes in step 8 and
-`ADMIN_USER_IDS` in step 11.
+`npm run cf:deploy` would also work, but OpenNext's deploy first starts a
+local emulator that insists on a local Hyperdrive connection string; with no
+incremental cache configured it does nothing beyond `wrangler deploy`, so
+the command above skips it. Secrets persist across deploys; set or change
+one with `npx wrangler secret put <NAME>`.
 
-## 6. First deploy (Agent)
-
-```bash
-npm ci
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY='pk_live_...' npm run cf:deploy
-```
-
-`cf:deploy` runs the OpenNext build, then `opennextjs-cloudflare deploy`. It
-prints a `*.workers.dev` URL; the app is not public on `paper.brokerlens.in`
-until step 7.
-
-## 7. Custom domain (Owner approves, Agent runs)
-
-Check that Cloudflare DNS has no existing record for `paper`. Then either:
-
-- Dashboard: **Workers & Pages > brokerlens-paper > Settings > Domains &
-  Routes > Add > Custom domain** `paper.brokerlens.in`; or
-- add to `wrangler.jsonc` and deploy again:
-  `"routes": [{ "pattern": "paper.brokerlens.in", "custom_domain": true }]`
-
-Cloudflare creates the DNS record and certificate. brokerlens.in itself is a
-different worker and is not touched.
-
-## 8. Clerk webhook (Owner)
-
-In Clerk: **Webhooks > Add endpoint** `https://paper.brokerlens.in/api/webhooks/clerk`,
-events `user.created` and `user.deleted`. Copy its signing secret, then:
-
-```bash
-npx wrangler secret put CLERK_WEBHOOK_SIGNING_SECRET
-```
+Routing: `wrangler.jsonc` gives the worker the custom domain
+`paper.brokerlens.in` **and** the route `paper.brokerlens.in/*`. The zone
+also has a dashboard route `*brokerlens.in/*` for the main site
+(`brokerlens-india`); its leading wildcard matches every subdomain and served
+the main site on `paper.` until the more specific route was added. Leave that
+dashboard route alone: brokerlens.in and www depend on it. `workers_dev` is
+off, so there is no second public copy on `*.workers.dev`.
 
 ## 9. Load price history (Agent; done 26 Nov 2026)
 
@@ -172,9 +165,26 @@ history count.
 
 ## 10. Daily price sync and CI deploys
 
-The daily sync is live: `.github/workflows/virtual-trading-eod-sync.yml` runs
-`scripts/eod-sync.mts` at 19:00 IST every day with the `VT_DATABASE_URL`
-secret (set 26 Nov 2026). It does not call the website.
+`.github/workflows/virtual-trading-eod-sync.yml` runs `scripts/eod-sync.mts`
+at 19:00 IST every day with the `VT_DATABASE_URL` secret. It moves the
+practice market forward and settles orders from the closes already stored,
+which needs nothing from NSE.
+
+**NSE refuses GitHub's runners** (HTTP 403 from nsearchives.nseindia.com,
+seen 26 Nov 2026), so the Actions run cannot fetch new closes; it records a
+`failed` row in `price_sync_runs` and carries on. Do not work around that
+block with browser-imitating headers or other evasion. New closes are
+fetched from a machine NSE serves normally, such as the owner's Mac:
+
+```bash
+set -a; . ~/.config/brokerlens-paper/prod.env; set +a
+DATABASE_URL="$SUPABASE_SESSION_URL" npx tsx scripts/eod-sync.mts --history 20
+```
+
+Each run fills every missing day in the window, so running it every few days
+is enough: the practice market reads closes 30 days old, so a gap only shows
+if nothing is fetched for about four weeks. The database had closes to
+25 Nov 2026 at launch.
 
 Optional, so CI deploys on every push to `main` (Owner):
 
@@ -183,12 +193,12 @@ gh secret set CLOUDFLARE_API_TOKEN              # a token scoped to Workers Scri
 ```
 
 Without it, `virtual-trading-ci.yml` tests but skips the deploy, and deploys
-are run by hand (step 6).
+are run by hand (steps 4 to 8).
 
 ## 11. Admin access (Owner)
 
 Sign up on `https://paper.brokerlens.in`, find your user id in Clerk
-(**Users**, starts with `user_`), then:
+(**Users** in the production instance, starts with `user_`), then:
 
 ```bash
 npx wrangler secret put ADMIN_USER_IDS          # comma-separated user ids
@@ -248,8 +258,8 @@ limiting rules** for paper.brokerlens.in:
 - `/go/`: about 30 a minute per IP (keeps account-opening click counts clean).
 - `/api/cron/` and `/api/webhooks/`: leave open (they authenticate themselves).
 
-After step 7 (custom domain) set `"workers_dev": false` in `wrangler.jsonc`
-and deploy again, so the app is reachable only at paper.brokerlens.in.
+`"workers_dev": false` is already set, so the app is reachable only at
+paper.brokerlens.in.
 
 At go-live with live Razorpay keys, clear any Plus granted in test mode:
 
