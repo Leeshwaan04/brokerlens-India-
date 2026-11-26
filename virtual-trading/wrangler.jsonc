@@ -37,10 +37,22 @@
   // cron and webhooks included, on a second public address. Turn workers_dev
   // off too once paper.brokerlens.in serves the app (LAUNCH.md step 7).
   "preview_urls": false,
+  // Served only at paper.brokerlens.in: Cloudflare created its DNS record and
+  // certificate. Not on *.workers.dev, which would be a second public copy.
+  "routes": [{ "pattern": "paper.brokerlens.in", "custom_domain": true }],
+  "workers_dev": false,
   "vars": {
     // Days the practice market runs behind the real one. Only lower on legal advice.
     "VT_PRICE_LAG_DAYS": "30",
     // Canonical URLs, the sitemap and Clerk's authorised origin.
-    "NEXT_PUBLIC_APP_URL": "https://paper.brokerlens.in"
+    "NEXT_PUBLIC_APP_URL": "https://paper.brokerlens.in",
+    // Clerk production instance "Brokerlens" (secondary application on
+    // paper.brokerlens.in, Frontend API clerk.paper.brokerlens.in). The
+    // publishable key is public; NEXT_PUBLIC_* values are also inlined at
+    // build time, so build with the same values in the environment.
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsucGFwZXIuYnJva2VybGVucy5pbiQ",
+    // Signed-out visitors go to the app's own pages, not Clerk's hosted portal.
+    "NEXT_PUBLIC_CLERK_SIGN_IN_URL": "/sign-in",
+    "NEXT_PUBLIC_CLERK_SIGN_UP_URL": "/sign-up"
   }
 }
