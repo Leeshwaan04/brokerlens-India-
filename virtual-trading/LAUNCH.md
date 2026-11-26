@@ -2,7 +2,8 @@
 
 The app runs on Cloudflare Workers as the worker `brokerlens-paper`, built by
 [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare), with Postgres
-on Neon and sign-in by Clerk. Production address: `https://paper.brokerlens.in`.
+on Supabase (through Cloudflare Hyperdrive) and sign-in by Clerk, all on free
+plans. Production address: `https://paper.brokerlens.in`.
 
 Each step says who does it:
 
@@ -22,19 +23,60 @@ Secrets go in with `npx wrangler secret put`, which prompts for the value.
    (30-day lag for price data used in education, in force 1 July 2026)
    applies, and approve the privacy notice (`/privacy`) and terms. The app
    ships with `VT_PRICE_LAG_DAYS=30`; only lower it on legal advice.
-2. **Workers Paid plan** (USD 5 a month) on the Cloudflare account. The worker
-   is 2.62 MiB gzipped, just under the Free plan's 3 MiB limit, but the Free
-   plan allows 10 ms of CPU per request, which server-rendered pages and the
-   daily price sync exceed. Paid allows 30 s by default.
+2. **Cloudflare plan.** The app is built to run on the **Workers Free plan**
+   (see "Running on free plans" below). Upgrade to Workers Paid (USD 5 a
+   month) when traffic nears the free limits listed there.
 
-## 1. Create the database (Owner)
+## Running on free plans (as set up on 26 Nov 2026)
 
-1. Sign up at <https://console.neon.tech> and create a project named
-   `brokerlens-paper` on the free tier, region **AWS Asia Pacific
-   (Singapore) `ap-southeast-1`** or the nearest to India the console offers.
-2. From **Connection details** copy two strings and keep them private:
-   - the **pooled** connection string (host contains `-pooler`): the app uses this;
-   - the **direct** connection string: migrations use this.
+| Piece | Service and plan | Free limit that matters |
+|---|---|---|
+| App | Cloudflare Workers Free, worker `brokerlens-paper` | 100,000 requests a day; 10 ms CPU a request; 3 MiB gzipped worker (the app is about 2.6 MiB) |
+| Database | Supabase Free, project `brokerlens-paper` (ref `zojfefftkqbuvivwzqid`, Mumbai `ap-south-1`, org "Leeshwaan04's Org") | 500 MB (13 MB used at launch); paused after 7 days without activity, which the daily sync prevents |
+| Database pooler | Cloudflare Hyperdrive Free, config `brokerlens-paper-db` (`ade55fc3221945f6a997d9525a371bc4`) | 100,000 queries a day (a signed-in page makes about 5 to 15) |
+| Daily price sync | GitHub Actions (`virtual-trading-eod-sync.yml`), secret `VT_DATABASE_URL` | public repository, no minutes limit |
+| Sign-in | Clerk Free | 50,000 monthly users |
+
+What makes the Free plan workable:
+
+- The daily sync (download and unzip NSE's bhavcopy, settle orders) runs in
+  GitHub Actions as a Node script, `scripts/eod-sync.mts`, straight against
+  the database. Inside the Worker it would need far more than 10 ms of CPU.
+- The Worker reaches the database through Hyperdrive, which keeps pooled,
+  already-authenticated connections near the database, so a request does no
+  TLS or password handshake of its own. Hyperdrive verifies Supabase's
+  certificate (`verify-full` against Supabase's root CA, uploaded to
+  Cloudflare as `supabase-root-2021`); query caching is off, so pages never
+  show a balance from before the user's last order. It may open at most 10
+  connections, leaving room in Supabase's session pool for the sync.
+- From Node, `lib/pg-ssl.ts` pins the same root CA and verifies it.
+
+When to upgrade: the Worker's **Metrics** tab shows errors with "exceeded
+CPU" or requests near 100,000 a day, or Hyperdrive's metrics near 100,000
+queries a day. Workers Paid lifts both (CPU to 5 minutes a request,
+Hyperdrive unlimited) with no code change.
+
+Supabase's Free plan has no point-in-time recovery. Before real money flows
+(Plus), consider Supabase Pro or a scheduled `pg_dump` kept somewhere
+private (never as a GitHub Actions artifact: this repository is public).
+
+## 1. The database (done 26 Nov 2026)
+
+The connection details live only in `~/.config/brokerlens-paper/prod.env`
+on the owner's Mac (readable by that user only): the database password and
+`SUPABASE_SESSION_URL`, the session-mode pooler string
+`postgresql://postgres.zojfefftkqbuvivwzqid:<password>@aws-0-ap-south-1.pooler.supabase.com:5432/postgres`.
+The same string is stored in Hyperdrive and in the GitHub secret
+`VT_DATABASE_URL`.
+
+If the database password is ever reset (Supabase **Project Settings >
+Database**), update all three:
+
+```bash
+npx wrangler hyperdrive update ade55fc3221945f6a997d9525a371bc4 --origin-password '<new password>'
+printf '%s' '<new session URL>' | gh secret set VT_DATABASE_URL
+# and edit ~/.config/brokerlens-paper/prod.env
+```
 
 ## 2. Create the sign-in service (Owner)
 
@@ -47,18 +89,20 @@ Secrets go in with `npx wrangler secret put`, which prompts for the value.
 3. From **API keys** keep the production publishable key (`pk_live_...`,
    public) and secret key (`sk_live_...`, private).
 
-## 3. Set up the database (Agent, with the direct string from step 1)
-
-Run in a shell where you set the variable yourself:
+## 3. Set up the database (Agent; done 26 Nov 2026)
 
 ```bash
-export DATABASE_URL='<direct Neon connection string>'
+set -a; . ~/.config/brokerlens-paper/prod.env; set +a
+export DATABASE_URL="$SUPABASE_SESSION_URL"
 npx drizzle-kit migrate            # applies every migration in drizzle/
 npm run sync:broker-rates          # broker fee schedules from seed/broker-rates.json
 npm run seed:market-holidays       # NSE trading holidays
 npm run sync:stock-universe        # Nifty 100 constituents from NSE
+npx tsx scripts/eod-sync.mts --history 60   # price history; run twice on a new database
 unset DATABASE_URL
 ```
+
+Run new migrations the same way before deploying code that needs them.
 
 ## 4. Put the publishable key in the build (Owner, then Agent)
 
@@ -76,13 +120,16 @@ Log in once with `npx wrangler login`, then run each command and paste the
 value at the prompt. The first one creates the worker if it does not exist.
 
 ```bash
-npx wrangler secret put DATABASE_URL                 # pooled Neon string (step 1)
 npx wrangler secret put CLERK_SECRET_KEY             # sk_live_... (step 2)
 openssl rand -hex 32                                 # make a cron secret, keep it
 npx wrangler secret put CRON_SECRET                  # paste that value
 ```
 
-`CLERK_WEBHOOK_SIGNING_SECRET` comes in step 8 and `ADMIN_USER_IDS` in step 11.
+The Worker gets its database through the Hyperdrive binding in
+`wrangler.jsonc`, so it needs no `DATABASE_URL` secret. `CRON_SECRET` only
+guards the sync route, which production does not use (the sync runs in
+GitHub Actions). `CLERK_WEBHOOK_SIGNING_SECRET` comes in step 8 and
+`ADMIN_USER_IDS` in step 11.
 
 ## 6. First deploy (Agent)
 
@@ -116,32 +163,27 @@ events `user.created` and `user.deleted`. Copy its signing secret, then:
 npx wrangler secret put CLERK_WEBHOOK_SIGNING_SECRET
 ```
 
-## 9. Load price history (Agent)
+## 9. Load price history (Agent; done 26 Nov 2026)
 
-The practice market runs 30 days behind, so it needs about three months of
-closes before its first session. Two runs fetch them from NSE's public
-archive (each run fetches up to 60 missing days, one at a time):
+Done in step 3 with `scripts/eod-sync.mts --history 60` (82 sessions, 28 Jul
+to 25 Nov 2026; practice market at 26 Oct 2026). To fetch more from GitHub
+instead: **Actions > Virtual Trading EOD Price Sync > Run workflow**, with a
+history count.
+
+## 10. Daily price sync and CI deploys
+
+The daily sync is live: `.github/workflows/virtual-trading-eod-sync.yml` runs
+`scripts/eod-sync.mts` at 19:00 IST every day with the `VT_DATABASE_URL`
+secret (set 26 Nov 2026). It does not call the website.
+
+Optional, so CI deploys on every push to `main` (Owner):
 
 ```bash
-curl -H "Authorization: Bearer $CRON_SECRET" "https://paper.brokerlens.in/api/cron/sync-eod-prices?history=60"
-curl -H "Authorization: Bearer $CRON_SECRET" "https://paper.brokerlens.in/api/cron/sync-eod-prices?history=60"
+gh secret set CLOUDFLARE_API_TOKEN              # a token scoped to Workers Scripts: Edit
 ```
 
-Each returns JSON; `marketDate` should be the practice market's date (about
-30 days ago) and `historyFetched` should be empty on the second run.
-
-## 10. Daily price sync and CI deploys (Owner)
-
-```bash
-gh secret set VT_APP_URL --body 'https://paper.brokerlens.in'
-gh secret set CRON_SECRET                       # same value as the worker's
-gh secret set CLOUDFLARE_API_TOKEN              # optional: lets CI deploy on push to main
-```
-
-`.github/workflows/virtual-trading-eod-sync.yml` then calls the sync at 19:00
-IST every day. With `CLOUDFLARE_API_TOKEN` set (a token scoped to
-**Workers Scripts: Edit** on this account), `virtual-trading-ci.yml` builds
-and deploys after the tests pass on `main`; without it the deploy job skips.
+Without it, `virtual-trading-ci.yml` tests but skips the deploy, and deploys
+are run by hand (step 6).
 
 ## 11. Admin access (Owner)
 
@@ -259,6 +301,7 @@ npm run cf:preview               # OpenNext build, then wrangler dev on workerd
   incompatible receiver"), which is why the campaign helpers live in
   `lib/campaign.ts`.
 - On Workers a database connection belongs to one request, so `lib/db.ts`
-  creates one client per request there (keyed by OpenNext's request context).
+  creates one client per request there (keyed by OpenNext's request context),
+  connecting to Hyperdrive.
 - Next.js lists Cloudflare's integration as not yet built on its verified
   adapter API, so check OpenNext's release notes before upgrading Next.js.
