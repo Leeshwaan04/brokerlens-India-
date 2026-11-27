@@ -289,7 +289,7 @@ def render_sip_scenario_page(amount: int, years: int, site_url="https://www.brok
 </div>
 
 <p class="small muted">
-  Explore other durations: <a href="/calculators/sip/">View All SIP Scenarios</a> &middot; <a href="/calculators/">All Financial Calculators</a> &middot; <a href="/funds/">Mutual Funds Directory</a>
+  Explore other durations: <a href="/calculators/sip/">View All SIP Scenarios</a> &middot; <a href="/calculators/">All Financial Calculators</a> &middot; <a href="/funds-by/">Mutual Funds Directory</a>
 </p>
 </main>
 
