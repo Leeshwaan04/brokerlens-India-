@@ -27,7 +27,10 @@ cat > "$PLIST" <<PLISTEOF
 <dict>
   <key>Label</key><string>$LABEL</string>
   <key>ProgramArguments</key><array><string>/bin/bash</string><string>$BASE/mac-daily.sh</string></array>
-  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>19</integer><key>Minute</key><integer>40</integer></dict>
+  <key>StartCalendarInterval</key><array>
+    <dict><key>Hour</key><integer>19</integer><key>Minute</key><integer>40</integer></dict>
+    <dict><key>Hour</key><integer>21</integer><key>Minute</key><integer>15</integer></dict>
+  </array>
   <key>RunAtLoad</key><false/>
   <key>ProcessType</key><string>Background</string>
 </dict>
@@ -36,5 +39,5 @@ PLISTEOF
 
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
-echo "installed $LABEL: daily 19:40, log at ~/Library/Logs/brokerlens-paper-daily.log"
+echo "installed $LABEL: daily 19:40 and 21:15, log at ~/Library/Logs/brokerlens-paper-daily.log"
 echo "run it now:   launchctl kickstart gui/$(id -u)/$LABEL"

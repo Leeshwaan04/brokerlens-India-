@@ -22,6 +22,14 @@ echo "=== $(date '+%Y-%m-%d %H:%M:%S %Z') daily job start"
 
 if [ ! -f "$ENV_FILE" ]; then echo "missing $ENV_FILE"; exit 1; fi
 
+# launchd can fire while the Mac is still waking up: wait up to 10 minutes for
+# the network rather than fail the day.
+for i in $(seq 1 60); do
+  curl -sf -o /dev/null --max-time 5 https://github.com && break
+  [ "$i" = 60 ] && { echo "no network after 10 minutes"; exit 1; }
+  sleep 10
+done
+
 if [ ! -d "$REPO/.git" ]; then
   git clone --depth 1 https://github.com/Leeshwaan04/brokerlens-India-.git "$REPO" || exit 1
 else

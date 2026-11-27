@@ -215,7 +215,7 @@ are run by hand (steps 4 to 8).
 ## 10b. Daily prices from the owner's Mac (installed 26 Nov 2026)
 
 NSE refuses GitHub's runners but serves this Mac, so `scripts/install-mac-job.sh`
-installs a launchd agent (`in.brokerlens.paper-daily`) that runs at 19:40 every
+installs a launchd agent (`in.brokerlens.paper-daily`) that runs at 19:40 and 21:15 every
 day (or when the Mac next wakes). `scripts/mac-daily.sh` keeps its own clone of
 `main` in `~/.local/share/brokerlens-paper/repo`, reads
 `~/.config/brokerlens-paper/prod.env`, and runs `scripts/eod-sync.mts --history 20`:
