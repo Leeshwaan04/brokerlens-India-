@@ -33,10 +33,12 @@ const done = new Set((await db.select({ d: priceHistoryDays.tradeDate }).from(pr
 const days: string[] = [];
 for (let t = utc(from).getTime(); t <= utc(to).getTime(); t += 86_400_000) {
   const d = new Date(t);
-  const wd = d.getUTCDay();
-  if (wd !== 0 && wd !== 6 && !done.has(iso(d))) days.push(iso(d));
+  // Weekends are tried too: NSE holds occasional special sessions (Budget Saturdays and Sundays,
+  // Muhurat trading). Skipping them leaves a gap, and the next day's printed previous close (the special
+  // session's close) would then look like a share-count change. A weekend with no file is remembered as none.
+  if (!done.has(iso(d))) days.push(iso(d));
 }
-console.log(`Backfill ${from} to ${to}: ${days.length} weekdays to do, ${done.size} already recorded, ${universe.size} symbols.`);
+console.log(`Backfill ${from} to ${to}: ${days.length} days to do, ${done.size} already recorded, ${universe.size} symbols.`);
 
 let ok = 0, none = 0, errors = 0, rowsTotal = 0, indexDays = 0;
 const started = Date.now();

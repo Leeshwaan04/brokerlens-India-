@@ -26,6 +26,12 @@ const MIN_CHANGE = 0.02;
 // How close the observed ratio must be to a simple new:old ratio.
 const RATIO_TOLERANCE = 0.01;
 const MAX_DENOMINATOR = 10;
+// A real split, bonus or consolidation moves the share count by at least a fifth (a 1:5 bonus is
+// 6:5). Smaller printed differences (7:6, 10:9, 11:10) are what an unseen weekend special session
+// (Budget Saturday, Muhurat) or any ordinary price gap produces, and they would match a "ratio" by
+// chance. They are reported as unrecognised, never applied: a wrong adjustment silently changes
+// holdings, a missed one is flagged to the owner. A genuine 1:10 bonus is the cost of that rule.
+const MIN_FACTOR = 1.18;
 
 /**
  * The share-count factor implied by NSE's printed previous close, or null
@@ -41,7 +47,9 @@ export function detectShareAdjustment(storedPrevClose: number, nsePrevClose: num
     const neu = Math.round(raw * old);
     if (neu < 1 || neu === old) continue;
     const factor = neu / old;
-    if (Math.abs(factor - raw) / raw <= RATIO_TOLERANCE) return { factor, ratio: `${neu}:${old}` };
+    if (Math.abs(factor - raw) / raw > RATIO_TOLERANCE) continue;
+    if (factor < MIN_FACTOR && factor > 1 / MIN_FACTOR) return null;
+    return { factor, ratio: `${neu}:${old}` };
   }
   return null;
 }

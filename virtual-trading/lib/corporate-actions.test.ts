@@ -23,6 +23,18 @@ describe("detectShareAdjustment", () => {
     expect(detectShareAdjustment(500, 200)).toEqual({ factor: 2.5, ratio: "5:2" });
   });
 
+  it("recognises a 6:5 bonus (1:5), the smallest share action it will apply", () => {
+    expect(detectShareAdjustment(120, 100)).toEqual({ factor: 1.2, ratio: "6:5" });
+  });
+
+  it("does not mistake a weekend special session's close for a share action", () => {
+    // Printed previous close is the Saturday session's: 10%, 11% and 12.5% away from Friday's stored close.
+    expect(detectShareAdjustment(110, 100)).toBeNull();
+    expect(detectShareAdjustment(100, 90)).toBeNull();
+    expect(detectShareAdjustment(100, 87.5)).toBeNull();
+    expect(detectShareAdjustment(87.5, 100)).toBeNull();
+  });
+
   it("recognises a 10:1 consolidation", () => {
     expect(detectShareAdjustment(12, 120)).toEqual({ factor: 0.1, ratio: "1:10" });
   });
