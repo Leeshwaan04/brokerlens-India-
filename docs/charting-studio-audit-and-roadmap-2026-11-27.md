@@ -120,3 +120,22 @@ Effort is in focused engineering weeks, assuming one builder with me [estimate; 
 2. **Intraday:** park it for now, or open a vendor and legal enquiry?
 3. **Advanced Charts licence:** apply in parallel as a possible shortcut? (Free to apply; terms unknown until we do.)
 4. **AI signals:** ask counsel before Phase 6, as suggested above?
+
+---
+
+## 9. Status after the first build (27 Nov 2026, same day)
+
+Owner decisions received: Phases 0 and 1 approved; intraday to be covered in the best possible way; build the charting on our own with no third-party licence; no counsel needed. So section 4's Advanced Charts application is dropped and Lightweight Charts stays as the renderer only.
+
+| Item | State |
+|---|---|
+| 5 years of daily history, Nifty 500 | **Done in production.** 530,000 rows, 497 symbols (4 of 501 have no data), 2021-11-26 to 2026-11-26, database about 79 MB of 500 MB |
+| Split and bonus adjustment | **Done, with limits.** NSE does not print an adjusted previous close, so adjustment works from prices: 80 symbols adjusted, falls of 17% to 44% (for example a 1:2 bonus) are listed as unadjusted and the chart says so. A real corporate-actions source would remove the limit |
+| Weekend special sessions | Backfill now includes them; the live daily sync still only walks weekdays |
+| Engine, 7 chart types, D/W/M | **Done**, 8.6 KB gzip, 29 unit tests, browser tests |
+| Intraday 1m to 4H | **Engine done and tested on synthetic minutes; no data source.** See the intraday runbook. Chips appear only with a minute source |
+| Paper app trade screen | **Live** (lazy-loaded; the old SVG chart remains as fallback) |
+| brokerlens.in stock pages | Migrated to the engine in the same change; 1Y and 3Y stay disabled there until the per-stock files hold more than 120 bars |
+| Found, not yet fixed | The live app's own split detection for holdings is inert (same wrong assumption); see memory note and the next decision below |
+
+**Next decisions:** (1) port price-based split detection to holdings, which must respect the 30-day practice lag; (2) longer history for the main site's Nifty 500 pages without adding files; (3) Phase 2 (full indicator library, compare, multi-chart).
