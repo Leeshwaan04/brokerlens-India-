@@ -26,6 +26,8 @@ export interface DataAdapter {
    * bars from daily ones.
    */
   intraday?: { timeframes: Timeframe[]; load(tf: Timeframe): Promise<Bar[]> };
+  /** A note shown under the chart, set by the adapter once its data has loaded (for example adjustment limits). */
+  notice?: string;
 }
 
 export interface StudioOptions {
@@ -592,7 +594,9 @@ export async function mountStudio(host: HTMLElement, opts: StudioOptions): Promi
   row2.append(indicatorGroup, tools);
   toolbar.append(row1, row2);
 
-  host.replaceChildren(hud, toolbar, canvasWrap, summary, tableDetails);
+  const footNote = el("p", "blc-foot", adapter.notice ?? "");
+  footNote.hidden = !adapter.notice;
+  host.replaceChildren(hud, toolbar, canvasWrap, summary, footNote, tableDetails);
 
   // ---- first paint
   rebuildRanges();
@@ -638,14 +642,22 @@ export async function mountStudio(host: HTMLElement, opts: StudioOptions): Promi
 
 /** The paper app's /api/history/<symbol>: columnar, adjusted, capped at the practice date. */
 export function columnsAdapter(symbol: string, url: string): DataAdapter {
-  return {
+  const adapter: DataAdapter = {
     symbol,
     async loadDaily() {
       const res = await fetch(url, { credentials: "same-origin" });
       if (!res.ok) throw new Error(`history ${res.status}`);
-      return barsFromColumns((await res.json()) as DailyColumns);
+      const cols = (await res.json()) as DailyColumns;
+      const dates = cols.unadjusted ?? [];
+      adapter.notice =
+        "Prices are adjusted for splits and bonus issues of 2:1 or more." +
+        (dates.length
+          ? ` Large one-day falls on ${dates.slice(0, 4).join(", ")}${dates.length > 4 ? ` and ${dates.length - 4} more` : ""} were not adjusted: each may be a smaller bonus issue or a real market move.`
+          : "");
+      return barsFromColumns(cols);
     },
   };
+  return adapter;
 }
 
 /** The main site's static /data/equity-history/<slug>.json. */

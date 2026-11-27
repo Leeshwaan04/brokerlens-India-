@@ -15,9 +15,9 @@ export interface HistoryPayload {
   symbol: string;
   asOf: string;
   adjusted: true;
-  /** Share-count adjustments applied (split or bonus ex-dates) and anything left unexplained. */
+  /** Share-count adjustments applied (split or bonus ex-dates), and dates of large falls left unadjusted. */
   actions: { date: string; ratio: string }[];
-  unexplained: number;
+  unadjusted: string[];
   /** Columnar: parallel arrays, oldest first. Prices in rupees, volume in shares. */
   d: string[];
   o: number[];
@@ -55,7 +55,6 @@ export async function getHistory(symbol: string): Promise<HistoryPayload | null>
     low: rupees(r.low),
     close: rupees(r.close),
     volume: r.volume,
-    prevClose: r.prevClose === null ? null : rupees(r.prevClose),
   }));
   const adj: AdjustmentResult = adjustForShareActions(raw, days.map((x) => x.d));
   const bars = adj.bars.slice(-MAX_BARS);
@@ -64,7 +63,7 @@ export async function getHistory(symbol: string): Promise<HistoryPayload | null>
     asOf,
     adjusted: true,
     actions: adj.applied.map((a) => ({ date: a.date, ratio: a.ratio })),
-    unexplained: adj.unexplained.length,
+    unadjusted: adj.unadjusted,
     d: bars.map((b) => b.date),
     o: bars.map((b) => b.open),
     h: bars.map((b) => b.high),

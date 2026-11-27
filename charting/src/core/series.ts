@@ -9,6 +9,8 @@ export interface DailyColumns {
   l: number[];
   c: number[];
   v: (number | null)[];
+  /** Dates of large one-day falls the server did not adjust (possible small bonus issues or real moves). */
+  unadjusted?: string[];
 }
 
 export function barsFromColumns(cols: DailyColumns): Bar[] {

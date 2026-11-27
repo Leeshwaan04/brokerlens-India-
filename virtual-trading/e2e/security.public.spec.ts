@@ -15,6 +15,20 @@ function expectNoLeak(raw: string, where: string) {
   for (const re of LEAKS) expect(text, `${where} leaked ${re}`).not.toMatch(re);
 }
 
+test("price history is for signed-in users only, and bad symbols are refused", async ({ request }) => {
+  for (const p of ["/api/history/RELIANCE", "/api/history/NOPE", "/api/history/..%2F..%2Fetc", "/api/history/%00", "/api/history/" + "A".repeat(40)]) {
+    const res = await request.get(p, { maxRedirects: 0 });
+    expect([301, 302, 307, 308, 400, 401, 403, 404], `${p} -> ${res.status()}`).toContain(res.status());
+    expectNoLeak(await res.text(), p);
+  }
+  // Static chart files are public (they hold code, no data), and carry no secrets.
+  for (const p of ["/charting/engine.js", "/charting/lightweight-charts.js"]) {
+    const res = await request.get(p);
+    expect(res.status(), p).toBe(200);
+    expectNoLeak(await res.text(), p);
+  }
+});
+
 test("sensitive paths are not served", async ({ request }) => {
   for (const p of ["/.env", "/.env.local", "/.git/config", "/package.json", "/drizzle/0000_init.sql", "/lib/schema.ts", "/.next/server/app/page.js", "/wrangler.jsonc", "/%2e%2e/%2e%2e/etc/passwd", "/_next/../.env", "/..%2f..%2f.env"]) {
     const res = await request.get(p, { maxRedirects: 0 });

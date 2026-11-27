@@ -117,6 +117,8 @@ test("the history API needs a session and refuses bad symbols", async ({ request
   const body = await ok.json();
   expect(body.d.length).toBeGreaterThan(20);
   expect(body.d.length).toBe(body.c.length);
+  expect(Array.isArray(body.unadjusted)).toBe(true);
+  expect(Array.isArray(body.actions)).toBe(true);
   for (const bad of ["..%2Fetc", "NOPE_NOT_A_STOCK", "A%27%3B--", "X".repeat(30)]) {
     expect([400, 404]).toContain((await request.get(`/api/history/${bad}`)).status());
   }

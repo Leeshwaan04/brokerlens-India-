@@ -1,23 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { adjustForShareActions, type RawBar } from "./adjust";
 
-const bar = (date: string, close: number, prevClose: number | null, volume = 1000): RawBar => ({
-  date, open: close, high: close * 1.01, low: close * 0.99, close, volume, prevClose,
+const bar = (date: string, open: number, close: number, volume = 1000): RawBar => ({
+  date, open, high: Math.max(open, close) * 1.01, low: Math.min(open, close) * 0.99, close, volume,
 });
 const sessions = ["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05", "2024-01-08"];
 
 describe("adjustForShareActions", () => {
   it("leaves a series with no action untouched", () => {
-    const bars = [bar("2024-01-01", 100, null), bar("2024-01-02", 101, 100), bar("2024-01-03", 99, 101)];
+    const bars = [bar("2024-01-01", 100, 100), bar("2024-01-02", 100, 101), bar("2024-01-03", 101, 99)];
     const r = adjustForShareActions(bars, sessions);
     expect(r.applied).toEqual([]);
+    expect(r.unadjusted).toEqual([]);
     expect(r.bars.map((b) => b.close)).toEqual([100, 101, 99]);
     expect(r.bars[0].volume).toBe(1000);
   });
 
   it("adjusts a 1:5 split: earlier prices divided by 5, volumes multiplied, no false crash", () => {
-    // 1,000 close, then NSE prints the previous close as 200 on the ex-date.
-    const bars = [bar("2024-01-01", 1000, null), bar("2024-01-02", 1010, 1000), bar("2024-01-03", 205, 202), bar("2024-01-04", 210, 205)];
+    // 1,010 close, then the stock opens near 202 and closes at 205 on the ex-date.
+    const bars = [bar("2024-01-01", 1000, 1000), bar("2024-01-02", 1000, 1010), bar("2024-01-03", 202, 205), bar("2024-01-04", 205, 210)];
     const r = adjustForShareActions(bars, sessions);
     expect(r.applied).toEqual([{ date: "2024-01-03", ratio: "5:1", factor: 5 }]);
     expect(r.bars.map((b) => b.close)).toEqual([200, 202, 205, 210]);
@@ -26,41 +27,68 @@ describe("adjustForShareActions", () => {
     expect(r.bars[2].close / r.bars[1].close - 1).toBeCloseTo(205 / 202 - 1, 6);
   });
 
-  it("adjusts a 1:1 bonus (2:1)", () => {
-    const bars = [bar("2024-01-01", 500, null), bar("2024-01-02", 252, 250)];
+  it("adjusts Reliance's 1:1 bonus of 28 Oct 2024 (real NSE prices)", () => {
+    const bars = [bar("2024-01-01", 2687, 2655.7), bar("2024-01-02", 1337, 1334.35)];
     const r = adjustForShareActions(bars, sessions);
-    expect(r.applied[0]).toMatchObject({ ratio: "2:1", factor: 2 });
-    expect(r.bars[0].close).toBe(250);
+    expect(r.applied).toMatchObject([{ date: "2024-01-02", factor: 2 }]);
+    expect(r.bars[0].close).toBeCloseTo(1327.85, 2); // the exchange's adjusted base price
+  });
+
+  it("adjusts Tata Steel's 10:1 split of 28 Jul 2022 (real NSE prices)", () => {
+    const bars = [bar("2024-01-01", 951, 959.4), bar("2024-01-02", 98.1, 100.35)];
+    const r = adjustForShareActions(bars, sessions);
+    expect(r.applied).toMatchObject([{ factor: 10 }]);
+    expect(r.bars[0].close).toBeCloseTo(95.94, 2);
   });
 
   it("compounds two actions", () => {
-    const bars = [bar("2024-01-01", 1000, null), bar("2024-01-02", 500, 500), bar("2024-01-03", 100, 100)];
-    // 2:1 on the 2nd (prev printed 500 vs stored 1000), then 5:1 on the 3rd (prev printed 100 vs stored 500).
+    const bars = [bar("2024-01-01", 1000, 1000), bar("2024-01-02", 500, 500), bar("2024-01-03", 100, 100)];
     const r = adjustForShareActions(bars, sessions);
     expect(r.applied.map((a) => a.factor)).toEqual([2, 5]);
     expect(r.bars.map((b) => b.close)).toEqual([100, 100, 100]);
     expect(r.bars[0].volume).toBe(10000);
   });
 
-  it("does not adjust when the previous session is missing from the data (a gap is not a split)", () => {
-    // 2024-01-02 is a known session but has no bar, so 01-03's printed previous close is 01-02's, not 01-01's.
-    const bars = [bar("2024-01-01", 100, null), bar("2024-01-03", 85, 90)];
+  it("does not report a mid-sized fall across a missing session (it may be days of movement)", () => {
+    // 2024-01-02 is a known session but has no bar.
+    const bars = [bar("2024-01-01", 100, 100), bar("2024-01-03", 80, 78)];
     const r = adjustForShareActions(bars, sessions);
     expect(r.applied).toEqual([]);
+    expect(r.unadjusted).toEqual([]);
     expect(r.skippedGaps).toEqual(["2024-01-03"]);
-    expect(r.bars.map((b) => b.close)).toEqual([100, 85]);
   });
 
-  it("reports, never guesses at, a change that is not a share ratio", () => {
-    const bars = [bar("2024-01-01", 100, null), bar("2024-01-02", 90, 93.37)];
+  it("still adjusts a clean 50% split across a missing session (a stock that sat out some days)", () => {
+    const bars = [bar("2024-01-01", 100, 100), bar("2024-01-03", 49, 50)];
+    const r = adjustForShareActions(bars, sessions);
+    expect(r.applied).toMatchObject([{ factor: 2 }]);
+    expect(r.bars[0].close).toBe(50);
+  });
+
+  it("reports, never adjusts, a mid-sized fall (a 1:2 bonus looks like a 33% crash)", () => {
+    const bars = [bar("2024-01-01", 150, 150), bar("2024-01-02", 100, 100)];
     const r = adjustForShareActions(bars, sessions);
     expect(r.applied).toEqual([]);
-    expect(r.unexplained).toEqual([{ date: "2024-01-02", storedPrevClose: 100, nsePrevClose: 93.37 }]);
-    expect(r.bars[0].close).toBe(100);
+    expect(r.unadjusted).toEqual(["2024-01-02"]);
+    expect(r.bars[0].close).toBe(150);
+  });
+
+  it("reports a huge fall that is not a clean factor", () => {
+    const bars = [bar("2024-01-01", 100, 100), bar("2024-01-02", 33, 31)]; // 3.2x at the open: nearest factor 3 is 7% off, but the close is 3.2x
+    const r = adjustForShareActions(bars, sessions);
+    // 100/33 = 3.03 matches 3 at the open and the close ratio 3.2 is within 20%: this is accepted as 3:1.
+    expect(r.applied).toMatchObject([{ factor: 3 }]);
+    const odd = adjustForShareActions([bar("2024-01-01", 100, 100), bar("2024-01-02", 36, 35)], sessions);
+    // 100/36 = 2.78 is 7.4% from 3 but 11% from 2.5; the open picks 3 (within 8%), close ratio 2.86 agrees: still a clean fit.
+    expect(odd.applied).toHaveLength(1);
+    const none = adjustForShareActions([bar("2024-01-01", 100, 100), bar("2024-01-02", 44, 40)], sessions);
+    // 100/44 = 2.27 sits between 2 (13.6% off) and 2.5 (9% off): no clean factor, so it is reported.
+    expect(none.applied).toEqual([]);
+    expect(none.unadjusted).toEqual(["2024-01-02"]);
   });
 
   it("handles empty and single-bar input", () => {
     expect(adjustForShareActions([], sessions).bars).toEqual([]);
-    expect(adjustForShareActions([bar("2024-01-01", 10, null)], sessions).bars).toHaveLength(1);
+    expect(adjustForShareActions([bar("2024-01-01", 10, 10)], sessions).bars).toHaveLength(1);
   });
 });

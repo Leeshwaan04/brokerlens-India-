@@ -18,6 +18,7 @@ const CSS = `
 .blc-input{font:inherit;font-size:12px;width:104px;min-height:28px;padding:4px 8px;border:1px solid var(--blc-border);border-radius:6px;background:transparent;color:var(--blc-text)}
 .blc-canvas{position:relative;width:100%;min-height:200px}
 .blc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.blc-foot{margin:6px 0 0;font-size:12px;color:var(--blc-muted)}
 .blc-table{margin-top:8px;color:var(--blc-muted);max-width:100%;overflow-x:auto}
 .blc-table summary{cursor:pointer}
 .blc-table table{width:100%;min-width:420px;white-space:nowrap;border-collapse:collapse;margin-top:6px;font-variant-numeric:tabular-nums}
