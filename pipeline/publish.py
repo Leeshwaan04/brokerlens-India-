@@ -25,7 +25,7 @@ import urllib.request
 from urllib.parse import quote
 from datetime import datetime, timezone
 
-from . import feeds, metrics
+from . import feeds, metrics, site_nav
 from .sources.nse import INDEX_FILES
 from .common import (
     CONFIG,
@@ -75,6 +75,15 @@ def _load_affiliate_partners():
         "angel-one": "https://www.angelone.in/open-demat-account?referral=BROKERLENS",
         "upstox": "https://upstox.com/open-account/?f=BROKERLENS",
     }
+
+
+def _fill_nav(head, spa):
+    """Put the shared nav (pipeline/site_nav.py) into a page-head template.
+    The templates are %-formatted later, so a literal % in the nav is escaped."""
+    esc = lambda t: t.replace("%", "%%")
+    return (head.replace("@@NAV@@", esc(site_nav.render_nav(spa)))
+                .replace("@@TIMINGS_BTN@@", esc(site_nav.render_timings_button()))
+                .replace("@@PANELS@@", esc(site_nav.render_panels(spa))))
 
 
 def _stamp_asset_versions(html):
@@ -698,6 +707,7 @@ def build():
     _restamp_js_media()
     _restamp_js_imports()
     _restamp_index_html_assets()
+    _upgrade_stale_headers()
     # Last, after every page and sitemap exists: the sitemap is the only set of
     # pages Google may index (see indexation.enforce_index_allowlist).
     from . import indexation
@@ -714,6 +724,32 @@ def _export_gsc_live():
         export_gsc_live.main()
     except Exception as exc:
         log("GSC live data export skipped or failed: %s" % exc, "warn")
+
+
+def _upgrade_stale_headers():
+    """Re-render the header (site_nav.upgrade_header_html) on the committed pages
+    the build does not regenerate (the hand-kept site/index.html shell and the
+    news articles), then re-stamp their /assets/* hashes: those files are
+    cached for a year as immutable, so a page that gained new header markup but
+    kept an old script URL would run old script against new markup."""
+    targets = [os.path.join(ROOT, "site", "index.html")]
+    for dp, _dn, fns in os.walk(os.path.join(ROOT, "site", "news")):
+        if "index.html" in fns:
+            targets.append(os.path.join(dp, "index.html"))
+    changed = stragglers = 0
+    for path in targets:
+        try:
+            html = open(path, encoding="utf-8").read()
+        except OSError:
+            continue
+        out = _stamp_asset_versions(site_nav.upgrade_header_html(html))
+        if out != html:
+            _write_text(path, out)
+            changed += 1
+        if site_nav.still_on_old_header(out):
+            stragglers += 1
+    log("header: %d committed pages re-rendered, %d still on an old header" % (changed, stragglers),
+        "warn" if stragglers else "ok")
 
 
 def _restamp_index_html_assets():
@@ -1196,36 +1232,11 @@ _REGISTRY_PAGE_HEAD = """<!doctype html>
   </a>
   <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
           aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
-  <nav class="nav-links" id="navlinks">
-    <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
-    <a href="/compare/">Compare</a>
-    <a href="/leaderboards/">Movers</a>
-    <a href="/calculators/">Calculators</a>
-    <a href="/registry/">SEBI registry</a>
-    <a href="/algo/">Algo platforms</a>
-    <a href="/ipo/">IPO</a>
-    <a href="/news/">News &amp; Blogs</a>
-    <a href="/reports/state-of-indian-broking-2026/">Reports</a>
-    <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
-  </nav>
-  <button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button class="icon-btn" id="audio-toggle" title="Play music" aria-label="Play music" aria-pressed="false" hidden><svg class="ico-off" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M11 6l3 4M14 6l-3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><svg class="ico-on" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="display:none"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M10.5 5.5a3.5 3.5 0 010 5M12.5 3.5a6.3 6.3 0 010 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+  @@NAV@@
+  @@TIMINGS_BTN@@<button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button class="icon-btn" id="audio-toggle" title="Play music" aria-label="Play music" aria-pressed="false" hidden><svg class="ico-off" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M11 6l3 4M14 6l-3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><svg class="ico-on" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="display:none"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M10.5 5.5a3.5 3.5 0 010 5M12.5 3.5a6.3 6.3 0 010 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
   <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
 </div>
-<div class="mega" id="mega-timings" hidden>
-  <div class="wrap">
-    <div id="mega-timings-body" class="mega-grid"><div class="small faint" style="padding:16px 0">Loading timings...</div></div>
-  </div>
-</div>
-<div class="mega" id="mega-markets" hidden>
-  <div class="wrap">
-    <div class="markets-list">
-      <a href="/brokers/"><span>India</span><span class="badge badge-up">Live</span></a>
-      <a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>
-      <a href="/coming-soon/us"><span>US</span><span class="badge badge-warn">Coming soon</span></a>
-      <a href="/coming-soon/gcc"><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
-    </div>
-  </div>
-</div>
+@@PANELS@@
 </header>
 <div class="search-overlay" id="search-overlay" hidden>
   <div class="search-modal" role="dialog" aria-modal="true" aria-label="Search BrokerLens">
@@ -1280,6 +1291,7 @@ _REGISTRY_PAGE_FOOT = f"""</main>
 </body>
 </html>
 """
+_REGISTRY_PAGE_HEAD = _fill_nav(_REGISTRY_PAGE_HEAD, spa=False)
 _REGISTRY_PAGE_HEAD = _stamp_asset_versions(_REGISTRY_PAGE_HEAD)
 _REGISTRY_PAGE_FOOT = _stamp_asset_versions(_REGISTRY_PAGE_FOOT)
 
@@ -1354,37 +1366,11 @@ _APP_SHELL_HEAD = """<!doctype html>
     </a>
     <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks"
             aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
-    <nav class="nav-links" id="navlinks">
-      <button class="mega-toggle" id="markets-toggle" aria-expanded="false" aria-controls="mega-markets">Brokers <span aria-hidden="true">&#9662;</span></button>
-      <a href="/compare/" data-link>Compare</a>
-      <a href="/leaderboards/" data-link>Movers</a>
-      <a href="/calculators/">Calculators</a>
-      <a href="/registry/" data-link>SEBI registry</a>
-      <a href="/algo/" data-link>Algo platforms</a>
-      <a href="/ipo/">IPO</a>
-      <a href="https://paper.brokerlens.in/" class="nav-paper-cta" target="_blank" rel="noopener">Paper Trade</a>
-      <a href="/news/" data-link>News &amp; Blogs</a>
-      <a href="/reports/state-of-indian-broking-2026/">Reports</a>
-      <button class="mega-toggle" id="timings-toggle" aria-expanded="false" aria-controls="mega-timings">Market timings <span aria-hidden="true">&#9662;</span></button>
-    </nav>
-    <button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button class="icon-btn" id="audio-toggle" title="Play music" aria-label="Play music" aria-pressed="false" hidden><svg class="ico-off" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M11 6l3 4M14 6l-3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><svg class="ico-on" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="display:none"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M10.5 5.5a3.5 3.5 0 010 5M12.5 3.5a6.3 6.3 0 010 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    @@NAV@@
+    @@TIMINGS_BTN@@<button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search" aria-haspopup="dialog" aria-controls="search-overlay"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button class="icon-btn" id="audio-toggle" title="Play music" aria-label="Play music" aria-pressed="false" hidden><svg class="ico-off" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M11 6l3 4M14 6l-3 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><svg class="ico-on" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="display:none"><path d="M2 6h2.5L8 3v10L4.5 10H2z" fill="currentColor"/><path d="M10.5 5.5a3.5 3.5 0 010 5M12.5 3.5a6.3 6.3 0 010 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
   </div>
-  <div class="mega" id="mega-timings" hidden>
-    <div class="wrap">
-      <div id="mega-timings-body" class="mega-grid"><div class="small faint" style="padding:16px 0">Loading timings&hellip;</div></div>
-    </div>
-  </div>
-  <div class="mega" id="mega-markets" hidden>
-    <div class="wrap">
-      <div class="markets-list">
-        <a href="/brokers/" data-link><span>India</span><span class="badge badge-up">Live</span></a>
-        <a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>
-        <a href="/coming-soon/us" data-link><span>US</span><span class="badge badge-warn">Coming soon</span></a>
-        <a href="/coming-soon/gcc" data-link><span>GCC</span><span class="badge badge-warn">Coming soon</span></a>
-      </div>
-    </div>
-  </div>
+  @@PANELS@@
 </header>
 <div class="search-overlay" id="search-overlay" hidden>
   <div class="search-modal" role="dialog" aria-modal="true" aria-label="Search BrokerLens">
@@ -1500,6 +1486,7 @@ _APP_SHELL_FOOT = """</main>
 </body>
 </html>
 """
+_APP_SHELL_HEAD = _fill_nav(_APP_SHELL_HEAD, spa=True)
 _APP_SHELL_HEAD = _stamp_asset_versions(_APP_SHELL_HEAD)
 
 _APP_SHELL_FOOT = _stamp_asset_versions(_APP_SHELL_FOOT) % {"contact_email": CONTACT_EMAIL}

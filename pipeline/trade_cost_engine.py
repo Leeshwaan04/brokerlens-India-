@@ -28,6 +28,25 @@ import re
 import sys
 from datetime import datetime, timezone
 
+
+def _stamp_assets(page: str) -> str:
+    """Content-hash the /assets/* URLs (cached a year as immutable), as other page engines do."""
+    try:
+        from . import publish
+    except ImportError:  # run as a script
+        return page
+    return publish._stamp_asset_versions(page)
+
+
+def _shared_nav() -> str:
+    """The site's header nav for pages without the menu script (pipeline/site_nav.py)."""
+    try:
+        from . import site_nav
+    except ImportError:  # run as a script
+        from pipeline import site_nav
+    return site_nav.render_flat_nav()
+
+
 try:
     from . import indexation as _ix
 except ImportError:  # run as a script
@@ -843,14 +862,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
     <span>BrokerLens</span>
   </a>
   <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="navlinks" aria-label="Menu"><span aria-hidden="true">&#9776;</span></button>
-  <nav class="nav-links" id="navlinks">
-    <a href="/brokers/">Brokers</a>
-    <a href="/compare/">Compare</a>
-    <a href="/leaderboards/">Movers</a>
-    <a href="/calculators/">Calculators</a>
-    <a href="/ipo/">IPO</a>
-    <a href="/news/">News &amp; Blogs</a>
-  </nav>
+  {_shared_nav()}
   <button class="icon-btn" id="search-toggle" title="Search (Ctrl+K)" aria-label="Search"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
   <button class="icon-btn" id="theme-toggle" title="Switch theme" aria-label="Switch theme">&#9680;</button>
 </div></header>
@@ -1024,6 +1036,7 @@ def render_trade_cost_page(broker_id: str, stock_sym: str, stock_name: str, isin
   <p class="small muted" style="max-width:70ch">BrokerLens is an independent financial research service, not a SEBI-registered investment adviser. Broker fees shown here are indicative model estimates and are not verified against the broker's current rate card. Statutory charges use the rates described in the calculation. Confirm all charges with your broker before trading. Nothing here constitutes a recommendation to buy, sell, or trade any security. <a href="/methodology/">Methodology</a> &middot; <a href="/sources/">Sources &amp; lineage</a> &middot; <a href="/editorial-policy/">Editorial Policy</a></p>
   <p class="small"><a href="/stock/{stock_slug}/">View {stock_sym} facts</a> &middot; {charges_footer_link_html} <a href="/broker/{broker_id}/">Broker profile</a> &middot; <a href="/trade-costs/">Trade Costs hub</a></p>
 </div></footer>
+<script type="module" src="/assets/js/nav-widgets.js"></script>
 </body>
 </html>
 """
@@ -1422,7 +1435,7 @@ def build_trade_cost_pages(limit_stocks: int = 1000, site_url: str = "https://ww
             dest = os.path.join(hub_dir, broker_id, _stock_slug(symbol), "index.html")
             os.makedirs(os.path.dirname(dest), exist_ok=True)
             with open(dest, "w", encoding="utf-8") as out:
-                out.write(page)
+                out.write(_stamp_assets(page))
             written += 1
 
     # Only the indexable hub is a sitemap candidate. Combination URLs are

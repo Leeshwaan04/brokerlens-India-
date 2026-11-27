@@ -555,9 +555,12 @@ def run(check, ROOT, load):
             r'<h3 style="font-size:16px[^>]*>(.*?)</h3><p class="small"[^>]*>(.*?)</p>', page)]
         check("contentintegrity: paper trading guide FAQPage text equals the visible questions and answers",
               visible == [(m["name"], m["acceptedAnswer"]["text"]) for m in graph["FAQPage"]["mainEntity"]])
-        check("contentintegrity: paper trading guide has no em or en dashes and no link to the unlaunched practice app",
+        # The site header (every page) carries the "Practise free" button to the
+        # live app; the guide's own content is what this check holds to no app link.
+        guide_content = re.sub(r"<header\b.*?</header>", "", page, flags=re.S)
+        check("contentintegrity: paper trading guide has no em or en dashes and its own content does not link to the practice app",
               not any(d in page for d in ("—", "–", "&mdash;", "&ndash;", "&#8212;", "&#8211;"))
-              and "paper.brokerlens" not in page)
+              and "paper.brokerlens" not in guide_content)
         check("contentintegrity: the sitemap lists /paper-trading-apps-india/ only when the page was built",
               'if os.path.isfile(os.path.join(ROOT, "site", "paper-trading-apps-india", "index.html")):'
               in _read(ROOT, "pipeline", "publish.py"))

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import hashlib
 import os
 import re
 import subprocess
@@ -964,9 +965,9 @@ def test_published():
     # had a real Calculators link, while auditing nav consistency.
     home_nav_html = home_html_for_dirs[:home_html_for_dirs.find('id="app"')]
     check("homepage nav has a Calculators link matching static pages",
-          'href="/calculators/">Calculators' in home_nav_html)
+          'href="/calculators/"' in home_nav_html)
     check("homepage nav has a Reports link matching static pages",
-          "Reports</a>" in home_nav_html and "/reports/state-of-indian-broking-2026/" in home_nav_html)
+          'href="/reports/state-of-indian-broking-2026/"' in home_nav_html)
 
     # About/Contact/Privacy/Terms: added because the site had no such pages
     # at all (an E-E-A-T gap), plus the one real support address, and every
@@ -1130,7 +1131,7 @@ def test_published():
         # Compare, Rankings, a calculators link and the market-timings mega
         # menu entirely, so navigation felt different depending on which
         # page a visitor landed on first.
-        NAV_LINKS = ["Brokers", "Compare", "Movers", "SEBI registry", "Algo platforms", "Reports"]
+        NAV_LINKS = [">Brokers <", ">Markets <", ">IPO</a>", ">Tools <", ">Learn <", ">Practise free</a>"]
         for label, path in [
             ("stock", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
             ("fund", hdfc_flexicap_path if os.path.isdir(fund_dir) and os.path.exists(hdfc_flexicap_path) else ""),
@@ -1141,6 +1142,12 @@ def test_published():
             check("%s page nav has the same link set as the homepage" % label,
                   all(n in html for n in NAV_LINKS), "missing: %s" % [n for n in NAV_LINKS if n not in html])
             check("%s page has a hamburger nav-toggle for mobile" % label, 'id="nav-toggle"' in html)
+            # Every link in the task-based header is on every page (site-wide
+            # internal linking must not shrink when links moved into dropdowns).
+            from pipeline import site_nav as _site_nav
+            missing_nav = [h for h in _site_nav.all_internal_hrefs() if 'href="%s"' % h not in html]
+            check("%s page links every header destination (Brokers, Markets, Tools, Learn menus)" % label,
+                  not missing_nav, "missing: %s" % missing_nav)
             check("%s page has the market-timings mega menu" % label,
                   'id="timings-toggle"' in html and 'id="mega-timings"' in html and 'id="mega-timings-body"' in html)
             check("%s page loads nav-widgets.js (mega menu / hamburger logic)" % label,
@@ -1162,7 +1169,8 @@ def test_published():
     # other nav element on this site.
     if os.path.exists(nav_widgets_path):
         check("nav-widgets.js implements the shared dropdown wiring used by both mega menus",
-              "wireDropdown" in nav_widgets_js and "markets-toggle" in nav_widgets_js)
+              "wireDropdown" in nav_widgets_js
+              and all(k in nav_widgets_js for k in ("'brokers'", "'markets'", "'tools'", "'learn'")))
     for label, path in [
         ("homepage", os.path.join(ROOT, "site", "index.html")),
         ("stock", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
@@ -1170,9 +1178,80 @@ def test_published():
         if not path or not os.path.exists(path):
             continue
         html = open(path, encoding="utf-8").read()
-        check("%s page has the markets dropdown (Brokers menu)" % label,
+        check("%s page has the markets dropdown (Markets menu)" % label,
               'id="markets-toggle"' in html and 'id="mega-markets"' in html
               and ">India<" in html and ">Crypto<" in html and ">US<" in html and ">GCC<" in html)
+
+    # ---- Task-based header (pipeline/site_nav.py): structure, links, accessibility,
+    # and consistency across the whole site.
+    from pipeline import site_nav as _sn
+    for label, path in [
+        ("homepage", os.path.join(ROOT, "site", "index.html")),
+        ("stock", os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""),
+    ]:
+        if not path or not os.path.exists(path):
+            continue
+        html = open(path, encoding="utf-8").read()
+        toggles = re.findall(r'<button class="mega-toggle" id="([a-z]+)-toggle"[^>]*aria-controls="([a-z-]+)"', html)
+        check("%s header has the four task menus in order" % label,
+              [t[0] for t in toggles] == ["brokers", "markets", "tools", "learn"], str(toggles))
+        ids = re.findall(r'\bid="([^"]+)"', html)
+        check("%s header: every aria-controls points at a real panel, and header ids are unique" % label,
+              all(('id="%s"' % c) in html for _, c in toggles)
+              and all(ids.count(i) == 1 for i in ["navlinks", "nav-toggle", "timings-toggle", "mega-timings", "mega-brokers", "mega-markets", "mega-tools", "mega-learn"]),
+              "controls=%s" % toggles)
+        check("%s header: the practice app is one clear button that opens safely" % label,
+              bool(re.search(r'<a href="https://paper\.brokerlens\.in/\?utm_source=brokerlens[^"]*" class="nav-paper-cta" target="_blank" rel="noopener"[^>]*>Practise free</a>', html)))
+        check("%s header: nav landmark is labelled and the timings button is keyboard-reachable with a name" % label,
+              'aria-label="Main"' in html and 'id="timings-toggle" title="Market timings" aria-label="Market timings"' in html)
+    broken_nav = [h for h in _sn.all_internal_hrefs()
+                  if not h.startswith("/coming-soon/") and not os.path.exists(os.path.join(ROOT, "site", h.strip("/"), "index.html"))]
+    check("every internal link in the header resolves to a built page", not broken_nav, "broken: %s" % broken_nav)
+    # One nav source: across every built page there are only the two shell variants.
+    variants = {}
+    nav_re = re.compile(r'<nav class="nav-links" id="navlinks".*?</nav>', re.S)
+    scanned = 0
+    for dp, _dn, fns in os.walk(os.path.join(ROOT, "site")):
+        if "index.html" not in fns:
+            continue
+        try:
+            with open(os.path.join(dp, "index.html"), encoding="utf-8") as fh:
+                head = fh.read(60000)
+        except OSError:
+            continue
+        m = nav_re.search(head)
+        if m:
+            scanned += 1
+            variants.setdefault(hashlib.md5(m.group(0).encode()).hexdigest(), os.path.join(dp, "index.html"))
+    check("the header is identical on every page that has the full one (the nav is the same for the SPA and static shells)",
+          0 < len(variants) <= 2 and scanned > 1000, "variants=%d scanned=%d e.g. %s" % (len(variants), scanned, list(variants.values())[:3]))
+    # Same panels on both shells (the SPA marks some links data-link, nothing else differs).
+    spa_panels = re.search(r'<div class="mega" id="mega-brokers".*?</div>\s*</div>\s*</div>', open(os.path.join(ROOT, "site", "index.html"), encoding="utf-8").read(), re.S)
+    st_path = os.path.join(stock_dir, slugs[0], "index.html") if os.path.isdir(stock_dir) and slugs else ""
+    st_panels = re.search(r'<div class="mega" id="mega-brokers".*?</div>\s*</div>\s*</div>', open(st_path, encoding="utf-8").read(), re.S) if st_path else None
+    check("the SPA and static page panels differ only by data-link",
+          bool(spa_panels and st_panels) and spa_panels.group(0).replace(" data-link", "") == st_panels.group(0).replace(" data-link", ""))
+    # Pages on a different header are reported, never hidden.
+    other = full = 0
+    for dp, _dn, fns in os.walk(os.path.join(ROOT, "site")):
+        if "index.html" not in fns:
+            continue
+        try:
+            with open(os.path.join(dp, "index.html"), encoding="utf-8") as fh:
+                head = fh.read(70000)
+        except OSError:
+            continue
+        if 'id="brokers-toggle"' in head:
+            full += 1
+        elif 'class="nav-links" id="navlinks"' not in head:
+            other += 1
+    print("  info: header coverage: %d pages on the full header, %d on their own minimal header (programmatic families)" % (full, other))
+    check("no built page still has the pre-27-Nov header",
+          not any(_sn.still_on_old_header(open(p_, encoding="utf-8").read()) for p_ in
+                  [os.path.join(ROOT, "site", "index.html")] + [os.path.join(dp, "index.html") for dp, _dn, fns in os.walk(os.path.join(ROOT, "site", "news")) if "index.html" in fns]))
+    # Unit tests for the nav module itself.
+    ut = subprocess.run([sys.executable, "-m", "unittest", "tests.test_site_nav"], cwd=ROOT, capture_output=True, text=True)
+    check("pipeline/site_nav.py unit tests pass", ut.returncode == 0, (ut.stderr or ut.stdout)[-400:])
 
     # Coming-soon routes for the still-unbuilt markets (crypto graduated to a
     # real pipeline - see the crypto page checks below): real pages, not dead
@@ -1431,7 +1510,8 @@ def test_published():
           0 < len(search_rows_fund_cmp) < 10000,
           "found %d (expected thousands, not the ~20K all-pairs total)" % len(search_rows_fund_cmp))
     check("markets dropdown marks Crypto as Live, not Coming soon",
-          '<a href="/crypto/"><span>Crypto</span><span class="badge badge-up">Live</span></a>' in home_html_for_dirs)
+          bool(re.search(r'<h4><span>Crypto</span> <span class="badge badge-up">Live</span></h4>', home_html_for_dirs))
+          and 'href="/crypto/"' in home_html_for_dirs)
 
     # IPO tracker: /ipo/ hub, /ipo/archive/, and one static page per IPO,
     # sourced from NSE's own public-issue disclosures (see
@@ -1493,7 +1573,7 @@ def test_published():
     check("sitemap includes /ipo/ pages", "/ipo/" in all_sitemap_xml)
     search_rows_ipo = [r for r in all_search_rows if r[2] == "ipo"]
     check("search index includes IPOs", len(search_rows_ipo) > 500, "found %d" % len(search_rows_ipo))
-    check("nav has an IPO link", '<a href="/ipo/">IPO</a>' in home_html_for_dirs)
+    check("nav has an IPO link", bool(re.search(r'<a href="/ipo/"[^>]*>IPO</a>', home_html_for_dirs)))
 
     # Affiliate banner: a real referral link, kept out of the ranking table,
     # and never mixed with crypto content per the standing placement rule.

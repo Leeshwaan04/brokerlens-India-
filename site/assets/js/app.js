@@ -8,8 +8,8 @@
 import { cls, esc, loadOverview, loadTicker, pct } from './store.js?v=b59cf0df04';
 import * as pages from './pages.js?v=9bfd23da0a';
 import { clearRedraws } from './chart.js?v=22460af914';
-import './nav-widgets.js?v=5e2c9f7920';
-import './search.js?v=25ab1aa597';
+import './nav-widgets.js?v=44111e04f6';
+import './search.js?v=9b75b122b7';
 import './hero-video.js?v=9e658a1fa5';
 
 const app = document.getElementById('app');
@@ -193,8 +193,9 @@ async function render() {
   const ogDesc = document.querySelector('meta[property="og:description"]');
   if (ogDesc && desc) ogDesc.setAttribute('content', desc.getAttribute('content'));
   const seg = path.split('/')[1] || '';
-  document.querySelectorAll('#navlinks a').forEach((a) =>
+  document.querySelectorAll('#navlinks a:not(.nav-paper-cta)').forEach((a) =>
     a.classList.toggle('active', a.getAttribute('href').split('/')[1] === seg));
+  window.dispatchEvent(new Event('bl:route'));
 
   if (location.hash) {
     const el = document.querySelector(location.hash);
