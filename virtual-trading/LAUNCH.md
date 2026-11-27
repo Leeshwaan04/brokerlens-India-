@@ -19,10 +19,12 @@ Secrets go in with `npx wrangler secret put`, which prompts for the value.
 
 ## 0. Decisions before anything else (Owner)
 
-1. **Legal sign-off.** Confirm with counsel how SEBI's 8 May 2026 circular
-   (30-day lag for price data used in education, in force 1 July 2026)
-   applies, and approve the privacy notice (`/privacy`) and terms. The app
-   ships with `VT_PRICE_LAG_DAYS=30`; only lower it on legal advice.
+1. **Legal sign-off (received, per the owner, 27 Nov 2026).** The owner
+   reports counsel's sign-off on SEBI's 8 May 2026 circular (30-day lag for
+   price data used in education, in force 1 July 2026). The opinion itself is
+   not in this repository. The app ships with `VT_PRICE_LAG_DAYS=30`; only
+   lower it on legal advice. The site makes no compliance claim beyond what
+   counsel approved in writing: add approved wording only from the opinion.
 2. **Cloudflare plan.** The app is built to run on the **Workers Free plan**
    (see "Running on free plans" below). Upgrade to Workers Paid (USD 5 a
    month) when traffic nears the free limits listed there.
