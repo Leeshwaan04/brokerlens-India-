@@ -1,10 +1,13 @@
 /* Tracking for every sponsored placement on the site.
  *
  * Google Analytics 4 (all partners): two events, sent through the gtag that theme-init.js loads.
- *   ad_impression  a partner banner was at least half visible for one second (once per banner
- *                  per page view). Banners are the IBSL ads (data-ad), the partner cards
- *                  (.aff-banner: Zerodha, 5paisa, Jiraaf, Binance, Delta) and the IBSL article card.
- *   ad_click       a click on any sponsored link (rel="sponsored"), inside a banner or not.
+ *   sponsor_impression  a partner banner was at least half visible for one second (once per
+ *                       banner per page view). Banners are the IBSL ads (data-ad), the partner
+ *                       cards (.aff-banner: Zerodha, 5paisa, Jiraaf, Binance, Delta) and the IBSL
+ *                       article card.
+ *   sponsor_click       a click on any sponsored link (rel="sponsored"), inside a banner or not.
+ * Not ad_impression / ad_click: GA4 reserves those names for Google's own ad products (this site
+ * runs AdSense) and silently dropped every ad_impression we sent (seen 26 to 27 Nov 2026).
  * Parameters:
  *   ad_id        partner: ibsl, zerodha, 5paisa, jiraaf, ... (data-ad, else the link's host)
  *   ad_slot      strip / wide / card for IBSL ads, card for partner cards, article_card,
@@ -98,7 +101,7 @@ function onClick(e) {
   const link = e.target && e.target.closest ? e.target.closest(SPONSORED) : null;
   if (!link) return;
   beacon('click', link);
-  ga('ad_click', link);
+  ga('sponsor_click', link);
 }
 // capture phase, so a handler that stops propagation further down cannot hide a click
 document.addEventListener('click', onClick, true);
@@ -116,7 +119,7 @@ function watch(el) {
         if (en.isIntersecting && en.intersectionRatio >= 0.5) {
           if (!timers.has(en.target)) {
             timers.set(en.target, setTimeout(() => {
-              beacon('imp', en.target); ga('ad_impression', en.target);
+              beacon('imp', en.target); ga('sponsor_impression', en.target);
               io.unobserve(en.target); timers.delete(en.target);
             }, 1000));
           }

@@ -2283,6 +2283,11 @@ table.data tr:hover td {
   display: flex;
   flex-direction: column;
 }
+/* Same trap as .search-overlay[hidden]: the display:flex above overrides the browser's
+   [hidden]{display:none}, so the closed drawer (drawer.hidden = true) stayed on screen over the
+   right 400px of every page with the nav (almost the whole screen on a phone) and swallowed
+   clicks on whatever was under it, sponsored banners included. */
+.wl-drawer[hidden] { display: none; }
 .wl-head {
   display: flex;
   justify-content: space-between;
