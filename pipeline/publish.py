@@ -3062,6 +3062,7 @@ def _write_stock_pages(companies, brokers_cfg, indices=None, equity_history=None
         if history:
             body = body.replace("</head>", _stamp_asset_versions(
                 '<script src="/assets/js/vendor/lightweight-charts.standalone.production.js" defer></script>'
+                '<script src="/assets/js/charting/engine.js" defer></script>'
                 '<script type="module" src="/assets/js/stock-chart.js" defer></script></head>'))
         # what-if price calculator (kind 'price-whatif'), same versioned loader as /calculators/
         body = body.replace("</head>", _stamp_asset_versions(

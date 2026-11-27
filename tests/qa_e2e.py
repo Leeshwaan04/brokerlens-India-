@@ -571,9 +571,9 @@ def test_published():
             check("stock page shows a real Sector field", "Fast Moving Consumer Goods" in itc_html)
             check("stock page shows a last-close price with a day-change badge",
                   "Last close" in itc_html and ('class="up"' in itc_html or 'class="down"' in itc_html))
-            check("stock page loads the price chart (vendor lib + stock-chart.js)",
+            check("stock page loads the price chart (vendor lib + charting engine + stock-chart.js)",
                   "lightweight-charts" in itc_html and "stock-chart.js" in itc_html
-                  and "data-stock-chart" in itc_html)
+                  and "charting/engine.js" in itc_html and "data-stock-chart" in itc_html)
             check("stock page has a trade-this-stock CTA linking to /compare/",
                   "Trade ITC" in itc_html and 'href="/compare/"' in itc_html)
             # Regression guard: the chart card used to be a short, fixed-height
@@ -610,12 +610,27 @@ def test_published():
         check("stock-chart.js exists", os.path.exists(stock_chart_path))
         if os.path.exists(stock_chart_path):
             stock_chart_src = open(stock_chart_path, encoding="utf-8").read()
-            check("stock-chart.js defines technical indicators (SMA, EMA, Bollinger)",
-                  "calcSMA" in stock_chart_src and "calcEMA" in stock_chart_src and "calcBollinger" in stock_chart_src)
-            check("stock-chart.js defines Smart Zones (Support/Resistance levels)",
-                  "calcSmartZones" in stock_chart_src and "createPriceLine" in stock_chart_src)
-            check("stock-chart.js defines interactive HUD legend",
-                  "chart-hud" in stock_chart_src and "subscribeCrosshairMove" in stock_chart_src)
+            check("stock-chart.js mounts the shared charting engine on the stock's own history file",
+                  "BrokerLensCharting" in stock_chart_src and "mountStudio" in stock_chart_src
+                  and "candleFileAdapter" in stock_chart_src and "/data/equity-history/" in stock_chart_src)
+        # The chart itself lives in the shared engine (charting/ -> assets/js/charting/engine.js,
+        # the same build paper.brokerlens.in serves). Strings survive minification.
+        engine_path = os.path.join(ROOT, "site", "assets", "js", "charting", "engine.js")
+        check("charting engine exists", os.path.exists(engine_path))
+        if os.path.exists(engine_path):
+            engine_src = open(engine_path, encoding="utf-8").read()
+            check("charting engine defines the chart types, indicators and Smart Zones",
+                  all(t in engine_src for t in ("Heikin-Ashi", "Hollow", "Baseline", "SMA 20", "EMA 50", "Bollinger",
+                                                "RSI 14", "Support/Resistance", "createPriceLine")))
+            check("charting engine defines the interactive HUD, saved settings and the target-line key",
+                  "blc-hud" in engine_src and "subscribeCrosshairMove" in engine_src
+                  and "bl_chart_targets_v1" in engine_src)
+            check("charting engine stays within its size budget (30 KB gzip)",
+                  len(__import__("gzip").compress(engine_src.encode("utf-8"))) <= 30 * 1024)
+            app_copy = os.path.join(ROOT, "virtual-trading", "public", "charting", "engine.js")
+            if os.path.exists(app_copy):
+                check("the site and the paper app serve the same charting engine build",
+                      open(app_copy, encoding="utf-8").read() == engine_src)
         # Corporate actions are matched by an exact BSE-symbol-to-NSE-symbol
         # string match, never fuzzy - so this only proves the wiring fires
         # for at least one real, currently-disclosed action, not that every

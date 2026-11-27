@@ -294,6 +294,7 @@ def write_pages(scrips, fresh, corporate_actions, news_articles, nse_slugs):
         if history:
             body = body.replace("</head>", P._stamp_asset_versions(
                 '<script src="/assets/js/vendor/lightweight-charts.standalone.production.js" defer></script>'
+                '<script src="/assets/js/charting/engine.js" defer></script>'
                 '<script type="module" src="/assets/js/stock-chart.js" defer></script></head>'))
         body = body.replace("</head>", P._stamp_asset_versions('<script src="/assets/js/calculators.js" defer></script></head>'))
         body += (
