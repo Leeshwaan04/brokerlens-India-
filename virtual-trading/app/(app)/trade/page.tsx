@@ -17,6 +17,7 @@ import { StockSearch } from "@/components/StockSearch";
 import { OrderTicket } from "@/components/OrderTicket";
 import { PendingOrders } from "@/components/PendingOrders";
 import { PriceChart } from "@/components/PriceChart";
+import { ChartStudio } from "@/components/ChartStudio";
 import { TradeHotkeys } from "@/components/TradeHotkeys";
 import { buttonClass, Card, CardTitle, cx, PageHeader, Pill } from "@/components/ui";
 import { toggleWatchlistAction } from "../actions";
@@ -263,7 +264,7 @@ export default async function TradePage({
 
               {history.length > 1 && (
                 <div className="mt-4 border-t border-line pt-4">
-                  <PriceChart points={history} symbol={stock.symbol} />
+                  <ChartStudio symbol={stock.symbol} fallback={<PriceChart points={history} symbol={stock.symbol} />} />
                 </div>
               )}
 

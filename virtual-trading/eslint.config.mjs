@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Built static files (charting engine and the vendored renderer): checked in charting/, not here.
+    "public/charting/**",
     // Cloudflare Workers (OpenNext) build output and wrangler's local state.
     ".open-next/**",
     ".wrangler/**",

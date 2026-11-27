@@ -65,9 +65,61 @@ test("the trade screen shows the quote, chart, market watch and order window", a
   await page.goto("/trade?symbol=RELIANCE");
   await expect(page.getByRole("heading", { name: "RELIANCE", exact: true })).toBeVisible();
   for (const label of ["Open", "High", "Low", "Prev. close", "Volume"]) await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(/Closes, last \d+ sessions/)).toBeVisible();
+  // The interactive studio replaces the plain closes chart once it loads.
+  await expect(page.locator('[data-testid="chart-studio"] .blc-canvas').or(page.getByText(/Closes, last \d+ sessions/))).toBeVisible();
   await expect(page.getByText("Order window").first()).toBeVisible();
   await expect(page.getByText(/Practice market|Oct|Nov/).first()).toBeVisible();
+});
+
+test("the chart studio: types, indicators and timeframes work, and nothing after the practice date is drawn", async () => {
+  await page.goto("/trade?symbol=RELIANCE");
+  const studio = page.locator('[data-testid="chart-studio"]');
+  await expect(studio.locator(".blc-canvas canvas").first()).toBeVisible({ timeout: 15_000 });
+  const group = (name: string) => studio.getByRole("group", { name });
+  // Daily bars only here: this app has no licensed intraday source, so no intraday chips are offered.
+  for (const tf of ["1m", "5m", "15m", "1H", "4H"]) await expect(group("Timeframe").getByRole("button", { name: tf, exact: true })).toHaveCount(0);
+  for (const tf of ["1D", "1W", "1M"]) await expect(group("Timeframe").getByRole("button", { name: tf, exact: true })).toBeVisible();
+
+  await group("Chart type").getByRole("button", { name: "Heikin-Ashi" }).click();
+  await expect(group("Chart type").getByRole("button", { name: "Heikin-Ashi" })).toHaveAttribute("aria-pressed", "true");
+  await group("Chart type").getByRole("button", { name: "Baseline" }).click();
+  await group("Indicators").getByRole("button", { name: "Bollinger" }).click();
+  await expect(group("Indicators").getByRole("button", { name: "Bollinger" })).toHaveAttribute("aria-pressed", "true");
+  await group("Timeframe").getByRole("button", { name: "1W", exact: true }).click();
+  await expect(group("Timeframe").getByRole("button", { name: "1W", exact: true })).toHaveAttribute("aria-pressed", "true");
+
+  // The text summary and data table exist for screen readers, and the last bar is on or before the practice date.
+  const summary = await studio.locator(".blc-sr").textContent();
+  expect(summary).toMatch(/RELIANCE .* chart, \d+ bars from \d{4}-\d{2}-\d{2} to (\d{4}-\d{2}-\d{2})/);
+  const last = /to (\d{4}-\d{2}-\d{2})/.exec(summary ?? "")![1];
+  const [{ d }] = await sql<{ d: string }>(`select to_char(max(trade_date), 'YYYY-MM-DD') d from price_history where symbol = 'RELIANCE'`);
+  expect(last <= d).toBe(true);
+  await studio.getByText("Show recent prices as a table").click();
+  await expect(studio.locator(".blc-table table tr").nth(1)).toBeVisible();
+
+  // An indicator that needs more bars than this timeframe has is shown as unavailable, not silently dropped.
+  const boll = group("Indicators").getByRole("button", { name: "Bollinger" });
+  const weeklyBars = Number(/(\d+) bars/.exec(summary ?? "")![1]);
+  if (weeklyBars < 20) await expect(boll).toBeDisabled();
+  await group("Timeframe").getByRole("button", { name: "1D", exact: true }).click();
+  await expect(boll).toBeEnabled();
+
+  // Saved settings survive a reload.
+  await page.reload();
+  await expect(studio.locator(".blc-canvas canvas").first()).toBeVisible({ timeout: 15_000 });
+  await expect(group("Indicators").getByRole("button", { name: "Bollinger" })).toHaveAttribute("aria-pressed", "true");
+  await expect(group("Chart type").getByRole("button", { name: "Baseline" })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("the history API needs a session and refuses bad symbols", async ({ request }) => {
+  const ok = await request.get("/api/history/RELIANCE");
+  expect(ok.status()).toBe(200);
+  const body = await ok.json();
+  expect(body.d.length).toBeGreaterThan(20);
+  expect(body.d.length).toBe(body.c.length);
+  for (const bad of ["..%2Fetc", "NOPE_NOT_A_STOCK", "A%27%3B--", "X".repeat(30)]) {
+    expect([400, 404]).toContain((await request.get(`/api/history/${bad}`)).status());
+  }
 });
 
 test("a delivery market buy is placed and listed as open", async () => {

@@ -12,7 +12,7 @@ const PORT = 3200;
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: signedOut ? ["public.spec.ts", "security.public.spec.ts"] : ["journey.spec.ts", "security.account.spec.ts"],
+  testMatch: signedOut ? ["public.spec.ts", "security.public.spec.ts"] : ["journey.spec.ts", "security.account.spec.ts", "charting-engine.spec.ts"],
   fullyParallel: false,
   workers: 1,
   retries: 0,
