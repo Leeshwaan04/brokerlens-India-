@@ -20,6 +20,7 @@ import {
 } from "./schema";
 import { fetchBhavcopy, type DailyPriceRow } from "./bhavcopy";
 import { fetchIndexCloses, type IndexCloseRow } from "./index-closes";
+import { recordHistoryDay, toHistoryRows, upsertPriceHistory } from "./history/store";
 import {
   isoDateOnly,
   missingCloseAction,
@@ -71,6 +72,10 @@ const shiftDays = (iso: string, days: number) =>
 // round trip costs a few hundred milliseconds.
 async function upsertDailyPrices(tradeDate: string, rows: DailyPriceRow[]) {
   if (rows.length === 0) return;
+  // The charting studio's long history gets the same day (lib/history/store.ts).
+  const hist = toHistoryRows(tradeDate, rows);
+  await upsertPriceHistory(hist);
+  await recordHistoryDay(tradeDate, "new", hist.length, "ok");
   const num = (v: number | null) => (v !== null ? String(v) : null);
   await getDb()
     .insert(dailyPrices)

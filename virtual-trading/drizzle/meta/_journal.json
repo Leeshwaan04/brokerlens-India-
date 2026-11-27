@@ -57,6 +57,13 @@
       "when": 1795692630534,
       "tag": "0007_index_closes",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795766842064,
+      "tag": "0008_price_history",
+      "breakpoints": true
     }
   ]
 }

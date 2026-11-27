@@ -18,6 +18,7 @@ import {
   check,
   jsonb,
   primaryKey,
+  bigint,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -102,6 +103,37 @@ export const indexCloses = pgTable(
   },
   (t) => [primaryKey({ columns: [t.indexKey, t.tradeDate] })],
 );
+
+// Long daily history for the charting studio (about five years of the Nifty 500).
+// Separate from daily_prices, which feeds order settlement and holds only the
+// recent window. Raw prices as NSE printed them, in paise (whole numbers, no
+// float drift), plus NSE's printed previous close: that previous close is
+// adjusted on a split or bonus ex-date, which is how lib/history/adjust.ts
+// finds the adjustments. Never served past the practice market's date.
+export const priceHistory = pgTable(
+  "price_history",
+  {
+    symbol: text("symbol").notNull(),
+    tradeDate: date("trade_date").notNull(),
+    open: integer("open_p").notNull(),
+    high: integer("high_p").notNull(),
+    low: integer("low_p").notNull(),
+    close: integer("close_p").notNull(),
+    prevClose: integer("prev_close_p"),
+    volume: bigint("volume", { mode: "number" }),
+  },
+  (t) => [primaryKey({ columns: [t.symbol, t.tradeDate] })],
+);
+
+// One row per date the history backfill has looked at, so a rerun skips
+// finished days and never re-asks for market holidays.
+export const priceHistoryDays = pgTable("price_history_days", {
+  tradeDate: date("trade_date").primaryKey(),
+  source: text("source").notNull(), // "old" or "new" NSE file format
+  rows: integer("rows").notNull(),
+  status: text("status").notNull(), // "ok" or "none" (no file published: holiday)
+  fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const marketHolidays = pgTable("market_holidays", {
   holidayDate: date("holiday_date").primaryKey(),
