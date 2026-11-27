@@ -1,0 +1,31 @@
+name: Charting CI
+
+# The shared chart engine (charting/): typecheck, unit tests, and a check that the
+# built copies served by the site and the paper app are current and within budget.
+on:
+  push:
+    paths: ["charting/**", "site/assets/js/charting/**", "virtual-trading/public/charting/**", ".github/workflows/charting-ci.yml"]
+  pull_request:
+    paths: ["charting/**", "site/assets/js/charting/**", "virtual-trading/public/charting/**", ".github/workflows/charting-ci.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: charting
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: charting/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build:check
