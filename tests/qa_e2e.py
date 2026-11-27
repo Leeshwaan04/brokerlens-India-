@@ -2460,9 +2460,12 @@ def test_instrument_pages():
 
     check("share prices keep their decimals (Rs 85.09, Rs 0.45) while totals stay whole rupees",
           _pub._px_html(85.09) == "&#8377;85.09" and _pub._px_html(0.45) == "&#8377;0.45" and _pub._inr_html(255) == "&#8377;255")
-    scj = open(os.path.join(site, "assets", "js", "stock-chart.js"), encoding="utf-8").read()
+    # The HUD now lives in the shared engine (charting/src/studio.ts, built to the minified
+    # engine.js): its change must be close vs the PREVIOUS bar's close, as the Last close card shows.
+    studio_src = open(os.path.join(ROOT, "charting", "src", "studio.ts"), encoding="utf-8").read()
     check("chart HUD change is close vs previous close, matching the Last close card",
-          "prevClose" in scj and "point.close - point.open" not in scj)
+          "(b.c / prev - 1)" in studio_src and "const prev = i > 0 ? bars[i - 1].c" in studio_src
+          and "b.c - b.o" not in studio_src.split("const updateHud")[1].split("chart.subscribeCrosshairMove")[0])
 
     css_hero = open(os.path.join(site, "assets", "css", "app.css"), encoding="utf-8").read()
     light_block = css_hero.split("Light theme: same geometry and feathered edges")[1].split("@media (max-width: 860px) {\n  .pitch-media")[0]
