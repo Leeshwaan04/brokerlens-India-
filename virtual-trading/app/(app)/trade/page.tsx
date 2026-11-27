@@ -41,11 +41,14 @@ export default async function TradePage({
 }) {
   const current = await getCurrentAccount();
   if (!current) redirect("/sign-in");
-  if (!current.account) redirect("/onboarding/broker");
-  const summary = await getAccountSummary(current.account);
-  if (!summary) redirect("/onboarding/broker");
-
   const { symbol: rawSymbol, side } = await searchParams;
+  // A new visitor arriving on a stock (a "Practise this" link) is sent through
+  // onboarding and then back here, not to the dashboard.
+  const toOnboarding = `/onboarding/broker?next=${encodeURIComponent(`/trade${rawSymbol ? `?symbol=${encodeURIComponent(rawSymbol.slice(0, 20))}` : ""}`)}`;
+  if (!current.account) redirect(toOnboarding);
+  const summary = await getAccountSummary(current.account);
+  if (!summary) redirect(toOnboarding);
+
   const symbol = rawSymbol?.trim().toUpperCase().slice(0, 20);
   const db = getDb();
 

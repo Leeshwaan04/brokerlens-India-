@@ -11,6 +11,7 @@ import { deliveryFeesFromRow, roundTripCharges } from "@/lib/trade-costs";
 import { BrokerCard, SAMPLE_TURNOVER } from "@/components/BrokerCard";
 import { AppHeader } from "@/components/AppHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { safeNextPath } from "@/lib/next-path";
 import { OnboardingForm, type OnboardingState } from "@/components/OnboardingForm";
 
 export const metadata: Metadata = { title: "Choose a practice broker", robots: { index: false, follow: false } };
@@ -58,12 +59,14 @@ function BrokerOption({ broker }: { broker: BrokerRow }) {
   );
 }
 
-export default async function BrokerOnboardingPage() {
+export default async function BrokerOnboardingPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const { next } = await searchParams;
+  const nextPath = safeNextPath(next);
   const userId = await getSessionUserId();
   if (!userId) redirect("/sign-in");
 
   const [existing] = await getDb().select().from(virtualAccounts).where(eq(virtualAccounts.userId, userId)).limit(1);
-  if (existing) redirect("/dashboard");
+  if (existing) redirect(nextPath);
 
   const brokers = await getAllBrokers();
   const byCost = (a: BrokerRow, b: BrokerRow) => sampleCost(a) - sampleCost(b) || a.brand.localeCompare(b.brand);
@@ -82,7 +85,7 @@ export default async function BrokerOnboardingPage() {
           is opened by this step.
         </p>
 
-        <OnboardingForm action={selectBroker}>
+        <OnboardingForm action={selectBroker} nextPath={nextPath}>
           <section>
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="font-semibold text-ink">Brokers with a full fee schedule on file</h2>

@@ -13,9 +13,12 @@ export type OnboardingState = { status: "idle" } | { status: "done" } | { status
 // pressed again.
 export function OnboardingForm({
   action,
+  nextPath,
   children,
 }: {
   action: (prev: OnboardingState, fd: FormData) => Promise<OnboardingState>;
+  /** Already checked server-side (lib/next-path.ts): a path inside this app. */
+  nextPath: string;
   children: ReactNode;
 }) {
   const [state, formAction, pending] = useActionState(action, { status: "idle" } as OnboardingState);
@@ -24,9 +27,8 @@ export function OnboardingForm({
   useEffect(() => {
     // Deliberately a full page load, not router.push: the in-app redirect is
     // what failed for a real user on a slow connection (26 Nov 2026).
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    if (done) window.location.assign("/dashboard");
-  }, [done]);
+    if (done) window.location.assign(nextPath);
+  }, [done, nextPath]);
 
   return (
     <form action={formAction} className="mt-8 flex flex-col gap-8">
@@ -38,7 +40,7 @@ export function OnboardingForm({
           aria-busy={pending || done}
           className={cx(buttonClass("primary"), "w-full py-3 text-base sm:w-auto sm:self-start")}
         >
-          {done ? "Opening your dashboard…" : pending ? "Setting up your account…" : "Start with ₹10,00,000 of virtual cash"}
+          {done ? "Opening your account…" : pending ? "Setting up your account…" : "Start with ₹10,00,000 of virtual cash"}
         </button>
         {state.status === "error" && (
           <p role="alert" className="text-sm text-down">
@@ -47,7 +49,7 @@ export function OnboardingForm({
         )}
         {done && (
           <p className="text-sm text-muted">
-            Your account is ready. If the dashboard does not open, <Link className="text-accent-ink underline" href="/dashboard">go to it here</Link>.
+            Your account is ready. If the next page does not open, <Link className="text-accent-ink underline" href={nextPath}>continue here</Link>.
           </p>
         )}
       </div>

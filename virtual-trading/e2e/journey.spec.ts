@@ -43,12 +43,16 @@ async function settleEverythingDue() {
 }
 
 test("a new user is sent to onboarding and starts with ₹10 lakh", async () => {
-  await page.goto("/");
-  await expect(page).toHaveURL(/\/onboarding\/broker/);
+  // A new visitor arriving on a stock (a "Practise this" link) goes through
+  // onboarding and comes back to that stock, not to the dashboard.
+  await page.goto("/trade?symbol=TCS");
+  await expect(page).toHaveURL(/\/onboarding\/broker\?next=%2Ftrade%3Fsymbol%3DTCS/);
   await expect(page.getByRole("heading", { name: "Choose a broker to practise with" })).toBeVisible();
   await page.locator('input[name="brokerId"][value="zerodha"]').check();
   await page.getByRole("button", { name: /Start with ₹10,00,000/ }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
+  await expect(page).toHaveURL(/\/trade\?symbol=TCS/);
+  await expect(page.getByRole("heading", { name: "TCS", exact: true })).toBeVisible();
+  await page.goto("/dashboard");
   await expect(page.getByText("₹10,00,000.00").first()).toBeVisible();
   const [ev] = await sql<{ n: string }>(
     `select count(*) n from events where name = 'onboarding_completed' and account_id = $1`,
