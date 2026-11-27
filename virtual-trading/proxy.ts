@@ -48,7 +48,15 @@ function rememberCampaign(req: NextRequest, res: Response | void | null | undefi
   return res;
 }
 
+// Pages answer GET and HEAD, and POST for server actions. Anything else (PUT,
+// PATCH, DELETE, TRACE, ...) is refused here, so a page never "succeeds" at a
+// method it does not implement. API routes define their own methods.
+const PAGE_METHODS = new Set(["GET", "HEAD", "POST", "OPTIONS"]);
+
 export default async function proxy(req: NextRequest, event: NextFetchEvent) {
+  if (!req.nextUrl.pathname.startsWith("/api/") && !PAGE_METHODS.has(req.method)) {
+    return new NextResponse(null, { status: 405, headers: { Allow: "GET, HEAD, POST, OPTIONS" } });
+  }
   // Local development without a Clerk instance (see lib/session.ts). Never
   // true in a production build.
   if (isDevAuth()) return rememberCampaign(req, NextResponse.next());

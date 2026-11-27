@@ -198,7 +198,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   // A repeat of an order already placed (a double-click, a retried request)
   // returns that order instead of running the checks again, which would
   // otherwise count the first order's reservation against the repeat.
-  const clientOrderId = input.clientOrderId && CLIENT_ORDER_ID.test(input.clientOrderId) ? input.clientOrderId : null;
+  // A malformed id is refused, not ignored: ignoring it would place the order
+  // without the duplicate protection the caller believes it has.
+  if (input.clientOrderId && !CLIENT_ORDER_ID.test(input.clientOrderId)) {
+    throw new OrderPlacementError("The order reference is not valid. Reload the page and try again.", "invalid_client_order_id");
+  }
+  const clientOrderId = input.clientOrderId || null;
   if (clientOrderId) {
     const [existing] = await db
       .select({ id: orders.id, targetTradeDate: orders.targetTradeDate })
@@ -256,6 +261,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   // queue: each sees the orders the others placed, and none can spend the
   // same free cash or shares twice.
   return db.transaction(async (tx) => {
+    // Queue for the lock for a few seconds at most, then fail fast as "busy"
+    // (lib/busy.ts) rather than hold a connection until the pool runs dry.
+    await tx.execute(sql`set local lock_timeout = '5s'`);
     const [locked] = await tx
       .select({ cashBalance: virtualAccounts.cashBalance })
       .from(virtualAccounts)

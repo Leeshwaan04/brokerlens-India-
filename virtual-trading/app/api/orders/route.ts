@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isBusyError } from "@/lib/busy";
 import { crossSiteRejection } from "@/lib/request-guard";
 import { getSessionUserId } from "@/lib/session";
 import { placeOrder, OrderPlacementError } from "@/lib/order-engine";
@@ -34,6 +35,9 @@ export async function POST(request: Request) {
   } catch (err) {
     if (err instanceof OrderPlacementError) {
       return NextResponse.json({ error: err.message }, { status: 422 });
+    }
+    if (isBusyError(err)) {
+      return NextResponse.json({ error: "The practice market is busy. Try again in a moment." }, { status: 503, headers: { "Retry-After": "2" } });
     }
     console.error("placeOrder failed", err);
     return NextResponse.json({ error: "Could not place order" }, { status: 500 });

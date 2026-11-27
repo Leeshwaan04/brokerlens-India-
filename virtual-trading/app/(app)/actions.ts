@@ -1,5 +1,6 @@
 "use server";
 
+import { isBusyError } from "@/lib/busy";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
@@ -72,7 +73,7 @@ export async function placeOrderAction(_prev: OrderActionState, formData: FormDa
     await track(
       "order_rejected",
       {
-        reason: err instanceof OrderPlacementError ? err.code : "error",
+        reason: err instanceof OrderPlacementError ? err.code : isBusyError(err) ? "busy" : "error",
         // Only known values, never free text from the request (see the events table).
         side: side === "BUY" || side === "SELL" ? side : "invalid",
         symbol: /^[A-Z0-9&_-]{1,20}$/.test(symbol) ? symbol : "invalid",
@@ -82,7 +83,12 @@ export async function placeOrderAction(_prev: OrderActionState, formData: FormDa
     );
     return {
       status: "error",
-      message: err instanceof OrderPlacementError ? err.message : "Could not place the order. Please try again.",
+      message:
+        err instanceof OrderPlacementError
+          ? err.message
+          : isBusyError(err)
+            ? "The practice market is busy right now. Your order was not placed; please try again in a moment."
+            : "Could not place the order. Please try again.",
     };
   }
 }
