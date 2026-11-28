@@ -1,5 +1,5 @@
 {
-"updated": "2026-11-27",
+"updated": "2026-11-28",
 "paths": [
 "/",
 "/branches/",
@@ -62,6 +62,7 @@
 "/broker/groww/branches/ludhiana/",
 "/broker/groww/branches/thiruvananthapuram/",
 "/broker/groww/charges/",
+"/broker/hdfc-securities/",
 "/broker/icici-direct/",
 "/broker/iifl-securities/",
 "/broker/kotak-securities/",
@@ -343,6 +344,7 @@
 "/compare/mutual-funds/axis-mutual-fund-axis-nifty-50-index-fund-vs-axis-mutual-fund-axis-nifty50-equal-weight-index-fund/",
 "/compare/mutual-funds/axis-mutual-fund-axis-ultra-short-to-short-term-fund-vs-lic-mutual-fund-lic-mf-money-market-fund/",
 "/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-balanced-advantage-fund-vs-bandhan-mutual-fund-bandhan-balanced-advantage-fund/",
+"/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-balanced-advantage-fund-vs-bank-of-india-mutual-fund-bank-of-india-balanced-advantage-fund/",
 "/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund-vs-bandhan-mutual-fund-bandhan-flexi-cap-fund/",
 "/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund-vs-dsp-mutual-fund-dsp-flexi-cap-fund/",
 "/compare/mutual-funds/bajaj-finserv-mutual-fund-bajaj-finserv-flexi-cap-fund-vs-edelweiss-mutual-fund-edelweiss-flexi-cap-fund/",
@@ -537,6 +539,7 @@
 "/compare/mutual-funds/groww-mutual-fund-groww-short-term-fund-vs-jio-blackrock-mutual-fund-jioblackrock-overnight-fund/",
 "/compare/mutual-funds/groww-mutual-fund-groww-short-term-fund-vs-sbi-mutual-fund-sbi-nifty-1d-rate-liquid-etf-idcw/",
 "/compare/mutual-funds/hdfc-mutual-fund-hdfc-balanced-advantage-fund-vs-kotak-mahindra-mutual-fund-kotak-balanced-advantage-fund/",
+"/compare/mutual-funds/hdfc-mutual-fund-hdfc-elss-tax-saver-fund-vs-edelweiss-mutual-fund-bharat-bond-etf-april-2033/",
 "/compare/mutual-funds/hdfc-mutual-fund-hdfc-flexi-cap-fund-vs-angel-one-mutual-fund-angel-one-nifty-1d-rate-liquid-etf-growth/",
 "/compare/mutual-funds/hdfc-mutual-fund-hdfc-flexi-cap-fund-vs-axis-mutual-fund-axis-floating-interest-rates-fund/",
 "/compare/mutual-funds/hdfc-mutual-fund-hdfc-flexi-cap-fund-vs-bank-of-india-mutual-fund-bank-of-india-overnight-fund/",
